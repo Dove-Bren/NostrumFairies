@@ -1,7 +1,7 @@
 package com.smanzana.nostrumfairies.proxy;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.TestChest;
+import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.client.gui.OverlayRenderer;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
@@ -32,9 +32,9 @@ public class ClientProxy extends CommonProxy {
 		super.init();
 		
 		//registerModel(SpellTome.instance(), 0, SpellTome.id);
-		registerModel(Item.getItemFromBlock(TestChest.instance()),
+		registerModel(Item.getItemFromBlock(StorageLogisticsChest.instance()),
 				0,
-				TestChest.ID);
+				StorageLogisticsChest.ID);
 	}
 	
 	@Override

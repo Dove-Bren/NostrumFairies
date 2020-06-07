@@ -5,7 +5,7 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.smanzana.nostrumfairies.blocks.TestChest;
+import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.entity.fairy.FairyTaskRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
@@ -130,8 +130,8 @@ public class NostrumFairies {
     }
     
     private void registerLogisticsComponents() {
-    	logisticsComponentRegistry.registerComponentType(TestChest.TestChestTileEntity.LOGISTICS_TAG,
-    			new TestChest.TestChestTileEntity.TestChestTEFactory());
+    	logisticsComponentRegistry.registerComponentType(StorageLogisticsChest.StorageChestTileEntity.LOGISTICS_TAG,
+    			new StorageLogisticsChest.StorageChestTileEntity.StorageChestTEFactory());
     }
     
     public static @Nullable World getWorld(int dimension) {

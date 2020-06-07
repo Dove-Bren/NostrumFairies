@@ -1,8 +1,8 @@
 package com.smanzana.nostrumfairies.client.gui;
 
-import com.smanzana.nostrumfairies.blocks.TestChest.TestChestTileEntity;
-import com.smanzana.nostrumfairies.client.gui.container.TestChestGui;
-import com.smanzana.nostrumfairies.client.gui.container.TestChestGui.TestChestGuiContainer;
+import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest.StorageChestTileEntity;
+import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui;
+import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui.StorageChestGuiContainer;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
@@ -12,17 +12,17 @@ import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class NostrumFairyGui implements IGuiHandler {
 
-	public static final int testChestID = 0;
+	public static final int storageChestID = 0;
 	
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
 		
-		if (ID == testChestID) {
+		if (ID == storageChestID) {
 			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
-			if (ent != null && ent instanceof TestChestTileEntity) {
-				return new TestChestGui.TestChestContainer(
+			if (ent != null && ent instanceof StorageChestTileEntity) {
+				return new StorageChestGui.StorageChestContainer(
 						player.inventory,
-						(TestChestTileEntity) ent); // should be tile inventory
+						(StorageChestTileEntity) ent); // should be tile inventory
 			}
 		}
 		
@@ -33,12 +33,12 @@ public class NostrumFairyGui implements IGuiHandler {
 	@Override
 	public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
 		
-		if (ID == testChestID) {
+		if (ID == storageChestID) {
 			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
-			if (ent != null && ent instanceof TestChestTileEntity) {
-				return new TestChestGuiContainer(new TestChestGui.TestChestContainer(
+			if (ent != null && ent instanceof StorageChestTileEntity) {
+				return new StorageChestGuiContainer(new StorageChestGui.StorageChestContainer(
 						player.inventory,
-						(TestChestTileEntity) ent)); // should be tile inventory
+						(StorageChestTileEntity) ent)); // should be tile inventory
 			}
 		}
 		

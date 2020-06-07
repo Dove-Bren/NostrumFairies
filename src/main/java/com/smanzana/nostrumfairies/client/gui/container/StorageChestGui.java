@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.TestChest.TestChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest.StorageChestTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
 import net.minecraft.client.gui.Gui;
@@ -18,7 +18,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class TestChestGui {
+public class StorageChestGui {
 	
 	private static final ResourceLocation TEXT = new ResourceLocation(NostrumFairies.MODID + ":textures/gui/container/chest.png");
 	private static final int GUI_TEXT_WIDTH = 176;
@@ -32,12 +32,12 @@ public class TestChestGui {
 	//private static final int GUI_INV_CELL_LENGTH = 18;
 	//private static final int GUI_INV_CELL_SPACING = 2;
 
-	public static class TestChestContainer extends Container {
+	public static class StorageChestContainer extends Container {
 		
-		protected TestChestTileEntity chest;
+		protected StorageChestTileEntity chest;
 		//private int chestIDStart;
 		
-		public TestChestContainer(IInventory playerInv, TestChestTileEntity chest) {
+		public StorageChestContainer(IInventory playerInv, StorageChestTileEntity chest) {
 			this.chest = chest;
 						
 			// Construct player inventory
@@ -109,11 +109,11 @@ public class TestChestGui {
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class TestChestGuiContainer extends GuiContainer {
+	public static class StorageChestGuiContainer extends GuiContainer {
 
 		//private TestChestContainer container;
 		
-		public TestChestGuiContainer(TestChestContainer container) {
+		public StorageChestGuiContainer(StorageChestContainer container) {
 			super(container);
 			//this.container = container;
 			
