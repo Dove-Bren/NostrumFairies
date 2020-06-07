@@ -1,0 +1,16 @@
+[
+{
+  "modid": "nostrumfairies",
+  "name": "Nostrum Fairies",
+  "description": "Fairy Logistics Add-On For Nostrum Magica",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Skyler Manzanares"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
