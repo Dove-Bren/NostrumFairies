@@ -5,10 +5,10 @@ import java.util.List;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -38,11 +38,11 @@ public class OverlayRenderer extends Gui {
 			try {
 				LogisticsNetwork network = networks.iterator().next();
 				int y = 30;
-				List<ItemStack> items = network.getAvailableNetworkItems();
+				List<ItemDeepStack> items = network.getCondensedNetworkItems();
 				if (!items.isEmpty()) {
-					for (ItemStack stack : items) {
+					for (ItemDeepStack stack : items) {
 						Minecraft.getMinecraft().fontRendererObj.drawString("- "
-								+ stack.getUnlocalizedName() + " x" + stack.stackSize,
+								+ stack.getTemplate().getUnlocalizedName() + " x" + stack.getCount(),
 								25, y, 0xFFFFFFFF);
 						y += Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT + 2;
 					}

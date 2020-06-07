@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.logistics;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,6 +16,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -40,6 +42,7 @@ public class LogisticsNetwork {
 	
 	protected boolean cacheDirty;
 	protected List<ItemStack> cachedItems;
+	protected List<ItemDeepStack> cachedCondensedItems; // List of itemstacks with over-stacked sizes
 	protected Map<ILogisticsComponent, List<ItemStack>> cachedItemMap;
 	
 	public LogisticsNetwork() {
@@ -49,6 +52,7 @@ public class LogisticsNetwork {
 	public LogisticsNetwork(UUID uuid, boolean register) {
 		this.uuid = uuid;
 		this.cachedItems = new LinkedList<>();
+		this.cachedCondensedItems = new LinkedList<>();
 		this.components = new HashSet<>(); // components will load and re-attach
 		cacheDirty = false;
 		
@@ -310,6 +314,25 @@ public class LogisticsNetwork {
 		this.cacheDirty = true;
 	}
 	
+	private void addToCondensed(List<ItemStack> items) {
+		// Could make sure both lists are sorted by itemstack, and have iterators on both to make this merge fast.
+		// Optimization oppertunity!
+		for (ItemStack stack : items) {
+			boolean merged = false;
+			for (ItemDeepStack condensed : cachedCondensedItems) {
+				if (condensed.canMerge(stack)) {
+					condensed.add(stack);
+					merged = true;
+					break;
+				}
+			}
+			
+			if (!merged) {
+				cachedCondensedItems.add(new ItemDeepStack(stack));
+			}
+		}
+	}
+	
 	protected void refresh() {
 		if (!this.cacheDirty) {
 			return;
@@ -318,13 +341,16 @@ public class LogisticsNetwork {
 		this.cacheDirty = false;
 		cachedItems = new LinkedList<>();
 		cachedItemMap = new HashMap<>();
+		cachedCondensedItems = new LinkedList<>();
 		
 		for (ILogisticsComponent component : components) {
 			List<ItemStack> list = Lists.newArrayList(component.getItems());
 			list.removeIf((stack) -> {
 				return stack == null;
 			});
+			Collections.sort(list, (stack1, stack2) -> {return stack1.getUnlocalizedName().compareTo(stack2.getUnlocalizedName());});
 			cachedItems.addAll(list);
+			addToCondensed(list);
 			cachedItemMap.put(component, list);
 		}
 	}
@@ -332,6 +358,11 @@ public class LogisticsNetwork {
 	public List<ItemStack> getAvailableNetworkItems() {
 		refresh();
 		return cachedItems;
+	}
+	
+	public List<ItemDeepStack> getCondensedNetworkItems() {
+		refresh();
+		return cachedCondensedItems;
 	}
 	
 	public Map<ILogisticsComponent, List<ItemStack>> getNetworkItems() {

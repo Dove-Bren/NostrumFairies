@@ -1,10 +1,10 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
@@ -112,6 +112,14 @@ public class TestChest extends BlockContainer {
 		public int getSizeInventory() {
 			return SLOTS;
 		}
+		
+		@Override
+		public void markDirty() {
+			if (network != null) {
+				this.network.dirty();
+			}
+			super.markDirty();
+		}
 
 		@Override
 		public ItemStack getStackInSlot(int index) {
@@ -120,7 +128,7 @@ public class TestChest extends BlockContainer {
 			
 			return slots[index];
 		}
-
+		
 		@Override
 		public ItemStack decrStackSize(int index, int count) {
 			if (index < 0 || index >= getSizeInventory() || slots[index] == null)
@@ -136,9 +144,6 @@ public class TestChest extends BlockContainer {
 				slots[index].stackSize -= count;
 			}
 			
-			if (network != null) {
-				this.network.dirty();
-			}
 			this.markDirty();
 			
 			return stack;
@@ -152,9 +157,6 @@ public class TestChest extends BlockContainer {
 			ItemStack stack = slots[index];
 			slots[index] = null;
 			
-			if (network != null) {
-				this.network.dirty();
-			}
 			this.markDirty();
 			return stack;
 		}
@@ -165,9 +167,6 @@ public class TestChest extends BlockContainer {
 				return;
 			
 			slots[index] = stack;
-			if (network != null) {
-				this.network.dirty();
-			}
 			this.markDirty();
 		}
 
@@ -261,55 +260,6 @@ public class TestChest extends BlockContainer {
 			}
 		}
 		
-		/**
-	     * Try to add the item to the invntory.
-	     * Return what won't fit.
-	     */
-	    public ItemStack addItem(@Nullable ItemStack stack) {
-	    	if (stack == null) {
-	    		return null;
-	    	}
-	    	
-	    	ItemStack itemstack = stack.copy();
-
-	    	for (int i = 0; i < this.getSizeInventory(); ++i) {
-	            ItemStack itemstack1 = this.getStackInSlot(i);
-
-	            if (itemstack1 == null) {
-	                this.setInventorySlotContents(i, itemstack);
-	                if (network != null) {
-	    				this.network.dirty();
-	    			}
-	                this.markDirty();
-	                return null;
-	            }
-	            
-	            if (itemstack.getItem() == itemstack1.getItem()
-	            		&& itemstack.getMetadata() == itemstack1.getMetadata()
-	            		&& Objects.equal(itemstack.getTagCompound(), itemstack1.getTagCompound())) {
-	            	// stacks appear to match. Deduct stack size
-	            	int room = itemstack1.getMaxStackSize() - itemstack1.stackSize;
-	            	if (room > itemstack.stackSize) {
-	            		itemstack1.stackSize += itemstack.stackSize;
-	            		if (network != null) {
-	        				this.network.dirty();
-	        			}
-	            		this.markDirty();
-	            		return null;
-	            	} else if (room > 0) {
-	            		if (network != null) {
-	        				this.network.dirty();
-	        			}
-	            		this.markDirty();
-	            		itemstack.stackSize -= room;
-	            		itemstack1.stackSize += room;
-	            	}
-	            }
-	        }
-
-	        return itemstack;
-	    }
-	    
 	    @Override
 	    public void updateContainingBlockInfo() {
 	    	super.updateContainingBlockInfo();
@@ -346,12 +296,13 @@ public class TestChest extends BlockContainer {
 
 		@Override
 		public Collection<ItemStack> getItems() {
-			return Lists.newArrayList(slots);
+			List<ItemStack> list = Lists.newArrayList(slots);
+			list.removeIf((stack) -> {return stack == null;});;
+			return list;
 		}
 		
 		private static final String NBT_LOG_POS = "pos";
 		private static final String NBT_LOG_DIM = "dim";
-		private static final String NBT_LOG_NETWORK = "network";
 
 		@Override
 		public NBTTagCompound toNBT() {

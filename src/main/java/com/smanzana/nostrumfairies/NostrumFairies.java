@@ -101,8 +101,11 @@ public class NostrumFairies {
     }
     
     public LogisticsRegistry getLogisticsRegistry() {
-    	if (this.logisticsRegistry == null) {
+    	if (proxy.isServer() && this.logisticsRegistry == null) {
     		throw new RuntimeException("Accessing logistics registry before it's been loaded!");
+    	} else if (this.logisticsRegistry == null) {
+    		//client wants a registry, but doesn't appear to be integrated
+    		this.logisticsRegistry = new LogisticsRegistry();
     	}
     	
     	return logisticsRegistry;

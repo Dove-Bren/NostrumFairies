@@ -31,6 +31,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		for (ILogisticsComponent comp : realNetwork.components) {
 			this.components.add(new FakeLogisticsComponent(comp));
 		}
+		this.dirty(); // changed components.
 	}
 	
 	public FakeLogisticsNetwork(UUID id) {
@@ -79,6 +80,8 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		for (int i = list.tagCount() - 1; i >= 0; i--) {
 			network.components.add(FakeLogisticsComponent.fromNBT(list.getCompoundTagAt(i)));
 		}
+		
+		network.dirty();
 		
 		return network;
 	}
@@ -185,8 +188,15 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			}
 			tag.setLong(NBT_COMP_POS, pos.toLong());
 			
+			// Note: since fake components don't need individual stack info and just typeXcount info, we _could_
+			// send ItemDeepStacks here instead, and convert to regular itemstacks.
+			// That'd mean the stacks on the client woulnd't match the server, but overal quantity would.
+			
 			NBTTagList list = new NBTTagList();
 			for (ItemStack stack : this.items) {
+				if (stack == null) {
+					continue;
+				}
 				list.appendTag(stack.writeToNBT(new NBTTagCompound()));
 			}
 			tag.setTag(NBT_COMP_ITEMS, list);

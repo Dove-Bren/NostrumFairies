@@ -130,5 +130,13 @@ public class LogisticsRegistry extends WorldSavedData {
 		
 		this.networks.add(network);
 	}
+
+	@SideOnly(Side.CLIENT)
+	public void clear() {
+		for (LogisticsNetwork network : networks) {
+			network.dissolveNetwork();
+		}
+		this.networks.clear();
+	}
 	
 }

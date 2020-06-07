@@ -1,12 +1,9 @@
 package com.smanzana.nostrumfairies.network.messages;
 
 import java.util.Collection;
-import java.util.LinkedList;
 
-import javax.annotation.Nullable;
-
-import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.logistics.FakeLogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 import io.netty.buffer.ByteBuf;
@@ -20,7 +17,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 /**
- * Server has processed a request for an update about one or more logistics networks and is
+ * Server has processed a request for an update about all logistics networks and is
  * sending back the info.
  * @author Skyler
  *
@@ -36,11 +33,14 @@ public class LogisticsUpdateResponse implements IMessage {
 				
 				NostrumFairies.logger.info("Received logistics network refreshed data");
 				
+				// Clear out our list of networks, since this should be all networks
+				NostrumFairies.instance.getLogisticsRegistry().clear();
+				
 				// Inject any network returned to us
 				NBTTagList list = message.tag.getTagList(NBT_LIST, NBT.TAG_COMPOUND);
 				for (int i = list.tagCount() - 1; i >= 0; i--) {
 					NBTTagCompound nbt = list.getCompoundTagAt(i);
-					LogisticsNetwork network = LogisticsNetwork.fromNBT(nbt);
+					LogisticsNetwork network = FakeLogisticsNetwork.fromNBT(nbt);
 					
 					NostrumFairies.instance.getLogisticsRegistry().injectNetwork(network);
 				}
@@ -64,14 +64,10 @@ public class LogisticsUpdateResponse implements IMessage {
 		
 		NBTTagList list = new NBTTagList();
 		for (LogisticsNetwork network : networks) {
-			list.appendTag(network.toNBT());
+			list.appendTag(new FakeLogisticsNetwork(network).toNBT());
 		}
 		
 		tag.setTag(NBT_LIST, list);
-	}
-	
-	public LogisticsUpdateResponse(@Nullable LogisticsNetwork network) {
-		this(network == null ? new LinkedList<>() : Lists.newArrayList(network));
 	}
 	
 	@Override

@@ -22,10 +22,10 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
  */
 public class LogisticsUpdateRequest implements IMessage {
 
-	public static class Handler implements IMessageHandler<LogisticsUpdateRequest, LogisticsUpdateResponse> {
+	public static class Handler implements IMessageHandler<LogisticsUpdateRequest, IMessage> {
 
 		@Override
-		public LogisticsUpdateResponse onMessage(LogisticsUpdateRequest message, MessageContext ctx) {
+		public IMessage onMessage(LogisticsUpdateRequest message, MessageContext ctx) {
 			
 			// We actually ignore this message if we're running integrated, as the client will already have
 			// correct information in the singleton registry
@@ -34,13 +34,14 @@ public class LogisticsUpdateRequest implements IMessage {
 			}
 			
 			ctx.getServerHandler().playerEntity.getServerWorld().addScheduledTask(() -> {
-				LogisticsUpdateResponse response;
+				IMessage response;
 				
 				// Is this about a single network, or all of them?
 				if (message.tag.hasUniqueId(NBT_NETWORK_ID)) {
 					// single network! look it up!
-					response = new LogisticsUpdateResponse(NostrumFairies.instance.getLogisticsRegistry().findNetwork(
-							message.tag.getUniqueId(NBT_NETWORK_ID)));
+					UUID uuid = message.tag.getUniqueId(NBT_NETWORK_ID);
+					response = new LogisticsUpdateSingleResponse(uuid, NostrumFairies.instance.getLogisticsRegistry().findNetwork(
+							uuid));
 				} else {
 					// All networks!
 					response = new LogisticsUpdateResponse(NostrumFairies.instance.getLogisticsRegistry().getNetworks());

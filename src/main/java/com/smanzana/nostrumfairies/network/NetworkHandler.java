@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.network;
 
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateResponse;
+import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateSingleResponse;
 
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
@@ -36,6 +37,7 @@ public class NetworkHandler {
 		
 		syncChannel.registerMessage(LogisticsUpdateRequest.Handler.class, LogisticsUpdateRequest.class, discriminator++, Side.SERVER);
 		syncChannel.registerMessage(LogisticsUpdateResponse.Handler.class, LogisticsUpdateResponse.class, discriminator++, Side.CLIENT);
+		syncChannel.registerMessage(LogisticsUpdateSingleResponse.Handler.class, LogisticsUpdateSingleResponse.class, discriminator++, Side.CLIENT);
 	}
 	
 }
