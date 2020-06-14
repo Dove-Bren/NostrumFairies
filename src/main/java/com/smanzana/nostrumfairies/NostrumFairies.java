@@ -5,9 +5,11 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
-import com.smanzana.nostrumfairies.entity.fairy.FairyTaskRegistry;
+import com.smanzana.nostrumfairies.logistics.FairyTaskRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
 import com.smanzana.nostrumfairies.proxy.CommonProxy;
@@ -133,6 +135,10 @@ public class NostrumFairies {
     private void registerLogisticsComponents() {
     	logisticsComponentRegistry.registerComponentType(StorageLogisticsChest.StorageChestTileEntity.LOGISTICS_TAG,
     			new StorageLogisticsChest.StorageChestTileEntity.StorageChestTEFactory());
+    	logisticsComponentRegistry.registerComponentType(BufferLogisticsChest.BufferChestTileEntity.LOGISTICS_TAG,
+    			new BufferLogisticsChest.BufferChestTileEntity.BufferChestTEFactory());
+    	logisticsComponentRegistry.registerComponentType(OutputLogisticsChest.OutputChestTileEntity.LOGISTICS_TAG,
+    			new OutputLogisticsChest.OutputChestTileEntity.OutputChestTEFactory());
     	logisticsComponentRegistry.registerComponentType(StorageMonitor.StorageMonitorTileEntity.LOGISTICS_TAG,
     			new StorageMonitor.StorageMonitorTileEntity.StorageMonitorTEFactory());
     	

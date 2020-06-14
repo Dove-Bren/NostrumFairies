@@ -1,6 +1,8 @@
-package com.smanzana.nostrumfairies.entity.fairy;
+package com.smanzana.nostrumfairies.logistics;
 
 import javax.annotation.Nullable;
+
+import com.smanzana.nostrumfairies.entity.fairy.EntityFairyBase;
 
 /**
  * Generic fairy task.

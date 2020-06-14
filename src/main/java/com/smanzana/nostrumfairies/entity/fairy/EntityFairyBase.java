@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.entity.fairy;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
+import com.smanzana.nostrumfairies.logistics.IFairyTask;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
 import net.minecraft.entity.monster.EntityGolem;

@@ -23,7 +23,7 @@ public abstract class LogisticsTileEntity extends TileEntity implements ILogisti
 
 	private static final String NBT_NETWORK_UUID = "lognet_uuid"; 
 	
-	private static final List<ItemStack> emptyList = new ArrayList<>(1);
+	protected static final List<ItemStack> emptyList = new ArrayList<>(1);
 	protected LogisticsNetwork network;
 	protected UUID networkID;
 	

@@ -1,6 +1,8 @@
 package com.smanzana.nostrumfairies.proxy;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.client.gui.OverlayRenderer;
@@ -29,6 +31,8 @@ public class ClientProxy extends CommonProxy {
 		
 		StorageMonitor.StorageMonitorRenderer.init();
 		StorageLogisticsChest.StorageChestRenderer.init();
+		BufferLogisticsChest.BufferChestRenderer.init();
+		OutputLogisticsChest.OutputChestRenderer.init();
 	}
 	
 	@Override
@@ -39,6 +43,12 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(StorageLogisticsChest.instance()),
 				0,
 				StorageLogisticsChest.ID);
+		registerModel(Item.getItemFromBlock(BufferLogisticsChest.instance()),
+				0,
+				BufferLogisticsChest.ID);
+		registerModel(Item.getItemFromBlock(OutputLogisticsChest.instance()),
+				0,
+				OutputLogisticsChest.ID);
 		registerModel(Item.getItemFromBlock(StorageMonitor.instance()),
 				0,
 				StorageMonitor.ID);
