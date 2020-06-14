@@ -9,9 +9,9 @@ import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
-import com.smanzana.nostrumfairies.logistics.FairyTaskRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 import com.smanzana.nostrumfairies.proxy.CommonProxy;
 import com.smanzana.nostrummagica.NostrumMagica;
 
@@ -93,7 +93,7 @@ public class NostrumFairies {
     
     @EventHandler
     public void onServerShutdown(FMLServerStoppedEvent event) {
-    	FairyTaskRegistry.instance().clear();
+    	LogisticsTaskRegistry.instance().clear();
     }
     
     @SubscribeEvent

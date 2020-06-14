@@ -10,6 +10,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
@@ -20,22 +21,23 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BufferChestGui {
 	
-	private static final ResourceLocation TEXT = new ResourceLocation(NostrumFairies.MODID + ":textures/gui/container/chest.png");
+	private static final ResourceLocation TEXT = new ResourceLocation(NostrumFairies.MODID + ":textures/gui/container/buffer_chest.png");
 	private static final int GUI_TEXT_WIDTH = 176;
-	private static final int GUI_TEXT_HEIGHT = 168;//222; //54
+	private static final int GUI_TEXT_HEIGHT = 132;
+	private static final int GUI_INV_CELL_LENGTH = 18;
+	private static final int GUI_TEXT_MISSING_ICON_HOFFSET = GUI_TEXT_WIDTH;
+	private static final int GUI_TEXT_WORKING_ICON_HOFFSET = GUI_TEXT_WIDTH + GUI_INV_CELL_LENGTH;
 	private static final int GUI_TOP_INV_HOFFSET = 8;
 	private static final int GUI_TOP_INV_VOFFSET = 18;
 	private static final int GUI_PLAYER_INV_HOFFSET = 8;
-	private static final int GUI_PLAYER_INV_VOFFSET = 86;
+	private static final int GUI_PLAYER_INV_VOFFSET = 50;
 	private static final int GUI_HOTBAR_INV_HOFFSET = 8;
-	private static final int GUI_HOTBAR_INV_VOFFSET = 144;
-	//private static final int GUI_INV_CELL_LENGTH = 18;
-	//private static final int GUI_INV_CELL_SPACING = 2;
+	private static final int GUI_HOTBAR_INV_VOFFSET = 108;
 
 	public static class BufferChestContainer extends Container {
 		
 		protected BufferChestTileEntity chest;
-		//private int chestIDStart;
+		private int chestIDStart;
 		
 		public BufferChestContainer(IInventory playerInv, BufferChestTileEntity chest) {
 			this.chest = chest;
@@ -52,12 +54,34 @@ public class BufferChestGui {
 				this.addSlotToContainer(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
 			}
 			
-			//chestIDStart = this.inventorySlots.size();
+			chestIDStart = this.inventorySlots.size();
 			for (int i = 0; i < chest.getSizeInventory(); i++) {
+				final int index = i;
 				this.addSlotToContainer(new Slot(chest, i, GUI_TOP_INV_HOFFSET + i * 18, GUI_TOP_INV_VOFFSET) {
+					@Override
 					public boolean isItemValid(@Nullable ItemStack stack) {
 				        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 				    }
+					
+					@Override
+					public int getSlotStackLimit() {
+						ItemStack template = chest.getTemplate(index);
+						if (template == null) {
+							return super.getSlotStackLimit();
+						} else {
+							return template.stackSize;
+						}
+					}
+					
+					@Override
+					public void putStack(@Nullable ItemStack stack) {
+//						ItemStack template = chest.getTemplate(index);
+//						if (template == null) {
+//							chest.setTemplate(index, stack);
+//						} else {
+							super.putStack(stack);
+//						}
+					}
 				});
 			}
 		}
@@ -94,13 +118,38 @@ public class BufferChestGui {
 		}
 		
 		@Override
-		public boolean canDragIntoSlot(Slot slotIn) {
+		public boolean canInteractWith(EntityPlayer playerIn) {
 			return true;
 		}
 		
 		@Override
-		public boolean canInteractWith(EntityPlayer playerIn) {
-			return true;
+		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
+			if (player.inventory.getItemStack() == null) {
+				// empty hand. Right-click?
+				if (slotId >= chestIDStart && dragType == 1 && clickTypeIn == ClickType.PICKUP && chest.getStackInSlot(slotId - chestIDStart) == null) {
+					chest.setTemplate(slotId - chestIDStart, null);
+					return null;
+				}
+			} else {
+				// Item in hand. Clicking empty output slot?
+				if (slotId >= chestIDStart && clickTypeIn == ClickType.PICKUP && chest.getTemplate(slotId - chestIDStart) == null) {
+					ItemStack template = player.inventory.getItemStack();
+					if (dragType == 1) { // right click
+						template = template.copy();
+						template.stackSize = 1;
+					}
+					chest.setTemplate(slotId - chestIDStart, template);
+					return null;
+				}
+//				System.out.println("Clicktype: " + clickTypeIn);
+//				System.out.println("dragType: " + dragType);
+			}
+			return super.slotClick(slotId, dragType, clickTypeIn, player);
+		}
+		
+		@Override
+		public boolean canDragIntoSlot(Slot slotIn) {
+			return slotIn.slotNumber < chestIDStart;
 		}
 		
 	}
@@ -108,11 +157,11 @@ public class BufferChestGui {
 	@SideOnly(Side.CLIENT)
 	public static class BufferChestGuiContainer extends GuiContainer {
 
-		//private TestChestContainer container;
+		private BufferChestContainer container;
 		
 		public BufferChestGuiContainer(BufferChestContainer container) {
 			super(container);
-			//this.container = container;
+			this.container = container;
 			
 			this.xSize = GUI_TEXT_WIDTH;
 			this.ySize = GUI_TEXT_HEIGHT;
@@ -121,6 +170,35 @@ public class BufferChestGui {
 		@Override
 		public void initGui() {
 			super.initGui();
+		}
+		
+		private void drawStatus(float partialTicks, boolean available) {
+			float alpha = (float) (.5f + (.25f * Math.sin(Math.PI * (double)(System.currentTimeMillis() % 1000) / 1000.0)));
+			GlStateManager.color(1.0F,  1.0F, 1.0F, alpha);
+			mc.getTextureManager().bindTexture(TEXT);
+			
+			final int text_hoffset = (available ? GUI_TEXT_WORKING_ICON_HOFFSET : GUI_TEXT_MISSING_ICON_HOFFSET);
+			final int text_voffset = 0;
+			GlStateManager.enableBlend();
+			this.drawTexturedModalRect(0, 0, text_hoffset, text_voffset, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
+		}
+		
+		private void drawTemplate(float partialTicks, @Nullable ItemStack template) {
+			if (template != null) {
+				GlStateManager.pushMatrix();
+				this.itemRender.renderItemIntoGUI(template, 0, 0);
+				GlStateManager.translate(0, 0, 110);
+				if (template.stackSize > 1) {
+					final String count = "" + template.stackSize;
+					
+					this.fontRendererObj.drawStringWithShadow("" + template.stackSize,
+							GUI_INV_CELL_LENGTH - (this.fontRendererObj.getStringWidth(count) + 1),
+							GUI_INV_CELL_LENGTH - (this.fontRendererObj.FONT_HEIGHT),
+							0xFFFFFFFF);
+				}
+				drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
+				GlStateManager.popMatrix();
+			}
 		}
 		
 		@Override
@@ -133,6 +211,34 @@ public class BufferChestGui {
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			Gui.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
+			
+			// Draw templates, if needed
+			for (int i = 0; i < container.chest.getSizeInventory(); i++) {
+				ItemStack template = container.chest.getTemplate(i);
+				ItemStack stack = container.chest.getStackInSlot(i);
+				
+				GlStateManager.pushMatrix();
+				GlStateManager.translate(horizontalMargin + GUI_TOP_INV_HOFFSET + (i * GUI_INV_CELL_LENGTH),
+						verticalMargin + GUI_TOP_INV_VOFFSET,
+						0);
+				
+				if (container.chest.getStackInSlot(i) == null) {
+					GlStateManager.pushMatrix();
+					GlStateManager.scale(1f, 1f, .05f);
+					drawTemplate(partialTicks, container.chest.getTemplate(i));
+					GlStateManager.popMatrix();
+				}
+				
+				if (template != null && (stack == null || stack.stackSize < template.stackSize)) {
+					GlStateManager.translate(0, 0, 100);
+					drawStatus(partialTicks, true);
+				}
+				
+				GlStateManager.popMatrix();
+			}
+
+			GlStateManager.enableBlend();
+			GlStateManager.enableAlpha();
 			
 		}
 		

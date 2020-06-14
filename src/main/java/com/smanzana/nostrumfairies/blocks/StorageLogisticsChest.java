@@ -7,6 +7,7 @@ import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.utils.ItemStacks;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
@@ -109,6 +110,11 @@ public class StorageLogisticsChest extends BlockContainer {
 		@Override
 		public double getLogisticsLinkRange() {
 			return 10;
+		}
+		
+		@Override
+		public boolean canAccept(ItemStack stack) {
+			return ItemStacks.canFit(this, stack);
 		}
 
 		@Override

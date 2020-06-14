@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.logistics;
+package com.smanzana.nostrumfairies.logistics.task;
 
 import javax.annotation.Nullable;
 
@@ -10,7 +10,7 @@ import com.smanzana.nostrumfairies.entity.fairy.EntityFairyBase;
  * @author Skyler
  *
  */
-public interface IFairyTask {
+public interface ILogisticsTask {
 
 	/**
 	 * Return the display name of the task
@@ -50,7 +50,7 @@ public interface IFairyTask {
 	 * @param other
 	 * @return true if the task can be merged
 	 */
-	public boolean canMerge(IFairyTask other);
+	public boolean canMerge(ILogisticsTask other);
 	
 	/**
 	 * Merge the provided other task into this same one.
@@ -61,5 +61,5 @@ public interface IFairyTask {
 	 * possibly queue up the original tasks instead of just queueing up this one.
 	 * @param other
 	 */
-	public void mergeIn(IFairyTask other);
+	public void mergeIn(ILogisticsTask other);
 }

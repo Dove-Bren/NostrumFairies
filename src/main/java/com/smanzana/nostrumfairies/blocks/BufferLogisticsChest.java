@@ -7,6 +7,7 @@ import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.utils.ItemStacks;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
@@ -17,6 +18,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
@@ -24,6 +26,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -78,12 +81,17 @@ public class BufferLogisticsChest extends BlockContainer {
 	public static class BufferChestTileEntity extends LogisticsChestTileEntity {
 
 		private static final int SLOTS = 9;
+		private static final String NBT_TEMPLATES = "templates";
+		private static final String NBT_TEMPLATE_INDEX = "index";
+		private static final String NBT_TEMPLATE_ITEM = "item";
 		
 		private String displayName;
+		private ItemStack[] templates;
 		
 		public BufferChestTileEntity() {
 			super();
 			displayName = "Buffer Chest";
+			templates = new ItemStack[SLOTS];
 		}
 		
 		@Override
@@ -110,11 +118,68 @@ public class BufferLogisticsChest extends BlockContainer {
 		public double getLogisticsLinkRange() {
 			return 10;
 		}
+		
+		@Override
+		public boolean canAccept(ItemStack stack) {
+			return ItemStacks.canFit(this, stack);
+		}
+		
+		public void setTemplate(int index, @Nullable ItemStack template) {
+			if (index < 0 || index >=  SLOTS) {
+				return;
+			}
+			
+			System.out.println("Setting template");
+			
+			ItemStack temp = template == null ? null : template.copy();
+			templates[index] = temp;
+			this.markDirty();
+		}
+		
+		public @Nullable ItemStack getTemplate(int index) {
+			if (index < 0 || index >=  SLOTS) {
+				return null;
+			}
+			
+			return templates[index];
+		}
+		
+		@Override
+		public boolean isItemValidForSlot(int index, ItemStack stack) {
+			if (!super.isItemValidForSlot(index, stack)) {
+				return false;
+			}
+			
+			ItemStack template = getTemplate(index);
+			if (template != null) {
+				return ItemStacks.stacksMatch(template, stack);
+			}
+			
+			return true;
+		}
 
 		@Override
 		public NBTTagCompound toNBT() {
-			// Nothing special on top of base te. Just return base;
-			return this.baseToNBT();
+			NBTTagCompound tag =  this.baseToNBT();
+			
+			// Save templates
+			NBTTagList templates = new NBTTagList();
+			for (int i = 0; i < SLOTS; i++) {
+				ItemStack stack = this.getStackInSlot(i);
+				if (stack == null) {
+					continue;
+				}
+				
+				NBTTagCompound template = new NBTTagCompound();
+				
+				template.setInteger(NBT_TEMPLATE_INDEX, i);
+				template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new NBTTagCompound()));
+				
+				templates.appendTag(template);
+			}
+			tag.setTag(NBT_TEMPLATES, templates);
+			
+			return tag;
 		}
 
 		public static final String LOGISTICS_TAG = "logcomp_bufferchest"; 
@@ -128,8 +193,25 @@ public class BufferLogisticsChest extends BlockContainer {
 
 			@Override
 			public BufferChestTileEntity construct(NBTTagCompound nbt, LogisticsNetwork network) {
-				// Since we don't do anything special, we can just use our base class' default
-				return (BufferChestTileEntity) LogisticsChestTileEntity.loadFromNBT(nbt, network); 
+				BufferChestTileEntity ent = (BufferChestTileEntity) LogisticsChestTileEntity.loadFromNBT(nbt, network);
+				
+				// Reload templates
+				NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
+				for (int i = 0; i < list.tagCount(); i++) {
+					NBTTagCompound template = list.getCompoundTagAt(i);
+					int index = template.getInteger(NBT_TEMPLATE_INDEX);
+					
+					if (index < 0 || index > SLOTS) {
+						NostrumFairies.logger.error("Found serialized template with invalid index! " + index + " outside of " + SLOTS);
+						continue;
+					}
+					
+					ItemStack stack = ItemStack.loadItemStackFromNBT(template.getCompoundTag(NBT_TEMPLATE_ITEM));
+					
+					ent.templates[index] = stack;
+				}
+				
+				return ent; 
 			}
 			
 		}

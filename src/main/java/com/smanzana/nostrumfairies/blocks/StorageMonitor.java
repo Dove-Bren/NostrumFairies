@@ -125,6 +125,11 @@ public class StorageMonitor extends BlockContainer {
 			}
 			
 		}
+
+		@Override
+		public boolean canAccept(ItemStack stack) {
+			return false;
+		}
 	}
 	
 	@SideOnly(Side.CLIENT)

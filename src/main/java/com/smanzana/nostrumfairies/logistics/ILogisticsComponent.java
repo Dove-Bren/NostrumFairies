@@ -52,6 +52,13 @@ public interface ILogisticsComponent {
 	 */
 	public Collection<ItemStack> getItems();
 	
+	/**
+	 * Check and return whether this component can store the provided item stack.
+	 * @param stack
+	 * @return
+	 */
+	public boolean canAccept(ItemStack stack);
+	
 	// public float getEnergyProduction(); // and consumption? What drives all of this?
 	
 	/**

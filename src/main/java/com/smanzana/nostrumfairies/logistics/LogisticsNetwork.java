@@ -477,4 +477,27 @@ public class LogisticsNetwork {
 		
 		return filteredMap;
 	}
+	
+	public @Nullable ILogisticsComponent getStorageForItem(World world, BlockPos pos, ItemStack stack) {
+		ILogisticsComponent nearest = null;
+		double minDist = 0;
+		
+		for (ILogisticsComponent comp : components) {
+			if (!comp.getWorld().equals(world)) {
+				continue;
+			}
+			
+			if (!comp.canAccept(stack)) {
+				continue;
+			}
+			
+			final double dist = comp.getPosition().distanceSq(pos);
+			if (nearest == null || dist < minDist) {
+				minDist = dist;
+				nearest = comp;
+			}
+		}
+		
+		return nearest;
+	}
 }

@@ -168,6 +168,11 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		public Collection<ItemStack> getItems() {
 			return this.items;
 		}
+		
+		@Override
+		public boolean canAccept(ItemStack stack) {
+			return false;
+		}
 
 		@Override
 		public String getSerializationTag() {

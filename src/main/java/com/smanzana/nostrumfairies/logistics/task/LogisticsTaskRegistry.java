@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.logistics;
+package com.smanzana.nostrumfairies.logistics.task;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -17,14 +17,14 @@ import net.minecraft.util.math.BlockPos;
  * Even if the blocks aren't loaded, this presumably has all the blocks 
  * @author Skyler
  */
-public class FairyTaskRegistry {
+public class LogisticsTaskRegistry {
 	
 	private static final class RegistryItem {
 		
-		private IFairyTask task;
+		private ILogisticsTask task;
 		private EntityFairyBase actor;
 		
-		public RegistryItem(IFairyTask task) {
+		public RegistryItem(ILogisticsTask task) {
 			this.task = task;
 			this.actor = null;
 		}
@@ -41,19 +41,19 @@ public class FairyTaskRegistry {
 	public static final class FairyTaskPair {
 		
 		public final BlockPos pos;
-		public final IFairyTask task;
+		public final ILogisticsTask task;
 		
-		public FairyTaskPair(BlockPos pos, IFairyTask task) {
+		public FairyTaskPair(BlockPos pos, ILogisticsTask task) {
 			this.pos = pos;
 			this.task = task;
 		}
 	}
 	
-	private static FairyTaskRegistry instance = null;
+	private static LogisticsTaskRegistry instance = null;
 	
-	public static FairyTaskRegistry instance() {
+	public static LogisticsTaskRegistry instance() {
 		if (instance == null) {
-			instance = new FairyTaskRegistry();
+			instance = new LogisticsTaskRegistry();
 		}
 		
 		return instance;
@@ -62,7 +62,7 @@ public class FairyTaskRegistry {
 	// Map between dim ID and known requesters
 	private Map<Integer, Map<BlockPos, RegistryItem>> registry;
 	
-	private FairyTaskRegistry() {
+	private LogisticsTaskRegistry() {
 		registry = new HashMap<>();
 	}
 	
@@ -70,7 +70,7 @@ public class FairyTaskRegistry {
 		registry.clear();
 	}
 	
-	public void register(int dimension, BlockPos pos, IFairyTask task) {
+	public void register(int dimension, BlockPos pos, ILogisticsTask task) {
 		Map<BlockPos, RegistryItem> dimReg = registry.get(dimension);
 		
 		if (dimReg == null) {
@@ -95,7 +95,7 @@ public class FairyTaskRegistry {
 		}
 	}
 	
-	public List<FairyTaskPair> findTasks(int dimension, BlockPos center, double maxDistanceSq, EntityFairyBase actor, @Nullable Predicate<IFairyTask> filter) {
+	public List<FairyTaskPair> findTasks(int dimension, BlockPos center, double maxDistanceSq, EntityFairyBase actor, @Nullable Predicate<ILogisticsTask> filter) {
 		List<FairyTaskPair> list = new LinkedList<>();
 		Map<BlockPos, RegistryItem> dimReg = registry.get(dimension);
 		

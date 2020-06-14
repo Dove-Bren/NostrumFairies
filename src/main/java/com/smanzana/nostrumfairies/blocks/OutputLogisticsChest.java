@@ -120,29 +120,15 @@ public class OutputLogisticsChest extends BlockContainer {
 		public double getLogisticsLinkRange() {
 			return 10;
 		}
+		
+		@Override
+		public boolean canAccept(ItemStack stack) {
+			return false;
+		}
 
 		@Override
 		public NBTTagCompound toNBT() {
-			NBTTagCompound tag =  this.baseToNBT();
-			
-			// Save templates
-			NBTTagList templates = new NBTTagList();
-			for (int i = 0; i < SLOTS; i++) {
-				ItemStack stack = this.getStackInSlot(i);
-				if (stack == null) {
-					continue;
-				}
-				
-				NBTTagCompound template = new NBTTagCompound();
-				
-				template.setInteger(NBT_TEMPLATE_INDEX, i);
-				template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new NBTTagCompound()));
-				
-				templates.appendTag(template);
-			}
-			tag.setTag(NBT_TEMPLATES, templates);
-			
-			return tag;
+			return this.baseToNBT();
 		}
 
 		public static final String LOGISTICS_TAG = "logcomp_outputchest"; 
@@ -192,29 +178,58 @@ public class OutputLogisticsChest extends BlockContainer {
 			return true;
 		}
 		
+		@Override
+		public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+			nbt = super.writeToNBT(nbt);
+			
+			// Save templates
+			NBTTagList templates = new NBTTagList();
+			for (int i = 0; i < SLOTS; i++) {
+				ItemStack stack = this.getTemplate(i);
+				if (stack == null) {
+					continue;
+				}
+				
+				NBTTagCompound template = new NBTTagCompound();
+				
+				template.setInteger(NBT_TEMPLATE_INDEX, i);
+				template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new NBTTagCompound()));
+				
+				templates.appendTag(template);
+			}
+			nbt.setTag(NBT_TEMPLATES, templates);
+			
+			return nbt;
+		}
+		
+		@Override
+		public void readFromNBT(NBTTagCompound nbt) {
+			super.readFromNBT(nbt);
+			
+			templates = new ItemStack[SLOTS];
+			
+			// Reload templates
+			NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
+			for (int i = 0; i < list.tagCount(); i++) {
+				NBTTagCompound template = list.getCompoundTagAt(i);
+				int index = template.getInteger(NBT_TEMPLATE_INDEX);
+				
+				if (index < 0 || index > SLOTS) {
+					NostrumFairies.logger.error("Found serialized template with invalid index! " + index + " outside of " + SLOTS);
+					continue;
+				}
+				
+				ItemStack stack = ItemStack.loadItemStackFromNBT(template.getCompoundTag(NBT_TEMPLATE_ITEM));
+				
+				templates[index] = stack;
+			}
+		}
+		
 		public static class OutputChestTEFactory implements ILogisticsComponentFactory<OutputChestTileEntity> {
 
 			@Override
 			public OutputChestTileEntity construct(NBTTagCompound nbt, LogisticsNetwork network) {
-				OutputChestTileEntity ent = (OutputChestTileEntity) LogisticsChestTileEntity.loadFromNBT(nbt, network);
-				
-				// Reload templates
-				NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
-				for (int i = 0; i < list.tagCount(); i++) {
-					NBTTagCompound template = list.getCompoundTagAt(i);
-					int index = template.getInteger(NBT_TEMPLATE_INDEX);
-					
-					if (index < 0 || index > SLOTS) {
-						NostrumFairies.logger.error("Found serialized template with invalid index! " + index + " outside of " + SLOTS);
-						continue;
-					}
-					
-					ItemStack stack = ItemStack.loadItemStackFromNBT(template.getCompoundTag(NBT_TEMPLATE_ITEM));
-					
-					ent.templates[index] = stack;
-				}
-				
-				return ent; 
+				return (OutputChestTileEntity) LogisticsChestTileEntity.loadFromNBT(nbt, network);
 			}
 			
 		}

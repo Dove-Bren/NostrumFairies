@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.entity.fairy;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
-import com.smanzana.nostrumfairies.logistics.IFairyTask;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
 import net.minecraft.entity.monster.EntityGolem;
@@ -41,7 +41,7 @@ public abstract class EntityFairyBase extends EntityGolem implements ILoreTagged
 	 */
 	protected double workDistanceSq;
 	
-	private IFairyTask currentTask;
+	private ILogisticsTask currentTask;
 	
 	public EntityFairyBase(World world) {
 		this(world, MAX_FAIRY_DISTANCE_SQ, MAX_FAIRY_DISTANCE_SQ);
@@ -116,12 +116,12 @@ public abstract class EntityFairyBase extends EntityGolem implements ILoreTagged
 	 * while calling while IDLE would not.
 	 * @return The current task if there is one, or null.
 	 */
-	public @Nullable IFairyTask getCurrentTask() {
+	public @Nullable ILogisticsTask getCurrentTask() {
 		return currentTask;
 	}
 	
-	protected void forceSetTask(@Nullable IFairyTask task) {
-		IFairyTask oldtask = this.getCurrentTask();
+	protected void forceSetTask(@Nullable ILogisticsTask task) {
+		ILogisticsTask oldtask = this.getCurrentTask();
 		this.currentTask = task;
 		this.onTaskChange(oldtask, task);
 		
@@ -138,7 +138,7 @@ public abstract class EntityFairyBase extends EntityGolem implements ILoreTagged
 	 * @param task
 	 * @return
 	 */
-	protected abstract boolean canPerformTask(IFairyTask task);
+	protected abstract boolean canPerformTask(ILogisticsTask task);
 	
 	/**
 	 * Check whether a fairy should start performing the provided task.
@@ -148,7 +148,7 @@ public abstract class EntityFairyBase extends EntityGolem implements ILoreTagged
 	 * @param task
 	 * @return
 	 */
-	protected abstract boolean shouldPerformTask(IFairyTask task);
+	protected abstract boolean shouldPerformTask(ILogisticsTask task);
 	
 	protected void finishTask() {
 		// This _could_ immediately look for a new task.
@@ -163,13 +163,13 @@ public abstract class EntityFairyBase extends EntityGolem implements ILoreTagged
 	 * @param oldTask The task that was just given up. 
 	 * @param newTask The new task.
 	 */
-	protected abstract void onTaskChange(@Nullable IFairyTask oldTask, @Nullable IFairyTask newTask);
+	protected abstract void onTaskChange(@Nullable ILogisticsTask oldTask, @Nullable ILogisticsTask newTask);
 	
 	/**
 	 * Called every tick that a task is active.
 	 * @param task
 	 */
-	protected abstract void onTaskTick(@Nullable IFairyTask task);
+	protected abstract void onTaskTick(@Nullable ILogisticsTask task);
 	
 	@Override
 	protected abstract void initEntityAI();

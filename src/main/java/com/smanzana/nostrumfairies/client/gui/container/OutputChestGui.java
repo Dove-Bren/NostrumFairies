@@ -195,6 +195,8 @@ public class OutputChestGui {
 							GUI_INV_CELL_LENGTH - (this.fontRendererObj.getStringWidth(count) + 1),
 							GUI_INV_CELL_LENGTH - (this.fontRendererObj.FONT_HEIGHT),
 							0xFFFFFFFF);
+				} else {
+					GlStateManager.enableAlpha();
 				}
 				drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
 				GlStateManager.popMatrix();
@@ -223,16 +225,22 @@ public class OutputChestGui {
 						0);
 				
 				if (container.chest.getStackInSlot(i) == null) {
+					GlStateManager.pushMatrix();
+					GlStateManager.scale(1f, 1f, .05f);
 					drawTemplate(partialTicks, container.chest.getTemplate(i));
+					GlStateManager.popMatrix();
 				}
 				
 				if (template != null && (stack == null || stack.stackSize < template.stackSize)) {
-					GlStateManager.translate(0, 0, 500);
+					GlStateManager.translate(0, 0, 100);
 					drawStatus(partialTicks, true);
 				}
 				
 				GlStateManager.popMatrix();
 			}
+
+			GlStateManager.enableBlend();
+			GlStateManager.enableAlpha();
 			
 		}
 		
