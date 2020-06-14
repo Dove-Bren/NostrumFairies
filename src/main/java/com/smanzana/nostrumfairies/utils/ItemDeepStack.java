@@ -15,6 +15,8 @@ public class ItemDeepStack {
 	public ItemDeepStack(ItemStack template, long count) {
 		this.item = template.copy();
 		this.count = count;
+		
+		this.item.stackSize = 1;
 	}
 	
 	public ItemDeepStack(ItemStack original) {

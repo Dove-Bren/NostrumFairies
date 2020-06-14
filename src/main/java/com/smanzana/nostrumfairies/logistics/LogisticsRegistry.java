@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -96,7 +97,8 @@ public class LogisticsRegistry extends WorldSavedData {
 	public void addNewComponent(ILogisticsComponent component) {
 		LogisticsNetwork firstNetwork = null;
 		
-		for (LogisticsNetwork network : this.networks) {
+		Set<LogisticsNetwork> originalSet = Sets.newHashSet(this.networks);
+		for (LogisticsNetwork network : originalSet) {
 			if (firstNetwork == null) {
 				if (network.addComponent(component)) {
 					firstNetwork = network;
@@ -105,7 +107,7 @@ public class LogisticsRegistry extends WorldSavedData {
 				// We've already added ourselves to a network. If another network could attach,
 				// combine the networks!
 				if (network.canLinkReach(component)) {
-					firstNetwork.mergeNetworkIn(network);
+					firstNetwork.mergeNetworkIn(network); // This may modify our list of networks!
 				}
 			}
 		}

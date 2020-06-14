@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.proxy;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.client.gui.OverlayRenderer;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
@@ -25,6 +26,9 @@ public class ClientProxy extends CommonProxy {
 	@Override
 	public void preinit() {
 		super.preinit();
+		
+		StorageMonitor.StorageMonitorRenderer.init();
+		StorageLogisticsChest.StorageChestRenderer.init();
 	}
 	
 	@Override
@@ -35,6 +39,10 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(StorageLogisticsChest.instance()),
 				0,
 				StorageLogisticsChest.ID);
+		registerModel(Item.getItemFromBlock(StorageMonitor.instance()),
+				0,
+				StorageMonitor.ID);
+		
 	}
 	
 	@Override
@@ -45,7 +53,6 @@ public class ClientProxy extends CommonProxy {
 	}
 	
 	public static void registerModel(Item item, int meta, String modelName) {
-		System.out.println("Fairies register model");
 		Minecraft.getMinecraft().getRenderItem().getItemModelMesher()
     	.register(item, meta,
     			new ModelResourceLocation(NostrumFairies.MODID + ":" + modelName, "inventory"));

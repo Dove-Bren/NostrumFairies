@@ -3,26 +3,19 @@ package com.smanzana.nostrumfairies.blocks;
 import java.util.Collection;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public abstract class LogisticsChestTileEntity extends TileEntity implements ILogisticsChest {
+public abstract class LogisticsChestTileEntity extends LogisticsTileEntity implements ILogisticsChest {
 
 	private static final String NBT_INV = "inventory_contents";
 	
 	private ItemStack slots[];
-	private LogisticsNetwork network;
 	
 	public LogisticsChestTileEntity() {
 		slots = new ItemStack[getSizeInventory()];
@@ -167,7 +160,7 @@ public abstract class LogisticsChestTileEntity extends TileEntity implements ILo
 			try {
 				id = Integer.parseInt(key);
 			} catch (NumberFormatException e) {
-				NostrumFairies.logger.error("Failed reading TestChest inventory slot: " + key);
+				NostrumFairies.logger.error("Failed reading LogisticsChest inventory slot: " + key);
 				continue;
 			}
 			
@@ -176,73 +169,11 @@ public abstract class LogisticsChestTileEntity extends TileEntity implements ILo
 		}
 	}
 	
-    @Override
-    public void updateContainingBlockInfo() {
-    	super.updateContainingBlockInfo();
-    	if (!worldObj.isRemote && this.network == null) {
-			System.out.println("Setting tile entity");
-			NostrumFairies.instance.getLogisticsRegistry().addNewComponent(this);
-		}
-    }
-
-	@Override
-	public void onJoinNetwork(LogisticsNetwork network) {
-		this.network = network;
-	}
-
-	@Override
-	public void onLeaveNetwork() {
-		this.network = null;
-	}
-
-	@Override
-	public BlockPos getPosition() {
-		return this.pos;
-	}
-
 	@Override
 	public Collection<ItemStack> getItems() {
 		List<ItemStack> list = Lists.newArrayList(slots);
-		list.removeIf((stack) -> {return stack == null;});;
+		list.removeIf((stack) -> {return stack == null;});
 		return list;
-	}
-	
-	private static final String NBT_LOG_POS = "pos";
-	private static final String NBT_LOG_DIM = "dim";
-
-	protected NBTTagCompound baseToNBT() {
-		NBTTagCompound tag = new NBTTagCompound();
-		
-		tag.setLong(NBT_LOG_POS, this.pos.toLong());
-		tag.setInteger(NBT_LOG_DIM, this.worldObj.provider.getDimension());
-		
-		return tag;
-	}
-	
-	protected static LogisticsChestTileEntity loadFromNBT(NBTTagCompound nbt, LogisticsNetwork network) {
-		// We store the TE position. Hook back up!
-		BlockPos pos = BlockPos.fromLong(nbt.getLong(NBT_LOG_POS));
-		World world = NostrumFairies.getWorld(nbt.getInteger(NBT_LOG_DIM));
-		
-		if (world == null) {
-			throw new RuntimeException("Failed to find world for persisted TileEntity logistics component: "
-					+ nbt.getInteger(NBT_LOG_DIM));
-		}
-		
-		TileEntity te = world.getTileEntity(pos);
-		
-		if (te == null) {
-			throw new RuntimeException("Failed to lookup tile entity at persisted location: "
-					+ pos);
-		}
-		
-		LogisticsChestTileEntity chest = (LogisticsChestTileEntity) te;
-		chest.network = network;
-		return chest;
-	}
-	
-	public @Nullable LogisticsNetwork getNetwork() {
-		return network;
 	}
 	
 }

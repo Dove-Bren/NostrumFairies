@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.logistics;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrumfairies.utils.Location;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -38,8 +40,13 @@ public class LogisticsNetwork {
 	
 	private UUID uuid;
 	
+	// Changes should be followed by a rebuildGraph() call
 	protected Set<ILogisticsComponent> components;
 	
+	// Network graph
+	protected Map<Location, Set<ILogisticsComponent>> componentGraph; // cached graphing of components set
+	
+	// Items
 	protected boolean cacheDirty;
 	protected List<ItemStack> cachedItems;
 	protected List<ItemDeepStack> cachedCondensedItems; // List of itemstacks with over-stacked sizes
@@ -54,6 +61,7 @@ public class LogisticsNetwork {
 		this.cachedItems = new LinkedList<>();
 		this.cachedCondensedItems = new LinkedList<>();
 		this.components = new HashSet<>(); // components will load and re-attach
+		this.componentGraph = new HashMap<>();
 		cacheDirty = false;
 		
 		if (register) {
@@ -95,11 +103,12 @@ public class LogisticsNetwork {
 			if (factory == null) {
 				throw new RuntimeException("Failed to find factory for component type [" + key + "]! Data has been lost!");
 			} else {
-				// Avoid 'adding' them the regular way to avoid calling the onAdd.
+				// Avoid 'adding' them the regular way to avoid calling the onAdd, and constnatly rebuilding graph
 				network.components.add(factory.construct(wrapper.getCompoundTag(NBT_COMPONENT_VALUE), network));
 			}
 		}
 		
+		network.rebuildGraph();
 		network.dirty();
 		return network;
 	}
@@ -118,6 +127,21 @@ public class LogisticsNetwork {
 		return uuid;
 	}
 	
+	protected static Location getLocation(ILogisticsComponent component) {
+		return new Location(component.getPosition(), component.getWorld().provider.getDimension());
+	}
+	
+	private boolean canComponentLinkReach(ILogisticsComponent component, ILogisticsComponent other) {
+		if (!component.getWorld().equals(other.getWorld())) {
+			return false;
+		}
+		
+		// If either distance reaches, call it a success
+		final double dist = Math.max(component.getLogisticsLinkRange(), other.getLogisticsLinkRange());
+		
+		return (component.getPosition().distanceSq(other.getPosition()) < dist * dist);
+	}
+	
 	/**
 	 * Check if any of our components can reach the provided component
 	 * @param component
@@ -128,15 +152,7 @@ public class LogisticsNetwork {
 		}
 		
 		for (ILogisticsComponent myComponent : components) {
-			
-			if (!component.getWorld().equals(myComponent.getWorld())) {
-				continue;
-			}
-			
-			// If either distance reaches, call it a success
-			final double dist = Math.max(component.getLogisticsLinkRange(), myComponent.getLogisticsLinkRange());
-			
-			if (component.getPosition().distanceSq(myComponent.getPosition()) < dist * dist) {
+			if (canComponentLinkReach(myComponent, component)) {
 				return true;
 			}
 		}
@@ -190,6 +206,31 @@ public class LogisticsNetwork {
 		return getLogisticsFor(world, pos) != null;
 	}
 	
+	public Collection<ILogisticsComponent> getAllComponents() {
+		return this.components;
+	}
+	
+	public Collection<ILogisticsComponent> getConnectedComponents(Location location) {
+		return componentGraph.get(location); // give them null if not in the graph! MWAHAHA
+	}
+	
+	public Collection<ILogisticsComponent> getConnectedComponents(ILogisticsComponent component) {
+		return getConnectedComponents(getLocation(component));
+	}
+	
+	/**
+	 * Adds a component to the component list. Does not alert the component it's been added or trigger any effects.
+	 * Appropriately dirties network caches and triggers a graph rebuild.
+	 * Call this when you would add to the components set itself.
+	 * @param component
+	 */
+	protected void addComponentInternal(ILogisticsComponent component) {
+		this.components.add(component);
+		dirty();
+		rebuildGraph();
+		NostrumFairies.instance.getLogisticsRegistry().markDirty();
+	}
+	
 	/**
 	 * Attempts to add the component to the network.
 	 * This verifies whether the component can be in the network.
@@ -201,9 +242,8 @@ public class LogisticsNetwork {
 			return false;
 		}
 		
-		this.components.add(component);
+		addComponentInternal(component);
 		component.onJoinNetwork(this);
-		dirty();
 		
 		return true;
 	}
@@ -213,9 +253,8 @@ public class LogisticsNetwork {
 	 * @param component
 	 */
 	public void removeComponent(ILogisticsComponent component) {
-		if (this.components.remove(component)) {
+		if (components.remove(component)) {
 			component.onLeaveNetwork();
-			dirty();
 			component = null;
 			
 			// Any time a component is removed, we have to re-eval the whole network in case we've been split into pieces.
@@ -270,6 +309,10 @@ public class LogisticsNetwork {
 				this.removeNetwork();
 				return;
 			}
+			
+			dirty();
+			rebuildGraph();
+			NostrumFairies.instance.getLogisticsRegistry().markDirty();
 		}
 	}
 	
@@ -290,7 +333,10 @@ public class LogisticsNetwork {
 		otherNetwork.dirty();
 		otherNetwork.removeNetwork();
 		
+		NostrumFairies.instance.getLogisticsRegistry().markDirty();
+		
 		this.dirty();
+		this.rebuildGraph();
 	}
 	
 	/**
@@ -301,6 +347,12 @@ public class LogisticsNetwork {
 	 */
 	public void dissolveNetwork() {
 		; // Do nothing for server networks.
+	}
+	
+	protected void clearComponents() {
+		this.components.clear();
+		this.dirty();
+		this.rebuildGraph();
 	}
 	
 	private void removeNetwork() {
@@ -352,6 +404,40 @@ public class LogisticsNetwork {
 			cachedItems.addAll(list);
 			addToCondensed(list);
 			cachedItemMap.put(component, list);
+		}
+	}
+	
+	protected void rebuildGraph() {
+		this.componentGraph.clear();
+		
+		ILogisticsComponent[] arr = components.toArray(new ILogisticsComponent[0]);
+		for (int j = 0; j < components.size(); j++) {
+			ILogisticsComponent component = arr[j];
+			Location compLocation = getLocation(component);
+			Set<ILogisticsComponent> neighbors = componentGraph.get(compLocation);
+			if (neighbors == null) {
+				neighbors = new HashSet<>();
+				componentGraph.put(compLocation, neighbors);
+			}
+			
+			for (int i = j + 1; i < components.size(); i++) {
+				ILogisticsComponent other = arr[i];
+				
+				// Can we reach it?
+				if (canComponentLinkReach(component, other)) {
+					neighbors.add(other);
+					
+					// Add to their list, too
+					Location otherLocation = getLocation(other);
+					Set<ILogisticsComponent> otherNeighbors = componentGraph.get(otherLocation);
+					
+					if (otherNeighbors == null) {
+						otherNeighbors = new HashSet<>();
+						componentGraph.put(otherLocation, otherNeighbors);
+					}
+					otherNeighbors.add(component);
+				}
+			}
 		}
 	}
 	

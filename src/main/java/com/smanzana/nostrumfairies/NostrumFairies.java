@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.entity.fairy.FairyTaskRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
@@ -132,6 +133,17 @@ public class NostrumFairies {
     private void registerLogisticsComponents() {
     	logisticsComponentRegistry.registerComponentType(StorageLogisticsChest.StorageChestTileEntity.LOGISTICS_TAG,
     			new StorageLogisticsChest.StorageChestTileEntity.StorageChestTEFactory());
+    	logisticsComponentRegistry.registerComponentType(StorageMonitor.StorageMonitorTileEntity.LOGISTICS_TAG,
+    			new StorageMonitor.StorageMonitorTileEntity.StorageMonitorTEFactory());
+    	
+    	/* TODO
+    	 * Couple of problems.
+    	 * First, the monitor doesn't seem to be getting a network ever? Even after restarting? Haven't double checked
+    	 * that it really is non-null yet.
+    	 * 
+    	 * Second, how would we request the network be updated but have screens and stuff that have references
+    	 * to the network when they get overriden from the server?
+    	 */
     }
     
     public static @Nullable World getWorld(int dimension) {

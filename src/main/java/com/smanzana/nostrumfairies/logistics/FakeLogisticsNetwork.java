@@ -32,6 +32,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			this.components.add(new FakeLogisticsComponent(comp));
 		}
 		this.dirty(); // changed components.
+		this.rebuildGraph();
 	}
 	
 	public FakeLogisticsNetwork(UUID id) {
@@ -53,6 +54,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		
 		components.clear();
 		this.dirty();
+		this.rebuildGraph();
 	}
 	
 	private static final String NBT_ID = "uuid";
@@ -82,6 +84,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		}
 		
 		network.dirty();
+		network.rebuildGraph();
 		
 		return network;
 	}

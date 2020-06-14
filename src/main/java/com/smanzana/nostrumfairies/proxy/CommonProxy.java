@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.proxy;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 
@@ -49,6 +50,11 @@ public class CommonProxy {
     			(new ItemBlock(StorageLogisticsChest.instance())).setRegistryName(StorageLogisticsChest.ID));
     	StorageLogisticsChest.init();
     	
+    	GameRegistry.register(StorageMonitor.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, StorageMonitor.ID));
+    	GameRegistry.register(
+    			(new ItemBlock(StorageMonitor.instance())).setRegistryName(StorageMonitor.ID));
+    	StorageMonitor.init();
     }
 
 	public EntityPlayer getPlayer() {

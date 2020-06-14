@@ -1,11 +1,9 @@
 package com.smanzana.nostrumfairies.client.gui;
 
 import java.util.Collection;
-import java.util.List;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
-import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -35,21 +33,21 @@ public class OverlayRenderer extends Gui {
 			Minecraft.getMinecraft().fontRendererObj.drawString("Network(s) ("
 					+ networks.size()					
 					+ ") alive and well!", 20, 20, 0xFFFFFFFF);
-			try {
-				LogisticsNetwork network = networks.iterator().next();
-				int y = 30;
-				List<ItemDeepStack> items = network.getCondensedNetworkItems();
-				if (!items.isEmpty()) {
-					for (ItemDeepStack stack : items) {
-						Minecraft.getMinecraft().fontRendererObj.drawString("- "
-								+ stack.getTemplate().getUnlocalizedName() + " x" + stack.getCount(),
-								25, y, 0xFFFFFFFF);
-						y += Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT + 2;
-					}
-				}
-			} catch (Exception e) {
-				;
-			}
+//			try {
+//				LogisticsNetwork network = networks.iterator().next();
+//				int y = 30;
+//				List<ItemDeepStack> items = network.getCondensedNetworkItems();
+//				if (!items.isEmpty()) {
+//					for (ItemDeepStack stack : items) {
+//						Minecraft.getMinecraft().fontRendererObj.drawString("- "
+//								+ stack.getTemplate().getUnlocalizedName() + " x" + stack.getCount(),
+//								25, y, 0xFFFFFFFF);
+//						y += Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT + 2;
+//					}
+//				}
+//			} catch (Exception e) {
+//				;
+//			}
 		}
 		
 		

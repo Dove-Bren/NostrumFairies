@@ -7,13 +7,14 @@ import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.network.NetworkHandler;
+import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -29,20 +30,20 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class StorageLogisticsChest extends BlockContainer {
+public class StorageMonitor extends BlockContainer {
 	
-	public static final String ID = "logistics_storage_chest";
+	public static final String ID = "logistics_storage_monitor";
 	
-	private static StorageLogisticsChest instance = null;
-	public static StorageLogisticsChest instance() {
+	private static StorageMonitor instance = null;
+	public static StorageMonitor instance() {
 		if (instance == null)
-			instance = new StorageLogisticsChest();
+			instance = new StorageMonitor();
 		
 		return instance;
 	}
 	
 	public static void init() {
-		GameRegistry.registerTileEntity(StorageChestTileEntity.class, "logistics_storage_chest_te");
+		GameRegistry.registerTileEntity(StorageMonitorTileEntity.class, "logistics_storage_monitor_te");
 //		GameRegistry.addShapedRecipe(new ItemStack(instance()),
 //				"WPW", "WCW", "WWW",
 //				'W', new ItemStack(Blocks.PLANKS, 1, OreDictionary.WILDCARD_VALUE),
@@ -50,7 +51,7 @@ public class StorageLogisticsChest extends BlockContainer {
 //				'C', NostrumResourceItem.getItem(ResourceType.CRYSTAL_LARGE, 1));
 	}
 	
-	public StorageLogisticsChest() {
+	public StorageMonitor() {
 		super(Material.WOOD, MapColor.WOOD);
 		this.setUnlocalizedName(ID);
 		this.setHardness(3.0f);
@@ -68,42 +69,33 @@ public class StorageLogisticsChest extends BlockContainer {
 	@Override
 	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
 		
+		// Kick off a request to refresh info.
+		if (worldIn.isRemote) {
+			TileEntity te = worldIn.getTileEntity(pos);
+			if (te != null && te instanceof StorageMonitorTileEntity) {
+				StorageMonitorTileEntity storage = (StorageMonitorTileEntity) te;
+				NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest(storage.networkID));	
+			}
+		}
+		
+		
+		// Don't wait, though, and show the UI
 		playerIn.openGui(NostrumFairies.instance,
-				NostrumFairyGui.storageChestID, worldIn,
+				NostrumFairyGui.storageMonitorID, worldIn,
 				pos.getX(), pos.getY(), pos.getZ());
 		
 		return true;
 	}
 	
-	public static class StorageChestTileEntity extends LogisticsChestTileEntity {
+	public static class StorageMonitorTileEntity extends LogisticsTileEntity {
 
-		private static final int SLOTS = 27;
-		
-		private String displayName;
-		
-		public StorageChestTileEntity() {
+		public StorageMonitorTileEntity() {
 			super();
-			displayName = "Storage Chest";
-		}
-		
-		@Override
-		public String getName() {
-			return displayName;
-		}
-
-		@Override
-		public boolean hasCustomName() {
-			return false;
-		}
-		
-		@Override
-		public int getSizeInventory() {
-			return SLOTS;
 		}
 		
 		@Override
 		public double getLogisticRange() {
-			return 20;
+			return 0;
 		}
 
 		@Override
@@ -117,36 +109,36 @@ public class StorageLogisticsChest extends BlockContainer {
 			return this.baseToNBT();
 		}
 
-		public static final String LOGISTICS_TAG = "logcomp_storagechest"; 
+		public static final String LOGISTICS_TAG = "logcomp_storagemonitor"; 
 
 		@Override
 		public String getSerializationTag() {
 			return LOGISTICS_TAG;
 		}
 		
-		public static class StorageChestTEFactory implements ILogisticsComponentFactory<StorageChestTileEntity> {
+		public static class StorageMonitorTEFactory implements ILogisticsComponentFactory<StorageMonitorTileEntity> {
 
 			@Override
-			public StorageChestTileEntity construct(NBTTagCompound nbt, LogisticsNetwork network) {
+			public StorageMonitorTileEntity construct(NBTTagCompound nbt, LogisticsNetwork network) {
 				// Since we don't do anything special, we can just use our base class' default
-				return (StorageChestTileEntity) LogisticsChestTileEntity.loadFromNBT(nbt, network); 
+				return (StorageMonitorTileEntity) LogisticsTileEntity.loadFromNBT(nbt, network); 
 			}
 			
 		}
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class StorageChestRenderer extends TileEntityLogisticsRenderer<StorageChestTileEntity> {
+	public static class StorageMonitorRenderer extends TileEntityLogisticsRenderer<StorageMonitorTileEntity> {
 		
 		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(StorageChestTileEntity.class,
-					new StorageChestRenderer());
+			ClientRegistry.bindTileEntitySpecialRenderer(StorageMonitorTileEntity.class,
+					new StorageMonitorRenderer());
 		}
 	}
 
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
-		return new StorageChestTileEntity();
+		return new StorageMonitorTileEntity();
 	}
 	
 	@Override
@@ -162,23 +154,15 @@ public class StorageLogisticsChest extends BlockContainer {
 	
 	private void destroy(World world, BlockPos pos, IBlockState state) {
 		TileEntity ent = world.getTileEntity(pos);
-		if (ent == null || !(ent instanceof StorageChestTileEntity))
+		if (ent == null || !(ent instanceof StorageMonitorTileEntity))
 			return;
 		
-		// TODO! This is missing some items sometimmes!@
+		StorageMonitorTileEntity monitor = (StorageMonitorTileEntity) ent;
 		
-		StorageChestTileEntity table = (StorageChestTileEntity) ent;
-		for (int i = 0; i < table.getSizeInventory(); i++) {
-			if (table.getStackInSlot(i) != null) {
-				EntityItem item = new EntityItem(
-						world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
-						table.removeStackFromSlot(i));
-				world.spawnEntityInWorld(item);
-			}
-		}
-		
-		if (table.getNetwork() != null) {
-			table.getNetwork().removeComponent(table);
+		if (monitor.getNetwork() != null) {
+			monitor.getNetwork().removeComponent(monitor);
+		} else {
+			System.out.println("Shadow component?");
 		}
 	}
 }
