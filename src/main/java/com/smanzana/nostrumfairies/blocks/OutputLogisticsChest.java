@@ -4,10 +4,12 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
+import com.smanzana.nostrumfairies.logistics.LogisticsItemRequester;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
@@ -89,11 +91,13 @@ public class OutputLogisticsChest extends BlockContainer {
 		
 		private String displayName;
 		private ItemStack[] templates;
+		private LogisticsItemRequester requester;
 		
 		public OutputChestTileEntity() {
 			super();
 			displayName = "Output Chest";
 			templates = new ItemStack[SLOTS];
+			requester = new LogisticsItemRequester(this);
 		}
 		
 		@Override
@@ -153,6 +157,12 @@ public class OutputLogisticsChest extends BlockContainer {
 			
 			ItemStack temp = template == null ? null : template.copy();
 			templates[index] = temp;
+			
+			// Update requester
+			if (!worldObj.isRemote) {
+				requester.updateRequestedItems(Lists.newArrayList(templates));
+			}
+			
 			this.markDirty();
 		}
 		

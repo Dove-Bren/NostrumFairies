@@ -14,10 +14,13 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrumfairies.utils.Location;
 
 import net.minecraft.item.ItemStack;
@@ -32,6 +35,36 @@ import net.minecraftforge.common.util.Constants.NBT;
  * @author Skyler
  */
 public class LogisticsNetwork {
+	
+	public static final class RequestedItemRecord {
+		
+		private ILogisticsTask task;
+		
+		private ItemDeepStack items;
+		
+		public RequestedItemRecord(ILogisticsTask task, ItemDeepStack item) {
+			this.task = task;
+			this.items = item;
+		}
+		
+		public ILogisticsTask getOwningTask() {
+			return task;
+		}
+		
+		public ItemDeepStack getItem() {
+			return items;
+		}
+	}
+	
+	private static final class CachedItemList {
+		public List<ItemDeepStack> rawItems;
+		public List<ItemDeepStack> availableItems;
+		
+		public CachedItemList(List<ItemDeepStack> raws, List<ItemDeepStack> available) {
+			this.rawItems = raws;
+			this.availableItems = available;
+		}
+	}
 	
 	private static final String NBT_UUID = "uuid";
 	private static final String NBT_COMPONENTS = "component";
@@ -48,9 +81,9 @@ public class LogisticsNetwork {
 	
 	// Items
 	protected boolean cacheDirty;
-	protected List<ItemStack> cachedItems;
 	protected List<ItemDeepStack> cachedCondensedItems; // List of itemstacks with over-stacked sizes
-	protected Map<ILogisticsComponent, List<ItemStack>> cachedItemMap;
+	protected Map<ILogisticsComponent, CachedItemList> cachedItemMap;
+	protected Map<ILogisticsComponent, List<RequestedItemRecord>> activeItemRequests; // current items that are being taken from each component
 	
 	public LogisticsNetwork() {
 		this(UUID.randomUUID(), true);
@@ -58,10 +91,10 @@ public class LogisticsNetwork {
 	
 	public LogisticsNetwork(UUID uuid, boolean register) {
 		this.uuid = uuid;
-		this.cachedItems = new LinkedList<>();
 		this.cachedCondensedItems = new LinkedList<>();
 		this.components = new HashSet<>(); // components will load and re-attach
 		this.componentGraph = new HashMap<>();
+		this.activeItemRequests = new HashMap<>();
 		cacheDirty = false;
 		
 		if (register) {
@@ -366,10 +399,10 @@ public class LogisticsNetwork {
 		this.cacheDirty = true;
 	}
 	
-	private void addToCondensed(List<ItemStack> items) {
+	private void addToCondensed(List<ItemDeepStack> items) {
 		// Could make sure both lists are sorted by itemstack, and have iterators on both to make this merge fast.
 		// Optimization oppertunity!
-		for (ItemStack stack : items) {
+		for (ItemDeepStack stack : items) {
 			boolean merged = false;
 			for (ItemDeepStack condensed : cachedCondensedItems) {
 				if (condensed.canMerge(stack)) {
@@ -380,9 +413,45 @@ public class LogisticsNetwork {
 			}
 			
 			if (!merged) {
-				cachedCondensedItems.add(new ItemDeepStack(stack));
+				cachedCondensedItems.add(stack);
 			}
 		}
+	}
+	
+	private List<ItemDeepStack> makeAvailableList(ILogisticsComponent component, List<ItemDeepStack> raws) {
+		List<RequestedItemRecord> requests = activeItemRequests.get(component);
+		List<ItemDeepStack> ret = Lists.newArrayList(raws);
+		
+		if (requests != null && !requests.isEmpty()) {
+			for (RequestedItemRecord request : requests) {
+				Iterator<ItemDeepStack> it = ret.iterator();
+				while (it.hasNext()) {
+					ItemDeepStack deep = it.next();
+					if (ItemStacks.stacksMatch(deep.getTemplate(), request.items.getTemplate())) {
+						deep.add(-request.items.getCount());
+						if (deep.getCount() <= 0) {
+							it.remove();
+						}
+						break;
+					}
+				}
+			}
+		}
+		
+		return ret;
+	}
+	
+	protected void refreshAvailableLists(ILogisticsComponent component) {
+		CachedItemList cache = cachedItemMap.get(component);
+		if (cache == null) {
+			return;
+		}
+		
+		cache.availableItems = makeAvailableList(component, cache.rawItems);
+	}
+	
+	private CachedItemList makeItemListEntry(ILogisticsComponent component, List<ItemDeepStack> raws) {
+		return new CachedItemList(raws, makeAvailableList(component, raws));
 	}
 	
 	protected void refresh() {
@@ -391,19 +460,17 @@ public class LogisticsNetwork {
 		}
 		
 		this.cacheDirty = false;
-		cachedItems = new LinkedList<>();
 		cachedItemMap = new HashMap<>();
 		cachedCondensedItems = new LinkedList<>();
 		
 		for (ILogisticsComponent component : components) {
-			List<ItemStack> list = Lists.newArrayList(component.getItems());
+			List<ItemDeepStack> list = ItemDeepStack.toDeepList(component.getItems());
 			list.removeIf((stack) -> {
-				return stack == null;
+				return stack == null || stack.getTemplate() == null;
 			});
-			Collections.sort(list, (stack1, stack2) -> {return stack1.getUnlocalizedName().compareTo(stack2.getUnlocalizedName());});
-			cachedItems.addAll(list);
+			Collections.sort(list, (stack1, stack2) -> {return stack1.getTemplate().getUnlocalizedName().compareTo(stack2.getTemplate().getUnlocalizedName());});
 			addToCondensed(list);
-			cachedItemMap.put(component, list);
+			cachedItemMap.put(component, makeItemListEntry(component, list));
 		}
 	}
 	
@@ -441,44 +508,36 @@ public class LogisticsNetwork {
 		}
 	}
 	
-	public List<ItemStack> getAvailableNetworkItems() {
-		refresh();
-		return cachedItems;
-	}
-	
-	public List<ItemDeepStack> getCondensedNetworkItems() {
+	public List<ItemDeepStack> getAllCondensedNetworkItems() {
 		refresh();
 		return cachedCondensedItems;
 	}
 	
-	public Map<ILogisticsComponent, List<ItemStack>> getNetworkItems() {
-		return getNetworkItems(null, null, 0.0);
+	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(boolean includeRequested) {
+		return getNetworkItems(null, null, 0.0, includeRequested);
 	}
 	
-	public Map<ILogisticsComponent, List<ItemStack>> getNetworkItems(@Nullable World world, @Nullable BlockPos pos, double maxDistance) {
+	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(@Nullable World world, @Nullable BlockPos pos, double maxDistance, boolean includeRequested) {
 		refresh();
 		
-		if (world == null || pos == null) {
-			return cachedItemMap;
-		}
+		Map<ILogisticsComponent, List<ItemDeepStack>> filteredMap = new HashMap<>();
 		
-		Map<ILogisticsComponent, List<ItemStack>> filteredMap = new HashMap<>();
 		final double maxDistSq = maxDistance * maxDistance;
-		for (Entry<ILogisticsComponent, List<ItemStack>> entry : cachedItemMap.entrySet()) {
+		for (Entry<ILogisticsComponent, CachedItemList> entry : cachedItemMap.entrySet()) {
 			ILogisticsComponent component = entry.getKey();
-			if (!component.getWorld().equals(world)) {
+			if (world != null && !component.getWorld().equals(world)) {
 				continue;
 			}
 			
-			if (component.getPosition().distanceSq(pos) < maxDistSq) {
-				filteredMap.put(component, entry.getValue());
+			if (pos != null && component.getPosition().distanceSq(pos) < maxDistSq) {
+				filteredMap.put(component, includeRequested ? entry.getValue().rawItems : entry.getValue().availableItems);
 			}
 		}
 		
 		return filteredMap;
 	}
 	
-	public @Nullable ILogisticsComponent getStorageForItem(World world, BlockPos pos, ItemStack stack) {
+	public @Nullable ILogisticsComponent getStorageForItem(World world, BlockPos pos, ItemStack stack, @Nullable Predicate<ILogisticsComponent> filter) {
 		ILogisticsComponent nearest = null;
 		double minDist = 0;
 		
@@ -491,6 +550,10 @@ public class LogisticsNetwork {
 				continue;
 			}
 			
+			if (filter != null && !filter.apply(comp)) {
+				continue;
+			}
+			
 			final double dist = comp.getPosition().distanceSq(pos);
 			if (nearest == null || dist < minDist) {
 				minDist = dist;
@@ -500,4 +563,64 @@ public class LogisticsNetwork {
 		
 		return nearest;
 	}
+	
+	public @Nullable ILogisticsComponent getStorageForItem(World world, BlockPos pos, ItemStack stack) {
+		return getStorageForItem(world, pos, stack, null);
+	}
+	
+	/**
+	 * Notify the network that some number of an item are spoken for from the given component.
+	 * Other requests should look elsewhere.
+	 * @param component
+	 * @param activeRequest
+	 */
+	public void addRequestedItem(ILogisticsComponent component, RequestedItemRecord request) {
+		List<RequestedItemRecord> requests = activeItemRequests.get(component);
+		if (requests == null) {
+			requests = new LinkedList<>();
+			activeItemRequests.put(component, requests);
+		}
+		
+		requests.add(request);
+		
+		refreshAvailableLists(component);
+	}
+	
+	public RequestedItemRecord addRequestedItem(ILogisticsComponent component, ILogisticsTask task, ItemDeepStack item) {
+		RequestedItemRecord record = new RequestedItemRecord(task, item);
+		
+		addRequestedItem(component, record);
+		
+		return record;
+	}
+	
+	public void removeRequestedItem(ILogisticsComponent component, RequestedItemRecord request) {
+		List<RequestedItemRecord> requests = activeItemRequests.get(component);
+		if (requests == null) {
+			return;
+		}
+		
+		requests.remove(request);
+		refreshAvailableLists(component);
+	}
+	
+	public void removeAllRequests(ILogisticsComponent component, ILogisticsTask task) {
+		List<RequestedItemRecord> requests = activeItemRequests.get(component);
+		if (requests == null) {
+			return;
+		}
+		
+		Iterator<RequestedItemRecord> it = requests.iterator();
+		while (it.hasNext()) {
+			if (it.next().task == task) {
+				it.remove();
+			}
+		}
+		refreshAvailableLists(component);
+	}
+	
+	public @Nullable Collection<RequestedItemRecord> getItemRequests(ILogisticsComponent component) {
+		return activeItemRequests.get(component);
+	}
+	
 }

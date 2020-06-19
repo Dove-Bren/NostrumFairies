@@ -51,7 +51,7 @@ public class StorageMonitorScreen extends GuiScreen {
 	@Override	
 	public void updateScreen() {
 		if (network != null) {
-			final List<ItemDeepStack> items = network.getCondensedNetworkItems();
+			final List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
 			final int len = items.size();
 			final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
 			final int spilloverRows = rows - GUI_CELL_ROWS; // scroll bar represents this many rows of pixels
@@ -122,7 +122,7 @@ public class StorageMonitorScreen extends GuiScreen {
 		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXT);
 		
 		if (network != null) {
-			final List<ItemDeepStack> items = network.getCondensedNetworkItems();
+			final List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
 			final int len = items.size();
 			final int rows = (int) Math.ceil((double)len / (double)GUI_CELL_COLS);
 			final int spilloverRows = rows - GUI_CELL_ROWS;
@@ -202,7 +202,7 @@ public class StorageMonitorScreen extends GuiScreen {
 		if (finalize) {
 			// Round scroll to an even increment for the inventory
 			if (network != null) {
-				final List<ItemDeepStack> items = network.getCondensedNetworkItems();
+				final List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
 				final int len = items.size();
 				final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
 				final int spilloverRows = rows - GUI_CELL_ROWS;
@@ -241,7 +241,7 @@ public class StorageMonitorScreen extends GuiScreen {
 		if (wheel != 0) {
 			// 120 seems to be scroll bar rotation magnitude?
 			if (network != null) {
-				final List<ItemDeepStack> items = network.getCondensedNetworkItems();
+				final List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
 				final int len = items.size();
 				final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
 				final int spilloverRows = rows - GUI_CELL_ROWS; // scroll bar represents this many rows of pixels

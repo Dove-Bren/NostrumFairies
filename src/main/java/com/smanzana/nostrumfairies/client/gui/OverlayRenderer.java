@@ -4,6 +4,8 @@ import java.util.Collection;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -48,6 +50,13 @@ public class OverlayRenderer extends Gui {
 //			} catch (Exception e) {
 //				;
 //			}
+		}
+		
+		Collection<ILogisticsTask> tasks = LogisticsTaskRegistry.instance().allTasks();
+		int y = 40;
+		for (ILogisticsTask task : tasks) {
+			Minecraft.getMinecraft().fontRendererObj.drawString("Task: " + task.getDisplayName(), 60, y, 0xFFFFFFFF);
+			y += 8;
 		}
 		
 		

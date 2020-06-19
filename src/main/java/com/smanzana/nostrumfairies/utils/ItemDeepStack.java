@@ -1,5 +1,9 @@
 package com.smanzana.nostrumfairies.utils;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import net.minecraft.item.ItemStack;
 
 /**
@@ -35,8 +39,16 @@ public class ItemDeepStack {
 		return ItemStacks.stacksMatch(item, other);
 	}
 	
+	public boolean canMerge(ItemDeepStack other) {
+		return ItemStacks.stacksMatch(item, other.item);
+	}
+	
 	public void add(ItemStack original) {
 		add(original.stackSize);
+	}
+	
+	public void add(ItemDeepStack original) {
+		add(original.count);
 	}
 	
 	public void add(long count) {
@@ -50,5 +62,26 @@ public class ItemDeepStack {
 		this.count -= stack.stackSize;
 		
 		return stack;
+	}
+	
+	public static List<ItemDeepStack> toDeepList(Collection<ItemStack> items) {
+		// Could make sure both lists are sorted by itemstack, and have iterators on both to make this merge fast.
+		// Optimization oppertunity!
+		List<ItemDeepStack> out = new ArrayList<>(items.size());
+		for (ItemStack stack : items) {
+			boolean merged = false;
+			for (ItemDeepStack condensed : out) {
+				if (condensed.canMerge(stack)) {
+					condensed.add(stack);
+					merged = true;
+					break;
+				}
+			}
+			
+			if (!merged) {
+				out.add(new ItemDeepStack(stack));
+			}
+		}
+		return out;
 	}
 }

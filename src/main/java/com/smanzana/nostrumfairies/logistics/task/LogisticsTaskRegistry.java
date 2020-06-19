@@ -1,14 +1,16 @@
 package com.smanzana.nostrumfairies.logistics.task;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
-import com.smanzana.nostrumfairies.entity.fairy.EntityFairyBase;
+import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
+import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 
 import net.minecraft.util.math.BlockPos;
 
@@ -22,7 +24,7 @@ public class LogisticsTaskRegistry {
 	private static final class RegistryItem {
 		
 		private ILogisticsTask task;
-		private EntityFairyBase actor;
+		private IFairyWorker actor;
 		
 		public RegistryItem(ILogisticsTask task) {
 			this.task = task;
@@ -33,7 +35,7 @@ public class LogisticsTaskRegistry {
 			return actor != null;
 		}
 		
-		public void setActor(EntityFairyBase actor) {
+		public void setActor(IFairyWorker actor) {
 			this.actor = actor;
 		}
 	}
@@ -59,93 +61,133 @@ public class LogisticsTaskRegistry {
 		return instance;
 	}
 	
-	// Map between dim ID and known requesters
-	private Map<Integer, Map<BlockPos, RegistryItem>> registry;
+	private List<RegistryItem> registry;
 	
 	private LogisticsTaskRegistry() {
-		registry = new HashMap<>();
+		registry = new LinkedList<>();
 	}
 	
 	public void clear() {
 		registry.clear();
 	}
 	
-	public void register(int dimension, BlockPos pos, ILogisticsTask task) {
-		Map<BlockPos, RegistryItem> dimReg = registry.get(dimension);
-		
-		if (dimReg == null) {
-			dimReg = new HashMap<>();
-		}
-		
-		dimReg.put(pos, new RegistryItem(task));
+	/**
+	 * Register a task with the registry so that workers can see it and decide to perform it
+	 * @param task
+	 */
+	public void register(ILogisticsTask task) {
+		registry.add(new RegistryItem(task));
 	}
 	
-	public void revoke(int dimension, BlockPos pos) {
-		Map<BlockPos, RegistryItem> dimReg = registry.get(dimension);
-		
-		if (dimReg == null) {
-			return;
-		}
-		
-		RegistryItem item = dimReg.remove(pos);
-		if (item != null) {
-			if (item.hasActor()) {
-				item.actor.cancelTask();
+	/**
+	 * Remove a task from the registry.
+	 * Note: this method notifies the actor and the task that it has been dropped, if it's active.
+	 * @param task
+	 */
+	public void revoke(ILogisticsTask task) {
+		Iterator<RegistryItem> it = registry.iterator();
+		while (it.hasNext()) {
+			RegistryItem item = it.next();
+			if (item.task == task) {
+				if (item.hasActor()) {
+					item.setActor(null);
+					item.task.onDrop(item.actor);
+					item.actor.cancelTask();
+				}
+				it.remove();
 			}
 		}
 	}
 	
-	public List<FairyTaskPair> findTasks(int dimension, BlockPos center, double maxDistanceSq, EntityFairyBase actor, @Nullable Predicate<ILogisticsTask> filter) {
-		List<FairyTaskPair> list = new LinkedList<>();
-		Map<BlockPos, RegistryItem> dimReg = registry.get(dimension);
-		
-		if (dimReg != null) {
-			dimReg.forEach((pos, record) -> {
-				if (record.hasActor()) {
-					return;
-				}
-				
-				if (pos.distanceSq(center) > maxDistanceSq) {
-					return;
-				}
-				
-				if (filter != null && !filter.apply(record.task)) {
-					return;
-				}
-				
-				if (!record.task.canAccept(actor)) {
-					return;
-				}
-				
-				list.add(new FairyTaskPair(pos, record.task));
-			});
+	private RegistryItem findTaskItem(ILogisticsTask task) {
+		for (RegistryItem item : registry) {
+			if (item.task == task) {
+				return item;
+			}
 		}
+		
+		return null;
+	}
+	
+	public List<FairyTaskPair> findTasks(int dimension, BlockPos center, double maxDistanceSq, IFairyWorker actor, @Nullable Predicate<ILogisticsTask> filter) {
+		final List<FairyTaskPair> list = new LinkedList<>();
+		
+		registry.forEach((item) -> {
+			if (item.hasActor()) {
+				return;
+			}
+			
+			ILogisticsComponent comp = item.task.getSourceComponent();
+			if (comp == null) {
+				throw new RuntimeException("Logistics task registered without an attached component");
+			}
+			
+			if (comp.getWorld().provider.getDimension() != dimension) {
+				return;
+			}
+			
+			BlockPos pos = comp.getPosition();
+			if (pos.distanceSq(center) > maxDistanceSq) {
+				return;
+			}
+			
+			if (filter != null && !filter.apply(item.task)) {
+				return;
+			}
+			
+			if (!item.task.canAccept(actor)) {
+				return;
+			}
+			
+			list.add(new FairyTaskPair(pos, item.task));
+		});
 		
 		return list;
 	}
 	
-	public void claimTask(int dimension, BlockPos pos, EntityFairyBase actor) {
-		Map<BlockPos, RegistryItem> dimReg = registry.get(dimension);
-		
-		if (dimReg != null) {
-			RegistryItem record = dimReg.get(pos);
-			if (record != null) {
-				record.setActor(actor);
-				record.task.onAccept(actor); // May remove from registry
-			}
+	/**
+	 * Mark the task as being worked on.
+	 * @param task
+	 * @param actor
+	 */
+	public void claimTask(ILogisticsTask task, IFairyWorker actor) {
+		RegistryItem item = findTaskItem(task);
+		if (item == null) {
+			throw new RuntimeException("Attempted to claim a logistics task before it was registered in the registry");
 		}
+		
+		if (item.hasActor()) {
+			forfitTask(task);
+		}
+		
+		item.setActor(actor);
+		task.onAccept(actor);
 	}
 	
-	public void forfitTask(int dimension, BlockPos pos) {
-		Map<BlockPos, RegistryItem> dimReg = registry.get(dimension);
-		
-		if (dimReg != null) {
-			RegistryItem record = dimReg.get(pos);
-			if (record != null) {
-				final EntityFairyBase actor = record.actor;
-				record.setActor(null);
-				record.task.onDrop(actor); // May remove from registry
-			}
+	/**
+	 * Mark that the task has been dropped.
+	 * Note: calls onDrop methods
+	 * @param dimension
+	 * @param pos
+	 */
+	public void forfitTask(ILogisticsTask task) {
+		RegistryItem item = findTaskItem(task);
+		if (item == null) {
+			throw new RuntimeException("Attempted to forgit a logistics task before it was registered in the registry");
 		}
+		
+		IFairyWorker oldActor = item.actor;
+		item.setActor(null);
+		item.task.onDrop(oldActor);
+		oldActor.cancelTask();
+	}
+
+	public Collection<ILogisticsTask> allTasks() {
+		// TODO remove me. This sucks.
+		List<ILogisticsTask> list = new ArrayList<>(registry.size());
+		for (RegistryItem item : registry) {
+			list.add(item.task);
+		}
+		return list;
 	}
 }

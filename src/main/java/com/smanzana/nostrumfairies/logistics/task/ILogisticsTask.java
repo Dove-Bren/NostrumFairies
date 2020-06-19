@@ -1,8 +1,11 @@
 package com.smanzana.nostrumfairies.logistics.task;
 
+import java.util.Collection;
+
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.entity.fairy.EntityFairyBase;
+import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
+import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 
 /**
  * Generic fairy task.
@@ -31,22 +34,23 @@ public interface ILogisticsTask {
 	 * @param worker
 	 * @return
 	 */
-	public boolean canAccept(EntityFairyBase worker);
+	public boolean canAccept(IFairyWorker worker);
 	
 	/**
 	 * Called when the worker is no longer able or willing to perform the task.
 	 * This may include death.
 	 */
-	public void onDrop(@Nullable EntityFairyBase worker);
+	public void onDrop(@Nullable IFairyWorker worker);
 	
 	/**
 	 * Called when a worker has picked up this task and is going to start working on it.
 	 * @param worker
 	 */
-	public void onAccept(EntityFairyBase worker);
+	public void onAccept(IFairyWorker worker);
 	
 	/**
 	 * Check and return whether the provided task is one that can be taken and done at the same time.
+	 * @param worker
 	 * @param other
 	 * @return true if the task can be merged
 	 */
@@ -62,4 +66,18 @@ public interface ILogisticsTask {
 	 * @param other
 	 */
 	public void mergeIn(ILogisticsTask other);
+	
+	/**
+	 * Split out all tasks that were merged into this one.
+	 * If this task never merged with another and represents a single task, it should return a collection
+	 * with itself in it.
+	 * @return
+	 */
+	public Collection<ILogisticsTask> unmerge();
+	
+	/**
+	 * Return the Logistics Component that is making this request, if one is.
+	 * @return
+	 */
+	public @Nullable ILogisticsComponent getSourceComponent();
 }

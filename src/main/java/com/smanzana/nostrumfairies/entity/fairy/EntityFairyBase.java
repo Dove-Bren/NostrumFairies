@@ -14,16 +14,8 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public abstract class EntityFairyBase extends EntityGolem implements ILoreTagged {
+public abstract class EntityFairyBase extends EntityGolem implements IFairyWorker, ILoreTagged {
 
-	public static enum FairyGeneralStatus {
-		WANDERING, // Not attached to a home, and therefore incapable of working
-		IDLE, // Able to work, but with no work to do
-		WORKING, // Working
-		REVOLTING, // Refusing to work
-	}
-	
-	protected static final double MAX_FAIRY_DISTANCE_SQ = 144;
 	protected static final DataParameter<Optional<BlockPos>> HOME  = EntityDataManager.<Optional<BlockPos>>createKey(EntityFairyBase.class, DataSerializers.OPTIONAL_BLOCK_POS);
 	
 	/**
@@ -54,10 +46,7 @@ public abstract class EntityFairyBase extends EntityGolem implements ILoreTagged
 		this.workDistanceSq = workDistanceSq;
 	}
 	
-	/**
-	 * Get current fairy worker status
-	 * @return
-	 */
+	@Override
 	public FairyGeneralStatus getStatus() {
 		return this.generalStatus;
 	}
@@ -85,10 +74,7 @@ public abstract class EntityFairyBase extends EntityGolem implements ILoreTagged
 	 */
 	protected abstract boolean onStatusChange(FairyGeneralStatus from, FairyGeneralStatus to);
 	
-	/**
-	 * Get the fairy's home block.
-	 * @return
-	 */
+	@Override
 	@Nullable
 	public BlockPos getHome() {
 		return this.dataManager.get(HOME).orNull();
@@ -110,12 +96,7 @@ public abstract class EntityFairyBase extends EntityGolem implements ILoreTagged
 	 */
 	protected abstract boolean isValidHome(BlockPos homePos);
 	
-	/**
-	 * Return the current task a fairy is working on.
-	 * It's expected that a status of 'WORKING' means this will return something,
-	 * while calling while IDLE would not.
-	 * @return The current task if there is one, or null.
-	 */
+	@Override
 	public @Nullable ILogisticsTask getCurrentTask() {
 		return currentTask;
 	}
@@ -127,6 +108,7 @@ public abstract class EntityFairyBase extends EntityGolem implements ILoreTagged
 		
 	}
 	
+	@Override
 	public void cancelTask() {
 		forceSetTask(null);
 	}
