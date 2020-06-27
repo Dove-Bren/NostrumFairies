@@ -85,6 +85,16 @@ public class LogisticsRegistry extends WorldSavedData {
 		return null;
 	}
 	
+	public @Nullable LogisticsNetwork findNetwork(ILogisticsComponent component) {
+		for (LogisticsNetwork network : this.networks) {
+			if (network.components.contains(component)) {
+				return network;
+			}
+		}
+		
+		return null;
+	}
+	
 	public Collection<LogisticsNetwork> getNetworks() {
 		return networks;
 	}

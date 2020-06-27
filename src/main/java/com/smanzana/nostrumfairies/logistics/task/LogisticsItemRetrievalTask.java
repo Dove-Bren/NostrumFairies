@@ -61,8 +61,7 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 			return false;
 		}
 		
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override

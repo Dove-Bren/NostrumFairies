@@ -6,15 +6,21 @@ import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.client.gui.OverlayRenderer;
+import com.smanzana.nostrumfairies.entity.fairy.EntityTestFairy;
+import com.smanzana.nostrumfairies.entity.render.RenderTestFairy;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.fml.client.registry.IRenderFactory;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class ClientProxy extends CommonProxy {
@@ -33,6 +39,13 @@ public class ClientProxy extends CommonProxy {
 		StorageLogisticsChest.StorageChestRenderer.init();
 		BufferLogisticsChest.BufferChestRenderer.init();
 		OutputLogisticsChest.OutputChestRenderer.init();
+		
+		RenderingRegistry.registerEntityRenderingHandler(EntityTestFairy.class, new IRenderFactory<EntityTestFairy>() {
+			@Override
+			public Render<? super EntityTestFairy> createRenderFor(RenderManager manager) {
+				return new RenderTestFairy(manager, 1.0f);
+			}
+		});
 	}
 	
 	@Override

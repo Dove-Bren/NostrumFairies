@@ -5,6 +5,7 @@ import java.util.Collection;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsItemRetrievalTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 
 import net.minecraft.client.Minecraft;
@@ -55,8 +56,20 @@ public class OverlayRenderer extends Gui {
 		Collection<ILogisticsTask> tasks = LogisticsTaskRegistry.instance().allTasks();
 		int y = 40;
 		for (ILogisticsTask task : tasks) {
-			Minecraft.getMinecraft().fontRendererObj.drawString("Task: " + task.getDisplayName(), 60, y, 0xFFFFFFFF);
+			String str = "Task: " + task.getDisplayName();
+			Minecraft.getMinecraft().fontRendererObj.drawString(str, 60, y, 0xFFFFFFFF);
 			y += 8;
+			
+			if (task instanceof LogisticsItemRetrievalTask) {
+				LogisticsItemRetrievalTask retrieve = (LogisticsItemRetrievalTask) task;
+				if (retrieve.isActive()) {
+					str = " (ACTIVE: " + retrieve.getCurrentWorker() + ")";
+				} else {
+					str = " (INACTIVE)";
+				}
+				Minecraft.getMinecraft().fontRendererObj.drawString(str, -120, y, 0xFFFFFFFF);
+				y += 8;
+			}
 		}
 		
 		

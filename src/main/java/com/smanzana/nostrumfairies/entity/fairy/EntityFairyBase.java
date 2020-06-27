@@ -1,20 +1,28 @@
 package com.smanzana.nostrumfairies.entity.fairy;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
+import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry.FairyTaskPair;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
-import net.minecraft.entity.monster.EntityGolem;
+import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public abstract class EntityFairyBase extends EntityGolem implements IFairyWorker, ILoreTagged {
+public abstract class EntityFairyBase extends EntityMob implements IFairyWorker, ILoreTagged {
 
 	protected static final DataParameter<Optional<BlockPos>> HOME  = EntityDataManager.<Optional<BlockPos>>createKey(EntityFairyBase.class, DataSerializers.OPTIONAL_BLOCK_POS);
 	
@@ -44,6 +52,8 @@ public abstract class EntityFairyBase extends EntityGolem implements IFairyWorke
 		generalStatus = FairyGeneralStatus.WANDERING;
 		this.wanderDistanceSq = wanderDistanceSq;
 		this.workDistanceSq = workDistanceSq;
+		
+		// don't seem to be tracking fairies! why??
 	}
 	
 	@Override
@@ -85,7 +95,7 @@ public abstract class EntityFairyBase extends EntityGolem implements IFairyWorke
 	 * @return
 	 */
 	public void setHome(@Nullable BlockPos home) {
-		this.dataManager.set(HOME, Optional.of(home));
+		this.dataManager.set(HOME, Optional.fromNullable(home));
 		this.setHomePosAndDistance(home, (int) this.wanderDistanceSq);
 	}
 	
@@ -96,6 +106,28 @@ public abstract class EntityFairyBase extends EntityGolem implements IFairyWorke
 	 */
 	protected abstract boolean isValidHome(BlockPos homePos);
 	
+	/**
+	 * Returns the logistics network this fairy is part of.
+	 * The default implementation uses the home position and insists that a tile entity exists there
+	 * that is a logistics component.
+	 * Subclasses can override this to do whatever they want.
+	 * @return
+	 */
+	protected @Nullable LogisticsNetwork getLogisticsNetwork() {
+		verifyHome();
+		BlockPos home = getHome();
+		if (home == null) {
+			return null;
+		}
+		
+		TileEntity te = worldObj.getTileEntity(home);
+		if (te != null && te instanceof ILogisticsComponent) {
+			return NostrumFairies.instance.getLogisticsRegistry().findNetwork((ILogisticsComponent) te);
+		}
+		
+		return null;
+	}
+	
 	@Override
 	public @Nullable ILogisticsTask getCurrentTask() {
 		return currentTask;
@@ -105,6 +137,8 @@ public abstract class EntityFairyBase extends EntityGolem implements IFairyWorke
 		ILogisticsTask oldtask = this.getCurrentTask();
 		this.currentTask = task;
 		this.onTaskChange(oldtask, task);
+		
+		System.out.println("Forcing task to " + task);
 		
 	}
 	
@@ -157,11 +191,23 @@ public abstract class EntityFairyBase extends EntityGolem implements IFairyWorke
 	protected abstract void initEntityAI();
 	
 	@Override
-	protected abstract void applyEntityAttributes();
-	
-	@Override
 	public void onUpdate() {
 		super.onUpdate();
+		
+		// TODO communiate status with DAtaParamater
+		if (worldObj.isRemote || this.isDead) {
+			return;
+		}
+		
+		// TODO remove. Testing code!
+		{
+			if (getHome() == null) {
+				if (isValidHome(getPosition().add(0,-1,0))) {
+					setHome(getPosition().add(0,-1,0));
+					changeStatus(FairyGeneralStatus.IDLE);
+				}
+			}
+		}
 		
 		// If we're supposed to have a home, verify it's still there and fix state.
 		verifyHome();
@@ -171,7 +217,10 @@ public abstract class EntityFairyBase extends EntityGolem implements IFairyWorke
 			if (!searchForJobs()) {
 				break;
 			}
+			
+			changeStatus(FairyGeneralStatus.WORKING);
 			// else fall through to start working as soon as task is picked up
+			// TODO maybe both should search for tasks if the task is dropable?
 		case WORKING:
 			if (currentTask != null) {
 				this.onTaskTick(currentTask);
@@ -193,8 +242,35 @@ public abstract class EntityFairyBase extends EntityGolem implements IFairyWorke
 	}
 	
 	private boolean searchForJobs() {
-		
-		// TODO
+		LogisticsNetwork network = this.getLogisticsNetwork();
+		if (network != null) {
+			List<FairyTaskPair> list = LogisticsTaskRegistry.instance().findTasks(network, this, (task) -> {
+				ILogisticsComponent comp = task.getSourceComponent();
+				if (comp.getWorld().provider.getDimension() != this.dimension) {
+					return false;
+				}
+				
+				final double maxDist = Math.pow(workDistanceSq, 2);
+				if (this.getHome().distanceSq(comp.getPosition()) > maxDist) {
+					return false;
+				}
+				
+				return true;
+			});
+			
+			if (list != null && !list.isEmpty()) {
+				// Could sort somehow.
+				for (FairyTaskPair pair : list) {
+					if (canPerformTask(pair.task)
+							&& pair.task.canAccept(this)
+							&& shouldPerformTask(pair.task)) {
+						LogisticsTaskRegistry.instance().claimTask(pair.task, this);
+						forceSetTask(pair.task);
+						return true;
+					}
+				}
+			}
+		}
 		return false;
 	}
 	
@@ -257,6 +333,15 @@ public abstract class EntityFairyBase extends EntityGolem implements IFairyWorke
 		} else {
 			this.changeStatus(FairyGeneralStatus.WANDERING);
 		}
+	}
+	
+	@Override
+	public void setDead() {
+		if (currentTask != null) {
+			LogisticsTaskRegistry.instance().forfitTask(currentTask);
+		}
+		
+		super.setDead();
 	}
 	
 	

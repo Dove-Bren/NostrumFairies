@@ -139,6 +139,7 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 			}
 			
 			if (!found) {
+				item = new ItemDeepStack(item.getTemplate(), item.getCount());
 				item.add(-2 * item.getCount());
 				deeps.add(item);
 				

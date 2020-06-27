@@ -6,12 +6,14 @@ import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.entity.fairy.EntityTestFairy;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CommonProxy {
@@ -20,14 +22,14 @@ public class CommonProxy {
 		NetworkHandler.getInstance();
 		
     	
-//    	int entityID = 0;
-//    	EntityRegistry.registerModEntity(EntitySpellProjectile.class, "spell_projectile",
-//    			entityID++,
-//    			NostrumFairies.instance,
-//    			64,
-//    			1,
-//    			true
-//    			);
+    	int entityID = 0;
+    	EntityRegistry.registerModEntity(EntityTestFairy.class, "test_fairy",
+    			entityID++,
+    			NostrumFairies.instance,
+    			64,
+    			1,
+    			false
+    			);
 
     	registerItems();
     	registerBlocks();

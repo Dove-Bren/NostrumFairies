@@ -11,8 +11,7 @@ import javax.annotation.Nullable;
 import com.google.common.base.Predicate;
 import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
-
-import net.minecraft.util.math.BlockPos;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 /**
  * Global registry of all active fairy task requesting blocks.
@@ -42,11 +41,11 @@ public class LogisticsTaskRegistry {
 	
 	public static final class FairyTaskPair {
 		
-		public final BlockPos pos;
+		public final ILogisticsComponent component;
 		public final ILogisticsTask task;
 		
-		public FairyTaskPair(BlockPos pos, ILogisticsTask task) {
-			this.pos = pos;
+		public FairyTaskPair(ILogisticsComponent component, ILogisticsTask task) {
+			this.component = component;
 			this.task = task;
 		}
 	}
@@ -90,9 +89,10 @@ public class LogisticsTaskRegistry {
 			RegistryItem item = it.next();
 			if (item.task == task) {
 				if (item.hasActor()) {
+					IFairyWorker oldActor = item.actor;
 					item.setActor(null);
-					item.task.onDrop(item.actor);
-					item.actor.cancelTask();
+					item.task.onDrop(oldActor);
+					oldActor.cancelTask();
 				}
 				it.remove();
 			}
@@ -109,7 +109,7 @@ public class LogisticsTaskRegistry {
 		return null;
 	}
 	
-	public List<FairyTaskPair> findTasks(int dimension, BlockPos center, double maxDistanceSq, IFairyWorker actor, @Nullable Predicate<ILogisticsTask> filter) {
+	public List<FairyTaskPair> findTasks(LogisticsNetwork network, IFairyWorker actor, @Nullable Predicate<ILogisticsTask> filter) {
 		final List<FairyTaskPair> list = new LinkedList<>();
 		
 		registry.forEach((item) -> {
@@ -122,12 +122,7 @@ public class LogisticsTaskRegistry {
 				throw new RuntimeException("Logistics task registered without an attached component");
 			}
 			
-			if (comp.getWorld().provider.getDimension() != dimension) {
-				return;
-			}
-			
-			BlockPos pos = comp.getPosition();
-			if (pos.distanceSq(center) > maxDistanceSq) {
+			if (!network.getAllComponents().contains(comp)) {
 				return;
 			}
 			
@@ -139,7 +134,7 @@ public class LogisticsTaskRegistry {
 				return;
 			}
 			
-			list.add(new FairyTaskPair(pos, item.task));
+			list.add(new FairyTaskPair(comp, item.task));
 		});
 		
 		return list;

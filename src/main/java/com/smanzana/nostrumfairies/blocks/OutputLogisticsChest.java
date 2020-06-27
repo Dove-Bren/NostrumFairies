@@ -235,6 +235,15 @@ public class OutputLogisticsChest extends BlockContainer {
 			}
 		}
 		
+		@Override
+		public void setWorldObj(World worldIn) {
+			super.setWorldObj(worldIn);
+			
+			if (!worldIn.isRemote) {
+				requester.updateRequestedItems(Lists.newArrayList(templates));
+			}
+		}
+		
 		public static class OutputChestTEFactory implements ILogisticsComponentFactory<OutputChestTileEntity> {
 
 			@Override
