@@ -108,12 +108,12 @@ public class BufferLogisticsChest extends BlockContainer {
 		}
 		
 		@Override
-		public double getLogisticRange() {
+		public double getDefaultLinkRange() {
 			return 10;
 		}
 
 		@Override
-		public double getLogisticsLinkRange() {
+		public double getDefaultLogisticsRange() {
 			return 10;
 		}
 		

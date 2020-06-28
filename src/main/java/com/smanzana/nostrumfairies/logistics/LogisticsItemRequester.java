@@ -85,7 +85,7 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 	
 	private void addRequests(ItemDeepStack item) {
 		for (long i = 0; i < item.getCount(); i++) {
-			LogisticsItemRetrievalTask task = makeTask("ItemRequest: " + item.getTemplate().getUnlocalizedName() + " x " + item.getCount(),
+			LogisticsItemRetrievalTask task = makeTask("ItemRequest: " + item.getTemplate().getUnlocalizedName() + " x " + 1,
 					new ItemDeepStack(item.getTemplate(), 1));
 			this.activeTasks.add(task);
 		}

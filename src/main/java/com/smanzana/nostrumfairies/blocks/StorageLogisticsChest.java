@@ -100,12 +100,12 @@ public class StorageLogisticsChest extends BlockContainer {
 		}
 		
 		@Override
-		public double getLogisticRange() {
+		public double getDefaultLogisticsRange() {
 			return 20;
 		}
 
 		@Override
-		public double getLogisticsLinkRange() {
+		public double getDefaultLinkRange() {
 			return 10;
 		}
 		

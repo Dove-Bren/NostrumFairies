@@ -5,7 +5,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
-import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -121,8 +121,8 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 		}
 		
 		TileEntity te = worldObj.getTileEntity(home);
-		if (te != null && te instanceof ILogisticsComponent) {
-			return NostrumFairies.instance.getLogisticsRegistry().findNetwork((ILogisticsComponent) te);
+		if (te != null && te instanceof LogisticsTileEntity) {
+			return ((LogisticsTileEntity) te).getNetwork();
 		}
 		
 		return null;

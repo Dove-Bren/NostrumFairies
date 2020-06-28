@@ -95,12 +95,12 @@ public class StorageMonitor extends BlockContainer {
 		}
 		
 		@Override
-		public double getLogisticRange() {
+		public double getDefaultLogisticsRange() {
 			return 0;
 		}
 
 		@Override
-		public double getLogisticsLinkRange() {
+		public double getDefaultLinkRange() {
 			return 10;
 		}
 

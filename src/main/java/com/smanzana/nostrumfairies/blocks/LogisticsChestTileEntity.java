@@ -153,10 +153,9 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
-		super.readFromNBT(nbt);
-		
 		if (nbt == null || !nbt.hasKey(NBT_INV, NBT.TAG_COMPOUND))
 			return;
+		
 		this.clear();
 		NBTTagCompound items = nbt.getCompoundTag(NBT_INV);
 		for (String key : items.getKeySet()) {
@@ -171,6 +170,8 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 			ItemStack stack = ItemStack.loadItemStackFromNBT(items.getCompoundTag(key));
 			this.setInventorySlotContents(id, stack);
 		}
+
+		super.readFromNBT(nbt);
 	}
 	
 	@Override

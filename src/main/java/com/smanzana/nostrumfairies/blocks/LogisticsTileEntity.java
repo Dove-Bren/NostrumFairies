@@ -64,6 +64,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
+		super.readFromNBT(nbt);
 		// Load in network UUID, so clients can hook things back up to fake network devices
 		if (nbt.hasUniqueId(NBT_NETWORK_COMP_UUID)) {
 //			UUID oldID = networkID;
@@ -89,11 +90,14 @@ public abstract class LogisticsTileEntity extends TileEntity {
 			UUID compID = nbt.getUniqueId(NBT_NETWORK_COMP_UUID);
 			setNetworkComponent(LogisticsTileEntityComponent.find(compID));
 		}
-		super.readFromNBT(nbt);
 	}
 	
+	protected abstract double getDefaultLinkRange();
+	
+	protected abstract double getDefaultLogisticsRange();
+	
 	protected LogisticsTileEntityComponent makeNetworkComponent() {
-		return new LogisticsTileEntityComponent(this);
+		return new LogisticsTileEntityComponent(this, getDefaultLinkRange(), getDefaultLogisticsRange());
 	}
 	
 	protected void setNetworkComponent(LogisticsTileEntityComponent component) {
@@ -136,10 +140,6 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		return emptyList;
 	}
 	
-	public abstract double getLogisticRange();
-
-	public abstract double getLogisticsLinkRange();
-
 	public boolean canAccept(ItemStack stack) {
 		return false;
 	}
@@ -158,23 +158,37 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		private static final String NBT_UUID = "uuid";
 		private static final String NBT_DIM = "dim";
 		private static final String NBT_POS = "pos";
+		private static final String NBT_LINK_RANGE = "lrange";
+		private static final String NBT_LOG_RANGE = "range";
 		
 		protected UUID componentID;
 		private LogisticsNetwork network;
 		private World world;
 		private BlockPos pos;
+		private double linkRange;
+		private double logisticsRange;
 		private LogisticsTileEntity teCache;
 		
 		private LogisticsTileEntityComponent() {
 			;
 		}
 		
-		public LogisticsTileEntityComponent(LogisticsTileEntity tileEntity) {
+		public LogisticsTileEntityComponent(LogisticsTileEntity tileEntity, double linkRange, double logisticsRange) {
 			componentID = UUID.randomUUID();
 			teCache = tileEntity;
 			world = teCache.worldObj;
 			pos = teCache.getPos();
 			map.put(componentID, this);
+			this.linkRange = linkRange;
+			this.logisticsRange = logisticsRange;
+		}
+		
+		public void setLinkRange(double range) {
+			this.linkRange = range;
+		}
+		
+		public void setLogisticsRange(double range) {
+			this.logisticsRange = range;
 		}
 		
 		private void refreshCache() {
@@ -224,20 +238,12 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		
 		@Override
 		public double getLogisticRange() {
-			refreshCache();
-			if (teCache != null) {
-				return teCache.getLogisticRange();
-			}
-			return 0;
+			return logisticsRange;
 		}
 
 		@Override
 		public double getLogisticsLinkRange() {
-			refreshCache();
-			if (teCache != null) {
-				return teCache.getLogisticsLinkRange();
-			}
-			return 0;
+			return linkRange;
 		}
 
 		@Override
@@ -267,6 +273,8 @@ public abstract class LogisticsTileEntity extends TileEntity {
 			tag.setUniqueId(NBT_UUID, componentID);
 			tag.setLong(NBT_POS, this.pos.toLong());
 			tag.setInteger(NBT_DIM, this.world.provider.getDimension());
+			tag.setDouble(NBT_LINK_RANGE, linkRange);
+			tag.setDouble(NBT_LOG_RANGE, logisticsRange);
 			
 			return tag;
 		}
@@ -275,6 +283,8 @@ public abstract class LogisticsTileEntity extends TileEntity {
 			BlockPos pos = BlockPos.fromLong(nbt.getLong(NBT_POS));
 			World world = NostrumFairies.getWorld(nbt.getInteger(NBT_DIM));
 			UUID compID = nbt.getUniqueId(NBT_UUID);
+			double linkRange = nbt.getDouble(NBT_LINK_RANGE);
+			double logisticsRange = nbt.getDouble(NBT_LOG_RANGE);
 			
 			if (world == null) {
 				throw new RuntimeException("Failed to find world for persisted TileEntity logistics component: "
@@ -285,6 +295,8 @@ public abstract class LogisticsTileEntity extends TileEntity {
 			comp.componentID = compID;
 			comp.world = world;
 			comp.pos = pos;
+			comp.linkRange = linkRange;
+			comp.logisticsRange = logisticsRange;
 			
 			map.put(compID, comp);
 			

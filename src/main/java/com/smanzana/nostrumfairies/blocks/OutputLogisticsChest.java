@@ -114,12 +114,12 @@ public class OutputLogisticsChest extends BlockContainer {
 		}
 		
 		@Override
-		public double getLogisticRange() {
+		public double getDefaultLogisticsRange() {
 			return 10;
 		}
 
 		@Override
-		public double getLogisticsLinkRange() {
+		public double getDefaultLinkRange() {
 			return 10;
 		}
 		
@@ -198,8 +198,6 @@ public class OutputLogisticsChest extends BlockContainer {
 		
 		@Override
 		public void readFromNBT(NBTTagCompound nbt) {
-			super.readFromNBT(nbt);
-			
 			templates = new ItemStack[SLOTS];
 			
 			// Reload templates
@@ -217,33 +215,42 @@ public class OutputLogisticsChest extends BlockContainer {
 				
 				templates[index] = stack;
 			}
+			
+			// Do super afterwards so taht we have templates already
+			super.readFromNBT(nbt);
 		}
 		
 		@Override
 		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
 			super.setNetworkComponent(component);
-			requester = new LogisticsItemRequester(this.networkComponent);
-			
-			requester.updateRequestedItems(Lists.newArrayList(templates));
 		}
 		
 		@Override
 		public void setWorldObj(World worldIn) {
 			super.setWorldObj(worldIn);
+			
+			if (!worldIn.isRemote && requester == null) {
+				requester = new LogisticsItemRequester(this.networkComponent);
+				requester.updateRequestedItems(Lists.newArrayList(templates));
+			}
 		}
 		
 		@Override
 		public void onLeaveNetwork() {
-			if (requester != null) {
+			if (!worldObj.isRemote && requester != null) {
 				requester.clearRequests();
 			}
+			
+			super.onLeaveNetwork();
 		}
 		
 		@Override
 		public void onJoinNetwork(LogisticsNetwork network) {
-			if (requester != null) {
+			if (!worldObj.isRemote && requester != null) {
 				requester.updateRequestedItems(Lists.newArrayList(templates));
 			}
+			
+			super.onJoinNetwork(network);
 		}
 	}
 	
