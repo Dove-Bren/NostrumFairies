@@ -5,7 +5,6 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
-import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
@@ -17,7 +16,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
@@ -74,7 +72,10 @@ public class StorageMonitor extends BlockContainer {
 			TileEntity te = worldIn.getTileEntity(pos);
 			if (te != null && te instanceof StorageMonitorTileEntity) {
 				StorageMonitorTileEntity storage = (StorageMonitorTileEntity) te;
-				NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest(storage.networkID));	
+				LogisticsNetwork network = storage.getNetwork();
+				if (network != null) {
+					NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest(network.getUUID()));
+				}
 			}
 		}
 		
@@ -101,29 +102,6 @@ public class StorageMonitor extends BlockContainer {
 		@Override
 		public double getLogisticsLinkRange() {
 			return 10;
-		}
-
-		@Override
-		public NBTTagCompound toNBT() {
-			// Nothing special on top of base te. Just return base;
-			return this.baseToNBT();
-		}
-
-		public static final String LOGISTICS_TAG = "logcomp_storagemonitor"; 
-
-		@Override
-		public String getSerializationTag() {
-			return LOGISTICS_TAG;
-		}
-		
-		public static class StorageMonitorTEFactory implements ILogisticsComponentFactory<StorageMonitorTileEntity> {
-
-			@Override
-			public StorageMonitorTileEntity construct(NBTTagCompound nbt, LogisticsNetwork network) {
-				// Since we don't do anything special, we can just use our base class' default
-				return (StorageMonitorTileEntity) LogisticsTileEntity.loadFromNBT(nbt, network); 
-			}
-			
 		}
 
 		@Override
@@ -163,11 +141,6 @@ public class StorageMonitor extends BlockContainer {
 			return;
 		
 		StorageMonitorTileEntity monitor = (StorageMonitorTileEntity) ent;
-		
-		if (monitor.getNetwork() != null) {
-			monitor.getNetwork().removeComponent(monitor);
-		} else {
-			System.out.println("Shadow component?");
-		}
+		monitor.unlinkFromNetwork();
 	}
 }

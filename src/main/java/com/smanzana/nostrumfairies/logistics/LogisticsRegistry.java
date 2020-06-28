@@ -24,7 +24,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  */
 public class LogisticsRegistry extends WorldSavedData {
 	
-	public static final String DATA_NAME =  NostrumFairies.MODID + "_SpellData";
+	public static final String DATA_NAME =  NostrumFairies.MODID + "_LogisticsNetwork";
 	private static final String NBT_NETWORKS = "networks";
 	
 	private Set<LogisticsNetwork> networks; // persisted

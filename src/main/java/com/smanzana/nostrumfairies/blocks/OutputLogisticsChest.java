@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
-import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.logistics.LogisticsItemRequester;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
@@ -97,7 +96,6 @@ public class OutputLogisticsChest extends BlockContainer {
 			super();
 			displayName = "Output Chest";
 			templates = new ItemStack[SLOTS];
-			requester = new LogisticsItemRequester(this);
 		}
 		
 		@Override
@@ -131,18 +129,6 @@ public class OutputLogisticsChest extends BlockContainer {
 		}
 
 		@Override
-		public NBTTagCompound toNBT() {
-			return this.baseToNBT();
-		}
-
-		public static final String LOGISTICS_TAG = "logcomp_outputchest"; 
-
-		@Override
-		public String getSerializationTag() {
-			return LOGISTICS_TAG;
-		}
-		
-		@Override
 		public Collection<ItemStack> getItems() {
 			// Output chests don't offer their items to the network
 			return LogisticsTileEntity.emptyList;
@@ -152,8 +138,6 @@ public class OutputLogisticsChest extends BlockContainer {
 			if (index < 0 || index >=  SLOTS) {
 				return;
 			}
-			
-			System.out.println("Setting template");
 			
 			ItemStack temp = template == null ? null : template.copy();
 			templates[index] = temp;
@@ -236,21 +220,30 @@ public class OutputLogisticsChest extends BlockContainer {
 		}
 		
 		@Override
+		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
+			super.setNetworkComponent(component);
+			requester = new LogisticsItemRequester(this.networkComponent);
+			
+			requester.updateRequestedItems(Lists.newArrayList(templates));
+		}
+		
+		@Override
 		public void setWorldObj(World worldIn) {
 			super.setWorldObj(worldIn);
-			
-			if (!worldIn.isRemote) {
-				requester.updateRequestedItems(Lists.newArrayList(templates));
+		}
+		
+		@Override
+		public void onLeaveNetwork() {
+			if (requester != null) {
+				requester.clearRequests();
 			}
 		}
 		
-		public static class OutputChestTEFactory implements ILogisticsComponentFactory<OutputChestTileEntity> {
-
-			@Override
-			public OutputChestTileEntity construct(NBTTagCompound nbt, LogisticsNetwork network) {
-				return (OutputChestTileEntity) LogisticsChestTileEntity.loadFromNBT(nbt, network);
+		@Override
+		public void onJoinNetwork(LogisticsNetwork network) {
+			if (requester != null) {
+				requester.updateRequestedItems(Lists.newArrayList(templates));
 			}
-			
 		}
 	}
 	
@@ -296,8 +289,6 @@ public class OutputLogisticsChest extends BlockContainer {
 			}
 		}
 		
-		if (table.getNetwork() != null) {
-			table.getNetwork().removeComponent(table);
-		}
+		table.unlinkFromNetwork();
 	}
 }

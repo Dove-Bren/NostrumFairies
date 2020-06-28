@@ -20,7 +20,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 
 /**
- * Wraps requesting a dynamic list of items for the logistics network.
+ * Wraps requesting a dynamic list of items from the logistics network.
  * @author Skyler
  *
  */
@@ -164,6 +164,15 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 			}
 			
 		}
+	}
+	
+	public void clearRequests() {
+		if (entity == null) {
+			for (ILogisticsTask task : this.activeTasks) {
+				LogisticsTaskRegistry.instance().revoke(task);
+			} // else not registered
+		}
+		activeTasks.clear();
 	}
 
 	@Override

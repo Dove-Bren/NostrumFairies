@@ -5,8 +5,6 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
-import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
-import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
 import net.minecraft.block.BlockContainer;
@@ -17,7 +15,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
@@ -116,29 +113,6 @@ public class StorageLogisticsChest extends BlockContainer {
 		public boolean canAccept(ItemStack stack) {
 			return ItemStacks.canFit(this, stack);
 		}
-
-		@Override
-		public NBTTagCompound toNBT() {
-			// Nothing special on top of base te. Just return base;
-			return this.baseToNBT();
-		}
-
-		public static final String LOGISTICS_TAG = "logcomp_storagechest"; 
-
-		@Override
-		public String getSerializationTag() {
-			return LOGISTICS_TAG;
-		}
-		
-		public static class StorageChestTEFactory implements ILogisticsComponentFactory<StorageChestTileEntity> {
-
-			@Override
-			public StorageChestTileEntity construct(NBTTagCompound nbt, LogisticsNetwork network) {
-				// Since we don't do anything special, we can just use our base class' default
-				return (StorageChestTileEntity) LogisticsChestTileEntity.loadFromNBT(nbt, network); 
-			}
-			
-		}
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -183,8 +157,6 @@ public class StorageLogisticsChest extends BlockContainer {
 			}
 		}
 		
-		if (table.getNetwork() != null) {
-			table.getNetwork().removeComponent(table);
-		}
+		table.unlinkFromNetwork();
 	}
 }

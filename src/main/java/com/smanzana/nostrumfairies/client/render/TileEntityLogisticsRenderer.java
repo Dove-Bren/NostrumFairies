@@ -37,7 +37,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 		if (player != null) { // REPLACE ME
 			LogisticsNetwork network = te.getNetwork();
 			if (network != null) {
-				Collection<ILogisticsComponent> neighbors = network.getConnectedComponents(te);
+				Collection<ILogisticsComponent> neighbors = network.getConnectedComponents(te.getNetworkComponent());
 				
 				if (neighbors == null) {
 					return;

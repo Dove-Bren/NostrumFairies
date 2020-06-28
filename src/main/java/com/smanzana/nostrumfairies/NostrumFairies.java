@@ -5,10 +5,7 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
-import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
-import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
-import com.smanzana.nostrumfairies.blocks.StorageMonitor;
+import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
@@ -133,23 +130,16 @@ public class NostrumFairies {
     }
     
     private void registerLogisticsComponents() {
-    	logisticsComponentRegistry.registerComponentType(StorageLogisticsChest.StorageChestTileEntity.LOGISTICS_TAG,
-    			new StorageLogisticsChest.StorageChestTileEntity.StorageChestTEFactory());
-    	logisticsComponentRegistry.registerComponentType(BufferLogisticsChest.BufferChestTileEntity.LOGISTICS_TAG,
-    			new BufferLogisticsChest.BufferChestTileEntity.BufferChestTEFactory());
-    	logisticsComponentRegistry.registerComponentType(OutputLogisticsChest.OutputChestTileEntity.LOGISTICS_TAG,
-    			new OutputLogisticsChest.OutputChestTileEntity.OutputChestTEFactory());
-    	logisticsComponentRegistry.registerComponentType(StorageMonitor.StorageMonitorTileEntity.LOGISTICS_TAG,
-    			new StorageMonitor.StorageMonitorTileEntity.StorageMonitorTEFactory());
-    	
-    	/* TODO
-    	 * Couple of problems.
-    	 * First, the monitor doesn't seem to be getting a network ever? Even after restarting? Haven't double checked
-    	 * that it really is non-null yet.
-    	 * 
-    	 * Second, how would we request the network be updated but have screens and stuff that have references
-    	 * to the network when they get overriden from the server?
-    	 */
+//    	logisticsComponentRegistry.registerComponentType(StorageLogisticsChest.StorageChestTileEntity.LOGISTICS_TAG,
+//    			new StorageLogisticsChest.StorageChestTileEntity.StorageChestTEFactory());
+//    	logisticsComponentRegistry.registerComponentType(BufferLogisticsChest.BufferChestTileEntity.LOGISTICS_TAG,
+//    			new BufferLogisticsChest.BufferChestTileEntity.BufferChestTEFactory());
+//    	logisticsComponentRegistry.registerComponentType(OutputLogisticsChest.OutputChestTileEntity.LOGISTICS_TAG,
+//    			new OutputLogisticsChest.OutputChestTileEntity.OutputChestTEFactory());
+//    	logisticsComponentRegistry.registerComponentType(StorageMonitor.StorageMonitorTileEntity.LOGISTICS_TAG,
+//    			new StorageMonitor.StorageMonitorTileEntity.StorageMonitorTEFactory());
+    	logisticsComponentRegistry.registerComponentType(LogisticsTileEntity.LogisticsTileEntityComponent.LOGISTICS_TAG,
+    			new LogisticsTileEntity.LogisticsTileEntityComponent.ComponentFactory());
     }
     
     public static @Nullable World getWorld(int dimension) {

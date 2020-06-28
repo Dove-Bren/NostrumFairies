@@ -459,6 +459,8 @@ public class LogisticsNetwork {
 			return;
 		}
 		
+		System.out.println("Refreshing cache");
+		
 		this.cacheDirty = false;
 		cachedItemMap = new HashMap<>();
 		cachedCondensedItems = new LinkedList<>();

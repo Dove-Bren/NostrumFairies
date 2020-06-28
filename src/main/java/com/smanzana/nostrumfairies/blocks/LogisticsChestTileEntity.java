@@ -5,26 +5,30 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public abstract class LogisticsChestTileEntity extends LogisticsTileEntity implements ILogisticsChest {
+public abstract class LogisticsChestTileEntity extends LogisticsTileEntity implements IInventory {
 
 	private static final String NBT_INV = "inventory_contents";
 	
 	private ItemStack slots[];
 	
 	public LogisticsChestTileEntity() {
+		super();
 		slots = new ItemStack[getSizeInventory()];
 	}
 	
 	@Override
 	public void markDirty() {
+		LogisticsNetwork network = getNetwork();
 		if (network != null) {
-			this.network.dirty();
+			network.dirty();
 		}
 		super.markDirty();
 	}
