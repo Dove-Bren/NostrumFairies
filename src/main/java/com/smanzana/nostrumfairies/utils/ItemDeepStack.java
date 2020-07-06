@@ -64,6 +64,10 @@ public class ItemDeepStack {
 		return stack;
 	}
 	
+	public ItemDeepStack copy() {
+		return new ItemDeepStack(item.copy(), count);
+	}
+	
 	public static List<ItemDeepStack> toDeepList(Collection<ItemStack> items) {
 		// Could make sure both lists are sorted by itemstack, and have iterators on both to make this merge fast.
 		// Optimization oppertunity!

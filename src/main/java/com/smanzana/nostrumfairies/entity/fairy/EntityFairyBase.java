@@ -113,7 +113,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	 * Subclasses can override this to do whatever they want.
 	 * @return
 	 */
-	protected @Nullable LogisticsNetwork getLogisticsNetwork() {
+	public @Nullable LogisticsNetwork getLogisticsNetwork() {
 		verifyHome();
 		BlockPos home = getHome();
 		if (home == null) {
@@ -223,7 +223,12 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 			// TODO maybe both should search for tasks if the task is dropable?
 		case WORKING:
 			if (currentTask != null) {
-				this.onTaskTick(currentTask);
+				if (currentTask.isComplete()) {
+					//LogisticsTaskRegistry.instance().revoke(currentTask);
+					finishTask();
+				} else {
+					this.onTaskTick(currentTask);
+				}
 			}
 			
 			// This isn't an else. That means it catches where we didn't have a task,
@@ -260,14 +265,24 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 			
 			if (list != null && !list.isEmpty()) {
 				// Could sort somehow.
+				ILogisticsTask foundTask = null;
 				for (FairyTaskPair pair : list) {
 					if (canPerformTask(pair.task)
 							&& pair.task.canAccept(this)
 							&& shouldPerformTask(pair.task)) {
-						LogisticsTaskRegistry.instance().claimTask(pair.task, this);
-						forceSetTask(pair.task);
-						return true;
+						if (foundTask == null) {
+							foundTask = pair.task;
+						} else if (foundTask.canMerge(pair.task)) {
+							foundTask.mergeIn(pair.task);
+							LogisticsTaskRegistry.instance().revoke(pair.task);
+						}
 					}
+				}
+				
+				if (foundTask != null) {
+					LogisticsTaskRegistry.instance().claimTask(foundTask, this);
+					forceSetTask(foundTask);
+					return true;
 				}
 			}
 		}
@@ -343,6 +358,5 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 		
 		super.setDead();
 	}
-	
 	
 }

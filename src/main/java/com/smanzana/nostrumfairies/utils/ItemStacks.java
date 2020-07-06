@@ -71,4 +71,51 @@ public class ItemStacks {
 		return null == attemptAddToInventory(inventory, stack, false);
 	}
 	
+	private static ItemStack attemptRemoveFromInventory(IInventory inventory, @Nullable ItemStack stack, boolean commit) {
+		if (stack == null) {
+    		return null;
+    	}
+    	
+    	ItemStack itemstack = stack.copy();
+
+    	for (int i = 0; i < inventory.getSizeInventory(); ++i) {
+    		ItemStack inSlot = inventory.getStackInSlot(i);
+    		
+    		if (inSlot == null) {
+    			continue;
+    		}
+    		
+            if (stacksMatch(itemstack, inSlot)) {
+            	// stacks appear to match. Deduct stack size
+            	if (inSlot.stackSize > itemstack.stackSize) {
+            		if (commit) {
+	            		inSlot.stackSize -= itemstack.stackSize;
+	            		inventory.markDirty();
+            		}
+            		return null;
+            	} else {
+            		itemstack.stackSize -= inSlot.stackSize;
+            		if (commit) {
+            			inventory.removeStackFromSlot(i);
+	            		inventory.markDirty();
+            		}
+            		
+            		if (itemstack.stackSize <= 0) {
+            			return null;
+            		}
+            	}
+           	}
+        }
+
+        return itemstack;
+	}
+	
+	public static boolean contains(IInventory inventory, @Nullable ItemStack items) {
+		return null == attemptRemoveFromInventory(inventory, items, false);
+	}
+	
+	public static ItemStack remove(IInventory inventory, @Nullable ItemStack items) {
+		return attemptRemoveFromInventory(inventory, items, true);
+	}
+	
 }

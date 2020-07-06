@@ -1,8 +1,16 @@
 package com.smanzana.nostrumfairies.entity.fairy;
 
+import java.util.List;
+import java.util.Map;
+
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
+import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsItemRetrievalTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask.Type;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -72,6 +80,18 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 			heldItem.stackSize += stack.stackSize; 
 		}
 	}
+	
+	@Override
+	public void removeItem(ItemStack stack) {
+		if (heldItem != null) {
+			if (ItemStacks.stacksMatch(stack, heldItem)) {
+				heldItem.stackSize -= stack.stackSize;
+				if (heldItem.stackSize <= 0) {
+					heldItem = null;
+				}
+			}
+		}
+	}
 
 	@Override
 	protected boolean onStatusChange(FairyGeneralStatus from, FairyGeneralStatus to) {
@@ -99,7 +119,20 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		return true;
+		if (task instanceof LogisticsItemRetrievalTask) {
+			LogisticsItemRetrievalTask retrieve = (LogisticsItemRetrievalTask) task;
+			Map<ILogisticsComponent, List<ItemDeepStack>> items = this.getLogisticsNetwork().getNetworkItems(false);
+			
+			for (List<ItemDeepStack> stacks : items.values()) {
+				for (ItemDeepStack deep : stacks) {
+					if (ItemStacks.stacksMatch(deep.getTemplate(), retrieve.getAttachedItem().getTemplate())) {
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
 	}
 
 	@Override
@@ -119,8 +152,33 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 
 	@Override
 	protected void onTaskTick(ILogisticsTask task) {
-		// TODO Auto-generated method stub
-		
+		LogisticsSubTask sub = task.getActiveSubtask();
+		if (sub != null) {
+			if (sub.getType() == Type.MOVE) {
+				BlockPos pos = sub.getPos();
+				if (worldObj.isAirBlock(pos.north())) {
+					pos = pos.north();
+				} else if (worldObj.isAirBlock(pos.south())) {
+					pos = pos.south();
+				} else if (worldObj.isAirBlock(pos.east())) {
+					pos = pos.east();
+				} else if (worldObj.isAirBlock(pos.west())) {
+					pos = pos.west();
+				}
+				
+				if (getPosition().distanceSq(pos) < .1) {
+					task.markSubtaskComplete();
+				} else if (!moveHelper.isUpdating()) {
+					this.moveHelper.setMoveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f);
+				}
+			} else if (sub.getType() == Type.BREAK) {
+				// this is where we'd play some animation?
+				if (this.onGround) {
+					this.jump();
+					task.markSubtaskComplete();
+				}
+			}
+		}
 	}
 
 	@Override

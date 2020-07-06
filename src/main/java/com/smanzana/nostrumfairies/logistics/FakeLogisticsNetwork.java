@@ -233,6 +233,16 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		public @Nullable LogisticsNetwork getNetwork() {
 			return network;
 		}
+
+		@Override
+		public void takeItem(ItemStack stack) {
+			;
+		}
+
+		@Override
+		public void addItem(ItemStack stack) {
+			;
+		}
 	}
 	
 }

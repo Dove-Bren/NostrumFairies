@@ -6,7 +6,9 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.utils.ItemStacks;
 
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -179,6 +181,22 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 		List<ItemStack> list = Lists.newArrayList(slots);
 		list.removeIf((stack) -> {return stack == null;});
 		return list;
+	}
+	
+	@Override
+	public void takeItem(ItemStack stack) {
+		super.takeItem(stack);
+		ItemStacks.remove(this, stack);
+	}
+	
+	@Override
+	public void addItem(ItemStack stack) {
+		super.addItem(stack);
+		ItemStack leftover = ItemStacks.addItem(this, stack);
+		if (leftover != null) {
+			EntityItem item = new EntityItem(this.worldObj, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, leftover);
+			worldObj.spawnEntityInWorld(item);
+		}
 	}
 	
 }

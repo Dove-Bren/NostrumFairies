@@ -85,7 +85,7 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 	
 	private void addRequests(ItemDeepStack item) {
 		for (long i = 0; i < item.getCount(); i++) {
-			LogisticsItemRetrievalTask task = makeTask("ItemRequest: " + item.getTemplate().getUnlocalizedName() + " x " + 1,
+			LogisticsItemRetrievalTask task = makeTask("ItemRequest",
 					new ItemDeepStack(item.getTemplate(), 1));
 			this.activeTasks.add(task);
 		}
@@ -178,9 +178,11 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 	@Override
 	public void onTaskDrop(ILogisticsTask task, IFairyWorker worker) {
 		activeTasks.remove(task);
-		task.unmerge().forEach((t) -> {
-			activeTasks.add((LogisticsItemRetrievalTask) t);
-		});
+//		LogisticsTaskRegistry.instance().revoke(task);
+//		task.unmerge().forEach((t) -> {
+//			activeTasks.add((LogisticsItemRetrievalTask) t);
+//			LogisticsTaskRegistry.instance().register(t);
+//		});
 	}
 
 	@Override

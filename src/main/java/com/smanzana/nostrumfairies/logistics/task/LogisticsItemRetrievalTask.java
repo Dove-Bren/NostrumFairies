@@ -1,7 +1,10 @@
 package com.smanzana.nostrumfairies.logistics.task;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -9,26 +12,44 @@ import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
 import com.smanzana.nostrumfairies.entity.fairy.IItemCarrierFairy;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 public class LogisticsItemRetrievalTask implements ILogisticsTask {
+	
+	private static enum Phase {
+		IDLE,
+		RETRIEVING,
+		DELIVERING,
+		DONE,
+	}
 	
 	private ILogisticsTaskListener owner;
 	private String displayName;
 	private ItemDeepStack item; // stacksize used for quantity and merge status
 	private IItemCarrierFairy fairy;
 	
+	private Phase phase;
+	private LogisticsSubTask retrieveTask;
+	private LogisticsSubTask deliverTask;
+	
 	private @Nullable ILogisticsComponent component;
 	private @Nullable EntityLivingBase entity;
+	
+	private int animCount;
+	private @Nullable ILogisticsComponent pickupComponent;
 	
 	private LogisticsItemRetrievalTask(ILogisticsTaskListener owner, String displayName, ItemDeepStack item) {
 		this.owner = owner;
 		this.displayName = displayName;
 		this.item = item;
+		phase = Phase.IDLE;
 	}
 	
 	public LogisticsItemRetrievalTask(ILogisticsTaskListener owner, ILogisticsComponent owningComponent, String displayName, ItemDeepStack item) {
@@ -47,7 +68,7 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 
 	@Override
 	public String getDisplayName() {
-		return displayName;
+		return displayName + " (" + item.getTemplate().getUnlocalizedName() + " x " + item.getCount() + " - " + phase.name() + ")";
 	}
 
 	@Override
@@ -71,12 +92,17 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		// TODO did we merge? Do some work here if we did!
 		
 		this.fairy = null;
+		phase = Phase.IDLE;
+		retrieveTask = null;
+		deliverTask = null;
 	}
 
 	@Override
 	public void onAccept(IFairyWorker worker) {
 		owner.onTaskAccept(this, worker);
 		this.fairy = (IItemCarrierFairy) worker;
+		phase = Phase.RETRIEVING;
+		animCount = 0;
 	}
 
 	@Override
@@ -118,6 +144,16 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		return tasks;
 	}
 	
+	protected LogisticsItemRetrievalTask split(int leftover) {
+		ItemDeepStack newItem = new ItemDeepStack(item.getTemplate().copy(), leftover);
+		
+		if (entity == null) {
+			return new LogisticsItemRetrievalTask(owner, component, displayName, newItem);
+		} else {
+			return new LogisticsItemRetrievalTask(owner, entity, displayName, newItem);
+		}
+	}
+	
 	public boolean isActive() {
 		return fairy != null;
 	}
@@ -128,6 +164,138 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 	
 	public ItemDeepStack getAttachedItem() {
 		return item;
+	}
+
+	@Override
+	public LogisticsSubTask getActiveSubtask() {
+		switch (phase) {
+		case IDLE:
+			return null;
+		case RETRIEVING:
+			if (retrieveTask == null) {
+				
+				if (animCount == 0) {
+					// Find an item to go and pick up
+					LogisticsNetwork network = fairy.getLogisticsNetwork();
+					if (network != null) {
+						Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.worldObj : component.getWorld(),
+								component == null ? entity.getPosition() : component.getPosition(),
+								250.0, false);
+						ItemDeepStack most = null;
+						ILogisticsComponent comp = null;
+						for (Entry<ILogisticsComponent, List<ItemDeepStack>> entry : items.entrySet()) {
+							ItemDeepStack item = null;
+							
+							for (ItemDeepStack deep : entry.getValue()) {
+								if (item == null || deep.canMerge(item)) {
+									// This item matches. Does it have more in its stack than our most
+									if (item == null || item.getCount() < deep.getCount()) {
+										item = deep;
+									}
+								}
+							}
+							
+							if (item != null) {
+								most = item;
+								comp = entry.getKey();
+							}
+						}
+						
+						if (comp != null) {
+							retrieveTask = LogisticsSubTask.Move(comp.getPosition());
+							pickupComponent = comp;
+							
+							// Make other tasks for leftovers
+							@SuppressWarnings("null")
+							long leftover = item.getCount() - most.getCount();
+							if (leftover > 0) {
+								// Adjust how much we're 'grabbing'
+								item.add(-leftover);
+								
+								LogisticsItemRetrievalTask other = split((int)leftover);
+								LogisticsTaskRegistry.instance().register(other);
+							}
+						}
+					}
+				}
+			} else if (animCount == 1) {
+				// made it to the location and now are 'pciking it up'
+				retrieveTask = LogisticsSubTask.Break(retrieveTask.getPos());
+			}
+			
+			
+			
+			return retrieveTask;
+		case DELIVERING:
+			if (deliverTask == null) {
+				deliverTask = LogisticsSubTask.Move(component == null ? entity.getPosition() : component.getPosition());
+			}
+			
+			return deliverTask;
+		case DONE:
+			return null;
+		}
+		
+		return null;
+	}
+
+	@Override
+	public void markSubtaskComplete() {
+		System.out.println("task complete");
+		switch (phase) {
+		case IDLE:
+			; // ?
+			break;
+		case RETRIEVING:
+			// Moved to pick up the item. Give it to them and then move on
+			if (animCount < 20) {
+				animCount++;
+			} else {
+				takeItems();
+				phase = Phase.DELIVERING;
+			}
+			break;
+		case DELIVERING:
+			giveItems();
+			phase = Phase.DONE;
+			break;
+		case DONE:
+			break;
+		}
+	}
+	
+	@Override
+	public boolean isComplete() {
+		return phase == Phase.DONE;
+	}
+	
+	private void takeItems() {
+		while (item.getCount() > 0) {
+			ItemStack stack = item.splitStack((int) Math.min(item.getTemplate().getMaxStackSize(), item.getCount()));
+			pickupComponent.takeItem(stack);
+			fairy.addItem(stack);
+		}
+	}
+	
+	private void giveItems() {
+		IItemCarrierFairy worker = fairy; // capture before making changes!
+		ItemStack old[] = worker.getCarriedItems();
+		ItemStack items[] = Arrays.copyOf(old, old.length);
+		
+		for (ItemStack stack : items) {
+			if (entity == null) {
+				component.addItem(stack);
+			} else {
+				if (entity instanceof EntityPlayer) {
+					EntityPlayer player = (EntityPlayer) entity;
+					player.inventory.addItemStackToInventory(stack);
+				} else {
+					EntityItem item = new EntityItem(entity.worldObj, entity.posX, entity.posY + .5, entity.posZ, stack);
+					entity.worldObj.spawnEntityInWorld(item);
+				}
+			}
+			worker.removeItem(stack);
+		}
 	}
 
 }

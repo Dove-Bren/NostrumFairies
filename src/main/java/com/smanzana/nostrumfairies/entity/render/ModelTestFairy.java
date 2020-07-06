@@ -1,8 +1,14 @@
 package com.smanzana.nostrumfairies.entity.render;
 
+import com.smanzana.nostrumfairies.entity.fairy.EntityTestFairy;
+
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.ItemStack;
 
 public class ModelTestFairy extends ModelBase {
 
@@ -22,6 +28,14 @@ public class ModelTestFairy extends ModelBase {
 			float swing, float headAngleY, float headAngleX, float scale) {
 		setRotationAngles(time, swingProgress, swing, headAngleY, headAngleX, scale, entity);
 		main.render(scale);
+		
+		ItemStack stack = ((EntityTestFairy) entity).getCarriedItems()[0];
+		if (stack != null) {
+			GlStateManager.pushMatrix();
+			GlStateManager.translate(0, 2, 0);
+			Minecraft.getMinecraft().getRenderItem().renderItem(stack, TransformType.GROUND);
+			GlStateManager.popMatrix();
+		}
 	}
 	
 }

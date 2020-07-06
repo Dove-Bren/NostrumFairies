@@ -69,6 +69,13 @@ public class OverlayRenderer extends Gui {
 				}
 				Minecraft.getMinecraft().fontRendererObj.drawString(str, -120, y, 0xFFFFFFFF);
 				y += 8;
+				str = "no subtask";
+				if (retrieve.getActiveSubtask() != null) {
+					str = retrieve.getDisplayName();
+					str += " (" + retrieve.getActiveSubtask().getPos() + ")";
+				}
+				Minecraft.getMinecraft().fontRendererObj.drawString(str, 40, y, 0xFFFFFFFF);
+				y += 8;
 			}
 		}
 		

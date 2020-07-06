@@ -76,6 +76,11 @@ public class LogisticsTaskRegistry {
 	 */
 	public void register(ILogisticsTask task) {
 		registry.add(new RegistryItem(task));
+		
+		ILogisticsComponent comp = task.getSourceComponent();
+		if (comp == null) {
+			throw new RuntimeException("Logistics task registered without an attached component");
+		} //donotcheckin
 	}
 	
 	/**
@@ -175,6 +180,12 @@ public class LogisticsTaskRegistry {
 		item.setActor(null);
 		item.task.onDrop(oldActor);
 		oldActor.cancelTask();
+		
+		// split up merged tasks
+		revoke(task);
+		task.unmerge().forEach((t) -> {
+			LogisticsTaskRegistry.instance().register(t);
+		});
 	}
 
 	public Collection<ILogisticsTask> allTasks() {

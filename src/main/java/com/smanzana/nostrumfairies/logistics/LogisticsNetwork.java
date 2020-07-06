@@ -531,7 +531,7 @@ public class LogisticsNetwork {
 				continue;
 			}
 			
-			if (pos != null && component.getPosition().distanceSq(pos) < maxDistSq) {
+			if (pos == null || component.getPosition().distanceSq(pos) < maxDistSq) {
 				filteredMap.put(component, includeRequested ? entry.getValue().rawItems : entry.getValue().availableItems);
 			}
 		}

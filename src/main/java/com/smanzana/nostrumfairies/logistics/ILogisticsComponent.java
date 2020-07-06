@@ -72,4 +72,8 @@ public interface ILogisticsComponent {
 	
 	public String getSerializationTag();
 	
+	public void takeItem(ItemStack stack);
+	
+	public void addItem(ItemStack stack);
+	
 }

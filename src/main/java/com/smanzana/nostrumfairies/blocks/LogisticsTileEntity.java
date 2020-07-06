@@ -152,6 +152,14 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		;
 	}
 	
+	public void takeItem(ItemStack stack) {
+		;
+	}
+	
+	public void addItem(ItemStack stack) {
+		;
+	}
+	
 	// The logistics component counterpart to the tile entity
 	public static class LogisticsTileEntityComponent implements ILogisticsComponent {
 		
@@ -315,6 +323,22 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		
 		public static LogisticsTileEntityComponent find(UUID componentID) {
 			return map.get(componentID);
+		}
+
+		@Override
+		public void takeItem(ItemStack stack) {
+			refreshCache();
+			if (teCache != null) {
+				teCache.takeItem(stack);
+			}
+		}
+
+		@Override
+		public void addItem(ItemStack stack) {
+			refreshCache();
+			if (teCache != null) {
+				teCache.addItem(stack);
+			}
 		}
 
 	}

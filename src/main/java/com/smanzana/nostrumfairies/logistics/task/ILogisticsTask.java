@@ -80,4 +80,18 @@ public interface ILogisticsTask {
 	 * @return
 	 */
 	public @Nullable ILogisticsComponent getSourceComponent();
+	
+	/**
+	 * Get the current subtask this logistics task is on.
+	 * Workers should perform this action.
+	 * @return
+	 */
+	public @Nullable LogisticsSubTask getActiveSubtask();
+	
+	/**
+	 * Call to indicate that a worker believes they've fulfilled the active subtask
+	 */
+	public void markSubtaskComplete();
+	
+	public boolean isComplete();
 }

@@ -1,10 +1,11 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
@@ -144,7 +145,7 @@ public class OutputLogisticsChest extends BlockContainer {
 			
 			// Update requester
 			if (!worldObj.isRemote) {
-				requester.updateRequestedItems(Lists.newArrayList(templates));
+				requester.updateRequestedItems(getItemRequests());
 			}
 			
 			this.markDirty();
@@ -223,15 +224,20 @@ public class OutputLogisticsChest extends BlockContainer {
 		@Override
 		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
 			super.setNetworkComponent(component);
+			
+			if (worldObj != null && !worldObj.isRemote && requester == null) {
+				requester = new LogisticsItemRequester(this.networkComponent);
+				requester.updateRequestedItems(getItemRequests());
+			}
 		}
 		
 		@Override
 		public void setWorldObj(World worldIn) {
 			super.setWorldObj(worldIn);
 			
-			if (!worldIn.isRemote && requester == null) {
+			if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
 				requester = new LogisticsItemRequester(this.networkComponent);
-				requester.updateRequestedItems(Lists.newArrayList(templates));
+				requester.updateRequestedItems(getItemRequests());
 			}
 		}
 		
@@ -247,10 +253,81 @@ public class OutputLogisticsChest extends BlockContainer {
 		@Override
 		public void onJoinNetwork(LogisticsNetwork network) {
 			if (!worldObj.isRemote && requester != null) {
-				requester.updateRequestedItems(Lists.newArrayList(templates));
+				requester.updateRequestedItems(getItemRequests());
 			}
 			
 			super.onJoinNetwork(network);
+		}
+		
+		private List<ItemStack> getItemRequests() {
+			List<ItemStack> requests = new LinkedList<>();
+			
+			for (int i = 0; i < templates.length; i++) {
+				if (templates[i] == null) {
+					continue;
+				}
+				
+				ItemStack inSlot = this.getStackInSlot(i);
+				int desire = templates[i].stackSize - (inSlot == null ? 0 : inSlot.stackSize);
+				if (desire > 0) {
+					ItemStack req = templates[i].copy();
+					req.stackSize = desire;
+					requests.add(req);
+				}
+			}
+			
+			return requests;
+		}
+		
+		@Override
+		public void takeItem(ItemStack stack) {
+			// If there's an option, take from slots that don't have templates first
+			super.takeItem(stack);
+			// TODO
+		}
+		
+		@Override
+		public void addItem(ItemStack stack) {
+			// If there's a choice, add to slots that have unfufilled templates first
+			for (int i = 0; i < templates.length; i++) {
+				if (templates[i] == null) {
+					continue;
+				}
+				
+				if (!isItemValidForSlot(i, stack)) {
+					// doesn't fit here anyways
+					continue;
+				}
+				
+				// if template count != stack count, try to add there
+				ItemStack inSlot = this.getStackInSlot(i);
+				int desire = templates[i].stackSize - (inSlot == null ? 0 : inSlot.stackSize);
+				int amt = Math.min(stack.stackSize, desire);
+				if (inSlot == null) {
+					// take out template desire amount
+					this.setInventorySlotContents(i, stack.splitStack(amt));
+				} else {
+					stack.stackSize -= amt;
+					inSlot.stackSize += amt;
+				}
+				
+				if (stack.stackSize <= 0) {
+					break;
+				}
+			}
+			
+			// Any leftover?
+			if (stack != null && stack.stackSize > 0) {
+				super.addItem(stack);
+			}
+		}
+		
+		@Override
+		public void markDirty() {
+			super.markDirty();
+			if (worldObj != null && !worldObj.isRemote && requester != null) {
+				requester.updateRequestedItems(getItemRequests());
+			}
 		}
 	}
 	

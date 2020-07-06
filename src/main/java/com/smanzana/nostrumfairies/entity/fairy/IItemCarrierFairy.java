@@ -23,4 +23,11 @@ public interface IItemCarrierFairy extends IFairyWorker {
 	 */
 	public void addItem(ItemStack stack);
 	
+	/**
+	 * Remove an item stack from the fairy.
+	 * Note this is 'remove stack.stackSize items of type stack.getItem() + stack.getMetadata()'
+	 * @param stack
+	 */
+	public void removeItem(ItemStack stack);
+	
 }

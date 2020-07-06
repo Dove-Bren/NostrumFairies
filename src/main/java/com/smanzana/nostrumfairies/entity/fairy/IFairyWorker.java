@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.entity.fairy;
 
 import javax.annotation.Nullable;
 
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 
 import net.minecraft.util.math.BlockPos;
@@ -39,5 +40,7 @@ public interface IFairyWorker {
 	public @Nullable ILogisticsTask getCurrentTask();
 	
 	public void cancelTask();
+	
+	public @Nullable LogisticsNetwork getLogisticsNetwork();
 	
 }
