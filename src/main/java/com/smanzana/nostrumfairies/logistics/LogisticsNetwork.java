@@ -448,6 +448,8 @@ public class LogisticsNetwork {
 		}
 		
 		cache.availableItems = makeAvailableList(component, cache.rawItems);
+		this.dirty();
+		this.refresh();
 	}
 	
 	private CachedItemList makeItemListEntry(ILogisticsComponent component, List<ItemDeepStack> raws) {
@@ -458,8 +460,6 @@ public class LogisticsNetwork {
 		if (!this.cacheDirty) {
 			return;
 		}
-		
-		System.out.println("Refreshing cache");
 		
 		this.cacheDirty = false;
 		cachedItemMap = new HashMap<>();

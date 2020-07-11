@@ -77,11 +77,20 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 
 	@Override
 	public void setInventorySlotContents(int index, ItemStack stack) {
+		setInventorySlotContentsDirty(index, stack);
+		this.markDirty();
+	}
+	
+	/**
+	 * Sets the contents of the inventory <b>without setting the dirty flag</b>
+	 * @param index
+	 * @param stack
+	 */
+	protected void setInventorySlotContentsDirty(int index, ItemStack stack) {
 		if (!isItemValidForSlot(index, stack))
 			return;
 		
 		slots[index] = stack;
-		this.markDirty();
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
 import com.smanzana.nostrumfairies.entity.fairy.IItemCarrierFairy;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.RequestedItemRecord;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
@@ -37,6 +38,7 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 	
 	private Phase phase;
 	private LogisticsSubTask retrieveTask;
+	private LogisticsSubTask workTask;
 	private LogisticsSubTask deliverTask;
 	
 	private @Nullable ILogisticsComponent component;
@@ -44,6 +46,7 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 	
 	private int animCount;
 	private @Nullable ILogisticsComponent pickupComponent;
+	private @Nullable RequestedItemRecord requestRecord;
 	
 	private LogisticsItemRetrievalTask(ILogisticsTaskListener owner, String displayName, ItemDeepStack item) {
 		this.owner = owner;
@@ -91,10 +94,16 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		
 		// TODO did we merge? Do some work here if we did!
 		
+		if (requestRecord != null) {
+			fairy.getLogisticsNetwork().removeRequestedItem(pickupComponent, requestRecord);
+		}
+		
 		this.fairy = null;
 		phase = Phase.IDLE;
 		retrieveTask = null;
 		deliverTask = null;
+		pickupComponent = null;
+		requestRecord = null;
 	}
 
 	@Override
@@ -103,6 +112,11 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		this.fairy = (IItemCarrierFairy) worker;
 		phase = Phase.RETRIEVING;
 		animCount = 0;
+		makeTasks();
+		
+		if (retrieveTask != null) {
+			requestRecord = fairy.getLogisticsNetwork().addRequestedItem(pickupComponent, this, item);
+		}
 	}
 
 	@Override
@@ -165,6 +179,63 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 	public ItemDeepStack getAttachedItem() {
 		return item;
 	}
+	
+	private void makeTasks() {
+		// Make retrieve task
+		retrieveTask = null;
+		{
+			// Find an item to go and pick up
+			LogisticsNetwork network = fairy.getLogisticsNetwork();
+			if (network != null) {
+				Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.worldObj : component.getWorld(),
+						component == null ? entity.getPosition() : component.getPosition(),
+						250.0, false);
+				ItemDeepStack most = null;
+				ILogisticsComponent comp = null;
+				for (Entry<ILogisticsComponent, List<ItemDeepStack>> entry : items.entrySet()) {
+					ItemDeepStack item = null;
+					
+					for (ItemDeepStack deep : entry.getValue()) {
+						if (item == null || deep.canMerge(item)) {
+							// This item matches. Does it have more in its stack than our most
+							if (item == null || item.getCount() < deep.getCount()) {
+								item = deep;
+							}
+						}
+					}
+					
+					if (item != null) {
+						most = item;
+						comp = entry.getKey();
+					}
+				}
+				
+				if (comp != null) {
+					retrieveTask = LogisticsSubTask.Move(comp.getPosition());
+					pickupComponent = comp;
+					
+					// Make other tasks for leftovers
+					@SuppressWarnings("null")
+					long leftover = item.getCount() - most.getCount();
+					if (leftover > 0) {
+						// Adjust how much we're 'grabbing'
+						item.add(-leftover);
+						
+						LogisticsItemRetrievalTask other = split((int)leftover);
+						LogisticsTaskRegistry.instance().register(other);
+					}
+				}
+			}
+		}
+		
+		if (retrieveTask != null) {
+			workTask = LogisticsSubTask.Break(retrieveTask.getPos());
+			
+			// make deliver task
+			deliverTask = LogisticsSubTask.Move(component == null ? entity.getPosition() : component.getPosition());
+		}
+		
+	}
 
 	@Override
 	public LogisticsSubTask getActiveSubtask() {
@@ -172,65 +243,12 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		case IDLE:
 			return null;
 		case RETRIEVING:
-			if (retrieveTask == null) {
-				
-				if (animCount == 0) {
-					// Find an item to go and pick up
-					LogisticsNetwork network = fairy.getLogisticsNetwork();
-					if (network != null) {
-						Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.worldObj : component.getWorld(),
-								component == null ? entity.getPosition() : component.getPosition(),
-								250.0, false);
-						ItemDeepStack most = null;
-						ILogisticsComponent comp = null;
-						for (Entry<ILogisticsComponent, List<ItemDeepStack>> entry : items.entrySet()) {
-							ItemDeepStack item = null;
-							
-							for (ItemDeepStack deep : entry.getValue()) {
-								if (item == null || deep.canMerge(item)) {
-									// This item matches. Does it have more in its stack than our most
-									if (item == null || item.getCount() < deep.getCount()) {
-										item = deep;
-									}
-								}
-							}
-							
-							if (item != null) {
-								most = item;
-								comp = entry.getKey();
-							}
-						}
-						
-						if (comp != null) {
-							retrieveTask = LogisticsSubTask.Move(comp.getPosition());
-							pickupComponent = comp;
-							
-							// Make other tasks for leftovers
-							@SuppressWarnings("null")
-							long leftover = item.getCount() - most.getCount();
-							if (leftover > 0) {
-								// Adjust how much we're 'grabbing'
-								item.add(-leftover);
-								
-								LogisticsItemRetrievalTask other = split((int)leftover);
-								LogisticsTaskRegistry.instance().register(other);
-							}
-						}
-					}
-				}
-			} else if (animCount == 1) {
-				// made it to the location and now are 'pciking it up'
-				retrieveTask = LogisticsSubTask.Break(retrieveTask.getPos());
+			if (animCount == 0) {
+				return retrieveTask;
+			} else {
+				return workTask;
 			}
-			
-			
-			
-			return retrieveTask;
 		case DELIVERING:
-			if (deliverTask == null) {
-				deliverTask = LogisticsSubTask.Move(component == null ? entity.getPosition() : component.getPosition());
-			}
-			
 			return deliverTask;
 		case DONE:
 			return null;
@@ -241,14 +259,13 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 
 	@Override
 	public void markSubtaskComplete() {
-		System.out.println("task complete");
 		switch (phase) {
 		case IDLE:
 			; // ?
 			break;
 		case RETRIEVING:
 			// Moved to pick up the item. Give it to them and then move on
-			if (animCount < 20) {
+			if (animCount < 3) { // TODO was 20
 				animCount++;
 			} else {
 				takeItems();
@@ -256,8 +273,8 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 			}
 			break;
 		case DELIVERING:
-			giveItems();
 			phase = Phase.DONE;
+			giveItems();
 			break;
 		case DONE:
 			break;
@@ -270,8 +287,9 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 	}
 	
 	private void takeItems() {
-		while (item.getCount() > 0) {
-			ItemStack stack = item.splitStack((int) Math.min(item.getTemplate().getMaxStackSize(), item.getCount()));
+		ItemDeepStack giveItem = item.copy();
+		while (giveItem.getCount() > 0) {
+			ItemStack stack = giveItem.splitStack((int) Math.min(giveItem.getTemplate().getMaxStackSize(), giveItem.getCount()));
 			pickupComponent.takeItem(stack);
 			fairy.addItem(stack);
 		}

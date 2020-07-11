@@ -289,6 +289,7 @@ public class OutputLogisticsChest extends BlockContainer {
 		@Override
 		public void addItem(ItemStack stack) {
 			// If there's a choice, add to slots that have unfufilled templates first
+			boolean anyChanges = false;
 			for (int i = 0; i < templates.length; i++) {
 				if (templates[i] == null) {
 					continue;
@@ -305,15 +306,21 @@ public class OutputLogisticsChest extends BlockContainer {
 				int amt = Math.min(stack.stackSize, desire);
 				if (inSlot == null) {
 					// take out template desire amount
-					this.setInventorySlotContents(i, stack.splitStack(amt));
+					this.setInventorySlotContentsDirty(i, stack.splitStack(amt)); // doesn't set dirty
+					anyChanges = true;
 				} else {
 					stack.stackSize -= amt;
 					inSlot.stackSize += amt;
+					anyChanges = true;
 				}
 				
 				if (stack.stackSize <= 0) {
 					break;
 				}
+			}
+			
+			if (anyChanges) {
+				this.markDirty();
 			}
 			
 			// Any leftover?

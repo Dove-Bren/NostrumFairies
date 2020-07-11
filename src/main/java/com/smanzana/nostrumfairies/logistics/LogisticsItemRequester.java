@@ -1,6 +1,7 @@
 package com.smanzana.nostrumfairies.logistics;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -53,7 +54,14 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 	}
 	
 	private void dropRequests(long count, List<LogisticsItemRetrievalTask> taskList) {
+		Collections.sort(taskList, (left, right) -> {
+			return left.isComplete()
+					? -1
+					: right.isComplete() ? 1 : 0;
+		});
 		Iterator<LogisticsItemRetrievalTask> it = taskList.iterator();
+		
+		// requests sorted with completed ones first
 		while (it.hasNext() && count > 0) {
 			LogisticsItemRetrievalTask task = it.next();
 			if (task.getAttachedItem().getCount() <= count) {
@@ -66,6 +74,7 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 				activeTasks.remove(task);
 			}
 		}
+		
 	}
 	
 	private LogisticsItemRetrievalTask makeTask(String name, ItemDeepStack item) {
@@ -167,12 +176,13 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 	}
 	
 	public void clearRequests() {
+		List<LogisticsItemRetrievalTask> list = this.activeTasks;
+		activeTasks = new LinkedList<>();
 		if (entity == null) {
-			for (ILogisticsTask task : this.activeTasks) {
+			for (ILogisticsTask task : list) {
 				LogisticsTaskRegistry.instance().revoke(task);
 			} // else not registered
 		}
-		activeTasks.clear();
 	}
 
 	@Override
@@ -187,6 +197,10 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 
 	@Override
 	public void onTaskAccept(ILogisticsTask task, IFairyWorker worker) {
+		// I dumbly am dropping and then re-adding tasks when merging.
+		if (!activeTasks.contains(task)) {
+			activeTasks.add((LogisticsItemRetrievalTask) task);
+		}
 		// TODO Auto-generated method stub
 		
 	}

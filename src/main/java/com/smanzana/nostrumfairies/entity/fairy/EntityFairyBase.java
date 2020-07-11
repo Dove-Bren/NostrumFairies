@@ -137,9 +137,6 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 		ILogisticsTask oldtask = this.getCurrentTask();
 		this.currentTask = task;
 		this.onTaskChange(oldtask, task);
-		
-		System.out.println("Forcing task to " + task);
-		
 	}
 	
 	@Override
@@ -272,16 +269,20 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 							&& shouldPerformTask(pair.task)) {
 						if (foundTask == null) {
 							foundTask = pair.task;
+							LogisticsTaskRegistry.instance().claimTask(foundTask, this);
+							forceSetTask(foundTask);
 						} else if (foundTask.canMerge(pair.task)) {
+							foundTask.onDrop(this);
 							foundTask.mergeIn(pair.task);
 							LogisticsTaskRegistry.instance().revoke(pair.task);
+							foundTask.onAccept(this);
 						}
 					}
 				}
 				
 				if (foundTask != null) {
-					LogisticsTaskRegistry.instance().claimTask(foundTask, this);
-					forceSetTask(foundTask);
+					
+					
 					return true;
 				}
 			}

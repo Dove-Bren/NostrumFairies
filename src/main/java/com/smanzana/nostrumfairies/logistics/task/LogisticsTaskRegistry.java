@@ -93,12 +93,12 @@ public class LogisticsTaskRegistry {
 		while (it.hasNext()) {
 			RegistryItem item = it.next();
 			if (item.task == task) {
+				IFairyWorker oldActor = item.actor;
 				if (item.hasActor()) {
-					IFairyWorker oldActor = item.actor;
 					item.setActor(null);
-					item.task.onDrop(oldActor);
 					oldActor.cancelTask();
 				}
+				item.task.onDrop(oldActor);
 				it.remove();
 			}
 		}

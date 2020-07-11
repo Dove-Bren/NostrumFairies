@@ -52,8 +52,8 @@ public class ItemStacks {
             		return null;
             	} else if (room > 0) {
             		if (commit) {
-	            		inventory.markDirty();
 	            		itemstack1.stackSize += room;
+	            		inventory.markDirty();
             		}
             		itemstack.stackSize -= room;
             	}
