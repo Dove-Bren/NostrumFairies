@@ -79,7 +79,7 @@ public class OverlayRenderer extends Gui {
 			}
 		}
 		
-		
+		Minecraft.getMinecraft().getTextureManager().bindTexture(Gui.ICONS);
 		
 	}
 	

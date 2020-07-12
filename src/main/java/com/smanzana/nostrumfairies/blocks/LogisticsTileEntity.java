@@ -160,6 +160,10 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		;
 	}
 	
+	public boolean isItemBuffer() {
+		return false;
+	}
+	
 	// The logistics component counterpart to the tile entity
 	public static class LogisticsTileEntityComponent implements ILogisticsComponent {
 		
@@ -339,6 +343,21 @@ public abstract class LogisticsTileEntity extends TileEntity {
 			if (teCache != null) {
 				teCache.addItem(stack);
 			}
+		}
+		
+		public @Nullable TileEntity getTileEntity() {
+			refreshCache();
+			return teCache;
+		}
+
+		@Override
+		public boolean isItemBuffer() {
+			refreshCache();
+			if (teCache != null) {
+				return teCache.isItemBuffer();
+			}
+			
+			return false;
 		}
 
 	}

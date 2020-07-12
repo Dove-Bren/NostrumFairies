@@ -44,13 +44,14 @@ public class StorageMonitorScreen extends GuiScreen {
 	private int mouseClickOffsetY;
 	private boolean scrollClicked;
 	
-	StorageMonitorScreen(LogisticsNetwork network) {
+	public StorageMonitorScreen(LogisticsNetwork network) {
 		this.network = network;
 	}
 	
 	@Override	
 	public void updateScreen() {
 		if (network != null) {
+			// TODO toggle excluding 'buffer' chest items
 			final List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
 			final int len = items.size();
 			final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);

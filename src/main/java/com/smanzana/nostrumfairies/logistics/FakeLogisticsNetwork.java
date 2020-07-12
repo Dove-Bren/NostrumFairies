@@ -243,6 +243,11 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		public void addItem(ItemStack stack) {
 			;
 		}
+
+		@Override
+		public boolean isItemBuffer() {
+			return false;
+		}
 	}
 	
 }

@@ -29,7 +29,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	@Override
 	public void markDirty() {
 		LogisticsNetwork network = getNetwork();
-		if (network != null) {
+		if (network != null && !this.worldObj.isRemote) {
 			network.dirty();
 		}
 		super.markDirty();

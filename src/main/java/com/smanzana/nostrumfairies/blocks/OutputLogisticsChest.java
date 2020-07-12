@@ -142,12 +142,6 @@ public class OutputLogisticsChest extends BlockContainer {
 			
 			ItemStack temp = template == null ? null : template.copy();
 			templates[index] = temp;
-			
-			// Update requester
-			if (!worldObj.isRemote) {
-				requester.updateRequestedItems(getItemRequests());
-			}
-			
 			this.markDirty();
 		}
 		
@@ -226,7 +220,7 @@ public class OutputLogisticsChest extends BlockContainer {
 			super.setNetworkComponent(component);
 			
 			if (worldObj != null && !worldObj.isRemote && requester == null) {
-				requester = new LogisticsItemRequester(this.networkComponent);
+				requester = new LogisticsItemRequester(this.networkComponent, true); // TODO make using buffer chests configurable!
 				requester.updateRequestedItems(getItemRequests());
 			}
 		}
@@ -236,7 +230,7 @@ public class OutputLogisticsChest extends BlockContainer {
 			super.setWorldObj(worldIn);
 			
 			if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
-				requester = new LogisticsItemRequester(this.networkComponent);
+				requester = new LogisticsItemRequester(this.networkComponent, true);
 				requester.updateRequestedItems(getItemRequests());
 			}
 		}

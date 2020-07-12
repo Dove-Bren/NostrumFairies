@@ -84,6 +84,7 @@ public class LogisticsNetwork {
 	protected List<ItemDeepStack> cachedCondensedItems; // List of itemstacks with over-stacked sizes
 	protected Map<ILogisticsComponent, CachedItemList> cachedItemMap;
 	protected Map<ILogisticsComponent, List<RequestedItemRecord>> activeItemRequests; // current items that are being taken from each component
+	protected UUID cacheKey; // used by components to know whether things have changed since the last time THEY cached stuff
 	
 	public LogisticsNetwork() {
 		this(UUID.randomUUID(), true);
@@ -95,6 +96,7 @@ public class LogisticsNetwork {
 		this.components = new HashSet<>(); // components will load and re-attach
 		this.componentGraph = new HashMap<>();
 		this.activeItemRequests = new HashMap<>();
+		this.cacheKey = UUID.randomUUID();
 		cacheDirty = false;
 		
 		if (register) {
@@ -426,7 +428,7 @@ public class LogisticsNetwork {
 			for (RequestedItemRecord request : requests) {
 				Iterator<ItemDeepStack> it = ret.iterator();
 				while (it.hasNext()) {
-					ItemDeepStack deep = it.next();
+					ItemDeepStack deep = it.next().copy();
 					if (ItemStacks.stacksMatch(deep.getTemplate(), request.items.getTemplate())) {
 						deep.add(-request.items.getCount());
 						if (deep.getCount() <= 0) {
@@ -474,6 +476,8 @@ public class LogisticsNetwork {
 			addToCondensed(list);
 			cachedItemMap.put(component, makeItemListEntry(component, list));
 		}
+		
+		this.cacheKey = UUID.randomUUID();
 	}
 	
 	protected void rebuildGraph() {
@@ -623,6 +627,17 @@ public class LogisticsNetwork {
 	
 	public @Nullable Collection<RequestedItemRecord> getItemRequests(ILogisticsComponent component) {
 		return activeItemRequests.get(component);
+	}
+	
+	/**
+	 * Return a UUID that changes any time the item cache is refreshed.
+	 * Network-dependent constructs can cache item stuff locally and use this key to see whether or not
+	 * they need to bust their cache and recompute.
+	 * @return
+	 */
+	public @Nullable UUID getCacheKey() {
+		// if the cache is dirty, don't even return the old one. Make them query inventory to generate new stuff.
+		return cacheDirty ? null : cacheKey;
 	}
 	
 }

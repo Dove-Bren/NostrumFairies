@@ -29,19 +29,21 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 
 	private @Nullable ILogisticsComponent component;
 	private @Nullable EntityLivingBase entity;
+	private boolean useBuffers;
 	private List<LogisticsItemRetrievalTask> activeTasks;
 	
-	private LogisticsItemRequester() {
+	private LogisticsItemRequester(boolean useBuffers) {
 		this.activeTasks = new LinkedList<>();
+		this.useBuffers = useBuffers;
 	}
 	
-	public LogisticsItemRequester(ILogisticsComponent component) {
-		this();
+	public LogisticsItemRequester(ILogisticsComponent component, boolean useBuffers) {
+		this(useBuffers);
 		this.component = component;
 	}
 	
-	public LogisticsItemRequester(EntityLivingBase entityRequester) {
-		this();
+	public LogisticsItemRequester(EntityLivingBase entityRequester, boolean useBuffers) {
+		this(useBuffers);
 		this.entity = entityRequester;
 	}
 	
@@ -83,10 +85,10 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 		// Only register task with registry if it's a block task and has a position.
 		// If it's from an entity, dont' register, as the entity's fairies have to do it
 		if (entity == null) {
-			task = new LogisticsItemRetrievalTask(this, component, name, item);
+			task = new LogisticsItemRetrievalTask(this, component, name, item, useBuffers);
 			LogisticsTaskRegistry.instance().register(task);
 		} else {
-			task = new LogisticsItemRetrievalTask(this, entity, name, item);
+			task = new LogisticsItemRetrievalTask(this, entity, name, item, useBuffers);
 		}
 		
 		return task;
@@ -203,5 +205,14 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 		}
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public void setUseBuffers(boolean useBuffers) {
+		this.useBuffers = useBuffers;
+		
+		// Go and update any existing tasks
+		for (LogisticsItemRetrievalTask task : this.activeTasks) {
+			task.setUseBuffers(useBuffers);
+		}
 	}
 }

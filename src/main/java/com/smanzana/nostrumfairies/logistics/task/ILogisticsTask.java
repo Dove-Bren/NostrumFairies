@@ -93,5 +93,15 @@ public interface ILogisticsTask {
 	 */
 	public void markSubtaskComplete();
 	
+	/**
+	 * Return whether the task is complete
+	 * @return
+	 */
 	public boolean isComplete();
+	
+	/**
+	 * Check whether the task is still valid, of if it should be dropped.
+	 * @return
+	 */
+	public boolean isValid();
 }

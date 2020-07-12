@@ -1,10 +1,15 @@
 package com.smanzana.nostrumfairies.blocks;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
+import com.smanzana.nostrumfairies.logistics.LogisticsItemRequester;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
 import net.minecraft.block.BlockContainer;
@@ -85,6 +90,7 @@ public class BufferLogisticsChest extends BlockContainer {
 		
 		private String displayName;
 		private ItemStack[] templates;
+		private LogisticsItemRequester requester;
 		
 		public BufferChestTileEntity() {
 			super();
@@ -119,7 +125,7 @@ public class BufferLogisticsChest extends BlockContainer {
 		
 		@Override
 		public boolean canAccept(ItemStack stack) {
-			return ItemStacks.canFit(this, stack);
+			return false; // buffer chests aren't for random storage
 		}
 		
 		public void setTemplate(int index, @Nullable ItemStack template) {
@@ -180,8 +186,6 @@ public class BufferLogisticsChest extends BlockContainer {
 		
 		@Override
 		public void readFromNBT(NBTTagCompound nbt) {
-			super.readFromNBT(nbt);
-			
 			templates = new ItemStack[SLOTS];
 			
 			// Reload templates
@@ -199,6 +203,130 @@ public class BufferLogisticsChest extends BlockContainer {
 				
 				templates[index] = stack;
 			}
+			
+			// Do super afterwards so taht we ahve templates already
+			super.readFromNBT(nbt);
+		}
+		
+		@Override
+		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
+			super.setNetworkComponent(component);
+			
+			if (worldObj != null && !worldObj.isRemote && requester == null) {
+				requester = new LogisticsItemRequester(this.networkComponent, false);
+				requester.updateRequestedItems(getItemRequests());
+			}
+		}
+		
+		@Override
+		public void setWorldObj(World worldIn) {
+			super.setWorldObj(worldIn);
+			
+			if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
+				requester = new LogisticsItemRequester(this.networkComponent, false);
+				requester.updateRequestedItems(getItemRequests());
+			}
+		}
+		
+		@Override
+		public void onLeaveNetwork() {
+			if (!worldObj.isRemote && requester != null) {
+				requester.clearRequests();
+			}
+			
+			super.onLeaveNetwork();
+		}
+		
+		@Override
+		public void onJoinNetwork(LogisticsNetwork network) {
+			if (!worldObj.isRemote && requester != null) {
+				requester.updateRequestedItems(getItemRequests());
+			}
+			
+			super.onJoinNetwork(network);
+		}
+		
+		private List<ItemStack> getItemRequests() {
+			List<ItemStack> requests = new LinkedList<>();
+			
+			for (int i = 0; i < templates.length; i++) {
+				if (templates[i] == null) {
+					continue;
+				}
+				
+				ItemStack inSlot = this.getStackInSlot(i);
+				int desire = templates[i].stackSize - (inSlot == null ? 0 : inSlot.stackSize);
+				if (desire > 0) {
+					ItemStack req = templates[i].copy();
+					req.stackSize = desire;
+					requests.add(req);
+				}
+			}
+			
+			return requests;
+		}
+		
+		@Override
+		public void takeItem(ItemStack stack) {
+			// If there's an option, take from slots that don't have templates first
+			super.takeItem(stack);
+			// TODO
+		}
+		
+		@Override
+		public void addItem(ItemStack stack) {
+			// If there's a choice, add to slots that have unfufilled templates first
+			boolean anyChanges = false;
+			for (int i = 0; i < templates.length; i++) {
+				if (templates[i] == null) {
+					continue;
+				}
+				
+				if (!isItemValidForSlot(i, stack)) {
+					// doesn't fit here anyways
+					continue;
+				}
+				
+				// if template count != stack count, try to add there
+				ItemStack inSlot = this.getStackInSlot(i);
+				int desire = templates[i].stackSize - (inSlot == null ? 0 : inSlot.stackSize);
+				int amt = Math.min(stack.stackSize, desire);
+				if (inSlot == null) {
+					// take out template desire amount
+					this.setInventorySlotContentsDirty(i, stack.splitStack(amt)); // doesn't set dirty
+					anyChanges = true;
+				} else {
+					stack.stackSize -= amt;
+					inSlot.stackSize += amt;
+					anyChanges = true;
+				}
+				
+				if (stack.stackSize <= 0) {
+					break;
+				}
+			}
+			
+			if (anyChanges) {
+				this.markDirty();
+			}
+			
+			// Any leftover?
+			if (stack != null && stack.stackSize > 0) {
+				super.addItem(stack);
+			}
+		}
+		
+		@Override
+		public void markDirty() {
+			super.markDirty();
+			if (worldObj != null && !worldObj.isRemote && requester != null) {
+				requester.updateRequestedItems(getItemRequests());
+			}
+		}
+		
+		@Override
+		public boolean isItemBuffer() {
+			return true;
 		}
 	}
 	

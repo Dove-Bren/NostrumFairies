@@ -41,7 +41,16 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	 */
 	protected double workDistanceSq;
 	
-	private ILogisticsTask currentTask;
+	/**
+	 * Current task being performed.
+	 */
+	private @Nullable ILogisticsTask currentTask;
+	
+	/**
+	 * Number of ticks the current task has been being run
+	 */
+	private int taskTickCount;
+	
 	
 	public EntityFairyBase(World world) {
 		this(world, MAX_FAIRY_DISTANCE_SQ, MAX_FAIRY_DISTANCE_SQ);
@@ -136,6 +145,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	protected void forceSetTask(@Nullable ILogisticsTask task) {
 		ILogisticsTask oldtask = this.getCurrentTask();
 		this.currentTask = task;
+		this.taskTickCount = 0;
 		this.onTaskChange(oldtask, task);
 	}
 	
@@ -224,7 +234,18 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 					//LogisticsTaskRegistry.instance().revoke(currentTask);
 					finishTask();
 				} else {
-					this.onTaskTick(currentTask);
+					this.taskTickCount++;
+					
+					if (this.taskTickCount % 5 == 0) {
+						// Make sure task is still okay
+						if (!this.currentTask.isValid()) {
+							LogisticsTaskRegistry.instance().forfitTask(this.currentTask);
+						}
+					}
+					
+					if (currentTask != null) {
+						this.onTaskTick(currentTask);
+					}
 				}
 			}
 			

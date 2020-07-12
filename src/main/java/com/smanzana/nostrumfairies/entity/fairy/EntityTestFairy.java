@@ -1,8 +1,5 @@
 package com.smanzana.nostrumfairies.entity.fairy;
 
-import java.util.List;
-import java.util.Map;
-
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -10,7 +7,6 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsItemRetrievalTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask.Type;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
-import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -120,15 +116,40 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
 		if (task instanceof LogisticsItemRetrievalTask) {
+			boolean hasItems = true;
 			LogisticsItemRetrievalTask retrieve = (LogisticsItemRetrievalTask) task;
-			Map<ILogisticsComponent, List<ItemDeepStack>> items = this.getLogisticsNetwork().getNetworkItems(false);
+//			Map<ILogisticsComponent, List<ItemDeepStack>> items = this.getLogisticsNetwork().getNetworkItems(false);
+//			
+//			for (List<ItemDeepStack> stacks : items.values()) {
+//				for (ItemDeepStack deep : stacks) {
+//					if (ItemStacks.stacksMatch(deep.getTemplate(), retrieve.getAttachedItem().getTemplate())) {
+//						hasItems = true;
+//						break;
+//					}
+//				}
+//				
+//				if (hasItems) {
+//					break;
+//				}
+//			}
 			
-			for (List<ItemDeepStack> stacks : items.values()) {
-				for (ItemDeepStack deep : stacks) {
-					if (ItemStacks.stacksMatch(deep.getTemplate(), retrieve.getAttachedItem().getTemplate())) {
+			if (hasItems) {
+				// Check for pathing
+				ILogisticsComponent source = retrieve.getSourceComponent();
+				if (source == null) {
+					// entity
+					if (this.navigator.tryMoveToEntityLiving(retrieve.getSourceEntity(), 1.0)) {
+						navigator.clearPathEntity();
+						return true;
+					}
+				} else {
+					BlockPos pos = source.getPosition();
+					if (this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0)) {
+						navigator.clearPathEntity();
 						return true;
 					}
 				}
+				
 			}
 		}
 		
@@ -166,10 +187,12 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 					pos = pos.west();
 				}
 				
-				if (getPosition().distanceSq(pos) < .1) {
+				if (getPosition().distanceSq(pos) < .2) {
 					task.markSubtaskComplete();
 				} else if (!moveHelper.isUpdating()) {
-					this.moveHelper.setMoveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f);
+					if (!this.getNavigator().tryMoveToXYZ(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f)) {
+						this.moveHelper.setMoveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f);
+					}
 				}
 			} else if (sub.getType() == Type.BREAK) {
 				// this is where we'd play some animation?

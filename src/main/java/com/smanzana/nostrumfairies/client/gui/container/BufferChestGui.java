@@ -195,6 +195,8 @@ public class BufferChestGui {
 							GUI_INV_CELL_LENGTH - (this.fontRendererObj.getStringWidth(count) + 1),
 							GUI_INV_CELL_LENGTH - (this.fontRendererObj.FONT_HEIGHT),
 							0xFFFFFFFF);
+				} else {
+					GlStateManager.enableAlpha();
 				}
 				drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
 				GlStateManager.popMatrix();

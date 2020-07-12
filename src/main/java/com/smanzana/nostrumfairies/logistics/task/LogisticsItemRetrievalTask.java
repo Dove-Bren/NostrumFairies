@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -34,39 +36,48 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 	private ILogisticsTaskListener owner;
 	private String displayName;
 	private ItemDeepStack item; // stacksize used for quantity and merge status
-	private IItemCarrierFairy fairy;
+	private boolean useBuffers; // can pull from buffer storage?
+	private @Nullable ILogisticsComponent component;
+	private @Nullable EntityLivingBase entity;
 	
+	private IItemCarrierFairy fairy;
 	private Phase phase;
 	private LogisticsSubTask retrieveTask;
 	private LogisticsSubTask workTask;
 	private LogisticsSubTask deliverTask;
 	
-	private @Nullable ILogisticsComponent component;
-	private @Nullable EntityLivingBase entity;
 	
 	private int animCount;
 	private @Nullable ILogisticsComponent pickupComponent;
 	private @Nullable RequestedItemRecord requestRecord;
+	private @Nullable UUID networkCacheKey;
+
+	/**
+	 * cached based on networkCacheKey. If inactive, guards checking if the task is possible.
+	 * If the task is going, guards checking if the task is still valid.
+	 */
+	private boolean networkCachedItemResult;
 	
-	private LogisticsItemRetrievalTask(ILogisticsTaskListener owner, String displayName, ItemDeepStack item) {
+	private LogisticsItemRetrievalTask(ILogisticsTaskListener owner, String displayName, ItemDeepStack item, boolean useBuffers) {
 		this.owner = owner;
 		this.displayName = displayName;
 		this.item = item;
+		this.useBuffers = useBuffers;
 		phase = Phase.IDLE;
 	}
 	
-	public LogisticsItemRetrievalTask(ILogisticsTaskListener owner, ILogisticsComponent owningComponent, String displayName, ItemDeepStack item) {
-		this(owner, displayName, item);
+	public LogisticsItemRetrievalTask(ILogisticsTaskListener owner, ILogisticsComponent owningComponent, String displayName, ItemDeepStack item, boolean useBuffers) {
+		this(owner, displayName, item, useBuffers);
 		this.component = owningComponent;
 	}
 	
-	public LogisticsItemRetrievalTask(ILogisticsTaskListener owner, EntityLivingBase requester, String displayName, ItemDeepStack item) {
-		this(owner, displayName, item);
+	public LogisticsItemRetrievalTask(ILogisticsTaskListener owner, EntityLivingBase requester, String displayName, ItemDeepStack item, boolean useBuffers) {
+		this(owner, displayName, item, useBuffers);
 		this.entity = requester;
 	}
 	
-	public LogisticsItemRetrievalTask(ILogisticsTaskListener owner, @Nullable ILogisticsComponent owningComponent, String displayName, ItemStack item) {
-		this(owner, owningComponent, displayName, new ItemDeepStack(item, 1));
+	public LogisticsItemRetrievalTask(ILogisticsTaskListener owner, @Nullable ILogisticsComponent owningComponent, String displayName, ItemStack item, boolean useBuffers) {
+		this(owner, owningComponent, displayName, new ItemDeepStack(item, 1), useBuffers);
 	}
 
 	@Override
@@ -85,7 +96,18 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 			return false;
 		}
 		
-		return true;
+		LogisticsNetwork network = worker.getLogisticsNetwork();
+		if (network == null) {
+			return false;
+		}
+		
+		if (this.networkCacheKey == null || !this.networkCacheKey.equals(network.getCacheKey())) {
+			System.out.println("Refreshing canAccept cache");
+			networkCachedItemResult = tryTasks(worker);
+			this.networkCacheKey = network.getCacheKey();
+		}
+		
+		return networkCachedItemResult;
 	}
 
 	@Override
@@ -94,16 +116,10 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		
 		// TODO did we merge? Do some work here if we did!
 		
-		if (requestRecord != null) {
-			fairy.getLogisticsNetwork().removeRequestedItem(pickupComponent, requestRecord);
-		}
+		releaseTasks();
 		
 		this.fairy = null;
 		phase = Phase.IDLE;
-		retrieveTask = null;
-		deliverTask = null;
-		pickupComponent = null;
-		requestRecord = null;
 	}
 
 	@Override
@@ -112,17 +128,31 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		this.fairy = (IItemCarrierFairy) worker;
 		phase = Phase.RETRIEVING;
 		animCount = 0;
-		makeTasks();
+		tryTasks(worker);
 		
 		if (retrieveTask != null) {
 			requestRecord = fairy.getLogisticsNetwork().addRequestedItem(pickupComponent, this, item);
 		}
+		
+		this.networkCacheKey = null; //reset so 'isValid' runs fully the first time
+		
+		// TODO hook up a way to say 'not from buffer chests!' and make buffer chests do that always, and
+		// output chests have an option. Somehow we gotta make sure that workers know that it's not okay
+		// too, which makes me thing that it'd be nice to consolidate all of the 'find the items in the network'
+		// code
 	}
 
 	@Override
 	public boolean canMerge(ILogisticsTask other) {
 		if (other instanceof LogisticsItemRetrievalTask) {
 			LogisticsItemRetrievalTask otherTask = (LogisticsItemRetrievalTask) other;
+			
+			// Are these requests to the same place?
+			if (!Objects.equals(this.entity, otherTask.entity)
+					|| !Objects.equals(this.component, otherTask.component)) {
+				return false;
+			}
+			
 			return ItemStacks.stacksMatch(item.getTemplate(), otherTask.item.getTemplate());
 		}
 		
@@ -136,8 +166,12 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 	}
 
 	@Override
-	public ILogisticsComponent getSourceComponent() {
+	public @Nullable ILogisticsComponent getSourceComponent() {
 		return component;
+	}
+	
+	public @Nullable EntityLivingBase getSourceEntity() {
+		return entity;
 	}
 
 	@Override
@@ -151,7 +185,7 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 			// make new task for each count
 			tasks = Lists.newArrayListWithCapacity((int) this.item.getCount());
 			for (int i = 0; i < this.item.getCount(); i++) {
-				tasks.add(new LogisticsItemRetrievalTask(owner, component, displayName, item.getTemplate()));
+				tasks.add(new LogisticsItemRetrievalTask(owner, component, displayName, item.getTemplate(), useBuffers));
 			}
 		}
 		
@@ -162,9 +196,9 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		ItemDeepStack newItem = new ItemDeepStack(item.getTemplate().copy(), leftover);
 		
 		if (entity == null) {
-			return new LogisticsItemRetrievalTask(owner, component, displayName, newItem);
+			return new LogisticsItemRetrievalTask(owner, component, displayName, newItem, useBuffers);
 		} else {
-			return new LogisticsItemRetrievalTask(owner, entity, displayName, newItem);
+			return new LogisticsItemRetrievalTask(owner, entity, displayName, newItem, useBuffers);
 		}
 	}
 	
@@ -180,7 +214,21 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		return item;
 	}
 	
-	private void makeTasks() {
+	private void releaseTasks() {
+		if (requestRecord != null) {
+			fairy.getLogisticsNetwork().removeRequestedItem(pickupComponent, requestRecord);
+		}
+		
+		retrieveTask = null;
+		deliverTask = null;
+		workTask = null;
+		pickupComponent = null;
+		requestRecord = null;
+	}
+	
+	private boolean tryTasks(IFairyWorker fairy) {
+		releaseTasks();
+		
 		// Make retrieve task
 		retrieveTask = null;
 		{
@@ -195,8 +243,13 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 				for (Entry<ILogisticsComponent, List<ItemDeepStack>> entry : items.entrySet()) {
 					ItemDeepStack item = null;
 					
+					// Ignore buffer chests if configured so
+					if (!this.useBuffers && entry.getKey().isItemBuffer()) {
+						continue;
+					}
+					
 					for (ItemDeepStack deep : entry.getValue()) {
-						if (item == null || deep.canMerge(item)) {
+						if (this.item.canMerge(deep)) {
 							// This item matches. Does it have more in its stack than our most
 							if (item == null || item.getCount() < deep.getCount()) {
 								item = deep;
@@ -234,6 +287,8 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 			// make deliver task
 			deliverTask = LogisticsSubTask.Move(component == null ? entity.getPosition() : component.getPosition());
 		}
+		
+		return retrieveTask != null;
 		
 	}
 
@@ -314,6 +369,56 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 			}
 			worker.removeItem(stack);
 		}
+	}
+
+	@Override
+	public boolean isValid() {
+		// Check whether the item we want is still available
+		if (this.retrieveTask == null) {
+			return false;
+		} // TODO is this right?
+		
+		if (this.phase == Phase.RETRIEVING) {
+			
+			LogisticsNetwork network = fairy.getLogisticsNetwork();
+			if (network == null) {
+				return false;
+			}
+			
+			if (this.networkCacheKey == null || !this.networkCacheKey.equals(network.getCacheKey())) {
+				System.out.println("Refreshing isValid cache");
+				this.networkCacheKey = network.getCacheKey();
+			
+				List<ItemDeepStack> items = fairy.getLogisticsNetwork().getNetworkItems(true).get(pickupComponent);
+				if (items == null) {
+					networkCachedItemResult = false;
+				} else {
+					long count = this.item.getCount();
+					for (ItemDeepStack deep : items) {
+						if (deep.canMerge(this.item)) {
+							count -= deep.getCount();
+							if (count <= 0) {
+								break;
+							}
+						}
+					}
+					
+					networkCachedItemResult = count <= 0;
+				}
+			}
+			
+			return networkCachedItemResult;
+		}
+		
+		return true;
+	}
+	
+	public boolean canUseBuffers() {
+		return useBuffers;
+	}
+	
+	public void setUseBuffers(boolean useBuffers) {
+		this.useBuffers = useBuffers;
 	}
 
 }

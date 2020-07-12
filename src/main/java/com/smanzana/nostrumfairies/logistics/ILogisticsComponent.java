@@ -53,6 +53,13 @@ public interface ILogisticsComponent {
 	public Collection<ItemStack> getItems();
 	
 	/**
+	 * Should this component be treated as an 'item buffer', meaning other buffers (or
+	 * so-configured requested blocks) should not pull from it?
+	 * @return
+	 */
+	public boolean isItemBuffer();
+	
+	/**
 	 * Check and return whether this component can store the provided item stack.
 	 * @param stack
 	 * @return
