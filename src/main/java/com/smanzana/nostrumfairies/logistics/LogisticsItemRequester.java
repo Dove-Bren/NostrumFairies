@@ -14,7 +14,6 @@ import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsItemRetrievalTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.entity.EntityLivingBase;
@@ -31,19 +30,21 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 	private @Nullable EntityLivingBase entity;
 	private boolean useBuffers;
 	private List<LogisticsItemRetrievalTask> activeTasks;
+	private @Nullable LogisticsNetwork network;
 	
-	private LogisticsItemRequester(boolean useBuffers) {
+	private LogisticsItemRequester(LogisticsNetwork network, boolean useBuffers) {
 		this.activeTasks = new LinkedList<>();
 		this.useBuffers = useBuffers;
+		this.network = network;
 	}
 	
-	public LogisticsItemRequester(ILogisticsComponent component, boolean useBuffers) {
-		this(useBuffers);
+	public LogisticsItemRequester(LogisticsNetwork network, boolean useBuffers, ILogisticsComponent component) {
+		this(network, useBuffers);
 		this.component = component;
 	}
 	
-	public LogisticsItemRequester(EntityLivingBase entityRequester, boolean useBuffers) {
-		this(useBuffers);
+	public LogisticsItemRequester(LogisticsNetwork network, boolean useBuffers, EntityLivingBase entityRequester) {
+		this(network, useBuffers);
 		this.entity = entityRequester;
 	}
 	
@@ -70,7 +71,7 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 				count -= task.getAttachedItem().getCount();
 				
 				if (entity == null) {
-					LogisticsTaskRegistry.instance().revoke(task);
+					network.getTaskRegistry().revoke(task);
 				} // else not registered
 				it.remove();
 				activeTasks.remove(task);
@@ -86,7 +87,7 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 		// If it's from an entity, dont' register, as the entity's fairies have to do it
 		if (entity == null) {
 			task = new LogisticsItemRetrievalTask(this, component, name, item, useBuffers);
-			LogisticsTaskRegistry.instance().register(task);
+			network.getTaskRegistry().register(task);
 		} else {
 			task = new LogisticsItemRetrievalTask(this, entity, name, item, useBuffers);
 		}
@@ -182,7 +183,7 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 		activeTasks = new LinkedList<>();
 		if (entity == null) {
 			for (ILogisticsTask task : list) {
-				LogisticsTaskRegistry.instance().revoke(task);
+				network.getTaskRegistry().revoke(task);
 			} // else not registered
 		}
 	}
@@ -214,5 +215,9 @@ public class LogisticsItemRequester implements ILogisticsTaskListener {
 		for (LogisticsItemRetrievalTask task : this.activeTasks) {
 			task.setUseBuffers(useBuffers);
 		}
+	}
+	
+	public void setNetwork(@Nullable LogisticsNetwork network) {
+		this.network = network;
 	}
 }

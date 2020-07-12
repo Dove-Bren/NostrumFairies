@@ -6,7 +6,6 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsItemRetrievalTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask.Type;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -95,7 +94,7 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 		// We want to just drop our task if our status changes from WORKING
 		if (from == FairyGeneralStatus.WORKING) {
 			if (this.getCurrentTask() != null) {
-				LogisticsTaskRegistry.instance().forfitTask(this.getCurrentTask());
+				this.getLogisticsNetwork().getTaskRegistry().forfitTask(this.getCurrentTask());
 				this.forceSetTask(null);
 			}
 		}

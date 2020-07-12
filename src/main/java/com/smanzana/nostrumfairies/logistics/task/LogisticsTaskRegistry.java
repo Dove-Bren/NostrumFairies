@@ -14,7 +14,7 @@ import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 /**
- * Global registry of all active fairy task requesting blocks.
+ * Registry of all active fairy task requesting blocks.
  * Even if the blocks aren't loaded, this presumably has all the blocks 
  * @author Skyler
  */
@@ -50,19 +50,9 @@ public class LogisticsTaskRegistry {
 		}
 	}
 	
-	private static LogisticsTaskRegistry instance = null;
-	
-	public static LogisticsTaskRegistry instance() {
-		if (instance == null) {
-			instance = new LogisticsTaskRegistry();
-		}
-		
-		return instance;
-	}
-	
 	private List<RegistryItem> registry;
 	
-	private LogisticsTaskRegistry() {
+	public LogisticsTaskRegistry() {
 		registry = new LinkedList<>();
 	}
 	
@@ -184,7 +174,7 @@ public class LogisticsTaskRegistry {
 		// split up merged tasks
 		revoke(task);
 		task.unmerge().forEach((t) -> {
-			LogisticsTaskRegistry.instance().register(t);
+			register(t);
 		});
 	}
 

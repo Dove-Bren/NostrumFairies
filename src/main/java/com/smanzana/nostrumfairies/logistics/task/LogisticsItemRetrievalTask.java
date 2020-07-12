@@ -102,7 +102,6 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		}
 		
 		if (this.networkCacheKey == null || !this.networkCacheKey.equals(network.getCacheKey())) {
-			System.out.println("Refreshing canAccept cache");
 			networkCachedItemResult = tryTasks(worker);
 			this.networkCacheKey = network.getCacheKey();
 		}
@@ -115,6 +114,8 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 		owner.onTaskDrop(this, worker);
 		
 		// TODO did we merge? Do some work here if we did!
+		
+		// TODO some part of this is duping items. The fairy drops the item, and also is still able to deliver it perhaps?
 		
 		releaseTasks();
 		
@@ -257,6 +258,9 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 						}
 					}
 					
+					// hmm. Should look at most and see if 'item' has more in it, but only if we WANT more than what most has?
+					// Also should look at distance of components (and maybe PREFER buffer if useBuffers?) and distance from worker?
+					// TODO heuristics!
 					if (item != null) {
 						most = item;
 						comp = entry.getKey();
@@ -275,7 +279,7 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 						item.add(-leftover);
 						
 						LogisticsItemRetrievalTask other = split((int)leftover);
-						LogisticsTaskRegistry.instance().register(other);
+						network.getTaskRegistry().register(other);
 					}
 				}
 			}
@@ -386,7 +390,6 @@ public class LogisticsItemRetrievalTask implements ILogisticsTask {
 			}
 			
 			if (this.networkCacheKey == null || !this.networkCacheKey.equals(network.getCacheKey())) {
-				System.out.println("Refreshing isValid cache");
 				this.networkCacheKey = network.getCacheKey();
 			
 				List<ItemDeepStack> items = fairy.getLogisticsNetwork().getNetworkItems(true).get(pickupComponent);

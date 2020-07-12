@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrumfairies.utils.Location;
@@ -86,6 +87,9 @@ public class LogisticsNetwork {
 	protected Map<ILogisticsComponent, List<RequestedItemRecord>> activeItemRequests; // current items that are being taken from each component
 	protected UUID cacheKey; // used by components to know whether things have changed since the last time THEY cached stuff
 	
+	// Tasks
+	private LogisticsTaskRegistry taskRegistry;
+	
 	public LogisticsNetwork() {
 		this(UUID.randomUUID(), true);
 	}
@@ -97,6 +101,7 @@ public class LogisticsNetwork {
 		this.componentGraph = new HashMap<>();
 		this.activeItemRequests = new HashMap<>();
 		this.cacheKey = UUID.randomUUID();
+		this.taskRegistry = new LogisticsTaskRegistry();
 		cacheDirty = false;
 		
 		if (register) {
@@ -638,6 +643,10 @@ public class LogisticsNetwork {
 	public @Nullable UUID getCacheKey() {
 		// if the cache is dirty, don't even return the old one. Make them query inventory to generate new stuff.
 		return cacheDirty ? null : cacheKey;
+	}
+	
+	public LogisticsTaskRegistry getTaskRegistry() {
+		return taskRegistry;
 	}
 	
 }

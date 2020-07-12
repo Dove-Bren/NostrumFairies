@@ -6,7 +6,6 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsItemRetrievalTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -36,8 +35,8 @@ public class OverlayRenderer extends Gui {
 			Minecraft.getMinecraft().fontRendererObj.drawString("Network(s) ("
 					+ networks.size()					
 					+ ") alive and well!", 20, 20, 0xFFFFFFFF);
-//			try {
-//				LogisticsNetwork network = networks.iterator().next();
+			try {
+				LogisticsNetwork network = networks.iterator().next();
 //				int y = 30;
 //				List<ItemDeepStack> items = network.getCondensedNetworkItems();
 //				if (!items.isEmpty()) {
@@ -48,37 +47,37 @@ public class OverlayRenderer extends Gui {
 //						y += Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT + 2;
 //					}
 //				}
-//			} catch (Exception e) {
-//				;
-//			}
-		}
-		
-		Collection<ILogisticsTask> tasks = LogisticsTaskRegistry.instance().allTasks();
-		int y = 40;
-		for (ILogisticsTask task : tasks) {
-			String str = "Task: " + task.getDisplayName();
-			Minecraft.getMinecraft().fontRendererObj.drawString(str, 60, y, 0xFFFFFFFF);
-			y += 8;
-			
-			if (task instanceof LogisticsItemRetrievalTask) {
-				LogisticsItemRetrievalTask retrieve = (LogisticsItemRetrievalTask) task;
-				if (retrieve.isActive()) {
-					str = " (ACTIVE: " + retrieve.getCurrentWorker() + ")";
-				} else {
-					str = " (INACTIVE)";
+				
+				Collection<ILogisticsTask> tasks = network.getTaskRegistry().allTasks();
+				int y = 40;
+				for (ILogisticsTask task : tasks) {
+					String str = "Task: " + task.getDisplayName();
+					Minecraft.getMinecraft().fontRendererObj.drawString(str, 60, y, 0xFFFFFFFF);
+					y += 8;
+					
+					if (task instanceof LogisticsItemRetrievalTask) {
+						LogisticsItemRetrievalTask retrieve = (LogisticsItemRetrievalTask) task;
+						if (retrieve.isActive()) {
+							str = " (ACTIVE: " + retrieve.getCurrentWorker() + ")";
+						} else {
+							str = " (INACTIVE)";
+						}
+						Minecraft.getMinecraft().fontRendererObj.drawString(str, -120, y, 0xFFFFFFFF);
+						y += 8;
+						str = "no subtask";
+						if (retrieve.getActiveSubtask() != null) {
+							str = retrieve.getDisplayName();
+							str += " (" + retrieve.getActiveSubtask().getPos() + ")";
+						}
+						Minecraft.getMinecraft().fontRendererObj.drawString(str, 40, y, 0xFFFFFFFF);
+						y += 8;
+					}
 				}
-				Minecraft.getMinecraft().fontRendererObj.drawString(str, -120, y, 0xFFFFFFFF);
-				y += 8;
-				str = "no subtask";
-				if (retrieve.getActiveSubtask() != null) {
-					str = retrieve.getDisplayName();
-					str += " (" + retrieve.getActiveSubtask().getPos() + ")";
-				}
-				Minecraft.getMinecraft().fontRendererObj.drawString(str, 40, y, 0xFFFFFFFF);
-				y += 8;
+				
+			} catch (Exception e) {
+				;
 			}
 		}
-		
 		Minecraft.getMinecraft().getTextureManager().bindTexture(Gui.ICONS);
 		
 	}

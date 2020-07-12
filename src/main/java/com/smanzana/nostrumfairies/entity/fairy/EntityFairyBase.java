@@ -9,7 +9,6 @@ import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry.FairyTaskPair;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
@@ -239,7 +238,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 					if (this.taskTickCount % 5 == 0) {
 						// Make sure task is still okay
 						if (!this.currentTask.isValid()) {
-							LogisticsTaskRegistry.instance().forfitTask(this.currentTask);
+							this.getLogisticsNetwork().getTaskRegistry().forfitTask(this.currentTask);
 						}
 					}
 					
@@ -267,7 +266,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	private boolean searchForJobs() {
 		LogisticsNetwork network = this.getLogisticsNetwork();
 		if (network != null) {
-			List<FairyTaskPair> list = LogisticsTaskRegistry.instance().findTasks(network, this, (task) -> {
+			List<FairyTaskPair> list = network.getTaskRegistry().findTasks(network, this, (task) -> {
 				ILogisticsComponent comp = task.getSourceComponent();
 				if (comp.getWorld().provider.getDimension() != this.dimension) {
 					return false;
@@ -290,12 +289,12 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 							&& shouldPerformTask(pair.task)) {
 						if (foundTask == null) {
 							foundTask = pair.task;
-							LogisticsTaskRegistry.instance().claimTask(foundTask, this);
+							network.getTaskRegistry().claimTask(foundTask, this);
 							forceSetTask(foundTask);
 						} else if (foundTask.canMerge(pair.task)) {
 							foundTask.onDrop(this);
 							foundTask.mergeIn(pair.task);
-							LogisticsTaskRegistry.instance().revoke(pair.task);
+							network.getTaskRegistry().revoke(pair.task);
 							foundTask.onAccept(this);
 						}
 					}
@@ -375,7 +374,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	@Override
 	public void setDead() {
 		if (currentTask != null) {
-			LogisticsTaskRegistry.instance().forfitTask(currentTask);
+			this.getLogisticsNetwork().getTaskRegistry().forfitTask(currentTask);
 		}
 		
 		super.setDead();

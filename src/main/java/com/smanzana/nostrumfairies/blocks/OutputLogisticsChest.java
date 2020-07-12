@@ -220,7 +220,7 @@ public class OutputLogisticsChest extends BlockContainer {
 			super.setNetworkComponent(component);
 			
 			if (worldObj != null && !worldObj.isRemote && requester == null) {
-				requester = new LogisticsItemRequester(this.networkComponent, true); // TODO make using buffer chests configurable!
+				requester = new LogisticsItemRequester(this.networkComponent.getNetwork(), true, this.networkComponent); // TODO make using buffer chests configurable!
 				requester.updateRequestedItems(getItemRequests());
 			}
 		}
@@ -230,7 +230,7 @@ public class OutputLogisticsChest extends BlockContainer {
 			super.setWorldObj(worldIn);
 			
 			if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
-				requester = new LogisticsItemRequester(this.networkComponent, true);
+				requester = new LogisticsItemRequester(this.networkComponent.getNetwork(), true, this.networkComponent);
 				requester.updateRequestedItems(getItemRequests());
 			}
 		}
@@ -239,6 +239,7 @@ public class OutputLogisticsChest extends BlockContainer {
 		public void onLeaveNetwork() {
 			if (!worldObj.isRemote && requester != null) {
 				requester.clearRequests();
+				requester.setNetwork(null);
 			}
 			
 			super.onLeaveNetwork();
@@ -247,6 +248,7 @@ public class OutputLogisticsChest extends BlockContainer {
 		@Override
 		public void onJoinNetwork(LogisticsNetwork network) {
 			if (!worldObj.isRemote && requester != null) {
+				requester.setNetwork(network);
 				requester.updateRequestedItems(getItemRequests());
 			}
 			

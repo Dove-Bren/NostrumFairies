@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 import com.smanzana.nostrumfairies.proxy.CommonProxy;
 import com.smanzana.nostrummagica.NostrumMagica;
 
@@ -90,7 +89,7 @@ public class NostrumFairies {
     
     @EventHandler
     public void onServerShutdown(FMLServerStoppedEvent event) {
-    	LogisticsTaskRegistry.instance().clear();
+    	;
     }
     
     @SubscribeEvent
