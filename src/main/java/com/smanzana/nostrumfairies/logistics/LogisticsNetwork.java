@@ -460,14 +460,15 @@ public class LogisticsNetwork {
 		}
 		
 		cache.availableItems = makeAvailableList(component, cache.rawItems);
-		this.dirty();
-		this.refresh();
-		// TODO wait this calls makeAvailableList twice cause it refreshes the raw and then rebuilds the available.
-		// Fix probably by just updating the cache key instead of dirty+refresh?
+		refreshCacheKey();
 	}
 	
 	private CachedItemList makeItemListEntry(ILogisticsComponent component, List<ItemDeepStack> raws) {
 		return new CachedItemList(raws, makeAvailableList(component, raws));
+	}
+	
+	private void refreshCacheKey() {
+		this.cacheKey = UUID.randomUUID();
 	}
 	
 	protected void refresh() {
@@ -489,7 +490,7 @@ public class LogisticsNetwork {
 			cachedItemMap.put(component, makeItemListEntry(component, list));
 		}
 		
-		this.cacheKey = UUID.randomUUID();
+		refreshCacheKey();
 	}
 	
 	protected void rebuildGraph() {

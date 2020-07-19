@@ -1,7 +1,6 @@
 package com.smanzana.nostrumfairies.logistics.requesters;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
