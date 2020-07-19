@@ -86,9 +86,15 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 			composite = new LogisticsItemDepositTask(left.entity, left.displayName, item);
 		}
 		
+		composite.fairy = left.fairy;
+		
 		composite.mergedTasks = new LinkedList<>();
 		composite.mergedTasks.add(left);
 		composite.mergedTasks.add(right);
+		
+		composite.phase = Phase.RETRIEVING;
+		composite.animCount = 0;
+		composite.tryTasks(composite.fairy);
 		return composite;
 	}
 	
@@ -153,9 +159,14 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 		if (other instanceof LogisticsItemDepositTask) {
 			LogisticsItemDepositTask otherTask = (LogisticsItemDepositTask) other;
 			
-			// Are these requests to the same place?
+			// Are these requests FROM the same place?
 			if (!Objects.equals(this.entity, otherTask.entity)
 					|| !Objects.equals(this.component, otherTask.component)) {
+				return false;
+			}
+			
+			// Are these task going to deposit INTO the same place?
+			if (this.dropoffComponent != otherTask.dropoffComponent) {
 				return false;
 			}
 			
@@ -168,6 +179,7 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 	private void mergeToComposite(LogisticsItemDepositTask otherTask) {
 		this.item.stackSize += otherTask.item.stackSize;
 		mergedTasks.add(otherTask);
+		tryTasks(fairy);
 	}
 
 	@Override
@@ -223,13 +235,20 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 		// Make deliver task
 		deliverTask = null;
 		{
-			// Find a place where we can drop off the item after we pick it up
 			LogisticsNetwork network = fairy.getLogisticsNetwork();
 			if (network != null) {
-				dropoffComponent = network.getStorageForItem(component == null ? entity.worldObj : component.getWorld(),
-						component == null ? entity.getPosition() : component.getPosition(),
-						item);
-				if (dropoffComponent != null) {
+				// Find a place where we can drop off the item after we pick it up.
+				// If this is a composite task, trust what the merge tasks have picked (and be
+				// comfy because we make sure only same-destination tasks can be merged)
+				if (this.mergedTasks == null) {
+					dropoffComponent = network.getStorageForItem(component == null ? entity.worldObj : component.getWorld(),
+							component == null ? entity.getPosition() : component.getPosition(),
+							item);
+					if (dropoffComponent != null) {
+						deliverTask = LogisticsSubTask.Move(dropoffComponent.getPosition());
+					}
+				} else {
+					dropoffComponent = ((LogisticsItemDepositTask) this.mergedTasks.get(0)).dropoffComponent;
 					deliverTask = LogisticsSubTask.Move(dropoffComponent.getPosition());
 				}
 			}
@@ -266,6 +285,15 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 		
 		return null;
 	}
+	
+	private void syncChildPhases() {
+		if (this.mergedTasks != null) {
+			for (ILogisticsTask task : this.mergedTasks) {
+				LogisticsItemDepositTask otherTask = (LogisticsItemDepositTask) task;
+				otherTask.phase = this.phase;
+			}
+		}
+	}
 
 	@Override
 	public void markSubtaskComplete() {
@@ -278,12 +306,14 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 			if (animCount < 3) { // TODO was 20
 				animCount++;
 			} else {
-				takeItems();
 				phase = Phase.DELIVERING;
+				takeItems();
+				syncChildPhases();
 			}
 			break;
 		case DELIVERING:
 			phase = Phase.DONE;
+			syncChildPhases();
 			giveItems();
 			break;
 		case DONE:
@@ -323,6 +353,11 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 			dropoffComponent.addItem(stack);
 			worker.removeItem(stack);
 		}
+		
+		// Note: If this ever registers 'incoming' or 'future' items, this is where it should clean it
+		// up normally (and in the regular onDrop, etc.).
+		// Note: If that happens, make sure that composite tasks call for each child so they can update
+		// the registry correctly.
 	}
 
 	@Override
@@ -336,5 +371,9 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 		// requester should cancel if the item is taken away before the worker gets there.
 		
 		return true;
+	}
+	
+	public boolean hasTakenItems() {
+		return this.phase == Phase.DELIVERING || this.phase == Phase.DONE;
 	}
 }

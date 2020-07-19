@@ -53,7 +53,7 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 	
 	
 	private int animCount;
-	private @Nullable ILogisticsComponent pickupComponent; // convenient if unmerged. If a composite task, filter possible components when making tasks
+	private @Nullable ILogisticsComponent pickupComponent;
 	private @Nullable RequestedItemRecord requestRecord;
 	private @Nullable UUID networkCacheKey;
 
@@ -96,7 +96,6 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 		
 		// pull registry stuff
 		composite.fairy = left.fairy;
-		composite.pickupComponent = left.pickupComponent;
 		
 		composite.mergedTasks = new LinkedList<>();
 		composite.mergedTasks.add(left);
@@ -268,8 +267,6 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 	private boolean tryTasks(IFairyWorker fairy) {
 		releaseTasks();
 		
-		System.out.println("====================================");
-		
 		// Make retrieve task
 		retrieveTask = null;
 		{
@@ -298,18 +295,7 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 							continue;
 						}
 						
-						System.out.println(entry.getKey().getPosition() + ":");
-						System.out.println("Requests:");
-						Collection<RequestedItemRecord> records = network.getItemRequests(entry.getKey());
-						if (records != null) {
-							for (RequestedItemRecord record : records) {
-								System.out.println("	- " + record.getItem().getTemplate().getDisplayName() + " x" + record.getItem().getCount());
-							}
-						}
-						
-						System.out.println("Available Items:");
 						for (ItemDeepStack deep : entry.getValue()) {
-							System.out.println("	- " + deep.getTemplate().getDisplayName() + " x" + deep.getCount());
 							if (this.item.canMerge(deep)) {
 								// This item matches. Does it have all that we want to pickup?
 								if (deep.getCount() >= this.item.getCount()) {
@@ -344,8 +330,6 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 			// make deliver task
 			deliverTask = LogisticsSubTask.Move(component == null ? entity.getPosition() : component.getPosition());
 		}
-		
-		System.out.println("====================================");
 		
 		return retrieveTask != null;
 		

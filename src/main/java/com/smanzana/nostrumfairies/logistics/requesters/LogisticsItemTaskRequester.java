@@ -70,6 +70,16 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 		}
 	}
 	
+	/**
+	 * Hook to filter requests if you want the requester to consider some tasks as basically
+	 * invisible. In other words, requests can be filtered out of they no longer match to
+	 * an item request from the inventory.
+	 * @param taskList
+	 * @return
+	 */
+	protected List<T> filterActiveRequests(final List<T> taskList) {
+		return taskList;
+	}
 	
 	private void dropRequests(long count, List<T> taskList) {
 		// TODO also sort forward tasks that ahven't been started
@@ -141,7 +151,7 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 		// for each task, subtract how many we have submitted. Negatives will be tasks we need to drop, and
 		// positives will be new requests we need to make
 		Map<ItemDeepStack, List<T>> map = new HashMap<>();
-		for (T task : currentTasks) {
+		for (T task : filterActiveRequests(currentTasks)) {
 			List<T> list;
 			ItemDeepStack item = task.getAttachedItem();
 			boolean found =  false;
