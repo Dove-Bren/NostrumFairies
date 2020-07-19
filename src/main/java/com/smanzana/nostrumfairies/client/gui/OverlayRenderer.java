@@ -4,8 +4,8 @@ import java.util.Collection;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsItemRetrievalTask;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -55,8 +55,8 @@ public class OverlayRenderer extends Gui {
 					Minecraft.getMinecraft().fontRendererObj.drawString(str, 60, y, 0xFFFFFFFF);
 					y += 8;
 					
-					if (task instanceof LogisticsItemRetrievalTask) {
-						LogisticsItemRetrievalTask retrieve = (LogisticsItemRetrievalTask) task;
+					if (task instanceof LogisticsItemWithdrawTask) {
+						LogisticsItemWithdrawTask retrieve = (LogisticsItemWithdrawTask) task;
 						if (retrieve.isActive()) {
 							str = " (ACTIVE: " + retrieve.getCurrentWorker() + ")";
 						} else {

@@ -9,8 +9,8 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
-import com.smanzana.nostrumfairies.logistics.LogisticsItemRequester;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
 import net.minecraft.block.BlockContainer;
@@ -91,7 +91,7 @@ public class OutputLogisticsChest extends BlockContainer {
 		
 		private String displayName;
 		private ItemStack[] templates;
-		private LogisticsItemRequester requester;
+		private LogisticsItemWithdrawRequester requester;
 		
 		public OutputChestTileEntity() {
 			super();
@@ -220,7 +220,7 @@ public class OutputLogisticsChest extends BlockContainer {
 			super.setNetworkComponent(component);
 			
 			if (worldObj != null && !worldObj.isRemote && requester == null) {
-				requester = new LogisticsItemRequester(this.networkComponent.getNetwork(), true, this.networkComponent); // TODO make using buffer chests configurable!
+				requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent); // TODO make using buffer chests configurable!
 				requester.updateRequestedItems(getItemRequests());
 			}
 		}
@@ -230,7 +230,7 @@ public class OutputLogisticsChest extends BlockContainer {
 			super.setWorldObj(worldIn);
 			
 			if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
-				requester = new LogisticsItemRequester(this.networkComponent.getNetwork(), true, this.networkComponent);
+				requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent);
 				requester.updateRequestedItems(getItemRequests());
 			}
 		}

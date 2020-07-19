@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.proxy;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
@@ -39,6 +40,7 @@ public class ClientProxy extends CommonProxy {
 		StorageLogisticsChest.StorageChestRenderer.init();
 		BufferLogisticsChest.BufferChestRenderer.init();
 		OutputLogisticsChest.OutputChestRenderer.init();
+		InputLogisticsChest.InputChestRenderer.init();
 		
 		RenderingRegistry.registerEntityRenderingHandler(EntityTestFairy.class, new IRenderFactory<EntityTestFairy>() {
 			@Override
@@ -65,6 +67,9 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(StorageMonitor.instance()),
 				0,
 				StorageMonitor.ID);
+		registerModel(Item.getItemFromBlock(InputLogisticsChest.instance()),
+				0,
+				InputLogisticsChest.ID);
 		
 	}
 	

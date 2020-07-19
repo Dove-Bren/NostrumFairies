@@ -1,5 +1,8 @@
 package com.smanzana.nostrumfairies.entity.fairy;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -149,8 +152,31 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	}
 	
 	@Override
-	public void cancelTask() {
-		forceSetTask(null);
+	public void dropTask(ILogisticsTask droppedTask) {
+		// Our 'currentTask' may be composite, so dissolve, drop the dropped task out of the list, and then recombine.
+		Collection<ILogisticsTask> tasks = this.currentTask.unmerge();
+		Iterator<ILogisticsTask> iter = tasks.iterator();
+		while (iter.hasNext()) {
+			if (iter.next() == droppedTask) {
+				iter.remove();
+				break;
+			}
+		}
+		
+		if (tasks.isEmpty()) {	
+			forceSetTask(null);
+		} else {
+			// all tasks remaining in tasks list are still claimed by us. Merge back up.
+			ILogisticsTask newTask = null;
+			for (ILogisticsTask task : tasks) {
+				if (newTask == null) {
+					newTask = task;
+				} else {
+					newTask = newTask.mergeIn(task);
+				}
+			}
+			this.forceSetTask(newTask);
+		}
 	}
 	
 	/**
@@ -177,11 +203,26 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 		// For now, I think 1 frame delay between having a new job is okay.
 		// That'll also mean that code that calls this and then looks at the task after will get NULL instead
 		// of possibly the same task or possibly a new one, which might make debugging easier.
-		forceSetTask(null);
+		if (this.currentTask != null) {
+			for (ILogisticsTask task : this.currentTask.unmerge()) {
+				this.getLogisticsNetwork().getTaskRegistry().completeTask(task);
+			}
+			forceSetTask(null);
+		}
+	}
+	
+	protected void forfitTask() {
+		if (this.currentTask != null) {
+			for (ILogisticsTask task : this.currentTask.unmerge()) {
+				this.getLogisticsNetwork().getTaskRegistry().forfitTask(task);
+			}
+			forceSetTask(null);
+		}
 	}
 	
 	/**
 	 * Called when the current task changes. This includes when the task is reset and there is no new task.
+	 * Note: This will be called whenever one task that we have taken is dropped, and we're creating a new composite.
 	 * @param oldTask The task that was just given up. 
 	 * @param newTask The new task.
 	 */
@@ -230,7 +271,6 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 		case WORKING:
 			if (currentTask != null) {
 				if (currentTask.isComplete()) {
-					//LogisticsTaskRegistry.instance().revoke(currentTask);
 					finishTask();
 				} else {
 					this.taskTickCount++;
@@ -238,7 +278,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 					if (this.taskTickCount % 5 == 0) {
 						// Make sure task is still okay
 						if (!this.currentTask.isValid()) {
-							this.getLogisticsNetwork().getTaskRegistry().forfitTask(this.currentTask);
+							forfitTask();
 						}
 					}
 					
@@ -280,29 +320,50 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 				return true;
 			});
 			
+			// Sort so nearest tasks are first in the list
+			Collections.sort(list, (l, r) -> {
+				ILogisticsComponent lComp = l.task.getSourceComponent();
+				ILogisticsComponent rComp = r.task.getSourceComponent();
+				if (lComp == null) {
+					return 1;
+				}
+				if (rComp == null) {
+					return -1;
+				}
+				if (!lComp.getWorld().equals(this.worldObj)) {
+					return 1;
+				}
+				if (!rComp.getWorld().equals(this.worldObj)) {
+					return -1;
+				}
+				
+				BlockPos fairyPos = this.getPosition();
+				double lDist = lComp.getPosition().distanceSq(fairyPos);
+				double rDist = rComp.getPosition().distanceSq(fairyPos);
+				return lDist < rDist ? -1 : 1;
+			});
+			
 			if (list != null && !list.isEmpty()) {
 				// Could sort somehow.
 				ILogisticsTask foundTask = null;
 				for (FairyTaskPair pair : list) {
 					if (canPerformTask(pair.task)
 							&& pair.task.canAccept(this)
-							&& shouldPerformTask(pair.task)) {
+							&& shouldPerformTask(pair.task)
+							&& (foundTask == null || foundTask.canMerge(pair.task))) {
+						network.getTaskRegistry().claimTask(pair.task, this);
 						if (foundTask == null) {
 							foundTask = pair.task;
-							network.getTaskRegistry().claimTask(foundTask, this);
-							forceSetTask(foundTask);
-						} else if (foundTask.canMerge(pair.task)) {
-							foundTask.onDrop(this);
-							foundTask.mergeIn(pair.task);
-							network.getTaskRegistry().revoke(pair.task);
-							foundTask.onAccept(this);
+						} else {
+							// pair.task is another task we should merge into foundTask.
+							// Note we also claim the original task.
+							foundTask = foundTask.mergeIn(pair.task);
 						}
 					}
 				}
 				
 				if (foundTask != null) {
-					
-					
+					forceSetTask(foundTask);
 					return true;
 				}
 			}
@@ -373,10 +434,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	
 	@Override
 	public void setDead() {
-		if (currentTask != null) {
-			this.getLogisticsNetwork().getTaskRegistry().forfitTask(currentTask);
-		}
-		
+		forfitTask();
 		super.setDead();
 	}
 	

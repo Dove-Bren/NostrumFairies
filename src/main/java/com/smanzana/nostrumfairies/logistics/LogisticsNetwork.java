@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.logistics;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -427,13 +428,17 @@ public class LogisticsNetwork {
 	
 	private List<ItemDeepStack> makeAvailableList(ILogisticsComponent component, List<ItemDeepStack> raws) {
 		List<RequestedItemRecord> requests = activeItemRequests.get(component);
-		List<ItemDeepStack> ret = Lists.newArrayList(raws);
+		List<ItemDeepStack> ret = new ArrayList<>(raws.size());
+		for (ItemDeepStack raw : raws) {
+			ret.add(raw.copy());
+		}
+		
 		
 		if (requests != null && !requests.isEmpty()) {
 			for (RequestedItemRecord request : requests) {
 				Iterator<ItemDeepStack> it = ret.iterator();
 				while (it.hasNext()) {
-					ItemDeepStack deep = it.next().copy();
+					ItemDeepStack deep = it.next();
 					if (ItemStacks.stacksMatch(deep.getTemplate(), request.items.getTemplate())) {
 						deep.add(-request.items.getCount());
 						if (deep.getCount() <= 0) {
@@ -457,6 +462,8 @@ public class LogisticsNetwork {
 		cache.availableItems = makeAvailableList(component, cache.rawItems);
 		this.dirty();
 		this.refresh();
+		// TODO wait this calls makeAvailableList twice cause it refreshes the raw and then rebuilds the available.
+		// Fix probably by just updating the cache key instead of dirty+refresh?
 	}
 	
 	private CachedItemList makeItemListEntry(ILogisticsComponent component, List<ItemDeepStack> raws) {
@@ -528,10 +535,32 @@ public class LogisticsNetwork {
 		return getNetworkItems(null, null, 0.0, includeRequested);
 	}
 	
+	/**
+	 * Get a filtered set of all items in the network, mapped to the component that has them.
+	 * This list is filtered to the world and max-distance requirements of the caller. It may optionally include
+	 * items that already have outstanding requests for them (aka a worker is coming to take or use that item).
+	 * World and pos are optional. If they are null, no distance checking will be done.
+	 * If provided,components that are further than the provided maxDistance from the provided pos will be filtered out.
+	 * <b>Note:</b> this map is sorted from least-distance to most-distance for convenience of selecting a component.
+	 * @param world
+	 * @param pos
+	 * @param maxDistance
+	 * @param includeRequested
+	 * @return
+	 */
 	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(@Nullable World world, @Nullable BlockPos pos, double maxDistance, boolean includeRequested) {
 		refresh();
 		
-		Map<ILogisticsComponent, List<ItemDeepStack>> filteredMap = new HashMap<>();
+		Map<ILogisticsComponent, List<ItemDeepStack>> filteredMap;
+		if (world == null || pos == null) {
+			filteredMap = new HashMap<>();
+		} else {
+			filteredMap = new TreeMap<>((l, r) -> {
+				double lDist = l.getPosition().distanceSq(pos);
+				double rDist = r.getPosition().distanceSq(pos);
+				return (lDist < rDist ? -1 : 1);
+			});
+		}
 		
 		final double maxDistSq = maxDistance * maxDistance;
 		for (Entry<ILogisticsComponent, CachedItemList> entry : cachedItemMap.entrySet()) {
@@ -598,6 +627,7 @@ public class LogisticsNetwork {
 	}
 	
 	public RequestedItemRecord addRequestedItem(ILogisticsComponent component, ILogisticsTask task, ItemDeepStack item) {
+		System.out.println("Adding hold for " + item.getTemplate().getDisplayName() + " x" + item.getCount());
 		RequestedItemRecord record = new RequestedItemRecord(task, item);
 		
 		addRequestedItem(component, record);

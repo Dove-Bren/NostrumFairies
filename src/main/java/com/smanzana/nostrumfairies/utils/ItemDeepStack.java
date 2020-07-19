@@ -55,6 +55,10 @@ public class ItemDeepStack {
 		this.count += count;
 	}
 	
+	public void setCount(long count) {
+		this.count = count;
+	}
+	
 	public ItemStack splitStack(int requestedCount) {
 		ItemStack stack = item.copy();
 		

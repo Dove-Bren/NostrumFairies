@@ -8,4 +8,6 @@ public interface ILogisticsTaskListener {
 
 	public void onTaskAccept(ILogisticsTask task, IFairyWorker worker);
 	
+	public void onTaskComplete(ILogisticsTask task, IFairyWorker worker);
+	
 }

@@ -23,10 +23,12 @@ public class LogisticsTaskRegistry {
 	private static final class RegistryItem {
 		
 		private ILogisticsTask task;
-		private IFairyWorker actor;
+		private @Nullable IFairyWorker actor;
+		private @Nullable ILogisticsTaskListener listener;
 		
-		public RegistryItem(ILogisticsTask task) {
+		public RegistryItem(ILogisticsTask task, @Nullable ILogisticsTaskListener listener) {
 			this.task = task;
+			this.listener = listener;
 			this.actor = null;
 		}
 		
@@ -36,6 +38,14 @@ public class LogisticsTaskRegistry {
 		
 		public void setActor(IFairyWorker actor) {
 			this.actor = actor;
+		}
+		
+		public boolean hasListener() {
+			return listener != null;
+		}
+		
+		public @Nullable ILogisticsTaskListener getListener() {
+			return listener;
 		}
 	}
 	
@@ -64,8 +74,9 @@ public class LogisticsTaskRegistry {
 	 * Register a task with the registry so that workers can see it and decide to perform it
 	 * @param task
 	 */
-	public void register(ILogisticsTask task) {
-		registry.add(new RegistryItem(task));
+	public void register(ILogisticsTask task, @Nullable ILogisticsTaskListener listener) {
+		System.out.println("Registering task " + task.getDisplayName());
+		registry.add(new RegistryItem(task, listener));
 		
 		ILogisticsComponent comp = task.getSourceComponent();
 		if (comp == null) {
@@ -79,6 +90,7 @@ public class LogisticsTaskRegistry {
 	 * @param task
 	 */
 	public void revoke(ILogisticsTask task) {
+		System.out.println("Revoking task " + task.getDisplayName());
 		Iterator<RegistryItem> it = registry.iterator();
 		while (it.hasNext()) {
 			RegistryItem item = it.next();
@@ -86,9 +98,13 @@ public class LogisticsTaskRegistry {
 				IFairyWorker oldActor = item.actor;
 				if (item.hasActor()) {
 					item.setActor(null);
-					oldActor.cancelTask();
+					oldActor.dropTask(task);
 				}
 				item.task.onDrop(oldActor);
+				if (item.hasListener()) {
+					item.getListener().onTaskDrop(task, oldActor);
+				}
+				item.task.onRevoke();
 				it.remove();
 			}
 		}
@@ -141,6 +157,7 @@ public class LogisticsTaskRegistry {
 	 * @param actor
 	 */
 	public void claimTask(ILogisticsTask task, IFairyWorker actor) {
+		System.out.println("Claiming task " + task.getDisplayName() + "(" + actor + ")");
 		RegistryItem item = findTaskItem(task);
 		if (item == null) {
 			throw new RuntimeException("Attempted to claim a logistics task before it was registered in the registry");
@@ -152,6 +169,9 @@ public class LogisticsTaskRegistry {
 		
 		item.setActor(actor);
 		task.onAccept(actor);
+		if (item.hasListener()) {
+			item.getListener().onTaskAccept(task, actor);
+		}
 	}
 	
 	/**
@@ -161,21 +181,33 @@ public class LogisticsTaskRegistry {
 	 * @param pos
 	 */
 	public void forfitTask(ILogisticsTask task) {
+		System.out.println("forfitting task " + task.getDisplayName());
 		RegistryItem item = findTaskItem(task);
 		if (item == null) {
-			throw new RuntimeException("Attempted to forgit a logistics task before it was registered in the registry");
+			throw new RuntimeException("Attempted to forfit a logistics task before it was registered in the registry");
 		}
 		
 		IFairyWorker oldActor = item.actor;
 		item.setActor(null);
 		item.task.onDrop(oldActor);
-		oldActor.cancelTask();
+		if (item.hasListener()) {
+			item.getListener().onTaskDrop(task, oldActor);
+		}
+	}
+	
+	public void completeTask(ILogisticsTask task) {
+		System.out.println("Completing task " + task.getDisplayName());
+		RegistryItem item = findTaskItem(task);
+		if (item == null) {
+			throw new RuntimeException("Attempted to complete a logistics task before it was registered in the registry");
+		}
 		
-		// split up merged tasks
-		revoke(task);
-		task.unmerge().forEach((t) -> {
-			register(t);
-		});
+		IFairyWorker actor = item.actor;
+		if (item.hasListener()) {
+			item.getListener().onTaskComplete(task, actor);
+		}
+		
+		registry.remove(item);
 	}
 
 	public Collection<ILogisticsTask> allTasks() {

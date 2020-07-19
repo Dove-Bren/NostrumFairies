@@ -39,7 +39,10 @@ public interface IFairyWorker {
 	 */
 	public @Nullable ILogisticsTask getCurrentTask();
 	
-	public void cancelTask();
+	/**
+	 * A task claimed by this fairy is no longer needed. Drop it.
+	 */
+	public void dropTask(ILogisticsTask task);
 	
 	public @Nullable LogisticsNetwork getLogisticsNetwork();
 	

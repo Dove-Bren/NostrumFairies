@@ -43,6 +43,12 @@ public interface ILogisticsTask {
 	public void onDrop(@Nullable IFairyWorker worker);
 	
 	/**
+	 * This task is being removed from the registry all together.
+	 * An onDrop call will happen first. Any leftover state should be cleared.
+	 */
+	public void onRevoke();
+	
+	/**
 	 * Called when a worker has picked up this task and is going to start working on it.
 	 * @param worker
 	 */
@@ -59,18 +65,24 @@ public interface ILogisticsTask {
 	/**
 	 * Merge the provided other task into this same one.
 	 * This will only be called if canMerge returns true.
-	 * The 'other' task will be destroyed afterwards. The task this is called on
-	 * should contain both pieces of work.
-	 * Note: tasks that support merging should check if they've been merged onDrop() and
-	 * possibly queue up the original tasks instead of just queueing up this one.
+	 * Calling code will abandon references to the 'this' task and
+	 * the 'other' task and use the return instead. Tasks that support merging should
+	 * create a new <i>composite</i> task which maintains links to the ones that it's built
+	 * out of. This composite task will not be registered in the task registry and will not get
+	 * listener events (onDrop, onAccept, etc.) and should be able to be unmerged at any time.
+	 * Methods like 'canAccept' and 'GetActiveSubtask' should return one result
+	 * for the composite task.
+	 * 
+	 * Note: all places that interact with the task registry know to call 'unmerge' to get back
+	 * the original list of tasks and use those instead of the return of this func.
 	 * @param other
 	 */
-	public void mergeIn(ILogisticsTask other);
+	public ILogisticsTask mergeIn(ILogisticsTask other);
 	
 	/**
 	 * Split out all tasks that were merged into this one.
 	 * If this task never merged with another and represents a single task, it should return a collection
-	 * with itself in it.
+	 * with itself in it. Otherwise, it should return the original objects that were merged in.
 	 * @return
 	 */
 	public Collection<ILogisticsTask> unmerge();

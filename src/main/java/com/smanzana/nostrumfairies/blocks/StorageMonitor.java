@@ -30,6 +30,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class StorageMonitor extends BlockContainer {
 	
+	// TODO what about viewing tasks? Condensed tasks that is.
+	
 	public static final String ID = "logistics_storage_monitor";
 	
 	private static StorageMonitor instance = null;

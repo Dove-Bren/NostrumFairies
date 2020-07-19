@@ -2,8 +2,9 @@ package com.smanzana.nostrumfairies.entity.fairy;
 
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
+import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositTask;
+import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsItemRetrievalTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask.Type;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
@@ -93,10 +94,7 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 
 		// We want to just drop our task if our status changes from WORKING
 		if (from == FairyGeneralStatus.WORKING) {
-			if (this.getCurrentTask() != null) {
-				this.getLogisticsNetwork().getTaskRegistry().forfitTask(this.getCurrentTask());
-				this.forceSetTask(null);
-			}
+			this.forfitTask();
 		}
 		
 		return true;
@@ -114,9 +112,9 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		if (task instanceof LogisticsItemRetrievalTask) {
+		if (task instanceof LogisticsItemWithdrawTask) {
 			boolean hasItems = true;
-			LogisticsItemRetrievalTask retrieve = (LogisticsItemRetrievalTask) task;
+			LogisticsItemWithdrawTask retrieve = (LogisticsItemWithdrawTask) task;
 //			Map<ILogisticsComponent, List<ItemDeepStack>> items = this.getLogisticsNetwork().getNetworkItems(false);
 //			
 //			for (List<ItemDeepStack> stacks : items.values()) {
@@ -150,6 +148,24 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 				}
 				
 			}
+		} else if (task instanceof LogisticsItemDepositTask) {
+			LogisticsItemDepositTask deposit = (LogisticsItemDepositTask) task;
+			
+			// Check for pathing
+			ILogisticsComponent source = deposit.getSourceComponent();
+			if (source == null) {
+				// entity
+				if (this.navigator.tryMoveToEntityLiving(deposit.getSourceEntity(), 1.0)) {
+					navigator.clearPathEntity();
+					return true;
+				}
+			} else {
+				BlockPos pos = source.getPosition();
+				if (this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0)) {
+					navigator.clearPathEntity();
+					return true;
+				}
+			}
 		}
 		
 		return false;
@@ -157,6 +173,11 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 
 	@Override
 	protected boolean shouldPerformTask(ILogisticsTask task) {
+		if (heldItem != null) {
+			EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, heldItem);
+			worldObj.spawnEntityInWorld(item);
+			heldItem = null;
+		}
 		return this.heldItem == null;
 	}
 

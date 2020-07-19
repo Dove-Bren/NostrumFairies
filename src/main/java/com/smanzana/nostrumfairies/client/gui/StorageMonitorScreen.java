@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.util.ResourceLocation;
 
 public class StorageMonitorScreen extends GuiScreen {
@@ -88,7 +89,10 @@ public class StorageMonitorScreen extends GuiScreen {
 			}
 			final int width = this.fontRendererObj.getStringWidth(count);
 			final int height = this.fontRendererObj.FONT_HEIGHT;
+			RenderHelper.disableStandardItemLighting();
+			RenderHelper.enableGUIStandardItemLighting();
 			this.itemRender.renderItemIntoGUI(stack.getTemplate(), x + 1, y + 1);
+			RenderHelper.enableGUIStandardItemLighting();
 			
 			GlStateManager.pushMatrix();
 			GlStateManager.translate(0, 0, 1000);

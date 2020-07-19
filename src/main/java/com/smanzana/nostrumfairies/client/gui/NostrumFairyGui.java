@@ -1,11 +1,14 @@
 package com.smanzana.nostrumfairies.client.gui;
 
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest.BufferChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.InputLogisticsChest.InputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest.OutputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest.StorageChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui.BufferChestGuiContainer;
+import com.smanzana.nostrumfairies.client.gui.container.InputChestGui;
+import com.smanzana.nostrumfairies.client.gui.container.InputChestGui.InputChestGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui.OutputChestGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui;
@@ -23,6 +26,7 @@ public class NostrumFairyGui implements IGuiHandler {
 	public static final int storageChestID = 1;
 	public static final int bufferChestID = 2;
 	public static final int outputChestID = 3;
+	public static final int inputChestID = 4;
 	
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
@@ -51,6 +55,15 @@ public class NostrumFairyGui implements IGuiHandler {
 				return new OutputChestGui.OutputChestContainer(
 						player.inventory,
 						(OutputChestTileEntity) ent); // should be tile inventory
+			}
+		}
+		
+		if (ID == inputChestID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof InputChestTileEntity) {
+				return new InputChestGui.InputChestContainer(
+						player.inventory,
+						(InputChestTileEntity) ent); // should be tile inventory
 			}
 		}
 		
@@ -89,6 +102,15 @@ public class NostrumFairyGui implements IGuiHandler {
 				return new OutputChestGuiContainer(new OutputChestGui.OutputChestContainer(
 						player.inventory,
 						(OutputChestTileEntity) ent)); // should be tile inventory
+			}
+		}
+		
+		if (ID == inputChestID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof InputChestTileEntity) {
+				return new InputChestGuiContainer(new InputChestGui.InputChestContainer(
+						player.inventory,
+						(InputChestTileEntity) ent)); // should be tile inventory
 			}
 		}
 		
