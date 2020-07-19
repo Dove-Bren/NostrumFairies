@@ -13,6 +13,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -140,7 +141,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		return emptyList;
 	}
 	
-	public boolean canAccept(ItemStack stack) {
+	public boolean canAccept(List<ItemDeepStack> stacks) {
 		return false;
 	}
 	
@@ -259,10 +260,10 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		}
 
 		@Override
-		public boolean canAccept(ItemStack stack) {
+		public boolean canAccept(List<ItemDeepStack> stacks) {
 			refreshCache();
 			if (teCache != null) {
-				return teCache.canAccept(stack);
+				return teCache.canAccept(stacks);
 			}
 			return false;
 		}

@@ -10,6 +10,7 @@ import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
 import net.minecraft.block.BlockContainer;
@@ -124,7 +125,7 @@ public class BufferLogisticsChest extends BlockContainer {
 		}
 		
 		@Override
-		public boolean canAccept(ItemStack stack) {
+		public boolean canAccept(List<ItemDeepStack> stacks) {
 			return false; // buffer chests aren't for random storage
 		}
 		

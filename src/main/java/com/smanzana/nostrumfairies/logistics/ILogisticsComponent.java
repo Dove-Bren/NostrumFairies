@@ -1,6 +1,9 @@
 package com.smanzana.nostrumfairies.logistics;
 
 import java.util.Collection;
+import java.util.List;
+
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -60,11 +63,11 @@ public interface ILogisticsComponent {
 	public boolean isItemBuffer();
 	
 	/**
-	 * Check and return whether this component can store the provided item stack.
-	 * @param stack
+	 * Check and return whether this component is allowed to store the provided items (and can fit all of them)
+	 * @param stacks
 	 * @return
 	 */
-	public boolean canAccept(ItemStack stack);
+	public boolean canAccept(List<ItemDeepStack> stacks);
 	
 	// public float getEnergyProduction(); // and consumption? What drives all of this?
 	

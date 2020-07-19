@@ -14,6 +14,7 @@ import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
 import com.smanzana.nostrumfairies.entity.fairy.IItemCarrierFairy;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.IncomingItemRecord;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsItemTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
@@ -52,6 +53,7 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 	
 	private int animCount;
 	private @Nullable ILogisticsComponent dropoffComponent;
+	private @Nullable IncomingItemRecord deliveryRecord;
 	private @Nullable UUID networkCacheKey;
 
 	/**
@@ -132,6 +134,10 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 		// TODO some part of this is duping items. The fairy drops the item, and also is still able to deliver it perhaps?
 		// Edit: possibly related, shutting things down while a fairy has an item leaves the fairy with the item in their inventory
 		
+		if (deliveryRecord != null) {
+			fairy.getLogisticsNetwork().removeIncomingItem(dropoffComponent, deliveryRecord);
+		}
+		
 		releaseTasks();
 		this.fairy = null;
 		phase = Phase.IDLE;
@@ -144,14 +150,20 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 		animCount = 0;
 		tryTasks(worker);
 		
+		if (deliverTask != null) {
+			deliveryRecord = fairy.getLogisticsNetwork().addIncomingItem(dropoffComponent, this, new ItemDeepStack(item));
+		}
+		
 		this.networkCacheKey = null; //reset so 'isValid' runs fully the first time
 	}
 	
 	@Override
 	public void onRevoke() {
 		// Item either in inventory OR in fairy carrier inventory which are taken care of.
-		// Nothing to do.
-		;
+		// Nothing to do except let the network know the item isn't coming yet after all.
+		if (deliveryRecord != null) {
+			fairy.getLogisticsNetwork().removeIncomingItem(dropoffComponent, deliveryRecord);
+		}
 	}
 
 	@Override
@@ -227,6 +239,7 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 		deliverTask = null;
 		workTask = null;
 		dropoffComponent = null;
+		deliveryRecord = null;
 	}
 	
 	private boolean tryTasks(IFairyWorker fairy) {
@@ -307,8 +320,8 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 				animCount++;
 			} else {
 				phase = Phase.DELIVERING;
-				takeItems();
 				syncChildPhases();
+				takeItems();
 			}
 			break;
 		case DELIVERING:
@@ -345,13 +358,24 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 	}
 	
 	private void giveItems() {
-		IItemCarrierFairy worker = fairy; // capture before making changes!
-		ItemStack old[] = worker.getCarriedItems();
-		ItemStack items[] = Arrays.copyOf(old, old.length);
-		
-		for (ItemStack stack : items) {
-			dropoffComponent.addItem(stack);
-			worker.removeItem(stack);
+		if (this.mergedTasks == null) {
+			IItemCarrierFairy worker = fairy; // capture before making changes!
+			ItemStack old[] = worker.getCarriedItems();
+			ItemStack items[] = Arrays.copyOf(old, old.length);
+			
+			for (ItemStack stack : items) {
+				dropoffComponent.addItem(stack);
+				worker.removeItem(stack);
+			}
+			
+			if (deliveryRecord != null) {
+				fairy.getLogisticsNetwork().removeIncomingItem(dropoffComponent, deliveryRecord);
+			}
+		} else {
+			// Make the merged tasks do it so they can update the network correctly
+			for (ILogisticsTask task : this.mergedTasks) {
+				((LogisticsItemDepositTask) task).giveItems();
+			}
 		}
 		
 		// Note: If this ever registers 'incoming' or 'future' items, this is where it should clean it

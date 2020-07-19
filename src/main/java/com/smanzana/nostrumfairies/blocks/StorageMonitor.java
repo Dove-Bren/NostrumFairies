@@ -1,5 +1,7 @@
 package com.smanzana.nostrumfairies.blocks;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
@@ -8,6 +10,7 @@ import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
@@ -107,7 +110,7 @@ public class StorageMonitor extends BlockContainer {
 		}
 
 		@Override
-		public boolean canAccept(ItemStack stack) {
+		public boolean canAccept(List<ItemDeepStack> stacks) {
 			return false;
 		}
 	}

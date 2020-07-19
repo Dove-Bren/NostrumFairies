@@ -92,4 +92,25 @@ public class ItemDeepStack {
 		}
 		return out;
 	}
+	
+	public static List<ItemDeepStack> toCondensedDeepList(Collection<ItemDeepStack> deeps) {
+		// Could make sure both lists are sorted by itemstack, and have iterators on both to make this merge fast.
+		// Optimization oppertunity!
+		List<ItemDeepStack> out = new ArrayList<>(deeps.size());
+		for (ItemDeepStack deep: deeps) {
+			boolean merged = false;
+			for (ItemDeepStack condensed : out) {
+				if (condensed.canMerge(deep)) {
+					condensed.add(deep);
+					merged = true;
+					break;
+				}
+			}
+			
+			if (!merged) {
+				out.add(deep);
+			}
+		}
+		return out;
+	}
 }

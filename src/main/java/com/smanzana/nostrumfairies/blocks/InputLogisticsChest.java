@@ -11,6 +11,7 @@ import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositRequester;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
@@ -116,7 +117,7 @@ public class InputLogisticsChest extends BlockContainer {
 		}
 		
 		@Override
-		public boolean canAccept(ItemStack stack) {
+		public boolean canAccept(List<ItemDeepStack> stacks) {
 			return false;
 		}
 

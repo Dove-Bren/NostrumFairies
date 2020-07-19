@@ -58,6 +58,25 @@ public class LogisticsNetwork {
 		}
 	}
 	
+	public static final class IncomingItemRecord {
+		private ILogisticsTask task;
+		
+		private ItemDeepStack items;
+		
+		public IncomingItemRecord(ILogisticsTask task, ItemDeepStack item) {
+			this.task = task;
+			this.items = item;
+		}
+		
+		public ILogisticsTask getOwningTask() {
+			return task;
+		}
+		
+		public ItemDeepStack getItem() {
+			return items;
+		}
+	}
+	
 	private static final class CachedItemList {
 		public List<ItemDeepStack> rawItems;
 		public List<ItemDeepStack> availableItems;
@@ -86,6 +105,7 @@ public class LogisticsNetwork {
 	protected List<ItemDeepStack> cachedCondensedItems; // List of itemstacks with over-stacked sizes
 	protected Map<ILogisticsComponent, CachedItemList> cachedItemMap;
 	protected Map<ILogisticsComponent, List<RequestedItemRecord>> activeItemRequests; // current items that are being taken from each component
+	protected Map<ILogisticsComponent, List<IncomingItemRecord>> activeItemDeliveries; // current items that are soon to be added to the logistics network
 	protected UUID cacheKey; // used by components to know whether things have changed since the last time THEY cached stuff
 	
 	// Tasks
@@ -101,6 +121,7 @@ public class LogisticsNetwork {
 		this.components = new HashSet<>(); // components will load and re-attach
 		this.componentGraph = new HashMap<>();
 		this.activeItemRequests = new HashMap<>();
+		this.activeItemDeliveries = new HashMap<>();
 		this.cacheKey = UUID.randomUUID();
 		this.taskRegistry = new LogisticsTaskRegistry();
 		cacheDirty = false;
@@ -428,9 +449,30 @@ public class LogisticsNetwork {
 	
 	private List<ItemDeepStack> makeAvailableList(ILogisticsComponent component, List<ItemDeepStack> raws) {
 		List<RequestedItemRecord> requests = activeItemRequests.get(component);
+		List<IncomingItemRecord> deliveries = activeItemDeliveries.get(component);
 		List<ItemDeepStack> ret = new ArrayList<>(raws.size());
 		for (ItemDeepStack raw : raws) {
 			ret.add(raw.copy());
+		}
+		
+		if (deliveries != null && !deliveries.isEmpty()) {
+			for (IncomingItemRecord delivery : deliveries) {
+				boolean found = false;
+				Iterator<ItemDeepStack> it = ret.iterator();
+				while (it.hasNext()) {
+					ItemDeepStack deep = it.next();
+					if (ItemStacks.stacksMatch(deep.getTemplate(), delivery.items.getTemplate())) {
+						deep.add(delivery.items.getCount());
+						found = true;
+						break;
+					}
+				}
+				
+				if (!found) {
+					// Should add it to the list
+					ret.add(delivery.items.copy());
+				}
+			}
 		}
 		
 		
@@ -454,13 +496,18 @@ public class LogisticsNetwork {
 	}
 	
 	protected void refreshAvailableLists(ILogisticsComponent component) {
-		CachedItemList cache = cachedItemMap.get(component);
-		if (cache == null) {
-			return;
+		// Corner case for if this network's first interaction is adding an incoming item
+		if (cachedItemMap == null) {
+			this.refresh();
+		} else {
+			CachedItemList cache = cachedItemMap.get(component);
+			if (cache == null) {
+				return;
+			}
+			
+			cache.availableItems = makeAvailableList(component, cache.rawItems);
+			refreshCacheKey();
 		}
-		
-		cache.availableItems = makeAvailableList(component, cache.rawItems);
-		refreshCacheKey();
 	}
 	
 	private CachedItemList makeItemListEntry(ILogisticsComponent component, List<ItemDeepStack> raws) {
@@ -532,24 +579,33 @@ public class LogisticsNetwork {
 		return cachedCondensedItems;
 	}
 	
-	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(boolean includeRequested) {
-		return getNetworkItems(null, null, 0.0, includeRequested);
+	/**
+	 * Get a map from a logistics network component and the items it has.
+	 * This version of this call does not do any filtering based on distance.
+	 * @param rawContents if true, return the items actually in the component. If false, factors in items being
+	 * 			pulled out of the logistics network and items being delivered.
+	 * @return
+	 */
+	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(boolean rawContents) {
+		return getNetworkItems(null, null, 0.0, rawContents);
 	}
 	
 	/**
 	 * Get a filtered set of all items in the network, mapped to the component that has them.
-	 * This list is filtered to the world and max-distance requirements of the caller. It may optionally include
-	 * items that already have outstanding requests for them (aka a worker is coming to take or use that item).
+	 * This list is filtered to the world and max-distance requirements of the caller.
+	 * This call either returns lists of items that are effectively in the component
+	 * (actual - items being requested + items being delivered) OR lists of all the items
+	 * actually in the component.
 	 * World and pos are optional. If they are null, no distance checking will be done.
 	 * If provided,components that are further than the provided maxDistance from the provided pos will be filtered out.
 	 * <b>Note:</b> this map is sorted from least-distance to most-distance for convenience of selecting a component.
 	 * @param world
 	 * @param pos
 	 * @param maxDistance
-	 * @param includeRequested
+	 * @param rawContents if true, return the actaul contents of the component without adjusting for deliveries or item requests.
 	 * @return
 	 */
-	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(@Nullable World world, @Nullable BlockPos pos, double maxDistance, boolean includeRequested) {
+	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(@Nullable World world, @Nullable BlockPos pos, double maxDistance, boolean rawContents) {
 		refresh();
 		
 		Map<ILogisticsComponent, List<ItemDeepStack>> filteredMap;
@@ -571,7 +627,7 @@ public class LogisticsNetwork {
 			}
 			
 			if (pos == null || component.getPosition().distanceSq(pos) < maxDistSq) {
-				filteredMap.put(component, includeRequested ? entry.getValue().rawItems : entry.getValue().availableItems);
+				filteredMap.put(component, rawContents ? entry.getValue().rawItems : entry.getValue().availableItems);
 			}
 		}
 		
@@ -587,7 +643,17 @@ public class LogisticsNetwork {
 				continue;
 			}
 			
-			if (!comp.canAccept(stack)) {
+			List<IncomingItemRecord> incomingRecords = activeItemDeliveries.get(comp);
+			List<ItemDeepStack> allIncomingStacks = new ArrayList<>(incomingRecords == null ? 1 : incomingRecords.size());
+			if (incomingRecords != null) {
+				for (IncomingItemRecord record : incomingRecords) {
+					allIncomingStacks.add(record.items);
+				}
+			}
+			
+			allIncomingStacks.add(new ItemDeepStack(stack));
+			
+			if (!comp.canAccept(allIncomingStacks)) {
 				continue;
 			}
 			
@@ -628,7 +694,6 @@ public class LogisticsNetwork {
 	}
 	
 	public RequestedItemRecord addRequestedItem(ILogisticsComponent component, ILogisticsTask task, ItemDeepStack item) {
-		System.out.println("Adding hold for " + item.getTemplate().getDisplayName() + " x" + item.getCount());
 		RequestedItemRecord record = new RequestedItemRecord(task, item);
 		
 		addRequestedItem(component, record);
@@ -663,6 +728,52 @@ public class LogisticsNetwork {
 	
 	public @Nullable Collection<RequestedItemRecord> getItemRequests(ILogisticsComponent component) {
 		return activeItemRequests.get(component);
+	}
+	
+	public IncomingItemRecord addIncomingItem(ILogisticsComponent component, IncomingItemRecord record) {
+		List<IncomingItemRecord> records = activeItemDeliveries.get(component);
+		
+		if (records == null) {
+			records = new LinkedList<>();
+			activeItemDeliveries.put(component, records);
+		}
+		
+		records.add(record);
+		refreshAvailableLists(component);
+		return record;
+	}
+	
+	public IncomingItemRecord addIncomingItem(ILogisticsComponent component, ILogisticsTask task, ItemDeepStack item) {
+		return addIncomingItem(component, new IncomingItemRecord(task, item));
+	}
+	
+	public void removeIncomingItem(ILogisticsComponent component, IncomingItemRecord request) {
+		List<IncomingItemRecord> deliveries = activeItemDeliveries.get(component);
+		if (deliveries == null) {
+			return;
+		}
+		
+		deliveries.remove(request);
+		refreshAvailableLists(component);
+	}
+	
+	public void removeAllIncomingItems(ILogisticsComponent component, ILogisticsTask task) {
+		List<IncomingItemRecord> deliveries = activeItemDeliveries.get(component);
+		if (deliveries == null) {
+			return;
+		}
+		
+		Iterator<IncomingItemRecord> it = deliveries.iterator();
+		while (it.hasNext()) {
+			if (it.next().task == task) {
+				it.remove();
+			}
+		}
+		refreshAvailableLists(component);
+	}
+	
+	public @Nullable Collection<IncomingItemRecord> getItemDeliveries(ILogisticsComponent component) {
+		return activeItemDeliveries.get(component);
 	}
 	
 	/**

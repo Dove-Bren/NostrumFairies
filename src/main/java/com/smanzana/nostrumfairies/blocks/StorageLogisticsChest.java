@@ -1,10 +1,13 @@
 package com.smanzana.nostrumfairies.blocks;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
 import net.minecraft.block.BlockContainer;
@@ -110,8 +113,8 @@ public class StorageLogisticsChest extends BlockContainer {
 		}
 		
 		@Override
-		public boolean canAccept(ItemStack stack) {
-			return ItemStacks.canFit(this, stack);
+		public boolean canAccept(List<ItemDeepStack> stacks) {
+			return ItemStacks.canFitAll(this, stacks);
 		}
 	}
 	

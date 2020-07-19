@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -170,7 +171,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		}
 		
 		@Override
-		public boolean canAccept(ItemStack stack) {
+		public boolean canAccept(List<ItemDeepStack> stacks) {
 			return false;
 		}
 
