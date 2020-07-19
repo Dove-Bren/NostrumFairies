@@ -229,4 +229,33 @@ public class ItemStacks {
 		return attemptRemoveFromInventory(inventory, items, true);
 	}
 	
+	/**
+	 * Checks whether all items in the subset list are available in the largelist.
+	 * <b>Big note</b>: This method assumes the lists are condensed lists.
+	 * @param largeList
+	 * @param subset
+	 * @return
+	 */
+	public static boolean isSubset(Collection<ItemDeepStack> largeList, Collection<ItemDeepStack> subset) {
+		for (ItemDeepStack deep : subset) {
+			boolean found = false;
+			
+			for (ItemDeepStack largeDeep : largeList) {
+				if (largeDeep.canMerge(deep)) {
+					if (largeDeep.getCount() < deep.getCount()) {
+						return false;
+					}
+					found = true;
+					break;
+				}
+			}
+			
+			if (!found) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
 }

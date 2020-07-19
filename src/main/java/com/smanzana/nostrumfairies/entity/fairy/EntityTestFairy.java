@@ -6,7 +6,6 @@ import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositTask
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask.Type;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -17,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFairy {
@@ -195,31 +195,102 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 	protected void onTaskTick(ILogisticsTask task) {
 		LogisticsSubTask sub = task.getActiveSubtask();
 		if (sub != null) {
-			if (sub.getType() == Type.MOVE) {
-				BlockPos pos = sub.getPos();
-				if (worldObj.isAirBlock(pos.north())) {
-					pos = pos.north();
-				} else if (worldObj.isAirBlock(pos.south())) {
-					pos = pos.south();
-				} else if (worldObj.isAirBlock(pos.east())) {
-					pos = pos.east();
-				} else if (worldObj.isAirBlock(pos.west())) {
-					pos = pos.west();
-				}
-				
-				if (getPosition().distanceSq(pos) < .2) {
-					task.markSubtaskComplete();
-				} else if (!moveHelper.isUpdating()) {
-					if (!this.getNavigator().tryMoveToXYZ(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f)) {
-						this.moveHelper.setMoveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f);
-					}
-				}
-			} else if (sub.getType() == Type.BREAK) {
+			switch (sub.getType()) {
+			case ATTACK:
+				break;
+			case BREAK:
 				// this is where we'd play some animation?
 				if (this.onGround) {
 					this.jump();
 					task.markSubtaskComplete();
 				}
+				break;
+			case IDLE:
+				if ((this.navigator != null && this.navigator.noPath()) || !this.moveHelper.isUpdating()) {
+					// already got a random place to go to. Are we there yet?
+					boolean finished = false;
+					if (this.navigator == null) {
+						double distSq = Math.pow(this.posX - moveHelper.getX(), 2)
+								+ Math.pow(this.posY - moveHelper.getY(), 2)
+								+ Math.pow(this.posZ - moveHelper.getZ(), 2);
+						if (distSq < .25) {
+							finished = true;
+							this.moveHelper.setMoveTo(posX, posY, posZ, 1);
+						}
+					} else {
+						finished = true;
+					}
+					
+					if (finished) {
+						task.markSubtaskComplete();
+					}
+				} else {
+					// Generate a new wait task
+					System.out.println("new idle loc");
+					final BlockPos center = sub.getPos();
+					BlockPos targ = null;
+					int attempts = 20;
+					final double maxDistSq = 25;
+					do {
+						double dist = this.rand.nextDouble() * Math.sqrt(maxDistSq);
+						float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
+						float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
+						
+						targ = new BlockPos(new Vec3d(
+								center.getX() + (Math.cos(angle) * dist),
+								center.getY() + (Math.cos(tilt) * dist),
+								center.getZ() + (Math.sin(angle) * dist)));
+						while (worldObj.isAirBlock(targ)) {
+							targ = targ.down();
+						}
+						
+						// We've hit a non-air block. Make sure there's space above it
+						BlockPos airBlock = null;
+						for (int i = 0; i < Math.ceil(this.height); i++) {
+							if (airBlock == null) {
+								airBlock = targ.up();
+							} else {
+								airBlock = airBlock.up();
+							}
+							
+							if (!worldObj.isAirBlock(airBlock)) {
+								targ = null;
+								break;
+							}
+						}
+					} while (targ == null && attempts > 0);
+					
+					if (targ == null) {
+						targ = center.up();
+					}
+					if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
+						this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+					}
+				}
+				break;
+			case MOVE:
+				{
+					// FIXME this runs every tick. Save pos?
+					BlockPos pos = sub.getPos();
+					if (worldObj.isAirBlock(pos.north())) {
+						pos = pos.north();
+					} else if (worldObj.isAirBlock(pos.south())) {
+						pos = pos.south();
+					} else if (worldObj.isAirBlock(pos.east())) {
+						pos = pos.east();
+					} else if (worldObj.isAirBlock(pos.west())) {
+						pos = pos.west();
+					}
+					
+					if (getPosition().distanceSq(pos) < .2) {
+						task.markSubtaskComplete();
+					} else if (!moveHelper.isUpdating()) {
+						if (!this.getNavigator().tryMoveToXYZ(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f)) {
+							this.moveHelper.setMoveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f);
+						}
+					}
+				}
+				break;
 			}
 		}
 	}

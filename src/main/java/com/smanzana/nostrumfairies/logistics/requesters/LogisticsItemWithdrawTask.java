@@ -16,6 +16,7 @@ import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
 import com.smanzana.nostrumfairies.entity.fairy.IItemCarrierFairy;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.RequestedItemRecord;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsItemTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -33,6 +34,7 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 	private static enum Phase {
 		IDLE,
 		RETRIEVING,
+		WAITING,
 		DELIVERING,
 		DONE,
 	}
@@ -50,6 +52,7 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 	private LogisticsSubTask retrieveTask;
 	private LogisticsSubTask workTask;
 	private LogisticsSubTask deliverTask;
+	private LogisticsSubTask idleTask;
 	
 	
 	private int animCount;
@@ -282,7 +285,7 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 				if (this.mergedTasks == null) {
 					Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.worldObj : component.getWorld(),
 							component == null ? entity.getPosition() : component.getPosition(),
-							250.0, false);
+							250.0, ItemCacheType.NET);
 					ItemDeepStack match = null;
 					ILogisticsComponent comp = null;
 					
@@ -329,6 +332,8 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 			
 			// make deliver task
 			deliverTask = LogisticsSubTask.Move(component == null ? entity.getPosition() : component.getPosition());
+			
+			idleTask = LogisticsSubTask.Idle(component == null ? entity.getPosition() : component.getPosition());
 		}
 		
 		return retrieveTask != null;
@@ -340,6 +345,8 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 		switch (phase) {
 		case IDLE:
 			return null;
+		case WAITING:
+			return idleTask;
 		case RETRIEVING:
 			if (animCount == 0) {
 				return retrieveTask;
@@ -371,14 +378,31 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 		case IDLE:
 			; // ?
 			break;
+		case WAITING:
+			if (animCount < 3) {
+				animCount++;
+			} else {
+				// Spent some time waiting. Go ahead and try and retrieve again
+				phase = Phase.RETRIEVING;
+				animCount = 0;
+				syncChildPhases();
+			}
+			break;
 		case RETRIEVING:
 			// Moved to pick up the item. Give it to them and then move on
 			if (animCount < 3) { // TODO was 20
 				animCount++;
 			} else {
-				takeItems();
-				phase = Phase.DELIVERING;
-				syncChildPhases();
+				if (canTakeItems()) {
+					takeItems();
+					phase = Phase.DELIVERING;
+					syncChildPhases();
+				} else {
+					// Items aren't there yet
+					phase = Phase.WAITING;
+					syncChildPhases();
+					animCount = 0;
+				}
 			}
 			break;
 		case DELIVERING:
@@ -394,6 +418,12 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 	@Override
 	public boolean isComplete() {
 		return phase == Phase.DONE;
+	}
+	
+	private boolean canTakeItems() {
+		Collection<ItemStack> available = pickupComponent.getItems();
+		
+		return ItemStacks.isSubset(ItemDeepStack.toDeepList(available), Lists.newArrayList(this.item));
 	}
 	
 	private void takeItems() {
@@ -453,13 +483,7 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 			if (this.networkCacheKey == null || !this.networkCacheKey.equals(network.getCacheKey())) {
 				this.networkCacheKey = network.getCacheKey();
 			
-				// TODO: Could add the concept of a 'future item' here too that deposit tasks register.
-				// So places could go and be waiting at the storage location for something to be deposited.
-				// That might make auto crafting easier, as well! And then this would need to make sure to pay attention to those
-				// here in the valid check and not drop if there are future items... but 'TakeItems' or w/e that pulls from
-				// the inventory would have to stall while it waited for the item. Maybe a 'waiting' phase that we sit in for a bit
-				// and then try again.
-				List<ItemDeepStack> items = fairy.getLogisticsNetwork().getNetworkItems(true).get(pickupComponent);
+				List<ItemDeepStack> items = fairy.getLogisticsNetwork().getNetworkItems(ItemCacheType.GROSS).get(pickupComponent);
 				if (items == null) {
 					networkCachedItemResult = false;
 				} else {

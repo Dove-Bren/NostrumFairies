@@ -9,6 +9,7 @@ public final class LogisticsSubTask {
 		MOVE,
 		BREAK,
 		ATTACK,
+		IDLE,
 	}
 	
 	private Type type;
@@ -31,6 +32,10 @@ public final class LogisticsSubTask {
 	
 	public static LogisticsSubTask Attack(EntityLivingBase entity) {
 		return new LogisticsSubTask(Type.ATTACK, null, entity);
+	}
+	
+	public static LogisticsSubTask Idle(BlockPos pos) {
+		return new LogisticsSubTask(Type.IDLE, pos, null);
 	}
 
 	public Type getType() {

@@ -80,11 +80,19 @@ public class LogisticsNetwork {
 	private static final class CachedItemList {
 		public List<ItemDeepStack> rawItems;
 		public List<ItemDeepStack> availableItems;
+		public List<ItemDeepStack> grossItems;
 		
-		public CachedItemList(List<ItemDeepStack> raws, List<ItemDeepStack> available) {
+		public CachedItemList(List<ItemDeepStack> raws, List<ItemDeepStack> available, List<ItemDeepStack> gross) {
 			this.rawItems = raws;
 			this.availableItems = available;
+			this.grossItems = gross;
 		}
+	}
+	
+	public static enum ItemCacheType {
+		RAW, // Items that are actually there in  the inventory right now
+		NET, // Items minus items that are spoken for but plus items that are incoming
+		GROSS, // Items that are there plus any that are incoming
 	}
 	
 	private static final String NBT_UUID = "uuid";
@@ -447,7 +455,7 @@ public class LogisticsNetwork {
 		}
 	}
 	
-	private List<ItemDeepStack> makeAvailableList(ILogisticsComponent component, List<ItemDeepStack> raws) {
+	private List<ItemDeepStack> makeAdjustedList(ILogisticsComponent component, List<ItemDeepStack> raws, boolean net) {
 		List<RequestedItemRecord> requests = activeItemRequests.get(component);
 		List<IncomingItemRecord> deliveries = activeItemDeliveries.get(component);
 		List<ItemDeepStack> ret = new ArrayList<>(raws.size());
@@ -475,24 +483,33 @@ public class LogisticsNetwork {
 			}
 		}
 		
-		
-		if (requests != null && !requests.isEmpty()) {
-			for (RequestedItemRecord request : requests) {
-				Iterator<ItemDeepStack> it = ret.iterator();
-				while (it.hasNext()) {
-					ItemDeepStack deep = it.next();
-					if (ItemStacks.stacksMatch(deep.getTemplate(), request.items.getTemplate())) {
-						deep.add(-request.items.getCount());
-						if (deep.getCount() <= 0) {
-							it.remove();
+		if (net) {
+			if (requests != null && !requests.isEmpty()) {
+				for (RequestedItemRecord request : requests) {
+					Iterator<ItemDeepStack> it = ret.iterator();
+					while (it.hasNext()) {
+						ItemDeepStack deep = it.next();
+						if (ItemStacks.stacksMatch(deep.getTemplate(), request.items.getTemplate())) {
+							deep.add(-request.items.getCount());
+							if (deep.getCount() <= 0) {
+								it.remove();
+							}
+							break;
 						}
-						break;
 					}
 				}
 			}
 		}
 		
 		return ret;
+	}
+	
+	private List<ItemDeepStack> makeAvailableList(ILogisticsComponent component, List<ItemDeepStack> raws) {
+		return makeAdjustedList(component, raws, true);
+	}
+	
+	private List<ItemDeepStack> makeGrossList(ILogisticsComponent component, List<ItemDeepStack> raws) {
+		return makeAdjustedList(component, raws, false);
 	}
 	
 	protected void refreshAvailableLists(ILogisticsComponent component) {
@@ -505,13 +522,15 @@ public class LogisticsNetwork {
 				return;
 			}
 			
+			// COULD make the func do both at the same time for effeciency
 			cache.availableItems = makeAvailableList(component, cache.rawItems);
+			cache.grossItems = makeGrossList(component, cache.rawItems); 
 			refreshCacheKey();
 		}
 	}
 	
 	private CachedItemList makeItemListEntry(ILogisticsComponent component, List<ItemDeepStack> raws) {
-		return new CachedItemList(raws, makeAvailableList(component, raws));
+		return new CachedItemList(raws, makeAvailableList(component, raws), makeGrossList(component, raws));
 	}
 	
 	private void refreshCacheKey() {
@@ -586,8 +605,8 @@ public class LogisticsNetwork {
 	 * 			pulled out of the logistics network and items being delivered.
 	 * @return
 	 */
-	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(boolean rawContents) {
-		return getNetworkItems(null, null, 0.0, rawContents);
+	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(ItemCacheType type) {
+		return getNetworkItems(null, null, 0.0, type);
 	}
 	
 	/**
@@ -605,7 +624,7 @@ public class LogisticsNetwork {
 	 * @param rawContents if true, return the actaul contents of the component without adjusting for deliveries or item requests.
 	 * @return
 	 */
-	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(@Nullable World world, @Nullable BlockPos pos, double maxDistance, boolean rawContents) {
+	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(@Nullable World world, @Nullable BlockPos pos, double maxDistance, ItemCacheType type) {
 		refresh();
 		
 		Map<ILogisticsComponent, List<ItemDeepStack>> filteredMap;
@@ -627,7 +646,18 @@ public class LogisticsNetwork {
 			}
 			
 			if (pos == null || component.getPosition().distanceSq(pos) < maxDistSq) {
-				filteredMap.put(component, rawContents ? entry.getValue().rawItems : entry.getValue().availableItems);
+				switch (type) {
+				case GROSS:
+					filteredMap.put(component, entry.getValue().grossItems);
+					break;
+				case NET:
+					filteredMap.put(component, entry.getValue().availableItems);
+					break;
+				case RAW:
+					filteredMap.put(component, entry.getValue().rawItems);
+					break;
+				}
+				
 			}
 		}
 		
