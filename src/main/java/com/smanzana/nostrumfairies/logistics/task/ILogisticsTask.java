@@ -7,6 +7,10 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+
 /**
  * Generic fairy task.
  * This is a job that fairies will do.
@@ -89,9 +93,17 @@ public interface ILogisticsTask {
 	
 	/**
 	 * Return the Logistics Component that is making this request, if one is.
+	 * Note, either this or {@link #getSourceEntity()} is expected to return a non-null result.
 	 * @return
 	 */
 	public @Nullable ILogisticsComponent getSourceComponent();
+	
+	/**
+	 * Return the entity that made this request, if there is one.
+	 * Note, either this or {@link #getSourceComponent()} is expected to return a non-null result.
+	 * @return
+	 */
+	public @Nullable EntityLivingBase getSourceEntity();
 	
 	/**
 	 * Get the current subtask this logistics task is on.
@@ -116,4 +128,28 @@ public interface ILogisticsTask {
 	 * @return
 	 */
 	public boolean isValid();
+	
+	public static World GetSourceWorld(ILogisticsTask task) {
+		World world;
+		ILogisticsComponent comp = task.getSourceComponent();
+		if (comp == null) {
+			world = task.getSourceEntity().getEntityWorld();
+		} else {
+			world = comp.getWorld();
+		}
+		
+		return world;
+	}
+	
+	public static BlockPos GetSourcePosition(ILogisticsTask task) {
+		BlockPos pos;
+		ILogisticsComponent comp = task.getSourceComponent();
+		if (comp == null) {
+			pos = task.getSourceEntity().getPosition();
+		} else {
+			pos = comp.getPosition();
+		}
+		
+		return pos;
+	}
 }

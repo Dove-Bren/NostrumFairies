@@ -26,6 +26,10 @@ public final class LogisticsSubTask {
 		return new LogisticsSubTask(Type.MOVE, pos, null);
 	}
 	
+	public static LogisticsSubTask Move(EntityLivingBase entity) {
+		return new LogisticsSubTask(Type.MOVE, null, entity);
+	}
+	
 	public static LogisticsSubTask Break(BlockPos pos) {
 		return new LogisticsSubTask(Type.BREAK, pos, null);
 	}

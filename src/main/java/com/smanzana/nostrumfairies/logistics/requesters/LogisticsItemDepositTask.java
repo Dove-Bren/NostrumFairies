@@ -271,8 +271,11 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 			workTask = LogisticsSubTask.Break(deliverTask.getPos());
 			
 			// make deliver task
-			retrieveTask = LogisticsSubTask.Move(component == null ? entity.getPosition() : component.getPosition());
-			// TODO make a 'move to entity' subtask?
+			if (component == null) {
+				retrieveTask = LogisticsSubTask.Move(entity);
+			} else {
+				retrieveTask = LogisticsSubTask.Move(component.getPosition());
+			}
 		}
 		
 		return deliverTask != null;
@@ -351,6 +354,9 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 				if (entity instanceof EntityPlayer) {
 					EntityPlayer player = (EntityPlayer) entity;
 					ItemStacks.remove(player.inventory, stack);
+				} else if (entity instanceof IItemCarrierFairy) {
+					IItemCarrierFairy carrier = (IItemCarrierFairy) entity;
+					carrier.removeItem(stack);
 				}
 			}
 			fairy.addItem(stack);

@@ -78,10 +78,9 @@ public class LogisticsTaskRegistry {
 		System.out.println("Registering task " + task.getDisplayName());
 		registry.add(new RegistryItem(task, listener));
 		
-		ILogisticsComponent comp = task.getSourceComponent();
-		if (comp == null) {
-			throw new RuntimeException("Logistics task registered without an attached component");
-		} //donotcheckin
+		if (task.getSourceComponent() == null && task.getSourceEntity() == null) {
+			throw new RuntimeException("Logistics task registered without an attached component OR an attached entity");
+		}
 	}
 	
 	/**
@@ -120,20 +119,11 @@ public class LogisticsTaskRegistry {
 		return null;
 	}
 	
-	public List<FairyTaskPair> findTasks(LogisticsNetwork network, IFairyWorker actor, @Nullable Predicate<ILogisticsTask> filter) {
-		final List<FairyTaskPair> list = new LinkedList<>();
+	public List<ILogisticsTask> findTasks(LogisticsNetwork network, IFairyWorker actor, @Nullable Predicate<ILogisticsTask> filter) {
+		final List<ILogisticsTask> list = new LinkedList<>();
 		
 		registry.forEach((item) -> {
 			if (item.hasActor()) {
-				return;
-			}
-			
-			ILogisticsComponent comp = item.task.getSourceComponent();
-			if (comp == null) {
-				throw new RuntimeException("Logistics task registered without an attached component");
-			}
-			
-			if (!network.getAllComponents().contains(comp)) {
 				return;
 			}
 			
@@ -145,7 +135,7 @@ public class LogisticsTaskRegistry {
 				return;
 			}
 			
-			list.add(new FairyTaskPair(comp, item.task));
+			list.add(item.task);
 		});
 		
 		return list;

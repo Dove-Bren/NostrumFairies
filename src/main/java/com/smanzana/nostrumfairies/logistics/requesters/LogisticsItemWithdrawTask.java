@@ -12,6 +12,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
 import com.smanzana.nostrumfairies.entity.fairy.IItemCarrierFairy;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -331,9 +332,11 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 			workTask = LogisticsSubTask.Break(retrieveTask.getPos());
 			
 			// make deliver task
-			deliverTask = LogisticsSubTask.Move(component == null ? entity.getPosition() : component.getPosition());
-			
-			idleTask = LogisticsSubTask.Idle(component == null ? entity.getPosition() : component.getPosition());
+			if (component == null) {
+				deliverTask = LogisticsSubTask.Move(entity);
+			} else {
+				deliverTask = LogisticsSubTask.Move(component.getPosition());
+			}
 		}
 		
 		return retrieveTask != null;
@@ -379,8 +382,10 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 			; // ?
 			break;
 		case WAITING:
-			if (animCount < 3) {
-				animCount++;
+			// pick random pos, go to it, and then wait a random amount of time.
+			// we use animCount to count DOWN
+			if (animCount > 0) {
+				animCount--;
 			} else {
 				// Spent some time waiting. Go ahead and try and retrieve again
 				phase = Phase.RETRIEVING;
@@ -390,20 +395,22 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 			break;
 		case RETRIEVING:
 			// Moved to pick up the item. Give it to them and then move on
-			if (animCount < 3) { // TODO was 20
-				animCount++;
-			} else {
-				if (canTakeItems()) {
+			if (canTakeItems()) {
+				if (animCount < 3) { // TODO was 20
+					animCount++;
+				} else {
 					takeItems();
 					phase = Phase.DELIVERING;
 					syncChildPhases();
-				} else {
-					// Items aren't there yet
-					phase = Phase.WAITING;
-					syncChildPhases();
-					animCount = 0;
 				}
+			} else {
+				// Items aren't there yet
+				idleTask = LogisticsSubTask.Idle(pickupComponent.getPosition());
+				animCount = 20 * (NostrumFairies.random.nextInt(3) + 2);
+				phase = Phase.WAITING;
+				syncChildPhases();
 			}
+			
 			break;
 		case DELIVERING:
 			phase = Phase.DONE;

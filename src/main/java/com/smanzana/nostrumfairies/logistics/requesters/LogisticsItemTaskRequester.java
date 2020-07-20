@@ -115,12 +115,10 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 			T task;
 			if (this.entity == null) {
 				task = makeTask(component, new ItemDeepStack(item.getTemplate(), 1));
-				network.getTaskRegistry().register(task, this);
 			} else {
-				// TODO fix me. Somehow. This is going to cause crashes when workers go to remove things from the registry
-				// Probably fix by just making 'owning component' not a thing and then register even if it's from an entity.
 				task = makeTask(entity, new ItemDeepStack(item.getTemplate(), 1));
 			}
+			network.getTaskRegistry().register(task, this);
 			this.currentTasks.add(task);
 		}
 	}

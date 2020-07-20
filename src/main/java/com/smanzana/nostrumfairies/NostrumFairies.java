@@ -1,5 +1,7 @@
 package com.smanzana.nostrumfairies;
 
+import java.util.Random;
+
 import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +45,7 @@ public class NostrumFairies {
     public static Logger logger = LogManager.getLogger(MODID);
     public static CreativeTabs creativeTab;
     public static LogisticsComponentRegistry logisticsComponentRegistry;
+    public static Random random = new Random();
     
     private LogisticsRegistry logisticsRegistry; // use getter below
     private boolean logisticsRegistryInitRecurseGuard;

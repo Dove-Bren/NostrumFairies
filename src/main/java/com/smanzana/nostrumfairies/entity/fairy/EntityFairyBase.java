@@ -9,10 +9,9 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
 import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
-import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
+import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorGroundFixed;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry.FairyTaskPair;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
 import net.minecraft.entity.monster.EntityMob;
@@ -64,7 +63,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 		this.wanderDistanceSq = wanderDistanceSq;
 		this.workDistanceSq = workDistanceSq;
 		
-		// don't seem to be tracking fairies! why??
+		this.navigator = new PathNavigatorGroundFixed(this, world);
 	}
 	
 	@Override
@@ -234,6 +233,8 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	 */
 	protected abstract void onTaskTick(@Nullable ILogisticsTask task);
 	
+	protected abstract void onIdleTick();
+	
 	@Override
 	protected abstract void initEntityAI();
 	
@@ -261,8 +262,13 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 		
 		switch (generalStatus) {
 		case IDLE:
-			if (!searchForJobs()) {
-				break;
+			onIdleTick();
+			
+			// Note: idle may decide to do task stuff on its own. We'll respect that.
+			if (currentTask == null) {
+				if (!searchForJobs()) {
+					break;
+				}
 			}
 			
 			changeStatus(FairyGeneralStatus.WORKING);
@@ -306,14 +312,14 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	private boolean searchForJobs() {
 		LogisticsNetwork network = this.getLogisticsNetwork();
 		if (network != null) {
-			List<FairyTaskPair> list = network.getTaskRegistry().findTasks(network, this, (task) -> {
-				ILogisticsComponent comp = task.getSourceComponent();
-				if (comp.getWorld().provider.getDimension() != this.dimension) {
+			List<ILogisticsTask> list = network.getTaskRegistry().findTasks(network, this, (task) -> {
+				World world = ILogisticsTask.GetSourceWorld(task);
+				BlockPos pos = ILogisticsTask.GetSourcePosition(task);
+				if (world.provider.getDimension() != this.dimension) {
 					return false;
 				}
 				
-				final double maxDist = Math.pow(workDistanceSq, 2);
-				if (this.getHome().distanceSq(comp.getPosition()) > maxDist) {
+				if (this.getHome().distanceSq(pos) > workDistanceSq) {
 					return false;
 				}
 				
@@ -322,42 +328,39 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 			
 			// Sort so nearest tasks are first in the list
 			Collections.sort(list, (l, r) -> {
-				ILogisticsComponent lComp = l.task.getSourceComponent();
-				ILogisticsComponent rComp = r.task.getSourceComponent();
-				if (lComp == null) {
+				BlockPos lPos = ILogisticsTask.GetSourcePosition(l);
+				World lWorld = ILogisticsTask.GetSourceWorld(l);
+				BlockPos rPos = ILogisticsTask.GetSourcePosition(r);
+				World rWorld = ILogisticsTask.GetSourceWorld(r);
+				
+				if (!lWorld.equals(this.worldObj)) {
 					return 1;
 				}
-				if (rComp == null) {
-					return -1;
-				}
-				if (!lComp.getWorld().equals(this.worldObj)) {
-					return 1;
-				}
-				if (!rComp.getWorld().equals(this.worldObj)) {
+				if (!rWorld.equals(this.worldObj)) {
 					return -1;
 				}
 				
 				BlockPos fairyPos = this.getPosition();
-				double lDist = lComp.getPosition().distanceSq(fairyPos);
-				double rDist = rComp.getPosition().distanceSq(fairyPos);
+				double lDist = lPos.distanceSq(fairyPos);
+				double rDist = rPos.distanceSq(fairyPos);
 				return lDist < rDist ? -1 : 1;
 			});
 			
 			if (list != null && !list.isEmpty()) {
 				// Could sort somehow.
 				ILogisticsTask foundTask = null;
-				for (FairyTaskPair pair : list) {
-					if (canPerformTask(pair.task)
-							&& pair.task.canAccept(this)
-							&& shouldPerformTask(pair.task)
-							&& (foundTask == null || foundTask.canMerge(pair.task))) {
-						network.getTaskRegistry().claimTask(pair.task, this);
+				for (ILogisticsTask task : list) {
+					if (canPerformTask(task)
+							&& task.canAccept(this)
+							&& shouldPerformTask(task)
+							&& (foundTask == null || foundTask.canMerge(task))) {
+						network.getTaskRegistry().claimTask(task, this);
 						if (foundTask == null) {
-							foundTask = pair.task;
+							foundTask = task;
 						} else {
 							// pair.task is another task we should merge into foundTask.
 							// Note we also claim the original task.
-							foundTask = foundTask.mergeIn(pair.task);
+							foundTask = foundTask.mergeIn(task);
 						}
 					}
 				}
