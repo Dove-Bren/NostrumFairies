@@ -24,6 +24,7 @@ import com.smanzana.nostrumfairies.utils.ItemStacks;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
 
 /*
  * Pick up an item and then deposit it somewhere in the network
@@ -405,5 +406,13 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 	
 	public boolean hasTakenItems() {
 		return this.phase == Phase.DELIVERING || this.phase == Phase.DONE;
+	}
+	
+	public @Nullable BlockPos getDestination() {
+		if (this.deliverTask != null) {
+			return this.deliverTask.getPos();
+		}
+		
+		return null;
 	}
 }

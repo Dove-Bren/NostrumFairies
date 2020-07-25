@@ -34,6 +34,7 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 	public EntityTestFairy(World world) {
 		super(world);
 		this.height = .6f;
+		this.workDistanceSq = 24 * 24;
 	}
 
 	@Override
@@ -118,66 +119,60 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
 		if (task instanceof LogisticsItemWithdrawTask) {
-			boolean hasItems = true;
 			LogisticsItemWithdrawTask retrieve = (LogisticsItemWithdrawTask) task;
-//			Map<ILogisticsComponent, List<ItemDeepStack>> items = this.getLogisticsNetwork().getNetworkItems(false);
-//			
-//			for (List<ItemDeepStack> stacks : items.values()) {
-//				for (ItemDeepStack deep : stacks) {
-//					if (ItemStacks.stacksMatch(deep.getTemplate(), retrieve.getAttachedItem().getTemplate())) {
-//						hasItems = true;
-//						break;
-//					}
-//				}
-//				
-//				if (hasItems) {
-//					break;
-//				}
-//			}
 			
-			if (hasItems) {
-				// Check for pathing
-				ILogisticsComponent source = retrieve.getSourceComponent();
-				if (source == null) {
-					// entity
-					if (this.getDistanceSqToEntity(retrieve.getSourceEntity()) < .2) {
-						return true;
-					}
-					
-					if (this.navigator.tryMoveToEntityLiving(retrieve.getSourceEntity(), 1.0)) {
-						navigator.clearPathEntity();
-						return true;
-					}
-				} else {
-					BlockPos pos = source.getPosition();
-					
-					if (!worldObj.isAirBlock(pos)) {
-						if (worldObj.isAirBlock(pos.north())) {
-							pos = pos.north();
-						} else if (worldObj.isAirBlock(pos.south())) {
-							pos = pos.south();
-						} else if (worldObj.isAirBlock(pos.east())) {
-							pos = pos.east();
-						} else if (worldObj.isAirBlock(pos.west())) {
-							pos = pos.west();
-						} else {
-							pos = pos.up();
-						}
-					}
-					
-					if (this.getDistanceSq(pos) < .2 || this.getPosition().equals(pos)) {
-						return true;
-					}
-					
-					if (this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0)) {
-						navigator.clearPathEntity();
-						return true;
+			// Check where the retrieval task wants us to go to pick up
+			BlockPos pickup = retrieve.getSource();
+			if (pickup != null && !this.canReach(pickup, true)) {
+				return false;
+			}
+			
+			// Check for pathing
+			ILogisticsComponent source = retrieve.getSourceComponent();
+			if (source == null) {
+				// entity
+				if (this.getDistanceSqToEntity(retrieve.getSourceEntity()) < .2) {
+					return true;
+				}
+				
+				if (this.navigator.tryMoveToEntityLiving(retrieve.getSourceEntity(), 1.0)) {
+					navigator.clearPathEntity();
+					return true;
+				}
+			} else {
+				BlockPos pos = source.getPosition();
+				
+				if (!worldObj.isAirBlock(pos)) {
+					if (worldObj.isAirBlock(pos.north())) {
+						pos = pos.north();
+					} else if (worldObj.isAirBlock(pos.south())) {
+						pos = pos.south();
+					} else if (worldObj.isAirBlock(pos.east())) {
+						pos = pos.east();
+					} else if (worldObj.isAirBlock(pos.west())) {
+						pos = pos.west();
+					} else {
+						pos = pos.up();
 					}
 				}
 				
+				if (this.getDistanceSq(pos) < .2 || this.getPosition().equals(pos)) {
+					return true;
+				}
+				
+				if (this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0)) {
+					navigator.clearPathEntity();
+					return true;
+				}
 			}
 		} else if (task instanceof LogisticsItemDepositTask) {
 			LogisticsItemDepositTask deposit = (LogisticsItemDepositTask) task;
+			
+			// Check where the retrieval task wants us to go to pick up
+			BlockPos pickup = deposit.getDestination();
+			if (pickup != null && !this.canReach(pickup, true)) {
+				return false;
+			}
 			
 			// Check for pathing
 			ILogisticsComponent source = deposit.getSourceComponent();
@@ -263,6 +258,58 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 			dropItem();
 			
 		}
+		
+		// See if we're too far away from our home block
+		if (this.navigator.noPath()) {
+			BlockPos home = this.getHome();
+			if (home != null && !this.canReach(this.getPosition(), false)) {
+				
+				// Go to a random place around our home
+				final BlockPos center = home;
+				BlockPos targ = null;
+				int attempts = 20;
+				final double maxDistSq = Math.min(25, this.wanderDistanceSq);
+				do {
+					double dist = this.rand.nextDouble() * Math.sqrt(maxDistSq);
+					float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
+					float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
+					
+					targ = new BlockPos(new Vec3d(
+							center.getX() + (Math.cos(angle) * dist),
+							center.getY() + (Math.cos(tilt) * dist),
+							center.getZ() + (Math.sin(angle) * dist)));
+					while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+						targ = targ.down();
+					}
+					if (targ.getY() < 256) {
+						targ = targ.up();
+					}
+					
+					// We've hit a non-air block. Make sure there's space above it
+					BlockPos airBlock = null;
+					for (int i = 0; i < Math.ceil(this.height); i++) {
+						if (airBlock == null) {
+							airBlock = targ.up();
+						} else {
+							airBlock = airBlock.up();
+						}
+						
+						if (!worldObj.isAirBlock(airBlock)) {
+							targ = null;
+							break;
+						}
+					}
+				} while (targ == null && attempts > 0);
+				
+				if (targ == null) {
+					targ = center.up();
+				}
+				if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
+					this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+				}
+				
+			}
+		}
 	}
 
 	@Override
@@ -341,7 +388,8 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 				{
 					if (this.navigator.noPath()) {
 						// First time through?
-						if (movePos != null || moveEntity != null) {
+						if ((movePos != null && this.getDistanceSqToCenter(movePos) < .5)
+							|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < .5)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;

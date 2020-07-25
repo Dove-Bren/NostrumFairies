@@ -180,7 +180,7 @@ public class StorageMonitorScreen extends GuiScreen {
 	
 	@Override
 	public boolean doesGuiPauseGame() {
-		return true;
+		return false;
 	}
 	
 	@Override

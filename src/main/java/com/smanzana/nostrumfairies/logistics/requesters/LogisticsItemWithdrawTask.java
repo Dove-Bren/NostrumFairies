@@ -29,6 +29,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
 
 public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 	
@@ -520,5 +521,13 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 	
 	public void setUseBuffers(boolean useBuffers) {
 		this.useBuffers = useBuffers;
+	}
+	
+	public @Nullable BlockPos getSource() {
+		if (this.retrieveTask != null) {
+			return this.retrieveTask.getPos();
+		}
+		
+		return null;
 	}
 }

@@ -54,7 +54,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	
 	
 	public EntityFairyBase(World world) {
-		this(world, MAX_FAIRY_DISTANCE_SQ, MAX_FAIRY_DISTANCE_SQ);
+		this(world, 100, MAX_FAIRY_DISTANCE_SQ);
 	}
 	
 	public EntityFairyBase(World world, double wanderDistanceSq, double workDistanceSq) {
@@ -115,6 +115,20 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	 * @return
 	 */
 	protected abstract boolean isValidHome(BlockPos homePos);
+	
+	/**
+	 * Checks whether or not the provided location is within this worker's reach
+	 * @param work
+	 * @return
+	 */
+	public boolean canReach(BlockPos pos, boolean work) {
+		BlockPos home = this.getHome();
+		if (home == null) {
+			return false;
+		}
+		
+		return home.distanceSq(pos) < (work ? workDistanceSq : wanderDistanceSq);
+	}
 	
 	/**
 	 * Returns the logistics network this fairy is part of.
@@ -319,7 +333,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 					return false;
 				}
 				
-				if (this.getHome().distanceSq(pos) > workDistanceSq) {
+				if (!canReach(pos, true)) {
 					return false;
 				}
 				
@@ -375,18 +389,16 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	}
 	
 	private void verifyHome() {
-		if (generalStatus != FairyGeneralStatus.WANDERING) {
-			BlockPos home = this.getHome();
-			if (home != null) {
-				if (!this.isValidHome(home)) {
-					this.setHome(null);
-					home = null; // Home is no longer valid
+		BlockPos home = this.getHome();
+		if (home != null) {
+			if (!this.isValidHome(home)) {
+				this.setHome(null);
+				home = null; // Home is no longer valid
+				
+				if (generalStatus != FairyGeneralStatus.WANDERING) {
+					// Don't have a home, and we expected to. Homeless!
+					this.changeStatus(FairyGeneralStatus.WANDERING);
 				}
-			}
-			
-			if (home == null) {
-				// Don't have a home, and we expected to. Homeless!
-				this.changeStatus(FairyGeneralStatus.WANDERING);
 			}
 		}
 	}

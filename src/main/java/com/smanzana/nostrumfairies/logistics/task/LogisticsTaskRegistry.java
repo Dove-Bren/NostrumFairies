@@ -75,7 +75,6 @@ public class LogisticsTaskRegistry {
 	 * @param task
 	 */
 	public void register(ILogisticsTask task, @Nullable ILogisticsTaskListener listener) {
-		System.out.println("Registering task " + task.getDisplayName());
 		registry.add(new RegistryItem(task, listener));
 		
 		if (task.getSourceComponent() == null && task.getSourceEntity() == null) {
@@ -89,7 +88,6 @@ public class LogisticsTaskRegistry {
 	 * @param task
 	 */
 	public void revoke(ILogisticsTask task) {
-		System.out.println("Revoking task " + task.getDisplayName());
 		Iterator<RegistryItem> it = registry.iterator();
 		while (it.hasNext()) {
 			RegistryItem item = it.next();
@@ -147,7 +145,6 @@ public class LogisticsTaskRegistry {
 	 * @param actor
 	 */
 	public void claimTask(ILogisticsTask task, IFairyWorker actor) {
-		System.out.println("Claiming task " + task.getDisplayName() + "(" + actor + ")");
 		RegistryItem item = findTaskItem(task);
 		if (item == null) {
 			throw new RuntimeException("Attempted to claim a logistics task before it was registered in the registry");
@@ -171,7 +168,6 @@ public class LogisticsTaskRegistry {
 	 * @param pos
 	 */
 	public void forfitTask(ILogisticsTask task) {
-		System.out.println("forfitting task " + task.getDisplayName());
 		RegistryItem item = findTaskItem(task);
 		if (item == null) {
 			throw new RuntimeException("Attempted to forfit a logistics task before it was registered in the registry");
@@ -186,7 +182,6 @@ public class LogisticsTaskRegistry {
 	}
 	
 	public void completeTask(ILogisticsTask task) {
-		System.out.println("Completing task " + task.getDisplayName());
 		RegistryItem item = findTaskItem(task);
 		if (item == null) {
 			throw new RuntimeException("Attempted to complete a logistics task before it was registered in the registry");
