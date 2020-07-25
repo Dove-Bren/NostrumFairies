@@ -260,10 +260,14 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 
 	@Override
 	protected void onTaskChange(ILogisticsTask oldTask, ILogisticsTask newTask) {
-		if (oldTask != null && heldItem != null) {
-			// I guess drop our item
-			dropItem();
-		}
+//		if (oldTask != null && heldItem != null) {
+//			// I guess drop our item
+//			dropItem();
+//		}
+		// Task should have checked if we could hold what it needed, if it's item related.
+		// Assuming it did, our current inventory is fine. We'll do that task, maybe use our
+		// inventory, and then be idle with an item afterwards -- whicih will prompt
+		// us to go return it.
 	}
 	
 	@Override

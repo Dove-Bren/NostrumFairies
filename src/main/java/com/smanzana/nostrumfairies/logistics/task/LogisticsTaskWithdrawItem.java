@@ -1,6 +1,5 @@
 package com.smanzana.nostrumfairies.logistics.task;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,7 +43,8 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	private @Nullable ILogisticsComponent component;
 	private @Nullable EntityLivingBase entity;
 	
-	private List<ILogisticsTask> mergedTasks;
+	private @Nullable List<ILogisticsTask> mergedTasks;
+	private @Nullable LogisticsTaskWithdrawItem compositeTask; // Task we were merged into
 	
 	private IItemCarrierFairy fairy;
 	private Phase phase;
@@ -106,6 +106,9 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 		composite.phase = Phase.RETRIEVING;
 		composite.animCount = 0;
 		composite.tryTasks(left.fairy);
+		
+		left.compositeTask = composite;
+		right.compositeTask = composite;
 		return composite;
 	}
 
@@ -140,6 +143,11 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 
 	@Override
 	public void onDrop(IFairyWorker worker) {
+		// If part of a composite, let it know that this subtask has been dropped
+		if (this.compositeTask != null) {
+			this.compositeTask.dropMerged(this);
+		}
+		
 		// TODO some part of this is duping items. The fairy drops the item, and also is still able to deliver it perhaps?
 		// Edit: possibly related, shutting things down while a fairy has an item leaves the fairy with the item in their inventory
 		if (requestRecord != null) {
@@ -154,11 +162,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	
 	@Override
 	public void onRevoke() {
-		// Only have to clean up logistics item request placeholder, since the actual items are either
-		// in the original inventory or in the fairy inventory
-		if (requestRecord != null) {
-			fairy.getLogisticsNetwork().removeRequestedItem(pickupComponent, requestRecord);
-		}
+		// Only need cleanup if we were being worked, which would call onDrop.
 	}
 
 	@Override
@@ -218,9 +222,21 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 		return false;
 	}
 	
+	private void dropMerged(LogisticsTaskWithdrawItem otherTask) {
+		if (this.mergedTasks.remove(otherTask)) {
+			this.item.add(-otherTask.item.getCount());
+			otherTask.compositeTask = null;
+			
+			if (!this.mergedTasks.isEmpty()) {
+				this.tryTasks(getCurrentWorker());
+			}
+		}
+	}
+	
 	private void mergeToComposite(LogisticsTaskWithdrawItem otherTask) {
 		this.item.add(otherTask.item.getCount());
 		mergedTasks.add(otherTask);
+		otherTask.compositeTask = this;
 		this.tryTasks(getCurrentWorker());
 	}
 
@@ -469,12 +485,11 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	
 	private void giveItems() {
 		IItemCarrierFairy worker = fairy; // capture before making changes!
-		ItemStack old[] = worker.getCarriedItems();
-		ItemStack items[] = Arrays.copyOf(old, old.length);
-		
-		for (ItemStack stack : items) {
+		ItemDeepStack giveItem = item.copy();
+		while (giveItem.getCount() > 0) {
+			ItemStack stack = giveItem.splitStack(giveItem.getTemplate().getMaxStackSize()); 
 			if (entity == null) {
-				component.addItem(stack);
+				component.addItem(stack.copy());
 			} else {
 				if (entity instanceof EntityPlayer) {
 					EntityPlayer player = (EntityPlayer) entity;
@@ -494,6 +509,11 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 		if (this.retrieveTask == null) {
 			return false;
 		} // TODO is this right?
+		
+		// If this task was a merged one but all things have been pulled out, no longer valid!
+		if (this.mergedTasks != null && this.mergedTasks.isEmpty()) {
+			return false;
+		}
 		
 		if (this.phase == Phase.RETRIEVING) {
 			
