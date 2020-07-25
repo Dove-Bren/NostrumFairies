@@ -504,4 +504,9 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 			heldItem = ItemStack.loadItemStackFromNBT(compound.getCompoundTag(NBT_ITEM));
 		}
 	}
+
+	@Override
+	protected boolean canMergeMoreJobs() {
+		return this.heldItem == null;
+	}
 }

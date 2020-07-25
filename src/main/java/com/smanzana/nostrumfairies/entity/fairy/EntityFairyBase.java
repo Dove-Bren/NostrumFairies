@@ -249,6 +249,14 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	
 	protected abstract void onIdleTick();
 	
+	/**
+	 * Called periodically while doing task ticks to see if we should see if any other tasks are out there that
+	 * we could also pick up. Fairies should return false if they're far enough in their task that picking up more
+	 * doesn't make sense. For example, if you ALREADY picked up an item in an item withdraw task.
+	 * @return
+	 */
+	protected abstract boolean canMergeMoreJobs();
+	
 	@Override
 	protected abstract void initEntityAI();
 	
@@ -299,6 +307,8 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 						// Make sure task is still okay
 						if (!this.currentTask.isValid()) {
 							forfitTask();
+						} else if (this.canMergeMoreJobs()) {
+							this.searchForJobs();
 						}
 					}
 					
@@ -362,7 +372,7 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 			
 			if (list != null && !list.isEmpty()) {
 				// Could sort somehow.
-				ILogisticsTask foundTask = null;
+				ILogisticsTask foundTask = this.currentTask; // may be null
 				for (ILogisticsTask task : list) {
 					if (canPerformTask(task)
 							&& task.canAccept(this)
