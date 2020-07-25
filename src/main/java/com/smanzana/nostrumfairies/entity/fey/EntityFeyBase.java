@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.entity.fairy;
+package com.smanzana.nostrumfairies.entity.fey;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -23,9 +23,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public abstract class EntityFairyBase extends EntityMob implements IFairyWorker, ILoreTagged {
+public abstract class EntityFeyBase extends EntityMob implements IFeyWorker, ILoreTagged {
 
-	protected static final DataParameter<Optional<BlockPos>> HOME  = EntityDataManager.<Optional<BlockPos>>createKey(EntityFairyBase.class, DataSerializers.OPTIONAL_BLOCK_POS);
+	protected static final DataParameter<Optional<BlockPos>> HOME  = EntityDataManager.<Optional<BlockPos>>createKey(EntityFeyBase.class, DataSerializers.OPTIONAL_BLOCK_POS);
 	
 	/**
 	 * Current general status of the worker.
@@ -53,11 +53,11 @@ public abstract class EntityFairyBase extends EntityMob implements IFairyWorker,
 	private int taskTickCount;
 	
 	
-	public EntityFairyBase(World world) {
+	public EntityFeyBase(World world) {
 		this(world, 100, MAX_FAIRY_DISTANCE_SQ);
 	}
 	
-	public EntityFairyBase(World world, double wanderDistanceSq, double workDistanceSq) {
+	public EntityFeyBase(World world, double wanderDistanceSq, double workDistanceSq) {
 		super(world);
 		generalStatus = FairyGeneralStatus.WANDERING;
 		this.wanderDistanceSq = wanderDistanceSq;

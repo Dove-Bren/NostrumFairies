@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.entity.render;
 
-import com.smanzana.nostrumfairies.entity.fairy.EntityTestFairy;
+import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.client.renderer.entity.RenderLiving;

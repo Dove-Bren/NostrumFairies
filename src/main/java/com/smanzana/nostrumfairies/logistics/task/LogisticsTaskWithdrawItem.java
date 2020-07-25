@@ -12,8 +12,8 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
-import com.smanzana.nostrumfairies.entity.fairy.IItemCarrierFairy;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
+import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
@@ -46,7 +46,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	private @Nullable List<ILogisticsTask> mergedTasks;
 	private @Nullable LogisticsTaskWithdrawItem compositeTask; // Task we were merged into
 	
-	private IItemCarrierFairy fairy;
+	private IItemCarrierFey fairy;
 	private Phase phase;
 	private LogisticsSubTask retrieveTask;
 	private LogisticsSubTask workTask;
@@ -123,8 +123,8 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	}
 
 	@Override
-	public boolean canAccept(IFairyWorker worker) {
-		if (!(worker instanceof IItemCarrierFairy)) {
+	public boolean canAccept(IFeyWorker worker) {
+		if (!(worker instanceof IItemCarrierFey)) {
 			return false;
 		}
 		
@@ -142,7 +142,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	}
 
 	@Override
-	public void onDrop(IFairyWorker worker) {
+	public void onDrop(IFeyWorker worker) {
 		// If part of a composite, let it know that this subtask has been dropped
 		if (this.compositeTask != null) {
 			this.compositeTask.dropMerged(this);
@@ -166,8 +166,8 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	}
 
 	@Override
-	public void onAccept(IFairyWorker worker) {
-		this.fairy = (IItemCarrierFairy) worker;
+	public void onAccept(IFeyWorker worker) {
+		this.fairy = (IItemCarrierFey) worker;
 		phase = Phase.RETRIEVING;
 		animCount = 0;
 		tryTasks(worker);
@@ -283,7 +283,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 		return fairy != null;
 	}
 	
-	public @Nullable IItemCarrierFairy getCurrentWorker() {
+	public @Nullable IItemCarrierFey getCurrentWorker() {
 		return fairy;
 	}
 	
@@ -299,7 +299,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 		pickupComponent = null;
 	}
 	
-	private boolean tryTasks(IFairyWorker fairy) {
+	private boolean tryTasks(IFeyWorker fairy) {
 		releaseTasks();
 		
 		// Make retrieve task
@@ -484,7 +484,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	}
 	
 	private void giveItems() {
-		IItemCarrierFairy worker = fairy; // capture before making changes!
+		IItemCarrierFey worker = fairy; // capture before making changes!
 		ItemDeepStack giveItem = item.copy();
 		while (giveItem.getCount() > 0) {
 			ItemStack stack = giveItem.splitStack(giveItem.getTemplate().getMaxStackSize()); 

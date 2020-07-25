@@ -9,7 +9,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
-import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
@@ -23,7 +23,7 @@ public class LogisticsTaskRegistry {
 	private static final class RegistryItem {
 		
 		private ILogisticsTask task;
-		private @Nullable IFairyWorker actor;
+		private @Nullable IFeyWorker actor;
 		private @Nullable ILogisticsTaskListener listener;
 		
 		public RegistryItem(ILogisticsTask task, @Nullable ILogisticsTaskListener listener) {
@@ -36,7 +36,7 @@ public class LogisticsTaskRegistry {
 			return actor != null;
 		}
 		
-		public void setActor(IFairyWorker actor) {
+		public void setActor(IFeyWorker actor) {
 			this.actor = actor;
 		}
 		
@@ -92,7 +92,7 @@ public class LogisticsTaskRegistry {
 		while (it.hasNext()) {
 			RegistryItem item = it.next();
 			if (item.task == task) {
-				IFairyWorker oldActor = item.actor;
+				IFeyWorker oldActor = item.actor;
 				if (item.hasActor()) {
 					item.setActor(null);
 					oldActor.dropTask(task);
@@ -117,7 +117,7 @@ public class LogisticsTaskRegistry {
 		return null;
 	}
 	
-	public List<ILogisticsTask> findTasks(LogisticsNetwork network, IFairyWorker actor, @Nullable Predicate<ILogisticsTask> filter) {
+	public List<ILogisticsTask> findTasks(LogisticsNetwork network, IFeyWorker actor, @Nullable Predicate<ILogisticsTask> filter) {
 		final List<ILogisticsTask> list = new LinkedList<>();
 		
 		registry.forEach((item) -> {
@@ -144,7 +144,7 @@ public class LogisticsTaskRegistry {
 	 * @param task
 	 * @param actor
 	 */
-	public void claimTask(ILogisticsTask task, IFairyWorker actor) {
+	public void claimTask(ILogisticsTask task, IFeyWorker actor) {
 		RegistryItem item = findTaskItem(task);
 		if (item == null) {
 			throw new RuntimeException("Attempted to claim a logistics task before it was registered in the registry");
@@ -173,7 +173,7 @@ public class LogisticsTaskRegistry {
 			throw new RuntimeException("Attempted to forfit a logistics task before it was registered in the registry");
 		}
 		
-		IFairyWorker oldActor = item.actor;
+		IFeyWorker oldActor = item.actor;
 		item.setActor(null);
 		item.task.onDrop(oldActor);
 		if (item.hasListener()) {
@@ -187,7 +187,7 @@ public class LogisticsTaskRegistry {
 			throw new RuntimeException("Attempted to complete a logistics task before it was registered in the registry");
 		}
 		
-		IFairyWorker actor = item.actor;
+		IFeyWorker actor = item.actor;
 		if (item.hasListener()) {
 			item.getListener().onTaskComplete(task, actor);
 		}

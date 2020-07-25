@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.entity.fairy;
+package com.smanzana.nostrumfairies.entity.fey;
 
 import javax.annotation.Nullable;
 
@@ -25,7 +25,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
-public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFairy {
+public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	private static final String NBT_ITEM = "helditem";
 	

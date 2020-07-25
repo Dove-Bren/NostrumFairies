@@ -7,8 +7,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
-import com.smanzana.nostrumfairies.entity.fairy.IItemCarrierFairy;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
+import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.IncomingItemRecord;
@@ -35,7 +35,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 	private EntityItem item;
 	private ILogisticsComponent owningComponent;
 	
-	private IItemCarrierFairy fairy;
+	private IItemCarrierFey fairy;
 	private Phase phase;
 	private LogisticsSubTask pickupTask;
 	private LogisticsSubTask workTask;
@@ -71,8 +71,8 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 	}
 
 	@Override
-	public boolean canAccept(IFairyWorker worker) {
-		if (!(worker instanceof IItemCarrierFairy)) {
+	public boolean canAccept(IFeyWorker worker) {
+		if (!(worker instanceof IItemCarrierFey)) {
 			return false;
 		}
 		
@@ -90,7 +90,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 	}
 
 	@Override
-	public void onDrop(IFairyWorker worker) {
+	public void onDrop(IFeyWorker worker) {
 		// TODO some part of this is duping items. The fairy drops the item, and also is still able to deliver it perhaps?
 		// Edit: possibly related, shutting things down while a fairy has an item leaves the fairy with the item in their inventory
 		
@@ -104,8 +104,8 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 	}
 
 	@Override
-	public void onAccept(IFairyWorker worker) {
-		this.fairy = (IItemCarrierFairy) worker;
+	public void onAccept(IFeyWorker worker) {
+		this.fairy = (IItemCarrierFey) worker;
 		phase = Phase.PICKINGUP;
 		animCount = 0;
 		tryTasks(worker);
@@ -154,7 +154,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 		return fairy != null;
 	}
 	
-	public @Nullable IItemCarrierFairy getCurrentWorker() {
+	public @Nullable IItemCarrierFey getCurrentWorker() {
 		return fairy;
 	}
 	
@@ -170,7 +170,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 		deliveryRecord = null;
 	}
 	
-	private boolean tryTasks(IFairyWorker fairy) {
+	private boolean tryTasks(IFeyWorker fairy) {
 		releaseTasks();
 		
 		// Make deliver task
@@ -257,7 +257,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 	}
 	
 	private void giveItems() {
-		IItemCarrierFairy worker = fairy; // capture before making changes!
+		IItemCarrierFey worker = fairy; // capture before making changes!
 		ItemStack old[] = worker.getCarriedItems();
 		ItemStack items[] = Arrays.copyOf(old, old.length);
 		

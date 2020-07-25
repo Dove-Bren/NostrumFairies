@@ -10,7 +10,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsItemTask;
@@ -202,17 +202,17 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 	}
 	
 	@Override
-	public void onTaskDrop(ILogisticsTask task, IFairyWorker worker) {
+	public void onTaskDrop(ILogisticsTask task, IFeyWorker worker) {
 		; // Don't actually care, but a subclass could if they wanted
 	}
 
 	@Override
-	public void onTaskAccept(ILogisticsTask task, IFairyWorker worker) {
+	public void onTaskAccept(ILogisticsTask task, IFeyWorker worker) {
 		; // Don't actually care, but a subclass could if they wanted
 	}
 	
 	@Override
-	public void onTaskComplete(ILogisticsTask task, IFairyWorker worker) {
+	public void onTaskComplete(ILogisticsTask task, IFeyWorker worker) {
 		; // Don't actually care, but a subclass could if they wanted
 	}
 }

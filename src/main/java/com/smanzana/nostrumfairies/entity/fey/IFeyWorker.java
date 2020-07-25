@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.entity.fairy;
+package com.smanzana.nostrumfairies.entity.fey;
 
 import javax.annotation.Nullable;
 
@@ -7,7 +7,7 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 
 import net.minecraft.util.math.BlockPos;
 
-public interface IFairyWorker {
+public interface IFeyWorker {
 
 	public static enum FairyGeneralStatus {
 		WANDERING, // Not attached to a home, and therefore incapable of working

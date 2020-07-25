@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.entity.fairy.IFairyWorker;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 
 import net.minecraft.entity.EntityLivingBase;
@@ -38,13 +38,13 @@ public interface ILogisticsTask {
 	 * @param worker
 	 * @return
 	 */
-	public boolean canAccept(IFairyWorker worker);
+	public boolean canAccept(IFeyWorker worker);
 	
 	/**
 	 * Called when the worker is no longer able or willing to perform the task.
 	 * This may include death.
 	 */
-	public void onDrop(@Nullable IFairyWorker worker);
+	public void onDrop(@Nullable IFeyWorker worker);
 	
 	/**
 	 * This task is being removed from the registry all together.
@@ -56,7 +56,7 @@ public interface ILogisticsTask {
 	 * Called when a worker has picked up this task and is going to start working on it.
 	 * @param worker
 	 */
-	public void onAccept(IFairyWorker worker);
+	public void onAccept(IFeyWorker worker);
 	
 	/**
 	 * Check and return whether the provided task is one that can be taken and done at the same time.

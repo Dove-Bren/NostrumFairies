@@ -1,10 +1,10 @@
-package com.smanzana.nostrumfairies.entity.fairy;
+package com.smanzana.nostrumfairies.entity.fey;
 
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
 
-public interface IItemCarrierFairy extends IFairyWorker {
+public interface IItemCarrierFey extends IFeyWorker {
 	
 	/**
 	 * Return all currently-held items
