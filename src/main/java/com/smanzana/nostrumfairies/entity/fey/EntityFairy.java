@@ -46,8 +46,9 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		super(world);
 		this.height = .25f;
 		this.width = .25f;
-		this.workDistanceSq = 24 * 24;
+		this.workDistanceSq = 100 * 100;
 		this.noClip = true;
+		this.enablePersistence();
 
 		this.moveHelper = new FairyFlyMoveHelper(this);
 	}
