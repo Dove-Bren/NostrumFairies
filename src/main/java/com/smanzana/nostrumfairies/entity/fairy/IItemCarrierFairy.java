@@ -1,5 +1,7 @@
 package com.smanzana.nostrumfairies.entity.fairy;
 
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+
 import net.minecraft.item.ItemStack;
 
 public interface IItemCarrierFairy extends IFairyWorker {
@@ -16,6 +18,13 @@ public interface IItemCarrierFairy extends IFairyWorker {
 	 * @return
 	 */
 	public boolean canAccept(ItemStack stack);
+	
+	/**
+	 * Check whether this fairy could add all of the provided to what it's carrying.
+	 * @param stack
+	 * @return
+	 */
+	public boolean canAccept(ItemDeepStack stack);
 	
 	/**
 	 * Add the provided item to what this fairy is carrying

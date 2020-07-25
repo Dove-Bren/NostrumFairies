@@ -10,6 +10,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -72,6 +73,17 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 	public boolean canAccept(ItemStack stack) {
 		return heldItem == null ||
 				(ItemStacks.stacksMatch(heldItem, stack) && heldItem.stackSize + stack.stackSize < heldItem.getMaxStackSize());
+	}
+	
+	@Override
+	public boolean canAccept(ItemDeepStack stack) {
+		// we know we can't if it's more than one regular ItemStack
+		if (stack.getCount() > stack.getTemplate().getMaxStackSize()) {
+			return false;
+		}
+		
+		// Looks like it's only actually one stack.
+		return canAccept(stack.copy().splitStack(stack.getTemplate().getMaxStackSize()));
 	}
 
 	@Override

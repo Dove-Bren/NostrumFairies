@@ -177,6 +177,10 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 
 	@Override
 	public boolean canMerge(ILogisticsTask other) {
+		if (this.phase == Phase.DELIVERING || this.phase == Phase.DONE) {
+			return false;
+		}
+		
 		if (other instanceof LogisticsTaskWithdrawItem) {
 			LogisticsTaskWithdrawItem otherTask = (LogisticsTaskWithdrawItem) other;
 			
@@ -195,7 +199,20 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 				return false;
 			}
 			
-			return ItemStacks.stacksMatch(item.getTemplate(), otherTask.item.getTemplate());
+			if (!ItemStacks.stacksMatch(item.getTemplate(), otherTask.item.getTemplate())) {
+				return false;
+			}
+			
+			// Make sure our worker would be able to even take it on.
+			// We use the fact that we won't merge after the item's been picked up,
+			// so the fairy's inventory should be empty still.
+			ItemDeepStack result = item.copy();
+			result.add(otherTask.item);
+			if (!this.getCurrentWorker().canAccept(result)) {
+				return false;
+			}
+			
+			return true;
 		}
 		
 		return false;
