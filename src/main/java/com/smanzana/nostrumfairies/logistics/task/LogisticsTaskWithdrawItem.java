@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.logistics.requesters;
+package com.smanzana.nostrumfairies.logistics.task;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,9 +19,6 @@ import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.RequestedItemRecord;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsItemTask;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
@@ -31,7 +28,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
-public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
+public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	
 	private static enum Phase {
 		IDLE,
@@ -68,35 +65,35 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 	 */
 	private boolean networkCachedItemResult;
 	
-	private LogisticsItemWithdrawTask(String displayName, ItemDeepStack item, boolean useBuffers) {
+	private LogisticsTaskWithdrawItem(String displayName, ItemDeepStack item, boolean useBuffers) {
 		this.displayName = displayName;
 		this.item = item;
 		this.useBuffers = useBuffers;
 		phase = Phase.IDLE;
 	}
 	
-	public LogisticsItemWithdrawTask(ILogisticsComponent owningComponent, String displayName, ItemDeepStack item, boolean useBuffers) {
+	public LogisticsTaskWithdrawItem(ILogisticsComponent owningComponent, String displayName, ItemDeepStack item, boolean useBuffers) {
 		this(displayName, item, useBuffers);
 		this.component = owningComponent;
 	}
 	
-	public LogisticsItemWithdrawTask(EntityLivingBase requester, String displayName, ItemDeepStack item, boolean useBuffers) {
+	public LogisticsTaskWithdrawItem(EntityLivingBase requester, String displayName, ItemDeepStack item, boolean useBuffers) {
 		this(displayName, item, useBuffers);
 		this.entity = requester;
 	}
 	
-	public LogisticsItemWithdrawTask(ILogisticsComponent owningComponent, String displayName, ItemStack item, boolean useBuffers) {
+	public LogisticsTaskWithdrawItem(ILogisticsComponent owningComponent, String displayName, ItemStack item, boolean useBuffers) {
 		this(owningComponent, displayName, new ItemDeepStack(item, 1), useBuffers);
 	}
 	
-	private static LogisticsItemWithdrawTask makeComposite(LogisticsItemWithdrawTask left, LogisticsItemWithdrawTask right) {
-		LogisticsItemWithdrawTask composite;
+	private static LogisticsTaskWithdrawItem makeComposite(LogisticsTaskWithdrawItem left, LogisticsTaskWithdrawItem right) {
+		LogisticsTaskWithdrawItem composite;
 		ItemDeepStack item = left.item.copy();
 		item.add(right.item);
 		if (left.entity == null) {
-			composite = new LogisticsItemWithdrawTask(left.component, left.displayName, item, left.useBuffers);
+			composite = new LogisticsTaskWithdrawItem(left.component, left.displayName, item, left.useBuffers);
 		} else {
-			composite = new LogisticsItemWithdrawTask(left.entity, left.displayName, item, left.useBuffers);
+			composite = new LogisticsTaskWithdrawItem(left.entity, left.displayName, item, left.useBuffers);
 		}
 		
 		// pull registry stuff
@@ -180,8 +177,8 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 
 	@Override
 	public boolean canMerge(ILogisticsTask other) {
-		if (other instanceof LogisticsItemWithdrawTask) {
-			LogisticsItemWithdrawTask otherTask = (LogisticsItemWithdrawTask) other;
+		if (other instanceof LogisticsTaskWithdrawItem) {
+			LogisticsTaskWithdrawItem otherTask = (LogisticsTaskWithdrawItem) other;
 			
 			// Are these requests from the same place?
 			if (!Objects.equals(this.entity, otherTask.entity)
@@ -204,7 +201,7 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 		return false;
 	}
 	
-	private void mergeToComposite(LogisticsItemWithdrawTask otherTask) {
+	private void mergeToComposite(LogisticsTaskWithdrawItem otherTask) {
 		this.item.add(otherTask.item.getCount());
 		mergedTasks.add(otherTask);
 		this.tryTasks(getCurrentWorker());
@@ -214,10 +211,10 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 	public ILogisticsTask mergeIn(ILogisticsTask other) {
 		// If already a composite, just add. Otherwise, make a composite!
 		if (this.mergedTasks == null) {
-			return makeComposite(this, (LogisticsItemWithdrawTask) other);
+			return makeComposite(this, (LogisticsTaskWithdrawItem) other);
 		} //else
 		
-		this.mergeToComposite((LogisticsItemWithdrawTask) other);
+		this.mergeToComposite((LogisticsTaskWithdrawItem) other);
 		return this;
 	}
 
@@ -323,7 +320,7 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 				} else {
 					// This is a composite. Use merged tasks' component and don't filter out requested, since merged tasks will
 					// have holds in place already.
-					pickupComponent = ((LogisticsItemWithdrawTask) this.mergedTasks.get(0)).pickupComponent;
+					pickupComponent = ((LogisticsTaskWithdrawItem) this.mergedTasks.get(0)).pickupComponent;
 					retrieveTask = LogisticsSubTask.Move(pickupComponent.getPosition());
 				}
 			}
@@ -369,7 +366,7 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 	private void syncChildPhases() {
 		if (this.mergedTasks != null) {
 			for (ILogisticsTask task : this.mergedTasks) {
-				LogisticsItemWithdrawTask otherTask = (LogisticsItemWithdrawTask) task;
+				LogisticsTaskWithdrawItem otherTask = (LogisticsTaskWithdrawItem) task;
 				otherTask.phase = this.phase;
 			}
 		}
@@ -448,7 +445,7 @@ public class LogisticsItemWithdrawTask implements ILogisticsItemTask {
 			}
 		} else {
 			for (ILogisticsTask task : this.mergedTasks) {
-				((LogisticsItemWithdrawTask) task).takeItems();
+				((LogisticsTaskWithdrawItem) task).takeItems();
 			}
 		}
 	}

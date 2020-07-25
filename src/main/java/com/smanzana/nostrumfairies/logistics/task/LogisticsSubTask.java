@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.logistics.task;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.math.BlockPos;
 
@@ -14,9 +15,9 @@ public final class LogisticsSubTask {
 	
 	private Type type;
 	private BlockPos pos;
-	private EntityLivingBase entity;
+	private Entity entity;
 	
-	private LogisticsSubTask(Type type, BlockPos pos, EntityLivingBase entity) {
+	private LogisticsSubTask(Type type, BlockPos pos, Entity entity) {
 		this.type = type;
 		this.pos = pos;
 		this.entity = entity;
@@ -26,7 +27,7 @@ public final class LogisticsSubTask {
 		return new LogisticsSubTask(Type.MOVE, pos, null);
 	}
 	
-	public static LogisticsSubTask Move(EntityLivingBase entity) {
+	public static LogisticsSubTask Move(Entity entity) {
 		return new LogisticsSubTask(Type.MOVE, null, entity);
 	}
 	
@@ -50,7 +51,7 @@ public final class LogisticsSubTask {
 		return pos;
 	}
 
-	public EntityLivingBase getEntity() {
+	public Entity getEntity() {
 		return entity;
 	}
 	

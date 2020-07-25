@@ -5,15 +5,16 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
-import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositTask;
-import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
@@ -29,7 +30,7 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 	
 	private ItemStack heldItem;
 	private @Nullable BlockPos movePos;
-	private @Nullable EntityLivingBase moveEntity;
+	private @Nullable Entity moveEntity;
 	
 	public EntityTestFairy(World world) {
 		super(world);
@@ -118,8 +119,8 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		if (task instanceof LogisticsItemWithdrawTask) {
-			LogisticsItemWithdrawTask retrieve = (LogisticsItemWithdrawTask) task;
+		if (task instanceof LogisticsTaskWithdrawItem) {
+			LogisticsTaskWithdrawItem retrieve = (LogisticsTaskWithdrawItem) task;
 			
 			// Check where the retrieval task wants us to go to pick up
 			BlockPos pickup = retrieve.getSource();
@@ -165,8 +166,8 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 					return true;
 				}
 			}
-		} else if (task instanceof LogisticsItemDepositTask) {
-			LogisticsItemDepositTask deposit = (LogisticsItemDepositTask) task;
+		} else if (task instanceof LogisticsTaskDepositItem) {
+			LogisticsTaskDepositItem deposit = (LogisticsTaskDepositItem) task;
 			
 			// Check where the retrieval task wants us to go to pick up
 			BlockPos pickup = deposit.getDestination();
@@ -211,6 +212,23 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 					return true;
 				}
 			}
+		} else if (task instanceof LogisticsTaskPickupItem) {
+			LogisticsTaskPickupItem pickupTask = (LogisticsTaskPickupItem) task;
+			
+			// Check where the retrieval task wants us to go to pick up
+			BlockPos pickup = pickupTask.getDestination();
+			if (pickup != null && !this.canReach(pickup, true)) {
+				return false;
+			}
+			
+			// Check for pathing
+			if (this.getDistanceSqToEntity(pickupTask.getEntityItem()) < .2) {
+				return true;
+			}
+			if (this.navigator.tryMoveToEntityLiving(pickupTask.getEntityItem(), 1.0)) {
+				navigator.clearPathEntity();
+				return true;
+			}
 		}
 		
 		return false;
@@ -246,7 +264,7 @@ public class EntityTestFairy extends EntityFairyBase implements IItemCarrierFair
 			if (network != null) {
 				@Nullable ILogisticsComponent storage = network.getStorageForItem(worldObj, getPosition(), heldItem);
 				if (storage != null) {
-					ILogisticsTask task = new LogisticsItemDepositTask(this, "Returning item", heldItem.copy());
+					ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", heldItem.copy());
 					network.getTaskRegistry().register(task, null);
 					network.getTaskRegistry().claimTask(task, this);
 					forceSetTask(task);

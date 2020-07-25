@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.logistics.requesters;
+package com.smanzana.nostrumfairies.logistics.task;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,9 +15,6 @@ import com.smanzana.nostrumfairies.entity.fairy.IItemCarrierFairy;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.IncomingItemRecord;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsItemTask;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 
@@ -29,7 +26,7 @@ import net.minecraft.util.math.BlockPos;
 /*
  * Pick up an item and then deposit it somewhere in the network
  */
-public class LogisticsItemDepositTask implements ILogisticsItemTask {
+public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 	
 	private static enum Phase {
 		IDLE,
@@ -63,30 +60,30 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 	 */
 	private boolean networkCachedItemResult;
 	
-	private LogisticsItemDepositTask(String displayName, ItemStack item) {
+	private LogisticsTaskDepositItem(String displayName, ItemStack item) {
 		this.displayName = displayName;
 		this.item = item;
 		phase = Phase.IDLE;
 	}
 	
-	public LogisticsItemDepositTask(ILogisticsComponent owningComponent, String displayName, ItemStack item) {
+	public LogisticsTaskDepositItem(ILogisticsComponent owningComponent, String displayName, ItemStack item) {
 		this(displayName, item);
 		this.component = owningComponent;
 	}
 	
-	public LogisticsItemDepositTask(EntityLivingBase requester, String displayName, ItemStack item) {
+	public LogisticsTaskDepositItem(EntityLivingBase requester, String displayName, ItemStack item) {
 		this(displayName, item);
 		this.entity = requester;
 	}
 	
-	private static LogisticsItemDepositTask makeComposite(LogisticsItemDepositTask left, LogisticsItemDepositTask right) {
-		LogisticsItemDepositTask composite;
+	private static LogisticsTaskDepositItem makeComposite(LogisticsTaskDepositItem left, LogisticsTaskDepositItem right) {
+		LogisticsTaskDepositItem composite;
 		ItemStack item = left.item.copy();
 		item.stackSize += right.item.stackSize;
 		if (left.entity == null) {
-			composite = new LogisticsItemDepositTask(left.component, left.displayName, item);
+			composite = new LogisticsTaskDepositItem(left.component, left.displayName, item);
 		} else {
-			composite = new LogisticsItemDepositTask(left.entity, left.displayName, item);
+			composite = new LogisticsTaskDepositItem(left.entity, left.displayName, item);
 		}
 		
 		composite.fairy = left.fairy;
@@ -169,8 +166,8 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 
 	@Override
 	public boolean canMerge(ILogisticsTask other) {
-		if (other instanceof LogisticsItemDepositTask) {
-			LogisticsItemDepositTask otherTask = (LogisticsItemDepositTask) other;
+		if (other instanceof LogisticsTaskDepositItem) {
+			LogisticsTaskDepositItem otherTask = (LogisticsTaskDepositItem) other;
 			
 			// Are these requests FROM the same place?
 			if (!Objects.equals(this.entity, otherTask.entity)
@@ -189,7 +186,7 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 		return false;
 	}
 	
-	private void mergeToComposite(LogisticsItemDepositTask otherTask) {
+	private void mergeToComposite(LogisticsTaskDepositItem otherTask) {
 		this.item.stackSize += otherTask.item.stackSize;
 		mergedTasks.add(otherTask);
 		tryTasks(fairy);
@@ -198,10 +195,10 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 	@Override
 	public ILogisticsTask mergeIn(ILogisticsTask other) {
 		if (this.mergedTasks == null) {
-			return makeComposite(this, (LogisticsItemDepositTask) other);
+			return makeComposite(this, (LogisticsTaskDepositItem) other);
 		} // else
 		
-		this.mergeToComposite((LogisticsItemDepositTask) other);
+		this.mergeToComposite((LogisticsTaskDepositItem) other);
 		return this;
 	}
 
@@ -262,7 +259,7 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 						deliverTask = LogisticsSubTask.Move(dropoffComponent.getPosition());
 					}
 				} else {
-					dropoffComponent = ((LogisticsItemDepositTask) this.mergedTasks.get(0)).dropoffComponent;
+					dropoffComponent = ((LogisticsTaskDepositItem) this.mergedTasks.get(0)).dropoffComponent;
 					deliverTask = LogisticsSubTask.Move(dropoffComponent.getPosition());
 				}
 			}
@@ -306,7 +303,7 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 	private void syncChildPhases() {
 		if (this.mergedTasks != null) {
 			for (ILogisticsTask task : this.mergedTasks) {
-				LogisticsItemDepositTask otherTask = (LogisticsItemDepositTask) task;
+				LogisticsTaskDepositItem otherTask = (LogisticsTaskDepositItem) task;
 				otherTask.phase = this.phase;
 			}
 		}
@@ -381,7 +378,7 @@ public class LogisticsItemDepositTask implements ILogisticsItemTask {
 		} else {
 			// Make the merged tasks do it so they can update the network correctly
 			for (ILogisticsTask task : this.mergedTasks) {
-				((LogisticsItemDepositTask) task).giveItems();
+				((LogisticsTaskDepositItem) task).giveItems();
 			}
 		}
 		

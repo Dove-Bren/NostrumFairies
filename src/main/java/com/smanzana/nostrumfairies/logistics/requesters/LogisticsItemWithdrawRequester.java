@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.entity.EntityLivingBase;
@@ -13,7 +14,7 @@ import net.minecraft.entity.EntityLivingBase;
  * @author Skyler
  *
  */
-public class LogisticsItemWithdrawRequester extends LogisticsItemTaskRequester<LogisticsItemWithdrawTask> {
+public class LogisticsItemWithdrawRequester extends LogisticsItemTaskRequester<LogisticsTaskWithdrawItem> {
 
 	private boolean useBuffers;
 	
@@ -28,20 +29,20 @@ public class LogisticsItemWithdrawRequester extends LogisticsItemTaskRequester<L
 	}
 	
 	@Override
-	public LogisticsItemWithdrawTask makeTask(ILogisticsComponent comp, ItemDeepStack item) {
-		return new LogisticsItemWithdrawTask(comp, "Item Request", item, useBuffers);
+	public LogisticsTaskWithdrawItem makeTask(ILogisticsComponent comp, ItemDeepStack item) {
+		return new LogisticsTaskWithdrawItem(comp, "Item Request", item, useBuffers);
 	}
 	
 	@Override
-	public LogisticsItemWithdrawTask makeTask(EntityLivingBase entity, ItemDeepStack item) {
-		return new LogisticsItemWithdrawTask(entity, "Item Request", item, useBuffers);
+	public LogisticsTaskWithdrawItem makeTask(EntityLivingBase entity, ItemDeepStack item) {
+		return new LogisticsTaskWithdrawItem(entity, "Item Request", item, useBuffers);
 	}
 	
 	public void setUseBuffers(boolean useBuffers) {
 		this.useBuffers = useBuffers;
 		
 		// Go and update any existing tasks
-		for (LogisticsItemWithdrawTask task : this.getCurrentTasks()) {
+		for (LogisticsTaskWithdrawItem task : this.getCurrentTasks()) {
 			task.setUseBuffers(useBuffers);
 		}
 	}
