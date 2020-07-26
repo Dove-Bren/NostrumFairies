@@ -340,6 +340,9 @@ public class MiningBlock extends BlockContainer {
 				clear = false;
 			}
 			
+			// (Make door into a beacon)
+			this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
+			
 			return !clear;
 		}
 		

@@ -124,6 +124,10 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			return false;
 		}
 		
+		if (!isValid()) {
+			return false;
+		}
+		
 		 return true;
 	}
 
@@ -258,7 +262,10 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			IBlockState state = world.getBlockState(block);
 			float secs = (state.getBlockHardness(world, block)) * 5;
 			// could put tool stuff here
-			animCount = (int) Math.ceil(secs * 3); // 3 break completes per second?
+			
+			//animCount = (int) Math.ceil(secs * 3); // 3 break completes per second?
+			// TODO testing code
+			animCount = 1;
 		}
 		
 		return true;
@@ -290,6 +297,8 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		case MOVING:
 			if (this.mergedTasks != null) {
 				if (subtask == null) {
+					// Error case. Something broke our block while we were moving maybe?
+					markSubtaskComplete();
 					return null;
 				} else {
 					return subtask.getActiveSubtask();
@@ -300,6 +309,8 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		case MINING:
 			if (this.mergedTasks != null) {
 				if (subtask == null) {
+					// Error case. Something broke our block while we were moving maybe?
+					markSubtaskComplete();
 					return null;
 				} else {
 					return subtask.getActiveSubtask();
@@ -441,7 +452,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			}
 			
 			// Otherwise, check children (assuming we're moving/mining)
-			if (this.phase == Phase.MOVING || phase == Phase.MINING) {
+			if (this.phase == Phase.IDLE || this.phase == Phase.MOVING || phase == Phase.MINING) {
 				for (ILogisticsTask child : this.mergedTasks) {
 					// could walk backwards, and drop children that no longer are valid.
 					// Gonna just be greedy and fail the whole thing here which will mean things like
@@ -452,7 +463,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 				}
 			}
 		} else {
-			if (this.phase == Phase.MOVING || phase == Phase.MINING) {
+			if (this.phase == Phase.IDLE || this.phase == Phase.MOVING || phase == Phase.MINING) {
 				// Make sure block is still there
 				if (lastOreCheck == 0 || this.world.getTotalWorldTime() - lastOreCheck > 100) {
 					lastOreResult = !world.isAirBlock(block) && world.getBlockState(block).getBlockHardness(world, block) >= 0;

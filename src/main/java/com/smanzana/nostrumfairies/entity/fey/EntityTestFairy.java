@@ -20,7 +20,9 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.pathfinding.Path;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -36,7 +38,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	public EntityTestFairy(World world) {
 		super(world);
 		this.height = .6f;
-		this.workDistanceSq = 40 * 40;
+		this.workDistanceSq = 24 * 24;
 	}
 
 	@Override
@@ -309,8 +311,10 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			if (this.getDistanceSq(target) < .2) {
 				return true;
 			}
-			if (this.navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0)) {
-				navigator.clearPathEntity();
+			Path currentPath = navigator.getPath();
+			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			navigator.setPath(currentPath, 1.0);
+			if (success) {
 				return true;
 			} else if (this.getDistanceSq(target) < 1) {
 				// extra case for if the navigator refuses cause we're too close
@@ -497,8 +501,8 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				{
 					if (this.navigator.noPath()) {
 						// First time through?
-						if ((movePos != null && this.getDistanceSqToCenter(movePos) < .5)
-							|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < .5)) {
+						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
+							|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < 1)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;
@@ -514,21 +518,29 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
+							// TODO pull this out to a 'moveTo' or something instead of copying all over.
+							// Then upgrade other places to make sure there's somewhere to stand on lol
 							if (!worldObj.isAirBlock(movePos)) {
-								if (worldObj.isAirBlock(movePos.north())) {
+								if (worldObj.isAirBlock(movePos.north()) && worldObj.isSideSolid(movePos.north().down(), EnumFacing.UP)) {
 									movePos = movePos.north();
-								} else if (worldObj.isAirBlock(movePos.south())) {
+								} else if (worldObj.isAirBlock(movePos.south()) && worldObj.isSideSolid(movePos.south().down(), EnumFacing.UP)) {
 									movePos = movePos.south();
-								} else if (worldObj.isAirBlock(movePos.east())) {
+								} else if (worldObj.isAirBlock(movePos.east()) && worldObj.isSideSolid(movePos.east().down(), EnumFacing.UP)) {
 									movePos = movePos.east();
-								} else if (worldObj.isAirBlock(movePos.west())) {
+								} else if (worldObj.isAirBlock(movePos.west()) && worldObj.isSideSolid(movePos.west().down(), EnumFacing.UP)) {
 									movePos = movePos.west();
-								} else {
+								} else if (worldObj.isAirBlock(movePos.up())) {
 									movePos = movePos.up();
+								} else {
+									movePos = movePos.down();
 								}
 							}
-							if (!this.getNavigator().tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f)) {
-								this.moveHelper.setMoveTo(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5, 1.0f);
+							
+							// Is the block we shifted to where we are?
+							if (!this.getPosition().equals(movePos) && this.getDistanceSqToCenter(movePos) > 1) {
+								if (!this.getNavigator().tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f)) {
+									this.moveHelper.setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
+								}
 							}
 						}
 					}
@@ -617,5 +629,18 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected boolean canMergeMoreJobs() {
 		return this.heldItem == null;
+	}
+	
+	@Override
+	protected void collideWithEntity(Entity entityIn) {
+		if (this.getCurrentTask() != null && this.getCurrentTask() instanceof LogisticsTaskMineBlock
+				&& entityIn instanceof IFeyWorker) {
+			ILogisticsTask theirs = ((IFeyWorker) entityIn).getCurrentTask();
+			if (theirs != null && theirs instanceof LogisticsTaskMineBlock) {
+				return;
+			}
+		}
+		
+		super.collideWithEntity(entityIn);
 	}
 }

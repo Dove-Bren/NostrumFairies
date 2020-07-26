@@ -1,6 +1,7 @@
 package com.smanzana.nostrumfairies.utils;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 public class Location {
 
@@ -10,6 +11,10 @@ public class Location {
 	public Location(BlockPos pos, int dimension) {
 		this.pos = pos;
 		this.dimension = dimension;
+	}
+	
+	public Location(World world, BlockPos pos) {
+		this(pos, world.provider.getDimension());
 	}
 	
 	public BlockPos getPos() {

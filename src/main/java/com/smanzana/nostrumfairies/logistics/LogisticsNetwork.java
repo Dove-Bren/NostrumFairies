@@ -17,6 +17,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -119,6 +120,10 @@ public class LogisticsNetwork {
 	// Tasks
 	private LogisticsTaskRegistry taskRegistry;
 	
+	// Beacons
+	protected Set<Location> extraBeacons;
+	protected Set<Location> cacheBeaconSet; // Cached set of logistics component and beacon locations
+	
 	public LogisticsNetwork() {
 		this(UUID.randomUUID(), true);
 	}
@@ -132,6 +137,7 @@ public class LogisticsNetwork {
 		this.activeItemDeliveries = new HashMap<>();
 		this.cacheKey = UUID.randomUUID();
 		this.taskRegistry = new LogisticsTaskRegistry();
+		this.extraBeacons = new HashSet<>();
 		cacheDirty = false;
 		
 		if (register) {
@@ -198,7 +204,7 @@ public class LogisticsNetwork {
 	}
 	
 	protected static Location getLocation(ILogisticsComponent component) {
-		return new Location(component.getPosition(), component.getWorld().provider.getDimension());
+		return new Location(component.getWorld(), component.getPosition());
 	}
 	
 	private boolean canComponentLinkReach(ILogisticsComponent component, ILogisticsComponent other) {
@@ -561,6 +567,7 @@ public class LogisticsNetwork {
 	
 	protected void rebuildGraph() {
 		this.componentGraph.clear();
+		this.cacheBeaconSet = null; // if components have changed, we need to redo beacons
 		
 		ILogisticsComponent[] arr = components.toArray(new ILogisticsComponent[0]);
 		for (int j = 0; j < components.size(); j++) {
@@ -821,4 +828,39 @@ public class LogisticsNetwork {
 		return taskRegistry;
 	}
 	
+	public Set<Location> getBeacons() {
+		if (this.cacheBeaconSet == null) {
+			this.cacheBeaconSet = new HashSet<>(this.extraBeacons);
+			for (ILogisticsComponent comp : components) {
+				cacheBeaconSet.add(getLocation(comp));
+			}
+		}
+		
+		return Sets.newHashSet(cacheBeaconSet);
+	}
+	
+	public void clearBeacons() {
+		this.cacheBeaconSet = null;
+		this.extraBeacons.clear();
+	}
+	
+	public void addBeacon(Location loc) {
+		if (this.extraBeacons.add(loc)) {
+			this.cacheBeaconSet = null;
+		}
+	}
+	
+	public void addBeacon(World world, BlockPos pos) {
+		this.addBeacon(new Location(world, pos));
+	}
+	
+	public void removeBeacon(Location loc) {
+		if (this.extraBeacons.remove(loc)) {
+			this.cacheBeaconSet = null;
+		}
+	}
+	
+	public void removeBeacon(World world, BlockPos pos) {
+		this.removeBeacon(new Location(world, pos));
+	}
 }

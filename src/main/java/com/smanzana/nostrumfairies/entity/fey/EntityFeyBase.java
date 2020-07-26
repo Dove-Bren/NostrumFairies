@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
 import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
-import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorGroundFixed;
+import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
@@ -63,7 +63,7 @@ public abstract class EntityFeyBase extends EntityMob implements IFeyWorker, ILo
 		this.wanderDistanceSq = wanderDistanceSq;
 		this.workDistanceSq = workDistanceSq;
 		
-		this.navigator = new PathNavigatorGroundFixed(this, world);
+		this.navigator = new PathNavigatorLogistics(this, world);
 	}
 	
 	@Override
@@ -472,5 +472,4 @@ public abstract class EntityFeyBase extends EntityMob implements IFeyWorker, ILo
 	protected boolean canDespawn() {
 		return false;
 	}
-	
 }
