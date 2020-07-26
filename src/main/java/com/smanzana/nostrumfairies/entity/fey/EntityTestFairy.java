@@ -7,9 +7,8 @@ import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
@@ -131,113 +130,149 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		if (task instanceof LogisticsTaskWithdrawItem) {
-			LogisticsTaskWithdrawItem retrieve = (LogisticsTaskWithdrawItem) task;
+//		if (task instanceof LogisticsTaskWithdrawItem) {
+//			LogisticsTaskWithdrawItem retrieve = (LogisticsTaskWithdrawItem) task;
+//			
+//			// Check where the retrieval task wants us to go to pick up
+//			BlockPos pickup = retrieve.getSource();
+//			if (pickup != null && !this.canReach(pickup, true)) {
+//				return false;
+//			}
+//			
+//			// Check for pathing
+//			ILogisticsComponent source = retrieve.getSourceComponent();
+//			if (source == null) {
+//				// entity
+//				if (this.getDistanceSqToEntity(retrieve.getSourceEntity()) < .2) {
+//					return true;
+//				}
+//				
+//				if (this.navigator.tryMoveToEntityLiving(retrieve.getSourceEntity(), 1.0)) {
+//					navigator.clearPathEntity();
+//					return true;
+//				}
+//			} else {
+//				BlockPos pos = source.getPosition();
+//				
+//				if (!worldObj.isAirBlock(pos)) {
+//					if (worldObj.isAirBlock(pos.north())) {
+//						pos = pos.north();
+//					} else if (worldObj.isAirBlock(pos.south())) {
+//						pos = pos.south();
+//					} else if (worldObj.isAirBlock(pos.east())) {
+//						pos = pos.east();
+//					} else if (worldObj.isAirBlock(pos.west())) {
+//						pos = pos.west();
+//					} else {
+//						pos = pos.up();
+//					}
+//				}
+//				
+//				if (this.getDistanceSq(pos) < .2 || this.getPosition().equals(pos)) {
+//					return true;
+//				}
+//				
+//				if (this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0)) {
+//					navigator.clearPathEntity();
+//					return true;
+//				}
+//			}
+//		} else if (task instanceof LogisticsTaskDepositItem) {
+//			LogisticsTaskDepositItem deposit = (LogisticsTaskDepositItem) task;
+//			
+//			// Check where the retrieval task wants us to go to pick up
+//			BlockPos pickup = deposit.getDestination();
+//			if (pickup != null && !this.canReach(pickup, true)) {
+//				return false;
+//			}
+//			
+//			// Check for pathing
+//			ILogisticsComponent source = deposit.getSourceComponent();
+//			if (source == null) {
+//				// entity
+//				if (this.getDistanceSqToEntity(deposit.getSourceEntity()) < .2) {
+//					return true;
+//				}
+//				if (this.navigator.tryMoveToEntityLiving(deposit.getSourceEntity(), 1.0)) {
+//					navigator.clearPathEntity();
+//					return true;
+//				}
+//			} else {
+//				BlockPos pos = source.getPosition();
+//				
+//				if (!worldObj.isAirBlock(pos)) {
+//					if (worldObj.isAirBlock(pos.north())) {
+//						pos = pos.north();
+//					} else if (worldObj.isAirBlock(pos.south())) {
+//						pos = pos.south();
+//					} else if (worldObj.isAirBlock(pos.east())) {
+//						pos = pos.east();
+//					} else if (worldObj.isAirBlock(pos.west())) {
+//						pos = pos.west();
+//					} else {
+//						pos = pos.up();
+//					}
+//				}
+//				
+//				if (this.getDistanceSq(pos) < .2 || this.getPosition().equals(pos)) {
+//					return true;
+//				}
+//				
+//				if (this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0)) {
+//					navigator.clearPathEntity();
+//					return true;
+//				}
+//			}
+//		} else if (task instanceof LogisticsTaskPickupItem) {
+//			LogisticsTaskPickupItem pickupTask = (LogisticsTaskPickupItem) task;
+//			
+//			// Check where the retrieval task wants us to go to pick up
+//			BlockPos pickup = pickupTask.getDestination();
+//			if (pickup != null && !this.canReach(pickup, true)) {
+//				return false;
+//			}
+//			
+//			// Check for pathing
+//			if (this.getDistanceSqToEntity(pickupTask.getEntityItem()) < .2) {
+//				return true;
+//			}
+//			if (this.navigator.tryMoveToEntityLiving(pickupTask.getEntityItem(), 1.0)) {
+//				navigator.clearPathEntity();
+//				return true;
+//			}
+//		} else if (task instanceof LogisticsTaskChopTree) {
+		if (task instanceof LogisticsTaskChopTree) {
+			LogisticsTaskChopTree chop = (LogisticsTaskChopTree) task;
 			
-			// Check where the retrieval task wants us to go to pick up
-			BlockPos pickup = retrieve.getSource();
-			if (pickup != null && !this.canReach(pickup, true)) {
+			if (chop.getWorld() != this.worldObj) {
 				return false;
 			}
 			
-			// Check for pathing
-			ILogisticsComponent source = retrieve.getSourceComponent();
-			if (source == null) {
-				// entity
-				if (this.getDistanceSqToEntity(retrieve.getSourceEntity()) < .2) {
-					return true;
-				}
-				
-				if (this.navigator.tryMoveToEntityLiving(retrieve.getSourceEntity(), 1.0)) {
-					navigator.clearPathEntity();
-					return true;
-				}
-			} else {
-				BlockPos pos = source.getPosition();
-				
-				if (!worldObj.isAirBlock(pos)) {
-					if (worldObj.isAirBlock(pos.north())) {
-						pos = pos.north();
-					} else if (worldObj.isAirBlock(pos.south())) {
-						pos = pos.south();
-					} else if (worldObj.isAirBlock(pos.east())) {
-						pos = pos.east();
-					} else if (worldObj.isAirBlock(pos.west())) {
-						pos = pos.west();
-					} else {
-						pos = pos.up();
-					}
-				}
-				
-				if (this.getDistanceSq(pos) < .2 || this.getPosition().equals(pos)) {
-					return true;
-				}
-				
-				if (this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0)) {
-					navigator.clearPathEntity();
-					return true;
-				}
-			}
-		} else if (task instanceof LogisticsTaskDepositItem) {
-			LogisticsTaskDepositItem deposit = (LogisticsTaskDepositItem) task;
-			
-			// Check where the retrieval task wants us to go to pick up
-			BlockPos pickup = deposit.getDestination();
-			if (pickup != null && !this.canReach(pickup, true)) {
+			// Check where the tree is
+			BlockPos pickup = chop.getTrunkPos();
+			if (pickup == null || !this.canReach(pickup, true)) {
 				return false;
 			}
 			
-			// Check for pathing
-			ILogisticsComponent source = deposit.getSourceComponent();
-			if (source == null) {
-				// entity
-				if (this.getDistanceSqToEntity(deposit.getSourceEntity()) < .2) {
-					return true;
+			if (!worldObj.isAirBlock(pickup)) {
+				if (worldObj.isAirBlock(pickup.north())) {
+					pickup = pickup.north();
+				} else if (worldObj.isAirBlock(pickup.south())) {
+					pickup = pickup.south();
+				} else if (worldObj.isAirBlock(pickup.east())) {
+					pickup = pickup.east();
+				} else if (worldObj.isAirBlock(pickup.west())) {
+					pickup = pickup.west();
+				} else {
+					pickup = pickup.up();
 				}
-				if (this.navigator.tryMoveToEntityLiving(deposit.getSourceEntity(), 1.0)) {
-					navigator.clearPathEntity();
-					return true;
-				}
-			} else {
-				BlockPos pos = source.getPosition();
-				
-				if (!worldObj.isAirBlock(pos)) {
-					if (worldObj.isAirBlock(pos.north())) {
-						pos = pos.north();
-					} else if (worldObj.isAirBlock(pos.south())) {
-						pos = pos.south();
-					} else if (worldObj.isAirBlock(pos.east())) {
-						pos = pos.east();
-					} else if (worldObj.isAirBlock(pos.west())) {
-						pos = pos.west();
-					} else {
-						pos = pos.up();
-					}
-				}
-				
-				if (this.getDistanceSq(pos) < .2 || this.getPosition().equals(pos)) {
-					return true;
-				}
-				
-				if (this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0)) {
-					navigator.clearPathEntity();
-					return true;
-				}
-			}
-		} else if (task instanceof LogisticsTaskPickupItem) {
-			LogisticsTaskPickupItem pickupTask = (LogisticsTaskPickupItem) task;
-			
-			// Check where the retrieval task wants us to go to pick up
-			BlockPos pickup = pickupTask.getDestination();
-			if (pickup != null && !this.canReach(pickup, true)) {
-				return false;
 			}
 			
 			// Check for pathing
-			if (this.getDistanceSqToEntity(pickupTask.getEntityItem()) < .2) {
+			if (this.getDistanceSq(pickup) < .2) {
 				return true;
 			}
-			if (this.navigator.tryMoveToEntityLiving(pickupTask.getEntityItem(), 1.0)) {
+			if (this.navigator.tryMoveToXYZ(pickup.getX(), pickup.getY(), pickup.getZ(), 1.0)) {
 				navigator.clearPathEntity();
 				return true;
 			}

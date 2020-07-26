@@ -47,31 +47,31 @@ public class OverlayRenderer extends Gui {
 //					}
 //				}
 				
-//				Collection<ILogisticsTask> tasks = network.getTaskRegistry().allTasks();
-//				int y = 40;
-//				for (ILogisticsTask task : tasks) {
-//					String str = "Task: " + task.getDisplayName();
-//					Minecraft.getMinecraft().fontRendererObj.drawString(str, 60, y, 0xFFFFFFFF);
-//					y += 8;
-////					
-////					if (task instanceof LogisticsItemWithdrawTask) {
-////						LogisticsItemWithdrawTask retrieve = (LogisticsItemWithdrawTask) task;
-////						if (retrieve.isActive()) {
-////							str = " (ACTIVE: " + retrieve.getCurrentWorker() + ")";
-////						} else {
-////							str = " (INACTIVE)";
-////						}
-////						Minecraft.getMinecraft().fontRendererObj.drawString(str, -120, y, 0xFFFFFFFF);
-////						y += 8;
-////						str = "no subtask";
-////						if (retrieve.getActiveSubtask() != null) {
-////							str = retrieve.getDisplayName();
-////							str += " (" + retrieve.getActiveSubtask().getPos() + ")";
-////						}
-////						Minecraft.getMinecraft().fontRendererObj.drawString(str, 40, y, 0xFFFFFFFF);
-////						y += 8;
-////					}
-//				}
+				Collection<ILogisticsTask> tasks = network.getTaskRegistry().allTasks();
+				int y = 40;
+				for (ILogisticsTask task : tasks) {
+					String str = "Task: " + task.getDisplayName();
+					Minecraft.getMinecraft().fontRendererObj.drawString(str, 60, y, 0xFFFFFFFF);
+					y += 8;
+//					
+//					if (task instanceof LogisticsItemWithdrawTask) {
+//						LogisticsItemWithdrawTask retrieve = (LogisticsItemWithdrawTask) task;
+//						if (retrieve.isActive()) {
+//							str = " (ACTIVE: " + retrieve.getCurrentWorker() + ")";
+//						} else {
+//							str = " (INACTIVE)";
+//						}
+//						Minecraft.getMinecraft().fontRendererObj.drawString(str, -120, y, 0xFFFFFFFF);
+//						y += 8;
+//						str = "no subtask";
+//						if (retrieve.getActiveSubtask() != null) {
+//							str = retrieve.getDisplayName();
+//							str += " (" + retrieve.getActiveSubtask().getPos() + ")";
+//						}
+//						Minecraft.getMinecraft().fontRendererObj.drawString(str, 40, y, 0xFFFFFFFF);
+//						y += 8;
+//					}
+				}
 				
 			} catch (Exception e) {
 				;

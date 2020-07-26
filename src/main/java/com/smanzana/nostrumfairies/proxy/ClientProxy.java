@@ -8,6 +8,7 @@ import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
+import com.smanzana.nostrumfairies.blocks.WoodcuttingBlock;
 import com.smanzana.nostrumfairies.client.gui.OverlayRenderer;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
@@ -47,6 +48,7 @@ public class ClientProxy extends CommonProxy {
 		InputLogisticsChest.InputChestRenderer.init();
 		GatheringBlock.GatheringBlockRenderer.init();
 		LogisticsPylon.PylonRenderer.init();
+		WoodcuttingBlock.WoodcuttingBlockRenderer.init();
 		
 		RenderingRegistry.registerEntityRenderingHandler(EntityTestFairy.class, new IRenderFactory<EntityTestFairy>() {
 			@Override
@@ -88,6 +90,9 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(LogisticsPylon.instance()),
 				0,
 				LogisticsPylon.ID);
+		registerModel(Item.getItemFromBlock(WoodcuttingBlock.instance()),
+				0,
+				WoodcuttingBlock.ID);
 		
 	}
 	

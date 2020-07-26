@@ -216,6 +216,14 @@ public class GatheringBlock extends BlockContainer {
 				 this.scan();
 			 }
 		}
+		
+		@Override
+		public void setWorldObj(World worldIn) {
+			super.setWorldObj(worldIn);
+			if (!worldIn.isRemote) {
+				MinecraftForge.EVENT_BUS.register(this);
+			}
+		}
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -230,9 +238,6 @@ public class GatheringBlock extends BlockContainer {
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		TileEntity ent = new GatheringBlockTileEntity();
-		if (worldIn.isRemote) {
-			MinecraftForge.EVENT_BUS.register(ent);
-		}
 		return ent;
 	}
 	

@@ -424,6 +424,11 @@ public abstract class EntityFeyBase extends EntityMob implements IFeyWorker, ILo
 	private static final String NBT_REVOLTING = "revolt";
 	
 	@Override
+	public boolean writeToNBTOptional(NBTTagCompound compound) {
+		return super.writeToNBTOptional(compound);
+	}
+	
+	@Override
 	public void writeEntityToNBT(NBTTagCompound compound) {
 		super.writeEntityToNBT(compound);
 		
@@ -461,6 +466,11 @@ public abstract class EntityFeyBase extends EntityMob implements IFeyWorker, ILo
 	public void setDead() {
 		forfitTask();
 		super.setDead();
+	}
+	
+	@Override
+	protected boolean canDespawn() {
+		return false;
 	}
 	
 }

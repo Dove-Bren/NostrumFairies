@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.oredict.OreDictionary;
 
 public class ItemStacks {
 	
@@ -22,6 +23,15 @@ public class ItemStacks {
 		return stack1.getItem() == stack2.getItem()
         		&& stack1.getMetadata() == stack2.getMetadata()
         		&& Objects.equals(stack1.getTagCompound(), stack2.getTagCompound());
+	}
+	
+	public static boolean stackMatchesOreDict(@Nullable ItemStack stack1, String oreDictName, boolean strict) {
+		if (stack1 == null) {
+			return false;
+		}
+		
+		List<ItemStack> dictionary = OreDictionary.getOres(oreDictName);
+		return OreDictionary.containsMatch(strict, dictionary, stack1);
 	}
 
 	private static ItemStack attemptAddToInventory(IInventory inventory, @Nullable ItemStack stack, boolean commit) {
