@@ -9,6 +9,7 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
@@ -35,7 +36,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	public EntityTestFairy(World world) {
 		super(world);
 		this.height = .6f;
-		this.workDistanceSq = 24 * 24;
+		this.workDistanceSq = 40 * 40;
 	}
 
 	@Override
@@ -273,7 +274,46 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				return true;
 			}
 			if (this.navigator.tryMoveToXYZ(pickup.getX(), pickup.getY(), pickup.getZ(), 1.0)) {
+				System.out.println("Navigator move to (" + pickup + ") worked");
 				navigator.clearPathEntity();
+				return true;
+			}
+		} else if (task instanceof LogisticsTaskMineBlock) {
+			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
+			
+			if (mine.getWorld() != this.worldObj) {
+				return false;
+			}
+			
+			// Check where the tree is
+			BlockPos target = mine.getTargetBlock();
+			if (target == null || !this.canReach(target, true)) {
+				return false;
+			}
+			
+			if (!worldObj.isAirBlock(target)) {
+				if (worldObj.isAirBlock(target.north())) {
+					target = target.north();
+				} else if (worldObj.isAirBlock(target.south())) {
+					target = target.south();
+				} else if (worldObj.isAirBlock(target.east())) {
+					target = target.east();
+				} else if (worldObj.isAirBlock(target.west())) {
+					target = target.west();
+				} else {
+					target = target.up();
+				}
+			}
+			
+			// Check for pathing
+			if (this.getDistanceSq(target) < .2) {
+				return true;
+			}
+			if (this.navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0)) {
+				navigator.clearPathEntity();
+				return true;
+			} else if (this.getDistanceSq(target) < 1) {
+				// extra case for if the navigator refuses cause we're too close
 				return true;
 			}
 		}
@@ -487,7 +527,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 									movePos = movePos.up();
 								}
 							}
-							if (!this.getNavigator().tryMoveToXYZ(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5, 1.0f)) {
+							if (!this.getNavigator().tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f)) {
 								this.moveHelper.setMoveTo(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5, 1.0f);
 							}
 						}

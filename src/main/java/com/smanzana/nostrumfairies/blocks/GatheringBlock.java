@@ -149,6 +149,10 @@ public class GatheringBlock extends BlockContainer {
 				this.radiusCache = radius;
 			}
 			
+			if (this.getNetwork() == null) {
+				return;
+			}
+			
 			// Check items on the ground nearby and create/destroy any tasks needed
 			List<EntityItem> items = this.worldObj.getEntitiesWithinAABB(EntityItem.class, boxCache);
 			Set<EntityItem> known = Sets.newHashSet(taskMap.keySet());

@@ -20,7 +20,7 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 
 /*
- * Pick up an item and then deposit it somewhere in the network
+ * Go to and then chop down a tree. Does not pick up the items.
  */
 public class LogisticsTaskChopTree implements ILogisticsTask {
 	

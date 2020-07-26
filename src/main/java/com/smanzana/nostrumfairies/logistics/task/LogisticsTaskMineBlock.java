@@ -1,0 +1,470 @@
+package com.smanzana.nostrumfairies.logistics.task;
+
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import com.google.common.collect.Lists;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
+import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
+import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+
+/*
+ * Travel to a block and mine it. If the block drops anything, return it to the surface.
+ */
+public class LogisticsTaskMineBlock implements ILogisticsTask {
+	
+	private static enum Phase {
+		IDLE,
+		MOVING,
+		MINING,
+		RETURNING,
+		DONE,
+	}
+	
+	private String displayName;
+	private World world;
+	private BlockPos block;
+	private ILogisticsComponent owningComponent;
+	
+	private @Nullable List<ILogisticsTask> mergedTasks;
+	private @Nullable LogisticsTaskMineBlock compositeTask; // Task we were merged into
+	
+	private IItemCarrierFey fairy;
+	private Phase phase;
+	private LogisticsSubTask moveTask;
+	private LogisticsSubTask workTask;
+	private LogisticsSubTask returnTask;
+	
+	private int animCount;
+	private long lastOreCheck;
+	private boolean lastOreResult;
+
+	public LogisticsTaskMineBlock(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos) {
+		this.displayName = displayName;
+		this.block = pos;
+		this.world = world;
+		this.owningComponent = owningComponent;
+		phase = Phase.IDLE;
+	}
+	
+	private static LogisticsTaskMineBlock makeComposite(LogisticsTaskMineBlock left, LogisticsTaskMineBlock right) {
+		LogisticsTaskMineBlock composite;
+		// Just take left's pos for now
+		composite = new LogisticsTaskMineBlock(left.owningComponent, left.displayName, left.world, left.block);
+		
+		// pull registry stuff
+		composite.fairy = left.fairy;
+		
+		composite.mergedTasks = new LinkedList<>();
+		composite.mergedTasks.add(left);
+		composite.mergedTasks.add(right);
+		
+		composite.phase = left.phase;
+		composite.animCount = left.animCount;
+		composite.tryTasks(left.fairy);
+		
+		left.compositeTask = composite;
+		right.compositeTask = composite;
+		return composite;
+	}
+
+	@Override
+	public String getDisplayName() {
+		return displayName + " (" + (this.mergedTasks == null ? block : "Multiple blocks") + " - " + phase.name() + ")";
+	}
+
+	@Override
+	public boolean canDrop() {
+		return false;
+	}
+
+	@Override
+	public boolean canAccept(IFeyWorker worker) {
+		if (!(worker instanceof IItemCarrierFey)) {
+			return false;
+		}
+		
+		LogisticsNetwork network = worker.getLogisticsNetwork();
+		if (network == null) {
+			return false;
+		}
+		
+		// Also check here if the area around the block is a) loaded and b) exposed
+		if (!world.isAreaLoaded(block, 1)) {
+			return false;
+		}
+		
+		BlockPos pos = block;
+		if (world.isAirBlock(pos.north())) {
+			pos = pos.north();
+		} else if (world.isAirBlock(pos.south())) {
+			pos = pos.south();
+		} else if (world.isAirBlock(pos.east())) {
+			pos = pos.east();
+		} else if (world.isAirBlock(pos.west())) {
+			pos = pos.west();
+		} else if (world.isAirBlock(pos.up())) {
+			pos = pos.up();
+		} else {
+			pos = pos.down();
+		}
+		
+		if (!world.isAirBlock(pos)) {
+			return false;
+		}
+		
+		 return true;
+	}
+
+	@Override
+	public void onDrop(IFeyWorker worker) {
+		// If part of a composite, let it know that this subtask has been dropped
+		if (this.compositeTask != null) {
+			this.compositeTask.dropMerged(this);
+		}
+		
+		releaseTasks();
+		
+		this.fairy = null;
+		phase = Phase.IDLE;
+	}
+	
+	@Override
+	public void onRevoke() {
+		// Only need cleanup if we were being worked, which would call onDrop.
+	}
+
+	@Override
+	public void onAccept(IFeyWorker worker) {
+		this.fairy = (IItemCarrierFey) worker;
+		phase = Phase.MOVING;
+		animCount = 0;
+		tryTasks(worker);
+		
+		lastOreCheck = 0; //reset so 'isValid' runs fully the first time
+	}
+
+	@Override
+	public boolean canMerge(ILogisticsTask other) {
+		if (this.phase == Phase.RETURNING || this.phase == Phase.DONE) {
+			return false;
+		}
+		
+		if (other instanceof LogisticsTaskMineBlock) {
+			LogisticsTaskMineBlock otherTask = (LogisticsTaskMineBlock) other;
+			
+			// Are these requests from the same place?
+			if (owningComponent != otherTask.owningComponent) {
+				return false;
+			}
+			
+			// We limit mining tasks to stacks of 8 to avoid having to try and guess how many items come out.
+			if (this.mergedTasks != null && this.mergedTasks.size() >= 8) {
+				return false;
+			}
+			
+			// I was going to check if it was the same type of block to limit the number of TYPES of items,
+			// but I'm just gonna give dwarfs some good inventory sizes
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	private void dropMerged(LogisticsTaskMineBlock otherTask) {
+		this.mergedTasks.remove(otherTask);
+	}
+	
+	private void mergeToComposite(LogisticsTaskMineBlock otherTask) {
+		mergedTasks.add(otherTask);
+		otherTask.compositeTask = this;
+	}
+
+	@Override
+	public ILogisticsTask mergeIn(ILogisticsTask other) {
+		// If already a composite, just add. Otherwise, make a composite!
+		if (this.mergedTasks == null) {
+			return makeComposite(this, (LogisticsTaskMineBlock) other);
+		} //else
+		
+		this.mergeToComposite((LogisticsTaskMineBlock) other);
+		return this;
+	}
+
+	@Override
+	public @Nullable ILogisticsComponent getSourceComponent() {
+		return owningComponent;
+	}
+	
+	public @Nullable EntityLivingBase getSourceEntity() {
+		return null;
+	}
+
+	@Override
+	public Collection<ILogisticsTask> unmerge() {
+		if (mergedTasks == null) {
+			return Lists.newArrayList(this);
+		}
+		
+		return Lists.newArrayList(mergedTasks);
+	}
+	
+	public World getWorld() {
+		return this.world;
+	}
+	
+	public BlockPos getTargetBlock() {
+		return block;
+	}
+	
+	public boolean isActive() {
+		return fairy != null;
+	}
+	
+	public @Nullable IItemCarrierFey getCurrentWorker() {
+		return fairy;
+	}
+	
+	private void releaseTasks() {
+		workTask = null;
+		moveTask = null;
+		returnTask = null;
+	}
+	
+	private boolean tryTasks(IFeyWorker fairy) {
+		releaseTasks();
+		
+		// composites only have a returnTask
+		this.returnTask = LogisticsSubTask.Move(owningComponent.getPosition());
+		
+		if (mergedTasks == null) {
+			moveTask = LogisticsSubTask.Move(block);
+			workTask = LogisticsSubTask.Break(block);
+			
+			// Figure out hardness for anim count
+			// TODO different tools for dwarves?
+			IBlockState state = world.getBlockState(block);
+			float secs = (state.getBlockHardness(world, block)) * 5;
+			// could put tool stuff here
+			animCount = (int) Math.ceil(secs * 3); // 3 break completes per second?
+		}
+		
+		return true;
+	}
+	
+	private @Nullable LogisticsTaskMineBlock getFirstUnfinishedChild() {
+		if (this.mergedTasks == null) {
+			return null;
+		}
+		
+		for (ILogisticsTask subtask : this.mergedTasks) {
+			LogisticsTaskMineBlock task = (LogisticsTaskMineBlock) subtask;
+			if (task.phase == Phase.MOVING || task.phase == Phase.MINING) {
+				return task;
+			}
+		}
+		
+		return null;
+	}
+
+	@Override
+	public LogisticsSubTask getActiveSubtask() {
+		// Composite defer to subtasks for MOVING and MINING
+		
+		@Nullable LogisticsTaskMineBlock subtask = getFirstUnfinishedChild();
+		switch (phase) {
+		case IDLE:
+			return null;
+		case MOVING:
+			if (this.mergedTasks != null) {
+				if (subtask == null) {
+					return null;
+				} else {
+					return subtask.getActiveSubtask();
+				}
+			} else {
+				return moveTask;
+			}
+		case MINING:
+			if (this.mergedTasks != null) {
+				if (subtask == null) {
+					return null;
+				} else {
+					return subtask.getActiveSubtask();
+				}
+			} else {
+				return workTask;
+			}
+		case RETURNING:
+			return returnTask;
+		case DONE:
+			return null;
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public void markSubtaskComplete() {
+		// If composite, find the child that this actually is talking about if we're in a work phase
+		@Nullable LogisticsTaskMineBlock subtask = getFirstUnfinishedChild();
+		
+		switch (phase) {
+		case IDLE:
+			; // ?
+			break;
+		case MOVING:
+			if (this.mergedTasks != null) {
+				if (subtask == null) {
+					// somehow ended up with no MINING phase.
+					phase = Phase.RETURNING;
+				} else {
+					// set our phase for better printing, and update the child task
+					phase = Phase.MINING;
+					subtask.markSubtaskComplete();
+				}
+			} else {
+				phase = Phase.MINING;
+			}
+			break;
+		case MINING:
+			// If composite, echo down as always. If there's another subtask afterwards,
+			// go back to 'moving' state
+			if (this.mergedTasks != null) {
+				if (subtask == null) {
+					// this state is substate was mining but didn't actually go to mining?
+					phase = Phase.RETURNING;
+				} else {
+					// note: marking subtask complete here first
+					subtask.markSubtaskComplete();
+					
+					subtask = getFirstUnfinishedChild();
+					if (subtask == null) {
+						phase = Phase.RETURNING; // no more undone children!
+					} else {
+						phase = Phase.MOVING;
+					}
+					
+				}
+			} else {
+				if (animCount > 0) {
+					animCount--;
+				} else {
+					phase = Phase.RETURNING;
+					mineBlock();
+				}
+			}
+			
+			break;
+		case RETURNING:
+			dropItems();
+			phase = Phase.DONE;
+			break;
+		case DONE:
+			break;
+		}
+	}
+	
+	@Override
+	public boolean isComplete() {
+		return phase == Phase.DONE;
+	}
+	
+	private void mineBlock() {
+		IBlockState state = world.getBlockState(block);
+		List<ItemStack> drops = state.getBlock().getDrops(world, block, state, 0); // Fortune?
+		world.destroyBlock(block, false);
+		
+		// Try to add them all to the dwarf
+		for (ItemStack drop : drops) {
+			if (fairy.canAccept(drop)) {
+				fairy.addItem(drop);
+			} else {
+				// drop on the floor
+				world.spawnEntityInWorld(new EntityItem(world, block.getX() + .5, block.getY() + .5, block.getZ() + .5, drop));
+			}
+		}
+	}
+	
+	private void dropItems() {
+		IItemCarrierFey worker = fairy; // capture before making changes!
+		// Just instruct the dwarf to drop all that they have :)
+		
+		ItemStack[] heldItems = worker.getCarriedItems();
+		ItemStack[] items = new ItemStack[heldItems.length];
+		double x;
+		double y;
+		double z;
+		if (fairy instanceof EntityLivingBase) {
+			x = ((EntityLivingBase) fairy).posX;
+			y = ((EntityLivingBase) fairy).posY;
+			z = ((EntityLivingBase) fairy).posZ;
+		} else {
+			BlockPos pos = owningComponent.getPosition();
+			x = pos.getX() + .5;
+			y = pos.getY() + 1.5;
+			z = pos.getZ() + .5;
+		}
+		
+		for (int i = 0; i < heldItems.length; i++) {
+			items[i] = heldItems[i].copy();
+		}
+		
+		for (ItemStack stack : items) {
+			fairy.removeItem(stack);
+			world.spawnEntityInWorld(new EntityItem(world, x, y, z, stack));
+		}
+	}
+	
+	public boolean minedBlock() {
+		return this.phase == Phase.RETURNING || this.phase == Phase.DONE;
+	}
+
+	@Override
+	public boolean isValid() {
+		if (this.mergedTasks != null) {
+			// If this task was a merged one but all things have been pulled out, no longer valid!
+			if (this.mergedTasks.isEmpty()) {
+				return false;
+			}
+			
+			// Otherwise, check children (assuming we're moving/mining)
+			if (this.phase == Phase.MOVING || phase == Phase.MINING) {
+				for (ILogisticsTask child : this.mergedTasks) {
+					// could walk backwards, and drop children that no longer are valid.
+					// Gonna just be greedy and fail the whole thing here which will mean things like
+					// players 'helping' will thrash the AI.
+					if (!child.isValid()) {
+						return false;
+					}
+				}
+			}
+		} else {
+			if (this.phase == Phase.MOVING || phase == Phase.MINING) {
+				// Make sure block is still there
+				if (lastOreCheck == 0 || this.world.getTotalWorldTime() - lastOreCheck > 100) {
+					lastOreResult = !world.isAirBlock(block) && world.getBlockState(block).getBlockHardness(world, block) >= 0;
+					lastOreCheck = world.getTotalWorldTime();
+				}
+				
+				if (!lastOreResult) {
+					return false;
+				}
+			}
+		}
+		
+		return true;
+	}
+}

@@ -14,7 +14,7 @@ import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrumfairies.utils.OreDict;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
@@ -23,14 +23,12 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -90,9 +88,6 @@ public class WoodcuttingBlock extends BlockContainer {
 		private Map<BlockPos, LogisticsTaskChopTree> taskMap;
 		private double radius;
 		
-		private AxisAlignedBB boxCache;
-		private double radiusCache;
-		
 		public WoodcuttingBlockTileEntity() {
 			this(10);
 		}
@@ -145,12 +140,11 @@ public class WoodcuttingBlock extends BlockContainer {
 		}
 		
 		private void scan() {
-			final long startTime = System.currentTimeMillis();
-			// Update BB cache if needed
-			if (boxCache == null || radiusCache != radius) {
-				boxCache = new AxisAlignedBB(this.pos).expandXyz(radius);
-				this.radiusCache = radius;
+			if (this.getNetwork() == null) {
+				return;
 			}
+			
+			final long startTime = System.currentTimeMillis();
 			
 			// Look for trees nearby and record their base. Also mark off ones we already know about.
 			Set<BlockPos> known = Sets.newHashSet(taskMap.keySet());
@@ -323,7 +317,7 @@ public class WoodcuttingBlock extends BlockContainer {
 		
 		WoodcuttingBlockTileEntity block = (WoodcuttingBlockTileEntity) ent;
 		block.unlinkFromNetwork();
-		MinecraftForge.EVENT_BUS.unregister(block);
+		MinecraftForge.TERRAIN_GEN_BUS.unregister(block);
 	}
 	
 	public static boolean isLeafMaterial(IBlockState state) {
@@ -334,9 +328,7 @@ public class WoodcuttingBlock extends BlockContainer {
 			return true;
 		}
 		
-		Item item = Item.getItemFromBlock(state.getBlock());
-        ItemStack stack = item == null ? null : new ItemStack(item, 1, state.getBlock().damageDropped(state));
-		return ItemStacks.stackMatchesOreDict(stack, "treeLeaves", false);
+		return OreDict.blockMatchesOreDict(state, "treeLeaves", false);
 	}
 	
 	public static boolean isLeafMaterial(World world, BlockPos pos) {
@@ -351,9 +343,7 @@ public class WoodcuttingBlock extends BlockContainer {
 			return true;
 		}
 		
-		Item item = Item.getItemFromBlock(state.getBlock());
-        ItemStack stack = item == null ? null : new ItemStack(item, 1, state.getBlock().damageDropped(state));
-		return ItemStacks.stackMatchesOreDict(stack, "logWood", false);
+		return OreDict.blockMatchesOreDict(state, "logWood", false);
 	}
 	
 	public static boolean isTrunkMaterial(World world, BlockPos pos) {

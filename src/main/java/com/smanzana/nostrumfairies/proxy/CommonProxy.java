@@ -5,6 +5,7 @@ import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
+import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
@@ -107,6 +108,12 @@ public class CommonProxy {
     	GameRegistry.register(
     			(new ItemBlock(WoodcuttingBlock.instance())).setRegistryName(WoodcuttingBlock.ID));
     	WoodcuttingBlock.init();
+    	
+    	GameRegistry.register(MiningBlock.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, MiningBlock.ID));
+    	GameRegistry.register(
+    			(new ItemBlock(MiningBlock.instance())).setRegistryName(MiningBlock.ID));
+    	MiningBlock.init();
     }
 
 	public EntityPlayer getPlayer() {
