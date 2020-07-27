@@ -101,9 +101,9 @@ public class MiningBlock extends BlockContainer {
 		
 		private int chunkXOffset; // rediscovered each time
 		private int chunkZOffset; // ^
-		private int scanLevel; // reset to 0 on load but that should mean 1-time long scan
 		private int lowestLevel; // ^
-		private int deepestPlatform; // ^
+		private int scanLevel; // reset to 0 on load but that should mean 1-time long scan
+		private int nextPlatform; // ^
 		
 		public MiningBlockTileEntity() {
 			this(32);
@@ -190,6 +190,14 @@ public class MiningBlock extends BlockContainer {
 			return Math.max(0, pos.getY() - y);
 		}
 		
+		private int platformToY(int platform) {
+			return getYFromLevel(platformToLevel(platform));
+		}
+		
+		private int platformToLevel(int platform) {
+			return platform * (MAJOR_LEVEL_DIFF / 2);
+		}
+		
 		/**
 		 * Get the PLATFORM level (not the regular level) for the given Y
 		 * @param y
@@ -212,14 +220,6 @@ public class MiningBlock extends BlockContainer {
 			}
 			
 			return platform;
-		}
-		
-		private int platformToY(int platform) {
-			return getYFromLevel(platformToLevel(platform));
-		}
-		
-		private int platformToLevel(int platform) {
-			return platform * (MAJOR_LEVEL_DIFF / 2);
 		}
 		
 		private boolean forEachOnLayer(int level, Function<MutableBlockPos, Boolean> func) {
@@ -302,7 +302,9 @@ public class MiningBlock extends BlockContainer {
 				return true;
 			});
 			
-			return result[0];
+			// TODO testing! do not leave this in!!!!!!!!!
+			return false;
+			//return result[0];
 		}
 		
 		private boolean makePlatform(int level, boolean upper) {
@@ -410,7 +412,7 @@ public class MiningBlock extends BlockContainer {
 		 * If the mine is already dug and looks good, returns false.
 		 * @return
 		 */
-		private boolean makeMine() {
+		private boolean makeMine(int platformToMake) {
 			// mine holes start to the north.
 			// mine is a 5x5 spiral staircase all the way down, with platforms every (MAJOR_LEVEL_DIFF / 2) blocks.
 			// note: this is a place where MAJOR_LEVEL_DIFF isn't dynamic.  It needs to be 16 to fit the 5x5.
@@ -423,9 +425,9 @@ public class MiningBlock extends BlockContainer {
 				return false;
 			}
 			
-			int level = 0;
 			boolean dug = false;
-			while (level < deepest && !dug) {
+			int level = platformToLevel(platformToMake);
+			if (level < deepest) {
 				boolean upper = (level % MAJOR_LEVEL_DIFF == 0);
 				if (makeStaircaseSegment(level, upper)) {
 					dug = true;
@@ -436,6 +438,20 @@ public class MiningBlock extends BlockContainer {
 				}
 			}
 			
+			return dug;
+		}
+		
+		/**
+		 * Looks at platforms up to the provided one and queues up any repair tasks
+		 * that are needed. Pesky gravel!
+		 * @param deepestPlatform
+		 * @return
+		 */
+		private boolean repairMine(int deepestPlatform) {
+			boolean dug = false;
+			for (int platform = 0; platform <= deepestPlatform; platform++) {
+				dug = makeMine(platform) || dug;
+			}
 			return dug;
 		}
 		
@@ -477,23 +493,47 @@ public class MiningBlock extends BlockContainer {
 			}
 		}
 		
+		private void repairScan() {
+			if (this.getNetwork() == null) {
+				return;
+			}
+			
+			if (getLowestLevel() == 0) {
+				return;
+			}
+			final long startTime = System.currentTimeMillis();
+			if (nextPlatform > 0) {
+				repairMine(nextPlatform - 1);
+			}
+			final long end = System.currentTimeMillis();
+			if (end - startTime >= 5) {
+				System.out.println("Took " + (end - startTime) + "ms to scan for repairs!");
+			}
+		}
+		
 		private void scan() {
 			if (this.getNetwork() == null) {
 				return;
 			}
 			
+			if (scanLevel > getLowestLevel() || getLowestLevel() == 0) {
+				return;
+			}
+			
 			final long startTime = System.currentTimeMillis();
 			
-			// TODO 'makeMine' for one layer, then switch to scanning the layer and clearing it out. Then switch back to 'makeMine' etc.
-			if (makeMine()) {
-				// Mine needs building still
-				// We queued up tasks as part of scanning.
-				;
-			} else {
-				// TODO
-//				while (getYFromLevel(scanLevel) > 0 && !scanLayer(scanLevel)) {
-//					scanLevel++;
-//				}
+			boolean didWork = false;
+			while (didWork == false) {
+				// If scan level is behind platform, scan. Otherwise, make a platform.
+				// Keep doing both if they run and find no work to do. Could limit this here. Once per minute seems long tho.
+				if (nextPlatform == 0 || scanLevel > platformToLevel(nextPlatform)) {
+					didWork = makeMine(nextPlatform);
+					nextPlatform++;
+				}
+				
+				if (!didWork) {
+					didWork = scanLayer(scanLevel++);
+				}
 			}
 			
 			final long end = System.currentTimeMillis();
@@ -508,7 +548,11 @@ public class MiningBlock extends BlockContainer {
 				return;
 			}
 			
-			if (this.tickCount % (20 * 1) == 0) {
+			int period = (scanLevel < getLowestLevel()) ? 60 : 180;
+			if (this.tickCount % (20) == 0) {
+				repairScan();
+			}
+			if (this.tickCount % (20 * period) == 0) {
 				scan();
 			}
 			this.tickCount++;
