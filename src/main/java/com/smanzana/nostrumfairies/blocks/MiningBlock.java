@@ -340,7 +340,8 @@ public class MiningBlock extends BlockContainer {
 				clear = false;
 			}
 			
-			// (Make door into a beacon)
+			// Make staircase in front of door into a beacon
+			cursor.setPos(0 + pos.getX(), y, pos.getZ() + (upper ? (innerRadius - 2) : -(innerRadius - 2)));
 			this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
 			
 			return !clear;
@@ -483,6 +484,7 @@ public class MiningBlock extends BlockContainer {
 			
 			final long startTime = System.currentTimeMillis();
 			
+			// TODO 'makeMine' for one layer, then switch to scanning the layer and clearing it out. Then switch back to 'makeMine' etc.
 			if (makeMine()) {
 				// Mine needs building still
 				// We queued up tasks as part of scanning.

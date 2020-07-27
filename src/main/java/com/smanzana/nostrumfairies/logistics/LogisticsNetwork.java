@@ -100,6 +100,7 @@ public class LogisticsNetwork {
 	private static final String NBT_COMPONENTS = "component";
 	private static final String NBT_COMPONENT_KEY = "key";
 	private static final String NBT_COMPONENT_VALUE = "value";
+	private static final String NBT_BEACONS = "beacons";
 	
 	private UUID uuid;
 	
@@ -148,6 +149,7 @@ public class LogisticsNetwork {
 	public NBTTagCompound toNBT() {
 		NBTTagCompound tag = new NBTTagCompound();
 		tag.setUniqueId(NBT_UUID, uuid);
+		
 		NBTTagList list = new NBTTagList();
 		
 		for (ILogisticsComponent component : this.components) {
@@ -158,6 +160,15 @@ public class LogisticsNetwork {
 		}
 		
 		tag.setTag(NBT_COMPONENTS, list);
+		
+		list = new NBTTagList();
+		
+		for (Location beacon : extraBeacons) {
+			list.appendTag(beacon.toNBT());
+		}
+		
+		tag.setTag(NBT_BEACONS, list);
+		
 		
 		return tag;
 	}
@@ -182,6 +193,12 @@ public class LogisticsNetwork {
 				// Avoid 'adding' them the regular way to avoid calling the onAdd, and constnatly rebuilding graph
 				network.components.add(factory.construct(wrapper.getCompoundTag(NBT_COMPONENT_VALUE), network));
 			}
+		}
+		
+		list = tag.getTagList(NBT_BEACONS, NBT.TAG_COMPOUND);
+		for (int i = list.tagCount() - 1; i >= 0; i--) {
+			NBTTagCompound wrapper = list.getCompoundTagAt(i);
+			network.addBeacon(Location.FromNBT(wrapper));
 		}
 		
 		network.rebuildGraph();
@@ -286,11 +303,11 @@ public class LogisticsNetwork {
 		return this.components;
 	}
 	
-	public Collection<ILogisticsComponent> getConnectedComponents(Location location) {
+	public @Nullable Collection<ILogisticsComponent> getConnectedComponents(Location location) {
 		return componentGraph.get(location); // give them null if not in the graph! MWAHAHA
 	}
 	
-	public Collection<ILogisticsComponent> getConnectedComponents(ILogisticsComponent component) {
+	public @Nullable Collection<ILogisticsComponent> getConnectedComponents(ILogisticsComponent component) {
 		return getConnectedComponents(getLocation(component));
 	}
 	
@@ -828,7 +845,7 @@ public class LogisticsNetwork {
 		return taskRegistry;
 	}
 	
-	public Set<Location> getBeacons() {
+	public Set<Location> getAllBeacons() {
 		if (this.cacheBeaconSet == null) {
 			this.cacheBeaconSet = new HashSet<>(this.extraBeacons);
 			for (ILogisticsComponent comp : components) {
@@ -837,6 +854,14 @@ public class LogisticsNetwork {
 		}
 		
 		return Sets.newHashSet(cacheBeaconSet);
+	}
+	
+	/**
+	 * Get beacons that were added AS BEACONS and not as a component
+	 * @return
+	 */
+	public Set<Location> getOnlyBeacons() {
+		return Sets.newHashSet(extraBeacons);
 	}
 	
 	public void clearBeacons() {

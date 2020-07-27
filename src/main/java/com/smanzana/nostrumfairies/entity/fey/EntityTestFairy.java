@@ -12,6 +12,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 
@@ -313,7 +314,16 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			}
 			Path currentPath = navigator.getPath();
 			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
-			navigator.setPath(currentPath, 1.0);
+			if (success) {
+				success = Paths.IsComplete(navigator.getPath(), target, 2);
+			}
+			if (currentPath == null) {
+				if (!success) {
+					navigator.setPath(currentPath, 1.0);
+				}
+			} else {
+				navigator.setPath(currentPath, 1.0);
+			}
 			if (success) {
 				return true;
 			} else if (this.getDistanceSq(target) < 1) {
