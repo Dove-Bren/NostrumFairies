@@ -59,9 +59,9 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	
 	private boolean shouldAttempt(BlockPos target) {
 		// Only invoke all of the expensive failure stuff if it's been a while or if we're attempting from a new location.
-		if (lastTicks != -1 || (theEntity.ticksExisted - lastTicks) < 20) {
-			// hasn't been enough time. Are the src and dest diff then?
-			if (target.equals(lastTarget) && theEntity.getPosition().equals(lastSource)) {
+		if (target.equals(lastTarget) && theEntity.getPosition().equals(lastSource)) {
+			if (lastTicks != -1 && (theEntity.ticksExisted - lastTicks) < 20) {
+				// hasn't been enough time to try again
 				return false;
 			}
 		}
@@ -128,7 +128,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			
 			for (Location beacon : beacons) {
 				Path subpath = super.getPathToPos(beacon.getPos());
-				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), 2)) {
+				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), theEntity.worldObj.isAirBlock(beacon.getPos()) ? 0 : 1)) {
 					LogisticsNode node = new LogisticsNode(beacon.getPos(), null, 0, getH(target, beacon.getPos()));
 					node.path = subpath;
 					return node;

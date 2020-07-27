@@ -131,120 +131,68 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		
 		return true;
 	}
+	
+	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
+		if (!worldObj.isAirBlock(targetPos)) {
+			do {
+				if (worldObj.isAirBlock(targetPos.north())) {
+					if (worldObj.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
+						targetPos = targetPos.north();
+						break;
+					} else if (worldObj.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
+						targetPos = targetPos.north().down();
+						break;
+					}
+				}
+				if (worldObj.isAirBlock(targetPos.south())) {
+					if (worldObj.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
+						targetPos = targetPos.south();
+						break;
+					} else if (worldObj.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
+						targetPos = targetPos.south().down();
+						break;
+					}
+				}
+				if (worldObj.isAirBlock(targetPos.east())) {
+					if (worldObj.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
+						targetPos = targetPos.east();
+						break;
+					} else if (worldObj.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
+						targetPos = targetPos.east().down();
+						break;
+					}
+				}
+				if (worldObj.isAirBlock(targetPos.west())) {
+					if (worldObj.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
+						targetPos = targetPos.west();
+						break;
+					} else if (worldObj.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
+						targetPos = targetPos.west().down();
+						break;
+					}
+				}
+				if (worldObj.isAirBlock(targetPos.up())) {
+					targetPos = targetPos.up();
+					break;
+				}
+				if (worldObj.isAirBlock(targetPos.down()) && worldObj.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
+					targetPos = targetPos.down();
+					break;
+				}
+			} while (false);
+		}
+		
+		if (allOrNothing) {
+			if (!worldObj.isAirBlock(targetPos)) {
+				targetPos = null;
+			}
+		}
+		
+		return targetPos;
+	}
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-//		if (task instanceof LogisticsTaskWithdrawItem) {
-//			LogisticsTaskWithdrawItem retrieve = (LogisticsTaskWithdrawItem) task;
-//			
-//			// Check where the retrieval task wants us to go to pick up
-//			BlockPos pickup = retrieve.getSource();
-//			if (pickup != null && !this.canReach(pickup, true)) {
-//				return false;
-//			}
-//			
-//			// Check for pathing
-//			ILogisticsComponent source = retrieve.getSourceComponent();
-//			if (source == null) {
-//				// entity
-//				if (this.getDistanceSqToEntity(retrieve.getSourceEntity()) < .2) {
-//					return true;
-//				}
-//				
-//				if (this.navigator.tryMoveToEntityLiving(retrieve.getSourceEntity(), 1.0)) {
-//					navigator.clearPathEntity();
-//					return true;
-//				}
-//			} else {
-//				BlockPos pos = source.getPosition();
-//				
-//				if (!worldObj.isAirBlock(pos)) {
-//					if (worldObj.isAirBlock(pos.north())) {
-//						pos = pos.north();
-//					} else if (worldObj.isAirBlock(pos.south())) {
-//						pos = pos.south();
-//					} else if (worldObj.isAirBlock(pos.east())) {
-//						pos = pos.east();
-//					} else if (worldObj.isAirBlock(pos.west())) {
-//						pos = pos.west();
-//					} else {
-//						pos = pos.up();
-//					}
-//				}
-//				
-//				if (this.getDistanceSq(pos) < .2 || this.getPosition().equals(pos)) {
-//					return true;
-//				}
-//				
-//				if (this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0)) {
-//					navigator.clearPathEntity();
-//					return true;
-//				}
-//			}
-//		} else if (task instanceof LogisticsTaskDepositItem) {
-//			LogisticsTaskDepositItem deposit = (LogisticsTaskDepositItem) task;
-//			
-//			// Check where the retrieval task wants us to go to pick up
-//			BlockPos pickup = deposit.getDestination();
-//			if (pickup != null && !this.canReach(pickup, true)) {
-//				return false;
-//			}
-//			
-//			// Check for pathing
-//			ILogisticsComponent source = deposit.getSourceComponent();
-//			if (source == null) {
-//				// entity
-//				if (this.getDistanceSqToEntity(deposit.getSourceEntity()) < .2) {
-//					return true;
-//				}
-//				if (this.navigator.tryMoveToEntityLiving(deposit.getSourceEntity(), 1.0)) {
-//					navigator.clearPathEntity();
-//					return true;
-//				}
-//			} else {
-//				BlockPos pos = source.getPosition();
-//				
-//				if (!worldObj.isAirBlock(pos)) {
-//					if (worldObj.isAirBlock(pos.north())) {
-//						pos = pos.north();
-//					} else if (worldObj.isAirBlock(pos.south())) {
-//						pos = pos.south();
-//					} else if (worldObj.isAirBlock(pos.east())) {
-//						pos = pos.east();
-//					} else if (worldObj.isAirBlock(pos.west())) {
-//						pos = pos.west();
-//					} else {
-//						pos = pos.up();
-//					}
-//				}
-//				
-//				if (this.getDistanceSq(pos) < .2 || this.getPosition().equals(pos)) {
-//					return true;
-//				}
-//				
-//				if (this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0)) {
-//					navigator.clearPathEntity();
-//					return true;
-//				}
-//			}
-//		} else if (task instanceof LogisticsTaskPickupItem) {
-//			LogisticsTaskPickupItem pickupTask = (LogisticsTaskPickupItem) task;
-//			
-//			// Check where the retrieval task wants us to go to pick up
-//			BlockPos pickup = pickupTask.getDestination();
-//			if (pickup != null && !this.canReach(pickup, true)) {
-//				return false;
-//			}
-//			
-//			// Check for pathing
-//			if (this.getDistanceSqToEntity(pickupTask.getEntityItem()) < .2) {
-//				return true;
-//			}
-//			if (this.navigator.tryMoveToEntityLiving(pickupTask.getEntityItem(), 1.0)) {
-//				navigator.clearPathEntity();
-//				return true;
-//			}
-//		} else if (task instanceof LogisticsTaskChopTree) {
 		if (task instanceof LogisticsTaskChopTree) {
 			LogisticsTaskChopTree chop = (LogisticsTaskChopTree) task;
 			
@@ -258,18 +206,9 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				return false;
 			}
 			
-			if (!worldObj.isAirBlock(pickup)) {
-				if (worldObj.isAirBlock(pickup.north())) {
-					pickup = pickup.north();
-				} else if (worldObj.isAirBlock(pickup.south())) {
-					pickup = pickup.south();
-				} else if (worldObj.isAirBlock(pickup.east())) {
-					pickup = pickup.east();
-				} else if (worldObj.isAirBlock(pickup.west())) {
-					pickup = pickup.west();
-				} else {
-					pickup = pickup.up();
-				}
+			pickup = findEmptySpot(pickup, true);
+			if (null == pickup) {
+				return false;
 			}
 			
 			// Check for pathing
@@ -288,24 +227,16 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				return false;
 			}
 			
-			// Check where the tree is
+			// Check where the block is
+			// EDIT mines have things go FAR down, so we ignore the distance check here
 			BlockPos target = mine.getTargetBlock();
-			if (target == null || !this.canReach(target, true)) {
+			if (target == null) {
 				return false;
 			}
 			
-			if (!worldObj.isAirBlock(target)) {
-				if (worldObj.isAirBlock(target.north())) {
-					target = target.north();
-				} else if (worldObj.isAirBlock(target.south())) {
-					target = target.south();
-				} else if (worldObj.isAirBlock(target.east())) {
-					target = target.east();
-				} else if (worldObj.isAirBlock(target.west())) {
-					target = target.west();
-				} else {
-					target = target.up();
-				}
+			target = findEmptySpot(target, true);
+			if (target == null) {
+				return false;
 			}
 			
 			// Check for pathing
@@ -528,23 +459,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
-							// TODO pull this out to a 'moveTo' or something instead of copying all over.
-							// Then upgrade other places to make sure there's somewhere to stand on lol
-							if (!worldObj.isAirBlock(movePos)) {
-								if (worldObj.isAirBlock(movePos.north()) && worldObj.isSideSolid(movePos.north().down(), EnumFacing.UP)) {
-									movePos = movePos.north();
-								} else if (worldObj.isAirBlock(movePos.south()) && worldObj.isSideSolid(movePos.south().down(), EnumFacing.UP)) {
-									movePos = movePos.south();
-								} else if (worldObj.isAirBlock(movePos.east()) && worldObj.isSideSolid(movePos.east().down(), EnumFacing.UP)) {
-									movePos = movePos.east();
-								} else if (worldObj.isAirBlock(movePos.west()) && worldObj.isSideSolid(movePos.west().down(), EnumFacing.UP)) {
-									movePos = movePos.west();
-								} else if (worldObj.isAirBlock(movePos.up())) {
-									movePos = movePos.up();
-								} else {
-									movePos = movePos.down();
-								}
-							}
+							movePos = findEmptySpot(movePos, false);
 							
 							// Is the block we shifted to where we are?
 							if (!this.getPosition().equals(movePos) && this.getDistanceSqToCenter(movePos) > 1) {
@@ -554,45 +469,6 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 							}
 						}
 					}
-//					else {
-//						// Check if we're close to where we need to be
-//						double distSq;
-//						if (movePos == null) {
-//							distSq = this.getDistanceSqToEntity(moveEntity);
-//						} else {
-//							distSq = this.getDistanceSq(movePos);
-//						}
-//						
-//						if (distSq < .2) {
-//							task.markSubtaskComplete();
-//							this.navigator.clearPathEntity();
-//						}
-//					}
-					// FIXME this runs every tick. Save pos?
-//					BlockPos pos = sub.getPos();
-//					if (pos == null) {
-//						EntityLivingBase entity = sub.getEntity();
-//						
-//					} else {
-//						if (worldObj.isAirBlock(pos.north())) {
-//							pos = pos.north();
-//						} else if (worldObj.isAirBlock(pos.south())) {
-//							pos = pos.south();
-//						} else if (worldObj.isAirBlock(pos.east())) {
-//							pos = pos.east();
-//						} else if (worldObj.isAirBlock(pos.west())) {
-//							pos = pos.west();
-//						}
-//						
-//						// TODO FIXME I think this is constantly making new paths?
-//						if (getPosition().distanceSq(pos) < .2) {
-//							task.markSubtaskComplete();
-//						} else if (!moveHelper.isUpdating()) {
-//							if (!this.getNavigator().tryMoveToXYZ(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f)) {
-//								this.moveHelper.setMoveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f);
-//							}
-//						}
-//					}
 				}
 				break;
 			}
