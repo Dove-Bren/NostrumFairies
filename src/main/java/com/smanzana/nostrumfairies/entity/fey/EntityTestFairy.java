@@ -216,7 +216,6 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				return true;
 			}
 			if (this.navigator.tryMoveToXYZ(pickup.getX(), pickup.getY(), pickup.getZ(), 1.0)) {
-				System.out.println("Navigator move to (" + pickup + ") worked");
 				navigator.clearPathEntity();
 				return true;
 			}

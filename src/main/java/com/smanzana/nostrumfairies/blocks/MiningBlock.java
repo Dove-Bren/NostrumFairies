@@ -9,6 +9,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -51,6 +52,9 @@ public class MiningBlock extends BlockContainer {
 	public static final String ID = "logistics_mining_block";
 	public static final int WORKER_REACH = 16;
 	public static final int MAJOR_LEVEL_DIFF = 16;
+	public static final int PLATFORM_WIDTH = 3;
+	public static final int STAIRCASE_RADIUS = 4;
+	public static final int SHAFT_DISTANCE = 4;
 	
 	private static MiningBlock instance = null;
 	public static MiningBlock instance() {
@@ -134,16 +138,25 @@ public class MiningBlock extends BlockContainer {
 		}
 		
 		private void makeMineTask(BlockPos pos) {
-			// TESTING
-			//worldObj.setBlockToAir(pos);
-			
+			makeMineTask(pos, null);
+		} 
+		
+		private void makeMineTask(BlockPos pos, BlockPos mineAt) {
 			LogisticsNetwork network = this.getNetwork();
 			if (network == null) {
 				return;
 			}
+			pos = pos.toImmutable();
 			
 			if (!taskMap.containsKey(pos)) {
-				LogisticsTaskMineBlock task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", worldObj, pos);
+				// Note: I'm using different constructors so that the mine task could change someday to do different things depending
+				// on the constructor
+				LogisticsTaskMineBlock task;
+				if (mineAt == null) {
+					task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", worldObj, pos);
+				} else {
+					task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", worldObj, pos, mineAt.toImmutable());
+				}
 				this.taskMap.put(pos, task);
 				network.getTaskRegistry().register(task, null);
 			}
@@ -282,6 +295,71 @@ public class MiningBlock extends BlockContainer {
 		 */
 		private void mineTo(BlockPos pos) {
 			
+			// Get platform level. Then move to the right X. Then mine up to the required Z.
+			// If X isn't beyond the platform, make sure to adjust where we 'start' at the right spot.
+			// Note X is rounded to 4 to spread shafts out
+			MutableBlockPos cursor = new MutableBlockPos();
+			final int effX = pos.getX() & ~3; // chop off bottom 2 bits, rounding down to nearest 4 
+			int y = platformToY(platformForY(pos.getY()));
+			int x;
+			int z;
+			boolean outside = true;
+			if (effX <= this.pos.getX() - (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
+				x = this.pos.getX() - (PLATFORM_WIDTH + STAIRCASE_RADIUS);
+				z = this.pos.getZ();
+			} else if (effX >= this.pos.getX() + (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
+				x = this.pos.getX() + (PLATFORM_WIDTH + STAIRCASE_RADIUS);
+				z = this.pos.getZ();
+			} else if (pos.getZ() <= this.pos.getZ() - (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
+				x = effX;
+				z = this.pos.getZ() - (PLATFORM_WIDTH + STAIRCASE_RADIUS);
+			} else if (pos.getZ() >= this.pos.getZ() + (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
+				x = effX;
+				z = this.pos.getZ() + (PLATFORM_WIDTH + STAIRCASE_RADIUS);
+			} else {
+				// inside the platform area??
+				x = effX;
+				z = pos.getZ();
+				outside = false;
+			}
+			
+			// Set the start location (and create a beacon!)
+			
+			cursor.setPos(x, y, z);
+			this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
+			
+			// First, get to the right x
+			int spaces = 0;
+			while (cursor.getX() != effX) {
+				clearBlock(cursor, false);
+				cursor.move(effX > cursor.getX() ? EnumFacing.EAST : EnumFacing.WEST);
+				
+				if (++spaces % 16 == 0) {
+					// Set a new beacon every once in a while
+					this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
+				}
+			}
+			
+			// Then walk to Z
+			while (cursor.getZ() != pos.getZ()) {
+				clearBlock(cursor, false);
+				cursor.move(pos.getZ() > cursor.getZ() ? EnumFacing.SOUTH : EnumFacing.NORTH);
+				
+				if (++spaces % 16 == 0) {
+					// Set a new beacon every once in a while
+					this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
+				}
+			}
+			
+			// Clear last (or first) block, if there is one
+			if (outside) {
+				clearBlock(cursor, false);
+			}
+			
+			// Then queue up the actual mining task
+			System.out.println("Mine to " + pos);
+			System.out.println("That's a " + worldObj.getBlockState(pos));
+			makeMineTask(pos, cursor);
 		}
 		
 		/**
@@ -292,7 +370,24 @@ public class MiningBlock extends BlockContainer {
 		 */
 		private boolean scanLayer(int level) {
 			boolean[] result = new boolean[]{false};
-			forEachOnLayer(getYFromLevel(level), (pos) -> {
+			int[] counter = new int[]{0};
+			final long startTime = System.currentTimeMillis();
+			forEachOnLayer(level, (pos) -> {
+				// Check run time every so often and stop if we've run a while
+					if (counter[0]++ % 256 == 0) {
+						final long now = System.currentTimeMillis();
+						if (now - startTime > 5) {
+							result[0] = true;
+							return false;
+						}
+					}
+				
+				// Stop after we have a bunch of tasks queued up
+				if (taskMap.size() > 100) {
+					result[0] = true;
+					return false;
+				}
+				
 				// Is this something we should mine?
 				if (IsOre(worldObj, pos)) {
 					mineTo(pos);
@@ -302,16 +397,13 @@ public class MiningBlock extends BlockContainer {
 				return true;
 			});
 			
-			// TODO testing! do not leave this in!!!!!!!!!
-			return false;
-			//return result[0];
+			return result[0];
 		}
 		
 		private boolean makePlatform(int level, boolean upper) {
 			// 17x17 ring with a doorway to the north (or south if !whole) that leads in
-			final int width = 3;
-			final int innerRadius = 4;
-			final int bounds = innerRadius + width;
+			
+			final int bounds = STAIRCASE_RADIUS + PLATFORM_WIDTH;
 			MutableBlockPos cursor = new MutableBlockPos();
 			boolean clear = true;
 			final int y = getYFromLevel(level);
@@ -320,10 +412,10 @@ public class MiningBlock extends BlockContainer {
 			for (int j = -bounds; j <= bounds; j++) {
 				// east or west ( i == +-bounds)? we fill in all j for these i
 				// north or south only clear top and bottom
-				if ((i >= -bounds && i <= -bounds + width)
-					|| (i >= bounds - width && i <= bounds)
-					|| (j >= -bounds && j <= -bounds + width)
-					|| (j >= bounds - width && j <= bounds)) {
+				if ((i >= -bounds && i <= -bounds + PLATFORM_WIDTH)
+					|| (i >= bounds - PLATFORM_WIDTH && i <= bounds)
+					|| (j >= -bounds && j <= -bounds + PLATFORM_WIDTH)
+					|| (j >= bounds - PLATFORM_WIDTH && j <= bounds)) {
 					// Note: we burrow centered on the actual TE but then shift our scan and
 					// mine area to chunk boundaries. So these x and z are not shifted.
 					final int x = pos.getX() + i;
@@ -335,16 +427,6 @@ public class MiningBlock extends BlockContainer {
 					}
 				} 
 			}
-			
-			// Finally, the door
-			cursor.setPos(0 + pos.getX(), y, pos.getZ() + (upper ? (innerRadius - 1) : -(innerRadius - 1)));
-			if (clearBlock(cursor, false)) {
-				clear = false;
-			}
-			
-			// Make staircase in front of door into a beacon
-			cursor.setPos(0 + pos.getX(), y, pos.getZ() + (upper ? (innerRadius - 2) : -(innerRadius - 2)));
-			this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
 			
 			return !clear;
 		}
@@ -400,6 +482,17 @@ public class MiningBlock extends BlockContainer {
 				}
 			}
 			
+			// Finally, the door and beacon
+			this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
+			cursor.move(upper ? EnumFacing.SOUTH : EnumFacing.NORTH);
+			if (clearBlock(cursor, false)) {
+				clear = false;
+			}
+			cursor.move(upper ? EnumFacing.SOUTH : EnumFacing.NORTH);
+			if (clearBlock(cursor, false)) {
+				clear = false;
+			}
+			
 			// Make special first-time door if needed?
 			// Make this should make a top-level platform instead?
 			// TODO
@@ -412,7 +505,7 @@ public class MiningBlock extends BlockContainer {
 		 * If the mine is already dug and looks good, returns false.
 		 * @return
 		 */
-		private boolean makeMine(int platformToMake) {
+		private boolean makeMine(int platformToMake, boolean repair) {
 			// mine holes start to the north.
 			// mine is a 5x5 spiral staircase all the way down, with platforms every (MAJOR_LEVEL_DIFF / 2) blocks.
 			// note: this is a place where MAJOR_LEVEL_DIFF isn't dynamic.  It needs to be 16 to fit the 5x5.
@@ -420,6 +513,8 @@ public class MiningBlock extends BlockContainer {
 			// Each platform is a 9x9 ring at the same y level connected to the north part of the spiral with a 1x3x1 doorway.
 			
 			// Each spot should be a 1x3x1 hole. Below it should be a solid block.
+			
+			// Repairs only take care of the staircase and the doorway.
 			final int deepest = this.getLowestLevel();
 			if (deepest == 0) {
 				return false;
@@ -432,9 +527,11 @@ public class MiningBlock extends BlockContainer {
 				if (makeStaircaseSegment(level, upper)) {
 					dug = true;
 				}
-				level += MAJOR_LEVEL_DIFF / 2;
-				if (makePlatform(level, upper)) {
-					dug = true;
+				if (!repair) {
+					level += MAJOR_LEVEL_DIFF / 2;
+					if (makePlatform(level, upper)) {
+						dug = true;
+					}
 				}
 			}
 			
@@ -450,7 +547,7 @@ public class MiningBlock extends BlockContainer {
 		private boolean repairMine(int deepestPlatform) {
 			boolean dug = false;
 			for (int platform = 0; platform <= deepestPlatform; platform++) {
-				dug = makeMine(platform) || dug;
+				dug = makeMine(platform, true) || dug;
 			}
 			return dug;
 		}
@@ -527,7 +624,7 @@ public class MiningBlock extends BlockContainer {
 				// If scan level is behind platform, scan. Otherwise, make a platform.
 				// Keep doing both if they run and find no work to do. Could limit this here. Once per minute seems long tho.
 				if (nextPlatform == 0 || scanLevel > platformToLevel(nextPlatform)) {
-					didWork = makeMine(nextPlatform);
+					didWork = makeMine(nextPlatform, false);
 					nextPlatform++;
 				}
 				
@@ -542,16 +639,30 @@ public class MiningBlock extends BlockContainer {
 			}
 		}
 		
+		private void cleanTasks() {
+			// Clean out any finished tasks
+			List<BlockPos> keys = Lists.newArrayList(taskMap.keySet());
+			for (BlockPos pos : keys) {
+				LogisticsTaskMineBlock task = taskMap.get(pos);
+				if (task != null && task.isComplete()) {
+					removeTask(pos);
+				}
+			}
+		}
+		
 		@Override
 		public void update() {
 			if (this.worldObj.isRemote) {
 				return;
 			}
 			
-			int period = (scanLevel < getLowestLevel()) ? 60 : 180;
+			if (this.tickCount % 5 == 0) {
+				cleanTasks();
+			}
 			if (this.tickCount % (20) == 0) {
 				repairScan();
 			}
+			int period = (scanLevel < getLowestLevel()) ? 60 : 180;
 			if (this.tickCount % (20 * period) == 0) {
 				scan();
 			}
@@ -666,7 +777,7 @@ public class MiningBlock extends BlockContainer {
 			}
 		}
 		
-		return true;
+		return false;
 	}
 	
 	private static Set<String> ExtraOres = null;

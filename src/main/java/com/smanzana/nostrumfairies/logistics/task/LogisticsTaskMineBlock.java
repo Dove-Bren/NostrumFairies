@@ -35,6 +35,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 	private String displayName;
 	private World world;
 	private BlockPos block;
+	private BlockPos mineAt;
 	private ILogisticsComponent owningComponent;
 	
 	private @Nullable List<ILogisticsTask> mergedTasks;
@@ -51,8 +52,13 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 	private boolean lastOreResult;
 
 	public LogisticsTaskMineBlock(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos) {
+		this(owningComponent, displayName, world, pos, pos);
+	}
+	
+	public LogisticsTaskMineBlock(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos, BlockPos mineAt) {
 		this.displayName = displayName;
 		this.block = pos;
+		this.mineAt = mineAt;
 		this.world = world;
 		this.owningComponent = owningComponent;
 		phase = Phase.IDLE;
@@ -100,12 +106,16 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			return false;
 		}
 		
+		if (this.block.getX() == 825 && block.getZ() == -775) {
+			System.out.print(".");
+		}
+		
 		// Also check here if the area around the block is a) loaded and b) exposed
 		if (!world.isAreaLoaded(block, 1)) {
 			return false;
 		}
 		
-		BlockPos pos = block;
+		BlockPos pos = mineAt;
 		if (world.isAirBlock(pos.north())) {
 			pos = pos.north();
 		} else if (world.isAirBlock(pos.south())) {
@@ -230,7 +240,8 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 	}
 	
 	public BlockPos getTargetBlock() {
-		return block;
+		return mineAt;
+		// TODO no this should be block and there should be a different func for the mine location
 	}
 	
 	public boolean isActive() {
@@ -254,7 +265,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		this.returnTask = LogisticsSubTask.Move(owningComponent.getPosition());
 		
 		if (mergedTasks == null) {
-			moveTask = LogisticsSubTask.Move(block);
+			moveTask = LogisticsSubTask.Move(mineAt);
 			workTask = LogisticsSubTask.Break(block);
 			
 			// Figure out hardness for anim count
