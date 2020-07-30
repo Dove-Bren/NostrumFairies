@@ -273,9 +273,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			float secs = (state.getBlockHardness(world, block)) * 5;
 			// could put tool stuff here
 			
-			//animCount = (int) Math.ceil(secs * 3); // 3 break completes per second?
-			// TODO testing code
-			animCount = 1;
+			animCount = (int) Math.ceil(secs * 1.5); // 1.5 break completes per second?
 		}
 		
 		return true;

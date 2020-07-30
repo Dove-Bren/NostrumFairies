@@ -24,23 +24,27 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrumfairies.utils.OreDict;
 import com.smanzana.nostrummagica.blocks.EssenceOre;
 import com.smanzana.nostrummagica.blocks.ManiOre;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockTorch;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -163,6 +167,35 @@ public class MiningBlock extends BlockContainer {
 			return false;
 		}
 		
+		@Override
+		public void takeItem(ItemStack stack) {
+			if (buildingMaterial != null && ItemStacks.stacksMatch(stack, this.buildingMaterial)) {
+				this.buildingMaterial.stackSize -= stack.stackSize;
+				if (buildingMaterial.stackSize <= 0) {
+					buildingMaterial = null;
+				}
+			} else if (torches != null && ItemStacks.stacksMatch(stack, this.torches)) {
+				this.torches.stackSize -= stack.stackSize;
+				if (torches.stackSize <= 0) {
+					torches = null;
+				}
+			}
+			this.dirty();
+		}
+		
+		@Override
+		public void addItem(ItemStack stack) {
+			// Less likely to be torches lol
+			if (torches != null && ItemStacks.stacksMatch(stack, this.torches)) {
+				torches.stackSize = Math.min(torches.getMaxStackSize(), torches.stackSize + stack.stackSize); 
+			} else if (buildingMaterial != null && ItemStacks.stacksMatch(stack, this.buildingMaterial)) {
+				buildingMaterial.stackSize = Math.min(buildingMaterial.getMaxStackSize(), buildingMaterial.stackSize + stack.stackSize);
+			} else if (buildingMaterial == null && isMaterials(stack)) {
+				this.buildingMaterial = stack;
+			}
+			this.dirty();
+		}
+		
 		private void refreshRequester() {
 			if (this.materialRequester == null) {
 				materialRequester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent); // TODO make using buffer chests configurable!
@@ -211,15 +244,22 @@ public class MiningBlock extends BlockContainer {
 				return null;
 			}
 			
+			if (this.platformRequests == 0) {
+				return new ArrayList<>();
+			}
+			
+			
+			int existing = 0;
 			if (this.buildingMaterial != null) {
 				base = this.buildingMaterial;
+				existing = base.stackSize;
 			} else {
 				// If we're auto-fetching, just take cobble
 				base = getRepairStack();
 			}
 			
 			List<ItemStack> list = new ArrayList<>(platformRequests);
-			int count = platformRequests;
+			int count = platformRequests - existing;
 			while (count > 0) {
 				ItemStack stack = base.copy();
 				stack.stackSize = Math.min(count, stack.getMaxStackSize());
@@ -281,13 +321,27 @@ public class MiningBlock extends BlockContainer {
 				
 				// Request block placement
 				LogisticsTaskPlaceBlock task;
+				IBlockState state = Blocks.COBBLESTONE.getDefaultState();
+				if (this.buildingMaterial != null) {
+					if (buildingMaterial.getItem() instanceof ItemBlock) {
+						// I don't trust the null entity in there...
+						ItemBlock itemBlock = (ItemBlock) buildingMaterial.getItem();
+						try {
+							int meta = itemBlock.getMetadata(buildingMaterial.getMetadata());
+							state = itemBlock.block.getStateForPlacement(worldObj, pos, EnumFacing.UP, 0, 0, 0, meta, null, buildingMaterial.copy());
+						} catch (Exception e) {
+							// fall back to default state
+							state = itemBlock.block.getDefaultState(); 
+						}
+					}
+				}
 				if (standAt == null) {
 					task = new LogisticsTaskPlaceBlock(this.getNetworkComponent(), "Mine Repair Task",
-							getRepairStack(), Blocks.COBBLESTONE.getDefaultState(),
+							getRepairStack(), state,
 							worldObj, pos);
 				} else {
 					task = new LogisticsTaskPlaceBlock(this.getNetworkComponent(), "Mine Repair Task",
-							getRepairStack(), Blocks.COBBLESTONE.getDefaultState(),
+							getRepairStack(), state,
 							worldObj, pos, standAt.toImmutable());
 				}
 						
@@ -313,16 +367,16 @@ public class MiningBlock extends BlockContainer {
 			
 			network.getTaskRegistry().revoke(task);
 			oreLocations.remove(base);
-			this.markDirty();
+			this.dirty();
 		}
 		
 		private int getYFromLevel(int level) {
 			return pos.getY() - level;
 		}
 		
-		private int levelFromY(int y) {
-			return Math.max(0, pos.getY() - y);
-		}
+//		private int levelFromY(int y) {
+//			return Math.max(0, pos.getY() - y);
+//		}
 		
 		private int platformToY(int platform) {
 			return getYFromLevel(platformToLevel(platform));
@@ -491,7 +545,7 @@ public class MiningBlock extends BlockContainer {
 			
 			// And mark that we're going there in the first place
 			oreLocations.add(pos.toImmutable());
-			this.markDirty();
+			this.dirty();
 		}
 		
 		/**
@@ -817,7 +871,7 @@ public class MiningBlock extends BlockContainer {
 				if (task != null && task.isComplete()) {
 					removeTask(pos);
 					oreLocations.remove(pos);
-					this.markDirty();
+					this.dirty();
 				}
 			}
 		}
@@ -919,7 +973,7 @@ public class MiningBlock extends BlockContainer {
 			super.readFromNBT(nbt);
 			
 			this.oreLocations.clear();
-			if (NostrumFairies.getWorld(0).isRemote) {
+			if (worldObj != null && worldObj.isRemote) {
 				NBTTagList list = nbt.getTagList(NBT_ORES, NBT.TAG_LONG);
 				for (int i = 0; i < list.tagCount(); i++) {
 					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
@@ -936,9 +990,6 @@ public class MiningBlock extends BlockContainer {
 			this.buildingMaterial = null;
 			if (nbt.hasKey(NBT_PLATFORMS)) {
 				this.buildingMaterial = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_PLATFORMS));
-				
-				// Set platform requests negative so future on es take from inventory first
-				this.platformRequests = -buildingMaterial.stackSize;
 			}
 			this.torches = null;
 			if (nbt.hasKey(NBT_TORCHES)) {
@@ -962,6 +1013,44 @@ public class MiningBlock extends BlockContainer {
 			if (task instanceof LogisticsTaskPlaceBlock) {
 				this.platformRequests--;
 			}
+		}
+		
+		public @Nullable ItemStack getMaterials() {
+			return this.buildingMaterial;
+		}
+		
+		public boolean isMaterials(@Nullable ItemStack stack) {
+			return stack == null || stack.getItem() instanceof ItemBlock;
+		}
+		
+		public void setMaterials(@Nullable ItemStack stack) {
+			if (isMaterials(stack)) {
+				this.buildingMaterial = stack;
+				this.dirty();
+			}
+		}
+		
+		public @Nullable ItemStack getTorches() {
+			return this.torches;
+		}
+		
+		public boolean isTorches(@Nullable ItemStack stack) {
+			return stack == null
+				|| (torches.getItem() instanceof ItemBlock && ((ItemBlock) torches.getItem()).getBlock() instanceof BlockTorch);
+		}
+		
+		public void setTorches(@Nullable ItemStack torches) {
+			if (isTorches(torches)) {
+				this.torches = torches;
+				this.dirty();
+			}
+		}
+		
+		private void dirty() {
+			worldObj.markBlockRangeForRenderUpdate(pos, pos);
+			worldObj.notifyBlockUpdate(pos, this.worldObj.getBlockState(pos), this.worldObj.getBlockState(pos), 3);
+			worldObj.scheduleBlockUpdate(pos, this.getBlockType(),0,0);
+			this.markDirty();
 		}
 	}
 	
@@ -1004,7 +1093,10 @@ public class MiningBlock extends BlockContainer {
 					GlStateManager.disableBlend();
 					GlStateManager.disableDepth();
 					
+					OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+					
 					for (BlockPos target : te.oreLocations) {
+						
 						GlStateManager.pushMatrix();
 						GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
 						buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
@@ -1013,6 +1105,7 @@ public class MiningBlock extends BlockContainer {
 						buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
 						buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
 						buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
+						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
 						
 						tessellator.draw();
 						
@@ -1022,6 +1115,7 @@ public class MiningBlock extends BlockContainer {
 						buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
 						buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
 						buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
+						buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
 						
 						tessellator.draw();
 						
