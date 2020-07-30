@@ -32,6 +32,7 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 	protected @Nullable LogisticsNetwork network;
 	private @Nullable ILogisticsComponent component;
 	private @Nullable EntityLivingBase entity;
+	private @Nullable ILogisticsTaskListener chainListener;
 	
 	private LogisticsItemTaskRequester(LogisticsNetwork network) {
 		this.currentTasks = new LinkedList<>();
@@ -54,6 +55,10 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 	
 	public @Nullable EntityLivingBase getEntityRequester() {
 		return entity;
+	}
+	
+	public void addChainListener(ILogisticsTaskListener chainListener) {
+		this.chainListener = chainListener;
 	}
 	
 	public void setNetwork(@Nullable LogisticsNetwork network) {
@@ -203,16 +208,24 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 	
 	@Override
 	public void onTaskDrop(ILogisticsTask task, IFeyWorker worker) {
-		; // Don't actually care, but a subclass could if they wanted
+		// Subclasses can extend to get this themselves instead of passing themselves in as chain listeners.
+		// Or they can pass in something else as a chain listener.
+		if (this.chainListener != null) {
+			this.chainListener.onTaskDrop(task, worker);
+		}
 	}
 
 	@Override
 	public void onTaskAccept(ILogisticsTask task, IFeyWorker worker) {
-		; // Don't actually care, but a subclass could if they wanted
+		if (this.chainListener != null) {
+			this.chainListener.onTaskAccept(task, worker);
+		}
 	}
 	
 	@Override
 	public void onTaskComplete(ILogisticsTask task, IFeyWorker worker) {
-		; // Don't actually care, but a subclass could if they wanted
+		if (this.chainListener != null) {
+			this.chainListener.onTaskComplete(task, worker);
+		}
 	}
 }

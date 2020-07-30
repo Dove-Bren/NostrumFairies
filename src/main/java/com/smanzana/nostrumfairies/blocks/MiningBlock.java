@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.blocks;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -15,9 +16,13 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.OreDict;
 import com.smanzana.nostrummagica.blocks.EssenceOre;
@@ -105,16 +110,16 @@ public class MiningBlock extends BlockContainer {
 		return false;
 	}
 	
-	public static class MiningBlockTileEntity extends LogisticsTileEntity implements ITickable{
+	public static class MiningBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener {
 
 		private int tickCount;
-		private Map<BlockPos, LogisticsTaskMineBlock> taskMap;
-		private LogisticsItemWithdrawRequester materialRequester; // TODO initialize! lol
+		private Map<BlockPos, ILogisticsTask> taskMap;
+		private LogisticsItemWithdrawRequester materialRequester;
 		private int radius;
 		
 		// Persisted data
 		private ItemStack buildingMaterial;
-		// TODO persist this!!!
+		private ItemStack torches;
 		private Set<BlockPos> beacons; // Beacons we've placed (for re-placement on load) 
 		
 		private int chunkXOffset; // rediscovered each time
@@ -122,8 +127,8 @@ public class MiningBlock extends BlockContainer {
 		private int lowestLevel; // ^
 		private int scanLevel; // reset to 0 on load but that should mean 1-time long scan
 		private int nextPlatform; // ^
-		
 		private int scanProgress; // When we early-out of a scan, where to pick up next time
+		private int platformRequests; // Number of platform blocks currently needed
 		
 		// Rendering variables
 		protected List<BlockPos> oreLocations;
@@ -156,6 +161,73 @@ public class MiningBlock extends BlockContainer {
 		@Override
 		public boolean canAccept(List<ItemDeepStack> stacks) {
 			return false;
+		}
+		
+		private void refreshRequester() {
+			if (this.materialRequester == null) {
+				materialRequester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent); // TODO make using buffer chests configurable!
+				materialRequester.addChainListener(this);
+			}
+			materialRequester.updateRequestedItems(getItemRequests());
+		}
+		
+		@Override
+		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
+			super.setNetworkComponent(component);
+			
+			if (worldObj != null && !worldObj.isRemote && materialRequester == null) {
+				refreshRequester();
+			}
+		}
+		
+		@Override
+		public void onLeaveNetwork() {
+			if (!worldObj.isRemote && materialRequester != null) {
+				materialRequester.clearRequests();
+				materialRequester.setNetwork(null);
+			}
+			
+			super.onLeaveNetwork();
+		}
+		
+		@Override
+		public void onJoinNetwork(LogisticsNetwork network) {
+			if (!worldObj.isRemote && materialRequester != null) {
+				refreshRequester();
+			}
+			
+			super.onJoinNetwork(network);
+		}
+		
+		protected ItemStack getRepairStack() {
+			return new ItemStack(Blocks.COBBLESTONE);
+		}
+		
+		protected List<ItemStack> getItemRequests() {
+			ItemStack base;
+			LogisticsNetwork network = this.getNetwork();
+			
+			if (network == null) {
+				return null;
+			}
+			
+			if (this.buildingMaterial != null) {
+				base = this.buildingMaterial;
+			} else {
+				// If we're auto-fetching, just take cobble
+				base = getRepairStack();
+			}
+			
+			List<ItemStack> list = new ArrayList<>(platformRequests);
+			int count = platformRequests;
+			while (count > 0) {
+				ItemStack stack = base.copy();
+				stack.stackSize = Math.min(count, stack.getMaxStackSize());
+				count -= stack.stackSize;
+				list.add(stack);
+			}
+			
+			return list;
 		}
 		
 		private void addBeacon(BlockPos pos) {
@@ -191,26 +263,44 @@ public class MiningBlock extends BlockContainer {
 			}
 		}
 		
-		private void makeRepairTask(BlockPos pos) {
+		private void makeRepairTask(BlockPos pos, @Nullable BlockPos standAt) {
 			// Actually need two tasks: one to request the material, and one to go place it
 			
 			// so make some other list that is our item list and update requester.
 			// and hook up to the logistics interface to expose those items to dwarves
+			LogisticsNetwork network = this.getNetwork();
+			if (network == null) {
+				return;
+			}
 			
-			// Putting on hold until the digging part is done
-//			broke() {
-//				/*
-//				 * Need to make a repair task (including waiting) to place missing blocks.
-//				 * And need to hook up requester.
-//				 * And then need to make platform creation code (makeMine())
-//				 * And then shaft creation code.
-//				 */
-//			}
-			worldObj.setBlockState(pos, Blocks.LOG.getDefaultState());
+			pos = pos.toImmutable();
+			if (!taskMap.containsKey(pos)) {
+				// Request platform material
+				platformRequests++;
+				refreshRequester();
+				
+				// Request block placement
+				LogisticsTaskPlaceBlock task;
+				if (standAt == null) {
+					task = new LogisticsTaskPlaceBlock(this.getNetworkComponent(), "Mine Repair Task",
+							getRepairStack(), Blocks.COBBLESTONE.getDefaultState(),
+							worldObj, pos);
+				} else {
+					task = new LogisticsTaskPlaceBlock(this.getNetworkComponent(), "Mine Repair Task",
+							getRepairStack(), Blocks.COBBLESTONE.getDefaultState(),
+							worldObj, pos, standAt.toImmutable());
+				}
+						
+				
+				this.taskMap.put(pos, task);
+				network.getTaskRegistry().register(task, null);
+			}
+			
+			
 		}
 		
 		private void removeTask(BlockPos base) {
-			LogisticsTaskMineBlock task = taskMap.remove(base);
+			ILogisticsTask task = taskMap.remove(base);
 			if (task == null) {
 				// We call this freely from event handling. Ignore it.
 				return;
@@ -293,7 +383,7 @@ public class MiningBlock extends BlockContainer {
 		 * Makes sure the provided location is a 1x3x1 space with a block underneath
 		 * @param base
 		 */
-		private boolean clearBlock(BlockPos base, boolean tall) {
+		private boolean clearBlock(BlockPos base, boolean tall, @Nullable BlockPos lastPos) {
 			// should base be the block underneath or the first air block??
 			
 			base = base.toImmutable();
@@ -301,7 +391,7 @@ public class MiningBlock extends BlockContainer {
 			
 			// check underneath
 			if (!worldObj.isSideSolid(base.down(), EnumFacing.UP)) {
-				makeRepairTask(base.down());
+				makeRepairTask(base.down(), lastPos);
 				tasked = true;
 			}
 			
@@ -363,10 +453,14 @@ public class MiningBlock extends BlockContainer {
 			cursor.setPos(x, y, z);
 			this.addBeacon(cursor.toImmutable());
 			
+			// Keep track of last for platform building
+			MutableBlockPos last = new MutableBlockPos(cursor);
+			
 			// First, get to the right x
 			int spaces = 0;
 			while (cursor.getX() != effX) {
-				clearBlock(cursor, false);
+				clearBlock(cursor, false, last);
+				last.setPos(cursor);
 				cursor.move(effX > cursor.getX() ? EnumFacing.EAST : EnumFacing.WEST);
 				
 				if (++spaces % 16 == 0) {
@@ -377,7 +471,8 @@ public class MiningBlock extends BlockContainer {
 			
 			// Then walk to Z
 			while (cursor.getZ() != pos.getZ()) {
-				clearBlock(cursor, false);
+				clearBlock(cursor, false, last);
+				last.setPos(cursor);
 				cursor.move(pos.getZ() > cursor.getZ() ? EnumFacing.SOUTH : EnumFacing.NORTH);
 				
 				if (++spaces % 16 == 0) {
@@ -388,7 +483,7 @@ public class MiningBlock extends BlockContainer {
 			
 			// Clear last (or first) block, if there is one
 			if (outside) {
-				clearBlock(cursor, false);
+				clearBlock(cursor, false, last);
 			}
 			
 			// Then queue up the actual mining task
@@ -455,6 +550,7 @@ public class MiningBlock extends BlockContainer {
 			
 			final int bounds = STAIRCASE_RADIUS + PLATFORM_WIDTH;
 			MutableBlockPos cursor = new MutableBlockPos();
+			MutableBlockPos last = null;
 			boolean clear = true;
 			final int y = getYFromLevel(level);
 			
@@ -471,8 +567,13 @@ public class MiningBlock extends BlockContainer {
 					final int x = pos.getX() + i;
 					final int z = pos.getZ() + j;
 					
+					if (last == null) {
+						last = new MutableBlockPos(x, y, z);
+					} else {
+						last.setPos(cursor);
+					}
 					cursor.setPos(x, y, z);
-					if (clearBlock(cursor, false)) {
+					if (clearBlock(cursor, false, last)) {
 						clear = false;
 					}
 				} 
@@ -490,6 +591,7 @@ public class MiningBlock extends BlockContainer {
 		 */
 		private boolean makeStaircaseSegment(int level, boolean upper) {
 			MutableBlockPos cursor = new MutableBlockPos();
+			MutableBlockPos last = new MutableBlockPos();
 			boolean clear = true;
 			
 			// 5x5 spiral staircase 'starting' to the north and descending 16 blocks in
@@ -508,6 +610,8 @@ public class MiningBlock extends BlockContainer {
 						: (i < startOffset + edgeLength + edgeLength ? EnumFacing.SOUTH
 						: (i < startOffset + edgeLength + edgeLength + edgeLength ? EnumFacing.WEST
 						: EnumFacing.NORTH)));
+				
+				last.setPos(cursor);
 				switch (side) {
 				case NORTH:
 					cursor.move(EnumFacing.EAST);
@@ -527,19 +631,22 @@ public class MiningBlock extends BlockContainer {
 				}
 				cursor.move(EnumFacing.DOWN);
 				
-				if (clearBlock(cursor, true)) {
+				if (clearBlock(cursor, true, last)) {
 					clear = false;
 				}
 			}
 			
 			// Finally, the door and beacon
 			this.addBeacon(cursor.toImmutable());
+			last.setPos(cursor);
 			cursor.move(upper ? EnumFacing.SOUTH : EnumFacing.NORTH);
-			if (clearBlock(cursor, false)) {
+			if (clearBlock(cursor, false, last)) {
 				clear = false;
 			}
+			
+			last.setPos(cursor);
 			cursor.move(upper ? EnumFacing.SOUTH : EnumFacing.NORTH);
-			if (clearBlock(cursor, false)) {
+			if (clearBlock(cursor, false, last)) {
 				clear = false;
 			}
 			
@@ -706,7 +813,7 @@ public class MiningBlock extends BlockContainer {
 			// Clean out any finished tasks
 			List<BlockPos> keys = Lists.newArrayList(taskMap.keySet());
 			for (BlockPos pos : keys) {
-				LogisticsTaskMineBlock task = taskMap.get(pos);
+				ILogisticsTask task = taskMap.get(pos);
 				if (task != null && task.isComplete()) {
 					removeTask(pos);
 					oreLocations.remove(pos);
@@ -760,6 +867,10 @@ public class MiningBlock extends BlockContainer {
 			if (!worldIn.isRemote) {
 				MinecraftForge.EVENT_BUS.register(this);
 			}
+			
+			if (this.networkComponent != null && !worldIn.isRemote && materialRequester == null) {
+				refreshRequester();
+			}
 		}
 		
 		@Override
@@ -771,6 +882,9 @@ public class MiningBlock extends BlockContainer {
 		}
 		
 		public static final String NBT_ORES = "ores";
+		public static final String NBT_BEACONS = "beacons";
+		public static final String NBT_PLATFORMS = "platforms";
+		public static final String NBT_TORCHES = "torches";
 		
 		@Override
 		public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
@@ -788,7 +902,14 @@ public class MiningBlock extends BlockContainer {
 			for (BlockPos pos : beacons) {
 				list.appendTag(new NBTTagLong(pos.toLong()));
 			}
-			nbt.setTag("beacons", list);
+			nbt.setTag(NBT_BEACONS, list);
+			
+			if (this.buildingMaterial != null) {
+				nbt.setTag(NBT_PLATFORMS, this.buildingMaterial.serializeNBT());
+			}
+			if (this.torches != null) {
+				nbt.setTag(NBT_TORCHES, this.torches.serializeNBT());
+			}
 			
 			return nbt;
 		}
@@ -805,11 +926,41 @@ public class MiningBlock extends BlockContainer {
 					oreLocations.add(pos);
 				}
 			} else {
-				NBTTagList list = nbt.getTagList("beacons", NBT.TAG_LONG);
+				NBTTagList list = nbt.getTagList(NBT_BEACONS, NBT.TAG_LONG);
 				for (int i = 0; i < list.tagCount(); i++) {
 					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
 					beacons.add(pos);
 				}
+			}
+			
+			this.buildingMaterial = null;
+			if (nbt.hasKey(NBT_PLATFORMS)) {
+				this.buildingMaterial = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_PLATFORMS));
+				
+				// Set platform requests negative so future on es take from inventory first
+				this.platformRequests = -buildingMaterial.stackSize;
+			}
+			this.torches = null;
+			if (nbt.hasKey(NBT_TORCHES)) {
+				this.torches = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_TORCHES));
+			}
+		}
+
+		@Override
+		public void onTaskDrop(ILogisticsTask task, IFeyWorker worker) {
+			;
+		}
+
+		@Override
+		public void onTaskAccept(ILogisticsTask task, IFeyWorker worker) {
+			;
+		}
+
+		@Override
+		public void onTaskComplete(ILogisticsTask task, IFeyWorker worker) {
+			// If this was a material request, decrement our outstanding count
+			if (task instanceof LogisticsTaskPlaceBlock) {
+				this.platformRequests--;
 			}
 		}
 	}

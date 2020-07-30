@@ -106,10 +106,6 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			return false;
 		}
 		
-		if (this.block.getX() == 825 && block.getZ() == -775) {
-			System.out.print(".");
-		}
-		
 		// Also check here if the area around the block is a) loaded and b) exposed
 		if (!world.isAreaLoaded(block, 1)) {
 			return false;
@@ -240,8 +236,11 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 	}
 	
 	public BlockPos getTargetBlock() {
+		return block;
+	}
+	
+	public BlockPos getTargetMineLoc() {
 		return mineAt;
-		// TODO no this should be block and there should be a different func for the mine location
 	}
 	
 	public boolean isActive() {

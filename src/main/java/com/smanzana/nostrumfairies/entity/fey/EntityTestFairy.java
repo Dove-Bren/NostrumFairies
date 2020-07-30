@@ -12,6 +12,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
@@ -238,7 +239,48 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			
 			// Check where the block is
 			// EDIT mines have things go FAR down, so we ignore the distance check here
-			BlockPos target = mine.getTargetBlock();
+			BlockPos target = mine.getTargetMineLoc();
+			if (target == null) {
+				return false;
+			}
+			
+			target = findEmptySpot(target, true);
+			if (target == null) {
+				return false;
+			}
+			
+			// Check for pathing
+			if (this.getDistanceSq(target) < .2) {
+				return true;
+			}
+			Path currentPath = navigator.getPath();
+			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			if (success) {
+				success = Paths.IsComplete(navigator.getPath(), target, 2);
+			}
+			if (currentPath == null) {
+				if (!success) {
+					navigator.setPath(currentPath, 1.0);
+				}
+			} else {
+				navigator.setPath(currentPath, 1.0);
+			}
+			if (success) {
+				return true;
+			} else if (this.getDistanceSq(target) < 1) {
+				// extra case for if the navigator refuses cause we're too close
+				return true;
+			}
+		} else if (task instanceof LogisticsTaskPlaceBlock) {
+			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
+			
+			if (place.getWorld() != this.worldObj) {
+				return false;
+			}
+			
+			// Check where the block is
+			// EDIT mines have things go FAR down, so we ignore the distance check here
+			BlockPos target = place.getTargetPlaceLoc();
 			if (target == null) {
 				return false;
 			}
