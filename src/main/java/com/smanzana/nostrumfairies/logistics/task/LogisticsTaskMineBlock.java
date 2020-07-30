@@ -441,10 +441,16 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		}
 		
 		for (int i = 0; i < heldItems.length; i++) {
+			if (heldItems[i] == null) {
+				continue;
+			}
 			items[i] = heldItems[i].copy();
 		}
 		
 		for (ItemStack stack : items) {
+			if (stack == null) {
+				continue;
+			}
 			fairy.removeItem(stack);
 			world.spawnEntityInWorld(new EntityItem(world, x, y, z, stack));
 		}

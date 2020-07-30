@@ -5,6 +5,7 @@ import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
+import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
@@ -114,6 +115,13 @@ public class CommonProxy {
     	GameRegistry.register(
     			(new ItemBlock(MiningBlock.instance())).setRegistryName(MiningBlock.ID));
     	MiningBlock.init();
+    	
+    	GameRegistry.register(MagicLight.Bright(),
+    			new ResourceLocation(NostrumFairies.MODID, MagicLight.BrightID));
+    	GameRegistry.register(MagicLight.Medium(),
+    			new ResourceLocation(NostrumFairies.MODID, MagicLight.MediumID));
+    	GameRegistry.register(MagicLight.Dim(),
+    			new ResourceLocation(NostrumFairies.MODID, MagicLight.DimID));
     }
 
 	public EntityPlayer getPlayer() {

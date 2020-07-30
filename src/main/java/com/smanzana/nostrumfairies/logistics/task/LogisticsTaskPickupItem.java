@@ -262,6 +262,9 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 		ItemStack items[] = Arrays.copyOf(old, old.length);
 		
 		for (ItemStack stack : items) {
+			if (stack == null) {
+				continue;
+			}
 			dropoffComponent.addItem(stack);
 			worker.removeItem(stack);
 		}

@@ -2,6 +2,8 @@ package com.smanzana.nostrumfairies.entity.fey;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
+import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -16,23 +18,31 @@ import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 
-	private static final String NBT_ITEM = "helditem";
+	private static final String NBT_ITEMS = "helditems";
+	private static final int INV_SIZE = 5;
 	
-	private ItemStack heldItem;
+	private InventoryBasic inventory;
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	
@@ -40,6 +50,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		super(world);
 		this.height = .6f;
 		this.workDistanceSq = 24 * 24;
+		this.inventory = new InventoryBasic("Fairy Inv", false, INV_SIZE);
 	}
 
 	@Override
@@ -69,46 +80,45 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	public ItemStack[] getCarriedItems() {
-		return new ItemStack[]{heldItem};
+		ItemStack[] stacks = new ItemStack[INV_SIZE];
+		int idx = 0;
+		for (int i = 0; i < INV_SIZE; i++) {
+			ItemStack stack = inventory.getStackInSlot(i);
+			if (stack != null) {
+				stacks[idx++] = stack;
+			}
+		}
+		return stacks;
 	}
 
 	@Override
 	public boolean canAccept(ItemStack stack) {
-		return heldItem == null ||
-				(ItemStacks.stacksMatch(heldItem, stack) && heldItem.stackSize + stack.stackSize < heldItem.getMaxStackSize());
+		return ItemStacks.canFit(inventory, stack);
 	}
 	
 	@Override
 	public boolean canAccept(ItemDeepStack stack) {
-		// we know we can't if it's more than one regular ItemStack
-		if (stack.getCount() > stack.getTemplate().getMaxStackSize()) {
-			return false;
-		}
-		
-		// Looks like it's only actually one stack.
-		return canAccept(stack.copy().splitStack(stack.getTemplate().getMaxStackSize()));
+		return ItemStacks.canFitAll(inventory, Lists.newArrayList(stack));
 	}
 
 	@Override
 	public void addItem(ItemStack stack) {
-		if (heldItem == null) {
-			heldItem = stack.copy();
-		} else {
-			// Just assume canAccept was called
-			heldItem.stackSize += stack.stackSize; 
-		}
+		ItemStacks.addItem(inventory, stack);
 	}
 	
 	@Override
 	public void removeItem(ItemStack stack) {
-		if (heldItem != null) {
-			if (ItemStacks.stacksMatch(stack, heldItem)) {
-				heldItem.stackSize -= stack.stackSize;
-				if (heldItem.stackSize <= 0) {
-					heldItem = null;
-				}
+		ItemStacks.remove(inventory, stack);
+	}
+	
+	protected boolean hasItems() {
+		for (int i = 0; i < INV_SIZE; i++) {
+			if (inventory.getStackInSlot(i) != null) {
+				return true;
 			}
 		}
+		
+		return false;
 	}
 
 	@Override
@@ -265,10 +275,16 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		return false;
 	}
 	
-	private void dropItem() {
-		EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, heldItem);
-		worldObj.spawnEntityInWorld(item);
-		heldItem = null;
+	private void dropItems() {
+		for (int i = 0; i < INV_SIZE; i++) {
+			ItemStack heldItem = inventory.getStackInSlot(i);
+			if (heldItem == null) {
+				continue;
+			}
+			EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, heldItem);
+			worldObj.spawnEntityInWorld(item);
+		}
+		inventory.clear();
 	}
 
 	@Override
@@ -294,21 +310,32 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		// We could play some idle animation or something
 		// For now, the only thing we care about is if we're idle but have an item. If so, make
 		// a quick task to go and deposit it
-		if (heldItem != null) {
-			LogisticsNetwork network = this.getLogisticsNetwork();
-			if (network != null) {
-				@Nullable ILogisticsComponent storage = network.getStorageForItem(worldObj, getPosition(), heldItem);
-				if (storage != null) {
-					ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", heldItem.copy());
-					network.getTaskRegistry().register(task, null);
-					network.getTaskRegistry().claimTask(task, this);
-					forceSetTask(task);
-					return;
+		if (hasItems()) {
+			ItemStack held = null;
+			
+			for (int i = 0; i < INV_SIZE; i++) {
+				held = inventory.getStackInSlot(i);
+				if (held != null) {
+					break;
+				}
+			}
+			
+			if (held != null) {
+				LogisticsNetwork network = this.getLogisticsNetwork();
+				if (network != null) {
+					@Nullable ILogisticsComponent storage = network.getStorageForItem(worldObj, getPosition(), held);
+					if (storage != null) {
+						ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", held.copy());
+						network.getTaskRegistry().register(task, null);
+						network.getTaskRegistry().claimTask(task, this);
+						forceSetTask(task);
+						return;
+					}
 				}
 			}
 			
 			// no return means we couldn't set up a task to drop it
-			dropItem();
+			dropItems();
 			
 		}
 		
@@ -367,14 +394,50 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected void onTaskTick(ILogisticsTask task) {
+		
+		// Mining dwarves should place down lights in the mines and refresh those around them
+		if (task instanceof LogisticsTaskMineBlock && this.ticksExisted % 5 == 0) {
+			if (!this.worldObj.canBlockSeeSky(this.getPosition())) {
+				// No light from the 'sky' which means we're underground
+				// Refreseh magic lights around. Then see if it's too dark
+				IBlockState state;
+				MutableBlockPos cursor = new MutableBlockPos();
+				for (int x = -1; x <= 1; x++)
+				for (int y = -1; y <= 1; y++)
+				for (int z = -1; z <= 1; z++) {
+					cursor.setPos(x, y, z);
+					state = worldObj.getBlockState(cursor);
+					if (state != null && state.getBlock() instanceof MagicLight) {
+						MagicLight.Bright().refresh(worldObj, cursor.toImmutable());
+					}
+				}
+				
+				if (this.worldObj.getLightFor(EnumSkyBlock.BLOCK, this.getPosition()) < 8) {
+					if (this.worldObj.isAirBlock(this.getPosition().up().up())) {
+						worldObj.setBlockState(this.getPosition().up().up(), MagicLight.Bright().getDefaultState());
+					} else if (this.worldObj.isAirBlock(this.getPosition().up())) {
+						worldObj.setBlockState(this.getPosition().up(), MagicLight.Bright().getDefaultState());
+					}
+				}
+			}
+		}
+		
 		LogisticsSubTask sub = task.getActiveSubtask();
 		if (sub != null) {
 			switch (sub.getType()) {
 			case ATTACK:
+				this.faceEntity(sub.getEntity(), 30, 180);
 				break;
 			case BREAK:
 				// this is where we'd play some animation?
 				if (this.onGround) {
+					BlockPos pos = sub.getPos();
+					double d0 = pos.getX() - this.posX;
+			        double d2 = pos.getZ() - this.posZ;
+					float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
+					
+					this.rotationYaw = desiredYaw;
+					
 					task.markSubtaskComplete();
 					if (task.getActiveSubtask() != sub) {
 						break;
@@ -493,12 +556,31 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
 	}
 	
+	private NBTTagList inventoryToNBT() {
+		NBTTagList list = new NBTTagList();
+		
+		for (int i = 0; i < INV_SIZE; i++) {
+			ItemStack stack = inventory.getStackInSlot(i);
+			if (stack != null) {
+				list.appendTag(stack.serializeNBT());
+			}
+		}
+		
+		return list;
+	}
+	
 	@Override
 	public void writeEntityToNBT(NBTTagCompound compound) {
 		super.writeEntityToNBT(compound);
 		
-		if (heldItem != null) {
-			compound.setTag(NBT_ITEM, heldItem.writeToNBT(new NBTTagCompound()));
+		compound.setTag(NBT_ITEMS, inventoryToNBT());
+	}
+	
+	private void loadInventoryFromNBT(NBTTagList list) {
+		inventory.clear();
+		
+		for (int i = 0; i < list.tagCount(); i++) {
+			inventory.setInventorySlotContents(i, ItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i)));
 		}
 	}
 	
@@ -506,14 +588,12 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	public void readEntityFromNBT(NBTTagCompound compound) {
 		super.readEntityFromNBT(compound);
 		
-		if (compound.hasKey(NBT_ITEM)) {
-			heldItem = ItemStack.loadItemStackFromNBT(compound.getCompoundTag(NBT_ITEM));
-		}
+		loadInventoryFromNBT(compound.getTagList(NBT_ITEMS, NBT.TAG_COMPOUND));
 	}
 
 	@Override
 	protected boolean canMergeMoreJobs() {
-		return this.heldItem == null;
+		return !this.hasItems();
 	}
 	
 	@Override

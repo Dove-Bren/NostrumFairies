@@ -2,11 +2,14 @@ package com.smanzana.nostrumfairies.blocks;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+
+import org.lwjgl.opengl.GL11;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -26,9 +29,17 @@ import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagLong;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
@@ -39,6 +50,7 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -100,8 +112,10 @@ public class MiningBlock extends BlockContainer {
 		private LogisticsItemWithdrawRequester materialRequester; // TODO initialize! lol
 		private int radius;
 		
+		// Persisted data
 		private ItemStack buildingMaterial;
 		// TODO persist this!!!
+		private Set<BlockPos> beacons; // Beacons we've placed (for re-placement on load) 
 		
 		private int chunkXOffset; // rediscovered each time
 		private int chunkZOffset; // ^
@@ -109,14 +123,21 @@ public class MiningBlock extends BlockContainer {
 		private int scanLevel; // reset to 0 on load but that should mean 1-time long scan
 		private int nextPlatform; // ^
 		
+		private int scanProgress; // When we early-out of a scan, where to pick up next time
+		
+		// Rendering variables
+		protected List<BlockPos> oreLocations;
+		
 		public MiningBlockTileEntity() {
 			this(32);
 		}
 		
 		public MiningBlockTileEntity(int blockRadius) {
 			super();
-			taskMap = new HashMap<>();
 			this.radius = blockRadius;
+			taskMap = new HashMap<>();
+			oreLocations = new LinkedList<>();
+			beacons = new HashSet<>();
 			
 			lowestLevel = -1;
 			scanLevel = 1;
@@ -135,6 +156,14 @@ public class MiningBlock extends BlockContainer {
 		@Override
 		public boolean canAccept(List<ItemDeepStack> stacks) {
 			return false;
+		}
+		
+		private void addBeacon(BlockPos pos) {
+			beacons.add(pos);
+			LogisticsNetwork network = this.getNetwork();
+			if (network != null) {
+				network.addBeacon(this.worldObj, pos);
+			}
 		}
 		
 		private void makeMineTask(BlockPos pos) {
@@ -193,6 +222,8 @@ public class MiningBlock extends BlockContainer {
 			}
 			
 			network.getTaskRegistry().revoke(task);
+			oreLocations.remove(base);
+			this.markDirty();
 		}
 		
 		private int getYFromLevel(int level) {
@@ -254,6 +285,10 @@ public class MiningBlock extends BlockContainer {
 			return true;
 		}
 		
+		private boolean isEmpty(BlockPos pos) {
+			return worldObj.isAirBlock(pos) || worldObj.getBlockState(pos).getBlock() instanceof MagicLight;
+		}
+		
 		/**
 		 * Makes sure the provided location is a 1x3x1 space with a block underneath
 		 * @param base
@@ -271,16 +306,16 @@ public class MiningBlock extends BlockContainer {
 			}
 			
 			// check for 3-high air
-			if (!worldObj.isAirBlock(base)) {
+			if (!isEmpty(base)) {
 				makeMineTask(base);
 				tasked = true;
 			}
-			if (!worldObj.isAirBlock(base.up())) {
+			if (!isEmpty(base.up())) {
 				makeMineTask(base.up());
 				tasked = true;
 			}
 			if (tall) {
-				if (!worldObj.isAirBlock(base.up().up())) {
+				if (!isEmpty(base.up().up())) {
 					makeMineTask(base.up().up());
 					tasked = true;
 				}
@@ -326,7 +361,7 @@ public class MiningBlock extends BlockContainer {
 			// Set the start location (and create a beacon!)
 			
 			cursor.setPos(x, y, z);
-			this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
+			this.addBeacon(cursor.toImmutable());
 			
 			// First, get to the right x
 			int spaces = 0;
@@ -336,7 +371,7 @@ public class MiningBlock extends BlockContainer {
 				
 				if (++spaces % 16 == 0) {
 					// Set a new beacon every once in a while
-					this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
+					this.addBeacon(cursor.toImmutable());
 				}
 			}
 			
@@ -347,7 +382,7 @@ public class MiningBlock extends BlockContainer {
 				
 				if (++spaces % 16 == 0) {
 					// Set a new beacon every once in a while
-					this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
+					this.addBeacon(cursor.toImmutable());
 				}
 			}
 			
@@ -357,9 +392,11 @@ public class MiningBlock extends BlockContainer {
 			}
 			
 			// Then queue up the actual mining task
-			System.out.println("Mine to " + pos);
-			System.out.println("That's a " + worldObj.getBlockState(pos));
 			makeMineTask(pos, cursor);
+			
+			// And mark that we're going there in the first place
+			oreLocations.add(pos.toImmutable());
+			this.markDirty();
 		}
 		
 		/**
@@ -371,20 +408,26 @@ public class MiningBlock extends BlockContainer {
 		private boolean scanLayer(int level) {
 			boolean[] result = new boolean[]{false};
 			int[] counter = new int[]{0};
+			boolean[] earlyOut = new boolean[]{false};
 			final long startTime = System.currentTimeMillis();
 			forEachOnLayer(level, (pos) -> {
+				// If we're resuming, skip to the relevant block
+				if (scanProgress > counter[0]++) {
+					return true;
+				}
+				
 				// Check run time every so often and stop if we've run a while
-					if (counter[0]++ % 256 == 0) {
-						final long now = System.currentTimeMillis();
-						if (now - startTime > 5) {
-							result[0] = true;
-							return false;
-						}
+				if (counter[0] % 256 == 0) {
+					final long now = System.currentTimeMillis();
+					if (now - startTime > 10) {
+						earlyOut[0] = true;
+						return false;
 					}
+				}
 				
 				// Stop after we have a bunch of tasks queued up
 				if (taskMap.size() > 100) {
-					result[0] = true;
+					earlyOut[0] = true;
 					return false;
 				}
 				
@@ -396,6 +439,13 @@ public class MiningBlock extends BlockContainer {
 				
 				return true;
 			});
+			
+			if (earlyOut[0]) {
+				result[0] = true; // Not finished with this layer
+				this.scanProgress = counter[0];
+			} else {
+				this.scanProgress = 0;
+			}
 			
 			return result[0];
 		}
@@ -483,7 +533,7 @@ public class MiningBlock extends BlockContainer {
 			}
 			
 			// Finally, the door and beacon
-			this.getNetwork().addBeacon(worldObj, cursor.toImmutable());
+			this.addBeacon(cursor.toImmutable());
 			cursor.move(upper ? EnumFacing.SOUTH : EnumFacing.NORTH);
 			if (clearBlock(cursor, false)) {
 				clear = false;
@@ -598,6 +648,7 @@ public class MiningBlock extends BlockContainer {
 			if (getLowestLevel() == 0) {
 				return;
 			}
+			
 			final long startTime = System.currentTimeMillis();
 			if (nextPlatform > 0) {
 				repairMine(nextPlatform - 1);
@@ -624,17 +675,29 @@ public class MiningBlock extends BlockContainer {
 				// If scan level is behind platform, scan. Otherwise, make a platform.
 				// Keep doing both if they run and find no work to do. Could limit this here. Once per minute seems long tho.
 				if (nextPlatform == 0 || scanLevel > platformToLevel(nextPlatform)) {
+					// Done scanning for this level.
+					// However, we wait to dig the next layer until there aren't very many outstanding tasks.
+					// This prevents the mine scanning from running away from the progress of the miners.
+					if (this.taskMap.size() > 10) {
+						break; // break the whole loop
+					}
+					
 					didWork = makeMine(nextPlatform, false);
 					nextPlatform++;
+					System.out.println("Making next platform: " + (nextPlatform - 1));
 				}
 				
 				if (!didWork) {
-					didWork = scanLayer(scanLevel++);
+					didWork = scanLayer(scanLevel);
+					if (this.scanProgress == 0) { // if no 'pickup' location was set
+						System.out.println("Finished scanning level " + scanLevel);
+						scanLevel++;
+					}
 				}
 			}
 			
 			final long end = System.currentTimeMillis();
-			if (end - startTime >= 5) {
+			if (end - startTime >= 15) {
 				System.out.println("Took " + (end - startTime) + "ms to scan for ores!");
 			}
 		}
@@ -646,6 +709,8 @@ public class MiningBlock extends BlockContainer {
 				LogisticsTaskMineBlock task = taskMap.get(pos);
 				if (task != null && task.isComplete()) {
 					removeTask(pos);
+					oreLocations.remove(pos);
+					this.markDirty();
 				}
 			}
 		}
@@ -656,13 +721,22 @@ public class MiningBlock extends BlockContainer {
 				return;
 			}
 			
+			if (this.tickCount == 0) {
+				if (this.getNetwork() != null) {
+					for (BlockPos pos : this.beacons) {
+						this.getNetwork().addBeacon(worldObj, pos);
+					}
+				}
+			}
+			
 			if (this.tickCount % 5 == 0) {
 				cleanTasks();
 			}
 			if (this.tickCount % (20) == 0) {
 				repairScan();
 			}
-			int period = (scanLevel < getLowestLevel()) ? 60 : 180;
+			int period = (scanLevel >= getLowestLevel()) ? 180
+					: (scanProgress > 0 && taskMap.size() < 100 ? 5 : 60);
 			if (this.tickCount % (20 * period) == 0) {
 				scan();
 			}
@@ -695,6 +769,49 @@ public class MiningBlock extends BlockContainer {
 			chunkXOffset = -((posIn.getX() - radius) & 0xF); // lowest 16 values
 			chunkZOffset = -((posIn.getZ() - radius) & 0xF);
 		}
+		
+		public static final String NBT_ORES = "ores";
+		
+		@Override
+		public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+			// We STORE the UUID of our network... but only so we can communicate it to the client.
+			// We hook things back up on the server when we load by position.
+			nbt = super.writeToNBT(nbt);
+			
+			NBTTagList list = new NBTTagList();
+			for (BlockPos pos : oreLocations) {
+				list.appendTag(new NBTTagLong(pos.toLong()));
+			}
+			nbt.setTag(NBT_ORES, list);
+			
+			list = new NBTTagList();
+			for (BlockPos pos : beacons) {
+				list.appendTag(new NBTTagLong(pos.toLong()));
+			}
+			nbt.setTag("beacons", list);
+			
+			return nbt;
+		}
+		
+		@Override
+		public void readFromNBT(NBTTagCompound nbt) {
+			super.readFromNBT(nbt);
+			
+			this.oreLocations.clear();
+			if (NostrumFairies.getWorld(0).isRemote) {
+				NBTTagList list = nbt.getTagList(NBT_ORES, NBT.TAG_LONG);
+				for (int i = 0; i < list.tagCount(); i++) {
+					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
+					oreLocations.add(pos);
+				}
+			} else {
+				NBTTagList list = nbt.getTagList("beacons", NBT.TAG_LONG);
+				for (int i = 0; i < list.tagCount(); i++) {
+					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
+					beacons.add(pos);
+				}
+			}
+		}
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -703,6 +820,103 @@ public class MiningBlock extends BlockContainer {
 		public static void init() {
 			ClientRegistry.bindTileEntitySpecialRenderer(MiningBlockTileEntity.class,
 					new MiningBlockRenderer());
+		}
+		
+		@Override
+		public void renderTileEntityAt(MiningBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
+			super.renderTileEntityAt(te, x, y, z, partialTicks, destroyStage);
+			
+			Minecraft mc = Minecraft.getMinecraft();
+			EntityPlayer player = mc.thePlayer;
+			
+			// TODO make a capability and see if they can see logistics stuff / its turned on
+			if (player != null) { // REPLACE ME
+				LogisticsNetwork network = te.getNetwork();
+				if (network != null) {
+					
+					Tessellator tessellator = Tessellator.getInstance();
+					VertexBuffer buffer = tessellator.getBuffer();
+					BlockPos origin = te.getPos();
+					
+					float red = 1f;
+					float blue = 0f;
+					float green = 0f;
+					float alpha = 1f;
+					
+					GlStateManager.pushMatrix();
+					GlStateManager.translate(x, y, z);
+					
+					GlStateManager.glLineWidth(3f);
+					GlStateManager.disableLighting();
+					GlStateManager.disableTexture2D();
+					GlStateManager.disableAlpha();
+					GlStateManager.disableBlend();
+					GlStateManager.disableDepth();
+					
+					for (BlockPos target : te.oreLocations) {
+						GlStateManager.pushMatrix();
+						GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
+						buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
+						
+						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
+						buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
+						buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
+						buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
+						
+						tessellator.draw();
+						
+						buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
+						
+						buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
+						buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
+						buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
+						buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
+						
+						tessellator.draw();
+						
+						buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+						
+						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
+							buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
+						buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
+							buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
+						buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
+							buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
+						buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
+							buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
+						
+						tessellator.draw();
+						GlStateManager.popMatrix();
+					}
+					
+					GlStateManager.enableDepth();
+					GlStateManager.enableTexture2D();
+					
+//					GlStateManager.disableLighting();
+//					GlStateManager.disableTexture2D();
+//					GlStateManager.disableAlpha();
+//					GlStateManager.disableBlend();
+//					GlStateManager.disableDepth();
+					
+					GlStateManager.popMatrix();
+					
+//					for (ILogisticsComponent component : neighbors) {
+//						BlockPos pos = component.getPosition();
+//						GlStateManager.glLineWidth(2f);
+//						GlStateManager.disableLighting();
+//						GlStateManager.disableAlpha();
+//						GlStateManager.disableBlend();
+//						buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+//						
+//						buffer.pos(.5, 1.25, .5).color(1f, .2f, .4f, .8f).endVertex();
+//						buffer.pos((pos.getX() - origin.getX()) + .5,
+//								(pos.getY() - origin.getY()) + 1.25,
+//								(pos.getZ() - origin.getZ()) + .5).color(1f, .2f, .4f, .8f).endVertex();
+//						
+//						tessellator.draw();
+//					}
+				}
+			}
 		}
 	}
 

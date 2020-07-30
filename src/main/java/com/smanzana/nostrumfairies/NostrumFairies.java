@@ -8,17 +8,21 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
+import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
 import com.smanzana.nostrumfairies.proxy.CommonProxy;
 import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
+import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -152,5 +156,17 @@ public class NostrumFairies {
 		}
     	
     	return null;
+    }
+    
+    @SubscribeEvent
+    public void onEntitySpawn(LivingSpawnEvent e) {
+    	if (e.isCanceled()) {
+    		return;
+    	}
+    	
+    	if (e.getEntityLiving() instanceof EntityMob) {
+    		EntityMob mob = (EntityMob) e.getEntityLiving();
+    		mob.targetTasks.addTask(4, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, true));
+    	}
     }
 }
