@@ -452,7 +452,9 @@ public class MiningBlock extends BlockContainer {
 		}
 		
 		private boolean isEmpty(BlockPos pos) {
-			return worldObj.isAirBlock(pos) || worldObj.getBlockState(pos).getBlock() instanceof MagicLight;
+			return worldObj.isAirBlock(pos)
+					|| worldObj.getBlockState(pos).getBlock() instanceof MagicLight
+					|| worldObj.getBlockState(pos).getBlock() instanceof BlockTorch;
 		}
 		
 		/**

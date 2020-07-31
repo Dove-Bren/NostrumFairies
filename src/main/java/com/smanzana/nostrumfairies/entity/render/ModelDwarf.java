@@ -1,6 +1,7 @@
 package com.smanzana.nostrumfairies.entity.render;
 
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
+import com.smanzana.nostrumfairies.entity.fey.EntityDwarf.ArmPose;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
@@ -125,36 +126,52 @@ public class ModelDwarf extends ModelBase {
 		legRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
 		legLeft.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
 		
-		if (dwarf.isSwingInProgress) {
+		if (dwarf.isSwingInProgress || dwarf.getPose() != ArmPose.IDLE) {
 			int sign = 1;//(dwarf.isLeftHanded() ? -1 : 1);
 			ModelRenderer hand = (dwarf.isLeftHanded() ? armLeft : armRight);
-			// ideally, move arm up on outside, then swing out and down.
-			// It'd be cool to have some recoil, but I don't think I can do that.
-			final double peakX = -sign * (Math.PI * 1.15);
-			float periodFirst = .2f;
-			float periodSecond = .1f;
-			float periodThird = 1 - (periodFirst + periodSecond);
-			if (this.swingProgress < periodFirst) {
-				// first part. Wind up!
-				// from (0, 0, 0) to (-(PI-peakX), pi, pi)
-				float progress = (swingProgress / periodFirst);
-				hand.rotateAngleZ = 0;
-				hand.rotateAngleY = 0;
-				hand.rotateAngleX = (float) (peakX * Math.sin(.5 * Math.PI * progress));
-			}
-			else if (this.swingProgress < (periodFirst + periodSecond)) {
-//				// stall and build anticipation
-				hand.rotateAngleZ = 0;//(float) (sign * Math.PI);
-				hand.rotateAngleX = (float) peakX;
-				hand.rotateAngleY = 0;
-			}
-			else {
-				// swing
-				float progress = (swingProgress - (periodFirst + periodSecond)) / periodThird;
-				hand.rotateAngleZ = 0;
-				hand.rotateAngleY = 0;
-				hand.rotateAngleX = (float) (peakX * Math.sin((Math.PI * .5) + (.5 * Math.PI * progress)));
-				
+			
+			if (dwarf.getPose() == ArmPose.MINING) {
+				double lowX = -sign * (Math.PI * .75);
+				double diffX = sign * (Math.PI * .4);
+				float periodFirst = .7f;
+				if (this.swingProgress < periodFirst) {
+					float progress = (swingProgress / periodFirst);
+					hand.rotateAngleZ = 0;
+					hand.rotateAngleY = 0;
+					hand.rotateAngleX = (float) (lowX + (diffX * Math.sin(Math.PI * progress)));
+				} else {
+					// Waiting for the next strike
+					hand.rotateAngleZ = 0;
+					hand.rotateAngleX = (float) lowX;
+					hand.rotateAngleY = 0;
+				}
+			} else {
+				final double peakX = -sign * (Math.PI * 1.15);
+				float periodFirst = .2f;
+				float periodSecond = .1f;
+				float periodThird = 1 - (periodFirst + periodSecond);
+				if (this.swingProgress < periodFirst) {
+					// first part. Wind up!
+					// from (0, 0, 0) to (-(PI-peakX), pi, pi)
+					float progress = (swingProgress / periodFirst);
+					hand.rotateAngleZ = 0;
+					hand.rotateAngleY = 0;
+					hand.rotateAngleX = (float) (peakX * Math.sin(.5 * Math.PI * progress));
+				}
+				else if (this.swingProgress < (periodFirst + periodSecond)) {
+	//				// stall and build anticipation
+					hand.rotateAngleZ = 0;//(float) (sign * Math.PI);
+					hand.rotateAngleX = (float) peakX;
+					hand.rotateAngleY = 0;
+				}
+				else {
+					// swing
+					float progress = (swingProgress - (periodFirst + periodSecond)) / periodThird;
+					hand.rotateAngleZ = 0;
+					hand.rotateAngleY = 0;
+					hand.rotateAngleX = (float) (peakX * Math.sin((Math.PI * .5) + (.5 * Math.PI * progress)));
+					
+				}
 			}
 		}
 		

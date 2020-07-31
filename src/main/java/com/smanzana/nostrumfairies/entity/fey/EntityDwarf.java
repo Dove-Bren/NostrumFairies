@@ -1,7 +1,10 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
+import java.io.IOException;
+
 import javax.annotation.Nullable;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
@@ -27,6 +30,11 @@ import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializer;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -40,6 +48,37 @@ import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
+	public static enum ArmPose {
+		IDLE,
+		MINING,
+		ATTACKING;
+		
+		public final static class PoseSerializer implements DataSerializer<ArmPose> {
+			
+			private PoseSerializer() {
+				DataSerializers.registerSerializer(this);
+			}
+			
+			@Override
+			public void write(PacketBuffer buf, ArmPose value) {
+				buf.writeEnumValue(value);
+			}
+
+			@Override
+			public ArmPose read(PacketBuffer buf) throws IOException {
+				return buf.readEnumValue(ArmPose.class);
+			}
+
+			@Override
+			public DataParameter<ArmPose> createKey(int id) {
+				return new DataParameter<>(id, this);
+			}
+		}
+		
+		public static final PoseSerializer Serializer = new PoseSerializer();
+	}
+	
+	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityFeyBase.class, ArmPose.Serializer);
 	private static final String NBT_ITEMS = "helditems";
 	private static final int INV_SIZE = 5;
 	
@@ -310,14 +349,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected void onTaskChange(ILogisticsTask oldTask, ILogisticsTask newTask) {
-//		if (oldTask != null && heldItem != null) {
-//			// I guess drop our item
-//			dropItem();
-//		}
-		// Task should have checked if we could hold what it needed, if it's item related.
-		// Assuming it did, our current inventory is fine. We'll do that task, maybe use our
-		// inventory, and then be idle with an item afterwards -- whicih will prompt
-		// us to go return it.
+		if (newTask == null) {
+			this.setPose(ArmPose.IDLE);
+		}
 	}
 	
 	@Override
@@ -447,8 +481,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				if (this.isSwingInProgress) {
 					;
 				} else {
+					this.setPose(ArmPose.MINING);
 					task.markSubtaskComplete();
 					if (task.getActiveSubtask() != sub) {
+						this.setPose(ArmPose.IDLE);
 						break;
 					}
 					this.swingArm(getActiveHand());
@@ -470,6 +506,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 //				}
 				break;
 			case IDLE:
+				this.setPose(ArmPose.IDLE);
 				if (this.navigator.noPath()) {
 					if (movePos == null) {
 						final BlockPos center = sub.getPos();
@@ -526,6 +563,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				break;
 			case MOVE:
 				{
+					this.setPose(ArmPose.IDLE);
 					if (this.navigator.noPath()) {
 						// First time through?
 						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
@@ -697,5 +735,19 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected String getRandomName() {
 		return getRandomFirstName() + " " + getRandomLastName();
+	}
+	
+	@Override
+	protected void entityInit() {
+		super.entityInit();
+		dataManager.register(POSE, ArmPose.IDLE);
+	}
+	
+	public ArmPose getPose() {
+		return dataManager.get(POSE);
+	}
+	
+	public void setPose(ArmPose pose) {
+		this.dataManager.set(POSE, pose);
 	}
 }
