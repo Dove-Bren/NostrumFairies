@@ -67,7 +67,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 	private static LogisticsTaskMineBlock makeComposite(LogisticsTaskMineBlock left, LogisticsTaskMineBlock right) {
 		LogisticsTaskMineBlock composite;
 		// Just take left's pos for now
-		composite = new LogisticsTaskMineBlock(left.owningComponent, left.displayName, left.world, left.block);
+		composite = new LogisticsTaskMineBlock(left.owningComponent, left.displayName, left.world, left.block, left.mineAt);
 		
 		// pull registry stuff
 		composite.fairy = left.fairy;
@@ -106,27 +106,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			return false;
 		}
 		
-		// Also check here if the area around the block is a) loaded and b) exposed
 		if (!world.isAreaLoaded(block, 1)) {
-			return false;
-		}
-		
-		BlockPos pos = mineAt;
-		if (world.isAirBlock(pos.north())) {
-			pos = pos.north();
-		} else if (world.isAirBlock(pos.south())) {
-			pos = pos.south();
-		} else if (world.isAirBlock(pos.east())) {
-			pos = pos.east();
-		} else if (world.isAirBlock(pos.west())) {
-			pos = pos.west();
-		} else if (world.isAirBlock(pos.up())) {
-			pos = pos.up();
-		} else {
-			pos = pos.down();
-		}
-		
-		if (!world.isAirBlock(pos)) {
 			return false;
 		}
 		
@@ -367,11 +347,14 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 					phase = Phase.RETURNING;
 				} else {
 					// note: marking subtask complete here first
+					LogisticsTaskMineBlock lastSubtask = subtask;
 					subtask.markSubtaskComplete();
 					
 					subtask = getFirstUnfinishedChild();
 					if (subtask == null) {
 						phase = Phase.RETURNING; // no more undone children!
+					} else if (subtask == lastSubtask) {
+						// same subtask. Animation continues
 					} else {
 						phase = Phase.MOVING;
 					}
@@ -390,6 +373,13 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		case RETURNING:
 			dropItems();
 			phase = Phase.DONE;
+			
+			// Update subtasks, if any, too
+			if (mergedTasks != null) {
+				for (ILogisticsTask task : mergedTasks) {
+					((LogisticsTaskMineBlock) task).phase = Phase.DONE;
+				}
+			}
 			break;
 		case DONE:
 			break;

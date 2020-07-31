@@ -108,7 +108,7 @@ public class LogisticsTaskRegistry {
 		}
 	}
 	
-	private RegistryItem findTaskItem(ILogisticsTask task) {
+	private @Nullable RegistryItem findTaskItem(ILogisticsTask task) {
 		for (RegistryItem item : registry) {
 			if (item.task == task) {
 				return item;
@@ -205,5 +205,14 @@ public class LogisticsTaskRegistry {
 			list.add(item.task);
 		}
 		return list;
+	}
+	
+	public @Nullable IFeyWorker getCurrentWorker(ILogisticsTask task) {
+		RegistryItem record = findTaskItem(task);
+		if (record == null) {
+			return null;
+		}
+		
+		return record.actor;
 	}
 }

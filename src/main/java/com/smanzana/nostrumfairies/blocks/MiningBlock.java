@@ -263,7 +263,7 @@ public class MiningBlock extends BlockContainer {
 			LogisticsNetwork network = this.getNetwork();
 			
 			if (network == null) {
-				return null;
+				return new ArrayList<>();
 			}
 			
 			if (this.platformRequests == 0) {
@@ -541,7 +541,7 @@ public class MiningBlock extends BlockContainer {
 				last.setPos(cursor);
 				cursor.move(effX > cursor.getX() ? EnumFacing.EAST : EnumFacing.WEST);
 				
-				if (++spaces % 16 == 0) {
+				if (spaces++ % 16 == 0) {
 					// Set a new beacon every once in a while
 					this.addBeacon(cursor.toImmutable());
 				}
@@ -553,7 +553,7 @@ public class MiningBlock extends BlockContainer {
 				last.setPos(cursor);
 				cursor.move(pos.getZ() > cursor.getZ() ? EnumFacing.SOUTH : EnumFacing.NORTH);
 				
-				if (++spaces % 16 == 0) {
+				if (spaces++ % 16 == 0) {
 					// Set a new beacon every once in a while
 					this.addBeacon(cursor.toImmutable());
 				}
@@ -582,6 +582,9 @@ public class MiningBlock extends BlockContainer {
 			boolean[] result = new boolean[]{false};
 			int[] counter = new int[]{0};
 			boolean[] earlyOut = new boolean[]{false};
+			
+			System.out.println("Scanning layer " + level + (scanProgress > 0 ? " (resuming)" : ""));
+			
 			final long startTime = System.currentTimeMillis();
 			forEachOnLayer(level, (pos) -> {
 				// If we're resuming, skip to the relevant block
@@ -1075,6 +1078,62 @@ public class MiningBlock extends BlockContainer {
 			worldObj.notifyBlockUpdate(pos, this.worldObj.getBlockState(pos), this.worldObj.getBlockState(pos), 3);
 			worldObj.scheduleBlockUpdate(pos, this.getBlockType(),0,0);
 			this.markDirty();
+		}
+		
+		/**
+		 * Check whether the provided task will be reachable after all other tasks the provided worker has for this
+		 * mine have been completed
+		 * @param task
+		 * @param worker
+		 * @return
+		 */
+		public boolean taskAccessibleWithTasks(LogisticsTaskMineBlock task, IFeyWorker worker) {
+			// Will look at blocks next to this block and see if they have tasks, and if the task is
+			// taken by this worker. Could care if it's taken by ANY worker, but that'd mean all workers
+			// would be down in the mines waiting, and probably stomp eachother? I might need to experiment...
+			BlockPos pos = task.getTargetBlock();
+			if (!this.taskMap.containsKey(pos)) {
+				return false;
+			}
+			
+			LogisticsNetwork network = this.getNetwork();
+			if (network == null) {
+				return false;
+			}
+			
+			// We do NOT look to see if there's air here. That would falsely say we could get to any
+			// mine task that happens to have air next to it. We need to check pathing for those things.
+			// Instead, we're trying to find blocks that are about to have the block next to them mined.
+			// The other tasks had a pathing check, so we should be able to get to this one.
+			/*
+			if (worldObj.isAirBlock(pos.north())) {
+				pos = pos.north();
+			} else if (worldObj.isAirBlock(pos.south())) {
+				pos = pos.south();
+			} else if (worldObj.isAirBlock(pos.east())) {
+				pos = pos.east();
+			} else if (worldObj.isAirBlock(pos.west())) {
+				pos = pos.west();
+			} else if (worldObj.isAirBlock(pos.up())) {
+				pos = pos.up();
+			} else {
+				pos = pos.down();
+			}
+			
+			if (worldObj.isAirBlock(pos)) {
+				// Already air?
+				return true;
+			}
+			*/
+			
+			for (BlockPos other : new BlockPos[] {pos.up(), pos.north(), pos.south(), pos.east(), pos.west(), pos.down()}) {
+				ILogisticsTask otherTask = taskMap.get(other);
+				if (otherTask != null && network.getTaskRegistry().getCurrentWorker(otherTask) == worker) {
+					return true;
+				}
+			}
+			
+			return false;
 		}
 	}
 	

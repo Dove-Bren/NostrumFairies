@@ -364,7 +364,9 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	private boolean searchForJobs() {
 		LogisticsNetwork network = this.getLogisticsNetwork();
+		//long start = System.currentTimeMillis();
 		if (network != null) {
+			
 			List<ILogisticsTask> list = network.getTaskRegistry().findTasks(network, this, (task) -> {
 				World world = ILogisticsTask.GetSourceWorld(task);
 				BlockPos pos = ILogisticsTask.GetSourcePosition(task);
@@ -401,21 +403,60 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			
 			if (list != null && !list.isEmpty()) {
 				// Could sort somehow.
+				
 				ILogisticsTask foundTask = this.currentTask; // may be null
 				for (ILogisticsTask task : list) {
-					if (canPerformTask(task)
-							&& task.canAccept(this)
-							&& shouldPerformTask(task)
-							&& (foundTask == null || foundTask.canMerge(task))) {
-						network.getTaskRegistry().claimTask(task, this);
-						if (foundTask == null) {
-							foundTask = task;
-						} else {
-							// pair.task is another task we should merge into foundTask.
-							// Note we also claim the original task.
-							foundTask = foundTask.mergeIn(task);
+//					if (canPerformTask(task)
+//							&& task.canAccept(this)
+//							&& shouldPerformTask(task)
+//							&& (foundTask == null || foundTask.canMerge(task))) {
+//						network.getTaskRegistry().claimTask(task, this);
+//						if (foundTask == null) {
+//							foundTask = task;
+//						} else {
+//							// pair.task is another task we should merge into foundTask.
+//							// Note we also claim the original task.
+//							foundTask = foundTask.mergeIn(task);
+//						}
+//					}
+					
+					boolean success;
+					long time1 = 0;
+					long time2 = 0;
+					long time3 = 0;
+					long time4 = 0;
+					long startInner;
+
+					//startInner = System.currentTimeMillis();
+					success = (foundTask == null || foundTask.canMerge(task));
+					//time4 += System.currentTimeMillis() - startInner;
+					if (success) {
+						//startInner = System.currentTimeMillis();
+						success = canPerformTask(task);
+						//time1 += System.currentTimeMillis() - startInner;
+						if (success) {
+							//startInner = System.currentTimeMillis();
+							success = task.canAccept(this);
+							//time2 += System.currentTimeMillis() - startInner;
+							if (success) {
+								//startInner = System.currentTimeMillis();
+								success = shouldPerformTask(task);
+								//time3 += System.currentTimeMillis() - startInner;
+								if (success) {
+									network.getTaskRegistry().claimTask(task, this);
+									if (foundTask == null) {
+										foundTask = task;
+									} else {
+										// pair.task is another task we should merge into foundTask.
+										// Note we also claim the original task.
+										foundTask = foundTask.mergeIn(task);
+									}
+								}
+							}
 						}
 					}
+					
+					//System.out.println(String.format("\t[%d] [%d] [%d] [%d]", time1, time2, time3, time4));
 				}
 				
 				if (foundTask != null) {
@@ -424,6 +465,9 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				}
 			}
 		}
+		//long end = System.currentTimeMillis();
+		//System.out.println("Took " + (end - start) + "ms");
+		
 		return false;
 	}
 	

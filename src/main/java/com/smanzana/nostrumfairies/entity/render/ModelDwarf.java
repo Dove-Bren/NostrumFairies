@@ -145,7 +145,7 @@ public class ModelDwarf extends ModelBase {
 					hand.rotateAngleX = (float) lowX;
 					hand.rotateAngleY = 0;
 				}
-			} if (dwarf.getPose() == ArmPose.ATTACKING) {
+			} else if (dwarf.getPose() == ArmPose.ATTACKING) {
 				// Have pick raised and do full swings
 				double lowX = -sign * (Math.PI * .95);
 				double diffX = sign * (Math.PI * .8);

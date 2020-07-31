@@ -41,6 +41,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
@@ -184,6 +185,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
+		
 		if (!worldObj.isAirBlock(targetPos)) {
 			do {
 				if (worldObj.isAirBlock(targetPos.north())) {
@@ -245,32 +247,72 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
 		if (task instanceof LogisticsTaskMineBlock) {
+			long start = System.currentTimeMillis();
 			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
 			
 			if (mine.getWorld() != this.worldObj) {
+				//System.out.println("\t\t Exit A: " + (System.currentTimeMillis() - start));
 				return false;
 			}
 			
 			// Dwarves only perform tasks from their mine
 			if (this.getHome() == null || mine.getSourceComponent() == null ||
 					!this.getHome().equals(mine.getSourceComponent().getPosition())) {
+				//System.out.println("\t\t Exit B: " + (System.currentTimeMillis() - start));
 				return false;
 			}
+			
+			//System.out.println("\t\tdelta: " + (System.currentTimeMillis() - start));
 			
 			// Check where the block is
 			// EDIT mines have things go FAR down, so we ignore the distance check here
 			BlockPos target = mine.getTargetMineLoc();
 			if (target == null) {
+				//System.out.println("\t\t Exit C: " + (System.currentTimeMillis() - start));
 				return false;
 			}
 			
+			//System.out.println("\t\tdelta: " + (System.currentTimeMillis() - start));
+			
+			if (this.getCurrentTask() != null
+					&& this.getCurrentTask() instanceof LogisticsTaskMineBlock) {
+				
+				//System.out.println("\t\t--- delta: " + (System.currentTimeMillis() - start));
+				
+				// Try to stay around the other tasks
+				if (((LogisticsTaskMineBlock)this.getCurrentTask()).getTargetMineLoc().distanceSq(mine.getTargetMineLoc()) > 25) {
+					//System.out.println("\t\t Exit D: " + (System.currentTimeMillis() - start));
+					return false;
+				}
+				
+				//System.out.println("\t\t*** delta: " + (System.currentTimeMillis() - start));
+				
+				// If we already have a mining task, we ask the mine to see if we'll be able to get to this task
+				// with what we already have.
+				// Otherwise we look for an empty spot and see if we can path.
+				if (mine.getSourceComponent() != null) {
+					TileEntity te = worldObj.getTileEntity(mine.getSourceComponent().getPosition());
+					if (te != null && te instanceof MiningBlock.MiningBlockTileEntity) {
+						//System.out.println("\t\t Exit E: " + (System.currentTimeMillis() - start));
+						return ((MiningBlock.MiningBlockTileEntity) te).taskAccessibleWithTasks(mine, this);
+					}
+					
+					//return taskAccessibleWithTasks
+				}
+				//System.out.println("\t\tdelta: " + (System.currentTimeMillis() - start));
+			}
+			
+			// else
+			
 			target = findEmptySpot(target, true);
 			if (target == null) {
+				//System.out.println("\t\t Exit F: " + (System.currentTimeMillis() - start));
 				return false;
 			}
 			
 			// Check for pathing
 			if (this.getDistanceSq(target) < .2) {
+				//System.out.println("\t\t Exit G: " + (System.currentTimeMillis() - start));
 				return true;
 			}
 			Path currentPath = navigator.getPath();
@@ -285,12 +327,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			} else {
 				navigator.setPath(currentPath, 1.0);
 			}
-			if (success) {
-				return true;
-			} else if (this.getDistanceSq(target) < 1) {
+			if (success || this.getDistanceSq(target) < 1) {
 				// extra case for if the navigator refuses cause we're too close
+				//System.out.println("\t\t Exit : " + (System.currentTimeMillis() - start));
 				return true;
 			}
+			//System.out.println("\t\t Exit Z: " + (System.currentTimeMillis() - start));
 		} else if (task instanceof LogisticsTaskPlaceBlock) {
 			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
 			
@@ -503,6 +545,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 						break;
 					}
 					this.swingArm(getActiveHand());
+					BlockPos pos = sub.getPos();
+					double d0 = pos.getX() - this.posX;
+			        double d2 = pos.getZ() - this.posZ;
+					float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
+					
+					this.rotationYaw = desiredYaw;
 				}
 //				// this is where we'd play some animation?
 //				if (this.onGround) {
@@ -689,8 +737,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	protected void collideWithEntity(Entity entityIn) {
 		if (entityIn instanceof IFeyWorker) {
 			IFeyWorker other = (IFeyWorker) entityIn;
-			if ((this.getCurrentTask() != null && this.getCurrentTask() instanceof LogisticsTaskMineBlock)
-				|| (other.getCurrentTask() != null && other.getCurrentTask() instanceof LogisticsTaskMineBlock)) {
+			if ((this.getCurrentTask() != null)
+				|| (other.getCurrentTask() != null)) {
 					return;
 			}
 		}

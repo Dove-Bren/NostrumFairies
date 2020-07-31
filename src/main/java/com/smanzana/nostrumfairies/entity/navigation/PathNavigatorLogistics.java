@@ -38,7 +38,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	
 	// Cache indicators
 	private BlockPos lastSource;
-	private BlockPos lastTarget;
+	private Set<BlockPos> lastTargets;
 	private long lastTicks;
 	
 	// stupid encapsulation breaking things
@@ -48,6 +48,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 		super(entitylivingIn, worldIn);
 		this.fey = (IFeyWorker) entitylivingIn; // CAST! Fail if not a fey! Need a network!
 		lastTicks = -1;
+		lastTargets = new HashSet<>();
 	}
 	
 	@Override
@@ -58,9 +59,14 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	}
 	
 	private boolean shouldAttempt(BlockPos target) {
+		
+		if (!theEntity.getPosition().equals(lastSource)) {
+			lastTargets.clear();
+		}
+		
 		// Only invoke all of the expensive failure stuff if it's been a while or if we're attempting from a new location.
-		if (target.equals(lastTarget) && theEntity.getPosition().equals(lastSource)) {
-			if (lastTicks != -1 && (theEntity.ticksExisted - lastTicks) < 20) {
+		if (lastTargets.contains(target)) {
+			if (lastTicks != -1 && (theEntity.ticksExisted - lastTicks) < (20 * 60)) {
 				// hasn't been enough time to try again
 				return false;
 			}
@@ -71,7 +77,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	
 	private void setFailCache(BlockPos target) {
 		lastTicks = theEntity.ticksExisted;
-		lastTarget = target;
+		lastTargets.add(target);
 		lastSource = theEntity.getPosition();
 	}
 
@@ -287,6 +293,8 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			// Nope! We couldn't!
 			path = vanillaPath;
 			setFailCache(target);
+		} else {
+			lastTargets.remove(target);
 		}
 		
 		return path;
