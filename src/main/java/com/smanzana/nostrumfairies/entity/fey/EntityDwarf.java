@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
@@ -25,6 +24,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.EntityAIAttackMelee;
+import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
@@ -250,6 +251,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				return false;
 			}
 			
+			// Dwarves only perform tasks from their mine
+			if (this.getHome() == null || mine.getSourceComponent() == null ||
+					!this.getHome().equals(mine.getSourceComponent().getPosition())) {
+				return false;
+			}
+			
 			// Check where the block is
 			// EDIT mines have things go FAR down, so we ignore the distance check here
 			BlockPos target = mine.getTargetMineLoc();
@@ -288,6 +295,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
 			
 			if (place.getWorld() != this.worldObj) {
+				return false;
+			}
+			
+			// Dwarves only perform tasks from their mine
+			if (this.getHome() == null || place.getSourceComponent() == null ||
+					!this.getHome().equals(place.getSourceComponent().getPosition())) {
 				return false;
 			}
 			
@@ -356,6 +369,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	protected void onIdleTick() {
+		this.setPose(ArmPose.IDLE);
 		// We could play some idle animation or something
 		// For now, the only thing we care about is if we're idle but have an item. If so, make
 		// a quick task to go and deposit it
@@ -475,6 +489,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		if (sub != null) {
 			switch (sub.getType()) {
 			case ATTACK:
+				this.setPose(ArmPose.ATTACKING);
 				this.faceEntity(sub.getEntity(), 30, 180);
 				break;
 			case BREAK:
@@ -601,6 +616,18 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected void initEntityAI() {
+		int priority = 1;
+		this.tasks.addTask(priority++, new EntityAIAttackMelee(this, 1.0, true)); // also gated on target, like 'combat tick' on fey mechs
+		
+		priority = 1;
+		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]));
+		
+		// Could hunt mobs
+//		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityMob>(this, EntityMob.class, 10, true, false, (mob) -> {
+//			return (mob instanceof IEntityTameable ? !((IEntityTameable) mob).isTamed()
+//					: true);
+//		}));
+		
 		// TODO Auto-generated method stub
 		// I guess we should wander and check if tehre's a home nearby and if so make it our home and stop wandering.
 		// Or if we're revolting... just quit for this test one?
@@ -660,11 +687,11 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	protected void collideWithEntity(Entity entityIn) {
-		if (this.getCurrentTask() != null && this.getCurrentTask() instanceof LogisticsTaskMineBlock
-				&& entityIn instanceof IFeyWorker) {
-			ILogisticsTask theirs = ((IFeyWorker) entityIn).getCurrentTask();
-			if (theirs != null && theirs instanceof LogisticsTaskMineBlock) {
-				return;
+		if (entityIn instanceof IFeyWorker) {
+			IFeyWorker other = (IFeyWorker) entityIn;
+			if ((this.getCurrentTask() != null && this.getCurrentTask() instanceof LogisticsTaskMineBlock)
+				|| (other.getCurrentTask() != null && other.getCurrentTask() instanceof LogisticsTaskMineBlock)) {
+					return;
 			}
 		}
 		
@@ -749,5 +776,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	public void setPose(ArmPose pose) {
 		this.dataManager.set(POSE, pose);
+	}
+
+	@Override
+	protected void onCombatTick() {
+		this.setPose(ArmPose.ATTACKING);
 	}
 }

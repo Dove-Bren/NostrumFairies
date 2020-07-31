@@ -655,4 +655,9 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	protected String getRandomName() {
 		return "Test Fairy " + rand.nextInt();
 	}
+	
+	@Override
+	protected void onCombatTick() {
+		; // No combat
+	}
 }

@@ -145,6 +145,22 @@ public class ModelDwarf extends ModelBase {
 					hand.rotateAngleX = (float) lowX;
 					hand.rotateAngleY = 0;
 				}
+			} if (dwarf.getPose() == ArmPose.ATTACKING) {
+				// Have pick raised and do full swings
+				double lowX = -sign * (Math.PI * .95);
+				double diffX = sign * (Math.PI * .8);
+				float periodFirst = .7f;
+				if (this.swingProgress < periodFirst) {
+					float progress = (swingProgress / periodFirst);
+					hand.rotateAngleZ = 0;
+					hand.rotateAngleY = 0;
+					hand.rotateAngleX = (float) (lowX + (diffX * Math.sin(Math.PI * progress)));
+				} else {
+					// Waiting for the next strike
+					hand.rotateAngleZ = 0;
+					hand.rotateAngleX = (float) lowX;
+					hand.rotateAngleY = 0;
+				}
 			} else {
 				final double peakX = -sign * (Math.PI * 1.15);
 				float periodFirst = .2f;

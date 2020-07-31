@@ -666,4 +666,9 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		};
 		return names[rand.nextInt(names.length)];
 	}
+
+	@Override
+	protected void onCombatTick() {
+		; // No combat
+	}
 }
