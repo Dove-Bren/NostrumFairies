@@ -9,6 +9,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -170,7 +171,9 @@ public class LogisticsTaskRegistry {
 	public void forfitTask(ILogisticsTask task) {
 		RegistryItem item = findTaskItem(task);
 		if (item == null) {
-			throw new RuntimeException("Attempted to forfit a logistics task before it was registered in the registry");
+			//throw new RuntimeException("Attempted to forfit a logistics task before it was registered in the registry");
+			NostrumFairies.logger.error("Attempted to forfit a logistics task before it was registered in the registry");
+			return;
 		}
 		
 		IFeyWorker oldActor = item.actor;

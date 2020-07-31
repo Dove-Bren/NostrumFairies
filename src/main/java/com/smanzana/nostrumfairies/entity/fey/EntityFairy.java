@@ -629,4 +629,41 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
             }
         }
     }
+
+	@Override
+	protected String getRandomName() {
+		final String[] names = {
+			"Happy Bubblefleck",
+			"Storm Silverclover",
+			"Sunset Mossflower",
+			"Dusk Almondglimmer",
+			"Pyro Cottonsprout",
+			"Flame Blackpuff",
+			"Quicksilver Gigglefly",
+			"Sunrise Mistyfoam",
+			"Canyon Cuteflame",
+			"Tadpole Eveningfur",
+			"Octavia Tulipdrop",
+			"Cintrine Jinglebud",
+			"Relle Spiderroot",
+			"Charity Turtlepebbles",
+			"Midnight Muddylake",
+			"Lapis Driftsky",
+			"Spore Mistywhisper",
+			"Prise Birdmint",
+			"Mildread Birdbriar",
+			"Orange Lillygust",
+			"Margo Chillyshine",
+			"Waterfall Plummeadow",
+			"Jillian Willowfeet",
+			"Marlie Wonderthorn",
+			"Amy Garlicmuse",
+			"Salle Bumblewish",
+			"June Tigerroot",
+			"Swan Lilyflame",
+			"Palmera Pollenhorn",
+			"Pluma Pinedale",
+		};
+		return names[rand.nextInt(names.length)];
+	}
 }

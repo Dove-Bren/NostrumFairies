@@ -22,10 +22,12 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 
 public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, ILoreTagged {
 
 	protected static final DataParameter<Optional<BlockPos>> HOME  = EntityDataManager.<Optional<BlockPos>>createKey(EntityFeyBase.class, DataSerializers.OPTIONAL_BLOCK_POS);
+	protected static final DataParameter<String> NAME = EntityDataManager.<String>createKey(EntityFeyBase.class, DataSerializers.STRING);
 	
 	/**
 	 * Current general status of the worker.
@@ -226,8 +228,10 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	protected void forfitTask() {
 		if (this.currentTask != null) {
-			for (ILogisticsTask task : this.currentTask.unmerge()) {
-				this.getLogisticsNetwork().getTaskRegistry().forfitTask(task);
+			if (this.getLogisticsNetwork() != null) {
+				for (ILogisticsTask task : this.currentTask.unmerge()) {
+					this.getLogisticsNetwork().getTaskRegistry().forfitTask(task);
+				}
 			}
 			forceSetTask(null);
 		}
@@ -263,6 +267,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	@Override
 	public void onUpdate() {
 		super.onUpdate();
+		
+		this.updateArmSwingProgress();
 		
 		// TODO communiate status with DAtaParamater
 		if (worldObj.isRemote || this.isDead) {
@@ -413,15 +419,19 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		}
 	}
 	
+	protected abstract String getRandomName();
+	
 	@Override
 	protected void entityInit() {
 		super.entityInit();
 		
 		this.dataManager.register(HOME, Optional.absent());
+		this.dataManager.register(NAME, getRandomName());
 	}
 	
 	private static final String NBT_HOME = "home";
 	private static final String NBT_REVOLTING = "revolt";
+	private static final String NBT_NAME = "default_name";
 	
 	@Override
 	public boolean writeToNBTOptional(NBTTagCompound compound) {
@@ -439,6 +449,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		if (this.getStatus() == FairyGeneralStatus.REVOLTING) {
 			compound.setBoolean(NBT_REVOLTING, true);
 		}
+		compound.setString(NBT_NAME, dataManager.get(NAME));
 	}
 	
 	@Override
@@ -460,6 +471,10 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		} else {
 			this.changeStatus(FairyGeneralStatus.WANDERING);
 		}
+		
+		if (compound.hasKey(NBT_NAME, NBT.TAG_STRING)) {
+			dataManager.set(NAME, compound.getString(NBT_NAME));
+		} // else default is a random one
 	}
 	
 	@Override
@@ -471,5 +486,14 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	@Override
 	protected boolean canDespawn() {
 		return false;
+	}
+	
+	@Override
+	public String getName() {
+		if (this.hasCustomName()) {
+			return this.getCustomNameTag();
+		}
+		
+		return this.dataManager.get(NAME);
 	}
 }

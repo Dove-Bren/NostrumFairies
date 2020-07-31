@@ -4,12 +4,11 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
-import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
@@ -21,6 +20,7 @@ import com.smanzana.nostrummagica.loretag.Lore;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.InventoryBasic;
@@ -32,13 +32,13 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
+public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	private static final String NBT_ITEMS = "helditems";
 	private static final int INV_SIZE = 5;
@@ -47,21 +47,21 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	
-	public EntityTestFairy(World world) {
+	public EntityDwarf(World world) {
 		super(world);
-		this.height = .6f;
+		this.height = .95f;
 		this.workDistanceSq = 24 * 24;
-		this.inventory = new InventoryBasic("Fairy Inv", false, INV_SIZE);
+		this.inventory = new InventoryBasic("Dwarf Inv", false, INV_SIZE);
 	}
-
+	
 	@Override
 	public String getLoreKey() {
-		return "testfairy";
+		return "dwarf";
 	}
 
 	@Override
 	public String getLoreDisplayName() {
-		return "testfairy";
+		return "dwarf";
 	}
 
 	@Override
@@ -136,7 +136,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected boolean isValidHome(BlockPos homePos) {
 		TileEntity te = worldObj.getTileEntity(homePos);
-		if (te == null || !(te instanceof StorageLogisticsChest.StorageChestTileEntity)) {
+		if (te == null || !(te instanceof MiningBlock.MiningBlockTileEntity)) {
 			return false;
 		}
 		
@@ -204,33 +204,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		if (task instanceof LogisticsTaskChopTree) {
-			LogisticsTaskChopTree chop = (LogisticsTaskChopTree) task;
-			
-			if (chop.getWorld() != this.worldObj) {
-				return false;
-			}
-			
-			// Check where the tree is
-			BlockPos pickup = chop.getTrunkPos();
-			if (pickup == null || !this.canReach(pickup, true)) {
-				return false;
-			}
-			
-			pickup = findEmptySpot(pickup, true);
-			if (null == pickup) {
-				return false;
-			}
-			
-			// Check for pathing
-			if (this.getDistanceSq(pickup) < .2) {
-				return true;
-			}
-			if (this.navigator.tryMoveToXYZ(pickup.getX(), pickup.getY(), pickup.getZ(), 1.0)) {
-				navigator.clearPathEntity();
-				return true;
-			}
-		} else if (task instanceof LogisticsTaskMineBlock) {
+		if (task instanceof LogisticsTaskMineBlock) {
 			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
 			
 			if (mine.getWorld() != this.worldObj) {
@@ -331,7 +305,6 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected boolean shouldPerformTask(ILogisticsTask task) {
-		//return this.heldItem == null;
 		return true;
 	}
 
@@ -471,21 +444,30 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				this.faceEntity(sub.getEntity(), 30, 180);
 				break;
 			case BREAK:
-				// this is where we'd play some animation?
-				if (this.onGround) {
-					BlockPos pos = sub.getPos();
-					double d0 = pos.getX() - this.posX;
-			        double d2 = pos.getZ() - this.posZ;
-					float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
-					
-					this.rotationYaw = desiredYaw;
-					
+				if (this.isSwingInProgress) {
+					;
+				} else {
 					task.markSubtaskComplete();
 					if (task.getActiveSubtask() != sub) {
 						break;
 					}
-					this.jump();
+					this.swingArm(getActiveHand());
 				}
+//				// this is where we'd play some animation?
+//				if (this.onGround) {
+//					BlockPos pos = sub.getPos();
+//					double d0 = pos.getX() - this.posX;
+//			        double d2 = pos.getZ() - this.posZ;
+//					float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
+//					
+//					this.rotationYaw = desiredYaw;
+//					
+//					task.markSubtaskComplete();
+//					if (task.getActiveSubtask() != sub) {
+//						break;
+//					}
+//					this.jump();
+//				}
 				break;
 			case IDLE:
 				if (this.navigator.noPath()) {
@@ -591,10 +573,10 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void applyEntityAttributes() {
 		super.applyEntityAttributes();
-		this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.24D);
-		this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(2.0D);
-		//this.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(0.0D);
-		this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(0.0D);
+		this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.20D);
+		this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(24.0D);
+		this.getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(3.0D);
+		this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
 		this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
 	}
 	
@@ -650,9 +632,70 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		
 		super.collideWithEntity(entityIn);
 	}
+	
+	@Override
+	public IEntityLivingData onInitialSpawn(DifficultyInstance difficulty, @Nullable IEntityLivingData livingdata) {
+		livingdata = super.onInitialSpawn(difficulty, livingdata);
+		
+		// Dwarves are 40:60 lefthanded
+		if (this.rand.nextFloat() < .4f) {
+			this.setLeftHanded(true);
+		}
+		
+		return livingdata;
+	}
+	
+	private String getRandomFirstName() {
+		final String[] names = new String[] {"Griliggs",
+				"Magnir",
+				"Hjalmor",
+				"Hjulkum",
+				"Ragdren",
+				"Raggran",
+				"Gerdor",
+				"Karmar",
+				"Murrik",
+				"Dulrigg",
+				"Harron",
+				"Kramkyl",
+				"Grennur",
+				"Kharthrun",
+				"Grildal",
+				"Baerrus",
+				"Morgron",
+				"Torkohm",
+				"Bandus",
+				"Amnik",};
+		return names[this.rand.nextInt(names.length)];
+	}
+	
+	private String getRandomLastName() {
+		final String[] names = new String[] {"Griliggs",
+				"Nightbelly",
+				"Warshield",
+				"Gravelblade",
+				"Thunderforged",
+				"Emberbranch",
+				"Opalbasher",
+				"Deeptank",
+				"Oreview",
+				"Earthbrew",
+				"Whitchest",
+				"Stronggranite",
+				"Honorarm",
+				"Pebblechest",
+				"Thunderback",
+				"Fierycoat",
+				"Dragonstone",
+				"Dragonmantle",
+				"Twilightmail",
+				"Amberchest",
+				"Hillgranite"};
+		return names[this.rand.nextInt(names.length)];
+	}
 
 	@Override
 	protected String getRandomName() {
-		return "Test Fairy " + rand.nextInt();
+		return getRandomFirstName() + " " + getRandomLastName();
 	}
 }

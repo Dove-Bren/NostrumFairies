@@ -215,9 +215,20 @@ public class MiningBlock extends BlockContainer {
 		
 		@Override
 		public void onLeaveNetwork() {
-			if (!worldObj.isRemote && materialRequester != null) {
-				materialRequester.clearRequests();
-				materialRequester.setNetwork(null);
+			if (!worldObj.isRemote) {
+				if (materialRequester != null) {
+					materialRequester.clearRequests();
+					materialRequester.setNetwork(null);
+				}
+				
+				if (this.getNetwork() != null) {
+					for (ILogisticsTask task : this.taskMap.values()) {
+						this.getNetwork().getTaskRegistry().revoke(task);
+					}
+					for (BlockPos beacon : beacons) {
+						this.getNetwork().removeBeacon(worldObj, beacon);
+					}
+				}
 			}
 			
 			super.onLeaveNetwork();
@@ -225,8 +236,19 @@ public class MiningBlock extends BlockContainer {
 		
 		@Override
 		public void onJoinNetwork(LogisticsNetwork network) {
-			if (!worldObj.isRemote && materialRequester != null) {
-				refreshRequester();
+			if (!worldObj.isRemote) {
+				if (materialRequester != null) {
+					refreshRequester();
+				}
+				
+				// add tasks and beacons to this network
+				for (BlockPos beacon : beacons) {
+					this.getNetwork().addBeacon(worldObj, beacon);
+				}
+				
+				for (ILogisticsTask task : this.taskMap.values()) {
+					this.getNetwork().getTaskRegistry().register(task, null);
+				}
 			}
 			
 			super.onJoinNetwork(network);
