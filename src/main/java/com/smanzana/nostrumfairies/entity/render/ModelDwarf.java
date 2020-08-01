@@ -133,7 +133,7 @@ public class ModelDwarf extends ModelBase {
 			if (dwarf.getPose() == ArmPose.MINING) {
 				double lowX = -sign * (Math.PI * .75);
 				double diffX = sign * (Math.PI * .4);
-				float periodFirst = .7f;
+				float periodFirst = .4f;
 				if (this.swingProgress < periodFirst) {
 					float progress = (swingProgress / periodFirst);
 					hand.rotateAngleZ = 0;
@@ -149,7 +149,7 @@ public class ModelDwarf extends ModelBase {
 				// Have pick raised and do full swings
 				double lowX = -sign * (Math.PI * .95);
 				double diffX = sign * (Math.PI * .8);
-				float periodFirst = .7f;
+				float periodFirst = .3f;
 				if (this.swingProgress < periodFirst) {
 					float progress = (swingProgress / periodFirst);
 					hand.rotateAngleZ = 0;

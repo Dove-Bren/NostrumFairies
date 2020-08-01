@@ -671,4 +671,9 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	protected void onCombatTick() {
 		; // No combat
 	}
+	
+	@Override
+	protected void onCientTick() {
+		;
+	}
 }

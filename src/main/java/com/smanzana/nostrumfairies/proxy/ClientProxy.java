@@ -12,9 +12,11 @@ import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.blocks.WoodcuttingBlock;
 import com.smanzana.nostrumfairies.client.gui.OverlayRenderer;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
+import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 import com.smanzana.nostrumfairies.entity.render.RenderDwarf;
+import com.smanzana.nostrumfairies.entity.render.RenderElf;
 import com.smanzana.nostrumfairies.entity.render.RenderFairy;
 import com.smanzana.nostrumfairies.entity.render.RenderTestFairy;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
@@ -70,6 +72,12 @@ public class ClientProxy extends CommonProxy {
 			@Override
 			public Render<? super EntityDwarf> createRenderFor(RenderManager manager) {
 				return new RenderDwarf(manager, 1.0f);
+			}
+		});
+		RenderingRegistry.registerEntityRenderingHandler(EntityElf.class, new IRenderFactory<EntityElf>() {
+			@Override
+			public Render<? super EntityElf> createRenderFor(RenderManager manager) {
+				return new RenderElf(manager, 1.0f);
 			}
 		});
 	}

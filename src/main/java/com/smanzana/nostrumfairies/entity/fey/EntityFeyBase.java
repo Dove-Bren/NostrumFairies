@@ -21,18 +21,24 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.EntityGolem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
+import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.play.server.SPacketAnimation;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, ILoreTagged {
 
@@ -265,6 +271,9 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	protected abstract void onCombatTick();
 	
+	@SideOnly(Side.CLIENT)
+	protected abstract void onCientTick();
+	
 	/**
 	 * Called periodically while doing task ticks to see if we should see if any other tasks are out there that
 	 * we could also pick up. Fairies should return false if they're far enough in their task that picking up more
@@ -276,11 +285,70 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	@Override
 	protected abstract void initEntityAI();
 	
+	protected int getDefaultSwingAnimationDuration() {
+		return 6;
+	}
+	
+	/**
+	 * Returns an integer indicating the end point of the swing animation, used by {@link #swingProgress} to provide a
+	 * progress indicator. Takes dig speed enchantments into account.
+	 * Note: Copied from vanilla where you can't override it :(
+	 */
+	protected int getArmSwingAnimationEnd() {
+		return this.isPotionActive(MobEffects.HASTE)
+				? getDefaultSwingAnimationDuration() - (1 + this.getActivePotionEffect(MobEffects.HASTE).getAmplifier())
+				: (this.isPotionActive(MobEffects.MINING_FATIGUE)
+						? getDefaultSwingAnimationDuration() + (1 + this.getActivePotionEffect(MobEffects.MINING_FATIGUE).getAmplifier()) * 2
+						: getDefaultSwingAnimationDuration());
+	}
+
+	@Override
+	public void swingArm(EnumHand hand) {
+		ItemStack stack = this.getHeldItem(hand);
+		if (stack != null && stack.getItem() != null) {
+			if (stack.getItem().onEntitySwing(this, stack)) {
+				return;
+			}
+		}
+		
+		if (!this.isSwingInProgress || this.swingProgressInt >= this.getArmSwingAnimationEnd() / 2 || this.swingProgressInt < 0) {
+			this.swingProgressInt = -1;
+			this.isSwingInProgress = true;
+			this.swingingHand = hand;
+
+			if (this.worldObj instanceof WorldServer) {
+				((WorldServer)this.worldObj).getEntityTracker().sendToAllTrackingEntity(this, new SPacketAnimation(this, hand == EnumHand.MAIN_HAND ? 0 : 3));
+			}
+		}
+	}
+	
+	@Override
+	protected void updateArmSwingProgress() {
+		int i = this.getArmSwingAnimationEnd();
+
+		if (this.isSwingInProgress) {
+			++this.swingProgressInt;
+
+			if (this.swingProgressInt >= i) {
+				this.swingProgressInt = 0;
+				this.isSwingInProgress = false;
+			}
+		}else {
+			this.swingProgressInt = 0;
+		}
+
+		this.swingProgress = (float)this.swingProgressInt / (float)i;
+	}
+	
 	@Override
 	public void onUpdate() {
 		super.onUpdate();
 		
 		this.updateArmSwingProgress();
+		
+		if (worldObj.isRemote) {
+			onCientTick();
+		}
 		
 		// TODO communiate status with DAtaParamater
 		if (worldObj.isRemote || this.isDead) {
@@ -421,11 +489,11 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 //					}
 					
 					boolean success;
-					long time1 = 0;
-					long time2 = 0;
-					long time3 = 0;
-					long time4 = 0;
-					long startInner;
+//					long time1 = 0;
+//					long time2 = 0;
+//					long time3 = 0;
+//					long time4 = 0;
+//					long startInner;
 
 					//startInner = System.currentTimeMillis();
 					success = (foundTask == null || foundTask.canMerge(task));

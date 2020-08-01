@@ -3,7 +3,6 @@ package com.smanzana.nostrumfairies.blocks;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -135,7 +134,7 @@ public class MiningBlock extends BlockContainer {
 		private int platformRequests; // Number of platform blocks currently needed
 		
 		// Rendering variables
-		protected List<BlockPos> oreLocations;
+		protected Set<BlockPos> oreLocations;
 		
 		public MiningBlockTileEntity() {
 			this(32);
@@ -145,7 +144,7 @@ public class MiningBlock extends BlockContainer {
 			super();
 			this.radius = blockRadius;
 			taskMap = new HashMap<>();
-			oreLocations = new LinkedList<>();
+			oreLocations = new HashSet<>();
 			beacons = new HashSet<>();
 			
 			lowestLevel = -1;
@@ -452,10 +451,26 @@ public class MiningBlock extends BlockContainer {
 			return true;
 		}
 		
+		private boolean isIgnorableBlock(BlockPos pos) {
+			IBlockState state = worldObj.getBlockState(pos);
+			// We care if it's something that doesn't block movement and isn't a liquid source block
+			if (state.getMaterial().blocksMovement()) {
+				return false;
+			}
+			if (state.getMaterial().isLiquid()) {
+				if (state.getBlock() == Blocks.FLOWING_WATER || state.getBlock() == Blocks.FLOWING_LAVA) {
+					return true;
+				}
+			}
+			
+			return true;
+		}
+		
 		private boolean isEmpty(BlockPos pos) {
 			return worldObj.isAirBlock(pos)
 					|| worldObj.getBlockState(pos).getBlock() instanceof MagicLight
-					|| worldObj.getBlockState(pos).getBlock() instanceof BlockTorch;
+					|| worldObj.getBlockState(pos).getBlock() instanceof BlockTorch
+					|| isIgnorableBlock(pos);
 		}
 		
 		/**
@@ -473,6 +488,13 @@ public class MiningBlock extends BlockContainer {
 				makeRepairTask(base.down(), lastPos);
 				tasked = true;
 			}
+			
+			// And above (but only if there's liquid flowing in
+			if (worldObj.getBlockState(tall ? base.up().up().up() : base.up().up()
+					).getMaterial().isLiquid()) {
+				makeRepairTask(tall ? base.up().up().up() : base.up().up(), lastPos);
+			}
+			
 			
 			// check for 2 or 3 high air
 			// Make a prereq from lastPos if it's there.
@@ -862,6 +884,11 @@ public class MiningBlock extends BlockContainer {
 			final long startTime = System.currentTimeMillis();
 			if (nextPlatform > 0) {
 				repairMine(nextPlatform - 1);
+			}
+			
+			// Also repair any mine shafts we have going (helps with gravel and changing terrain)
+			for (BlockPos pos : this.oreLocations.toArray(new BlockPos[oreLocations.size()])) {
+				mineTo(pos);
 			}
 			final long end = System.currentTimeMillis();
 			if (end - startTime >= 5) {

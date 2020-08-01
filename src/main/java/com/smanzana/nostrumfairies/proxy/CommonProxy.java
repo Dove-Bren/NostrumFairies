@@ -13,6 +13,7 @@ import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.blocks.WoodcuttingBlock;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
+import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
@@ -46,6 +47,13 @@ public class CommonProxy {
     			false
     			);
     	EntityRegistry.registerModEntity(EntityDwarf.class, "dwarf",
+    			entityID++,
+    			NostrumFairies.instance,
+    			128,
+    			1,
+    			false
+    			);
+    	EntityRegistry.registerModEntity(EntityElf.class, "elf",
     			entityID++,
     			NostrumFairies.instance,
     			128,

@@ -129,24 +129,25 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 			return false;
 		}
 		
-		BlockPos pos = placeAt;
-		if (world.isAirBlock(pos.north())) {
-			pos = pos.north();
-		} else if (world.isAirBlock(pos.south())) {
-			pos = pos.south();
-		} else if (world.isAirBlock(pos.east())) {
-			pos = pos.east();
-		} else if (world.isAirBlock(pos.west())) {
-			pos = pos.west();
-		} else if (world.isAirBlock(pos.up())) {
-			pos = pos.up();
-		} else {
-			pos = pos.down();
-		}
-		
-		if (!world.isAirBlock(pos)) {
-			return false;
-		}
+		// We leave this up to the entity, which can do it better
+//		BlockPos pos = placeAt;
+//		if (world.isAirBlock(pos.north())) {
+//			pos = pos.north();
+//		} else if (world.isAirBlock(pos.south())) {
+//			pos = pos.south();
+//		} else if (world.isAirBlock(pos.east())) {
+//			pos = pos.east();
+//		} else if (world.isAirBlock(pos.west())) {
+//			pos = pos.west();
+//		} else if (world.isAirBlock(pos.up())) {
+//			pos = pos.up();
+//		} else {
+//			pos = pos.down();
+//		}
+//		
+//		if (!world.isAirBlock(pos)) {
+//			return false;
+//		}
 		
 		// Try to create tasks including retrieving the item
 		if (this.networkCacheKey == null || !this.networkCacheKey.equals(network.getCacheKey())) {

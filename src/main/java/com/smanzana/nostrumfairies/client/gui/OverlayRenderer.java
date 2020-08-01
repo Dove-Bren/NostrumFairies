@@ -4,8 +4,6 @@ import java.util.Collection;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -36,7 +34,7 @@ public class OverlayRenderer extends Gui {
 					+ networks.size()					
 					+ ") alive and well!", 20, 20, 0xFFFFFFFF);
 			try {
-				LogisticsNetwork network = networks.iterator().next();
+//				LogisticsNetwork network = networks.iterator().next();
 //				int y = 30;
 //				List<ItemDeepStack> items = network.getCondensedNetworkItems();
 //				if (!items.isEmpty()) {

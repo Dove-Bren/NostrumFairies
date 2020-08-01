@@ -174,9 +174,12 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 			; // ?
 			break;
 		case MOVING:
+		{
 			phase = Phase.CHOPPING;
-			animCount = getTreeHeight() * 3;
+			float secs = getTreeHeight() * 4;
+			animCount = (int) Math.ceil(secs * .5); // only .5 of a swing per second
 			break;
+		}
 		case CHOPPING:
 			// Moved to chop. Spend time chopping!
 			if (animCount > 0) { // TODO base on size of tree?

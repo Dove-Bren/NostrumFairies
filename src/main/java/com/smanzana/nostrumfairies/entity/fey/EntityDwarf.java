@@ -191,31 +191,33 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		// We also change the order we evaluate spots based on the same thing. we prefer above for repair, and prefer at or below
 		// for non-repair
 		
-		if ((repair) || (!worldObj.isAirBlock(targetPos) || !worldObj.isSideSolid(targetPos.down(), EnumFacing.UP))) {
+		if (repair || ((!worldObj.isAirBlock(targetPos) && worldObj.getBlockState(targetPos).getMaterial().blocksMovement())
+						|| !worldObj.isSideSolid(targetPos.down(), EnumFacing.UP))) {
 			// could get enum facing from diffs in dir to start at the side closest!
 			BlockPos[] initOffsets = {targetPos.north(), targetPos.east(), targetPos.south(), targetPos.west()};
 			BlockPos[] offsets;
 			if (repair) {
-				// Prefer up, same, double up, then down
+				// Prefer up, double up, same, then down
 				offsets = new BlockPos[] {
 					initOffsets[0].up(), initOffsets[1].up(), initOffsets[2].up(), initOffsets[3].up(),
-					initOffsets[0], initOffsets[1], initOffsets[2], initOffsets[3],
 					initOffsets[0].up().up(), initOffsets[1].up().up(), initOffsets[2].up().up(), initOffsets[3].up().up(),
+					initOffsets[0], initOffsets[1], initOffsets[2], initOffsets[3],
 					targetPos.down(), initOffsets[0].down(), initOffsets[1].down(), initOffsets[2].down(), initOffsets[3].down(),
 				};
 			} else {
 				// Prefer same, below, above
 				offsets = new BlockPos[] {
 					initOffsets[0], initOffsets[1], initOffsets[2], initOffsets[3],
-					targetPos.down(), targetPos.up(),
 					initOffsets[0].down(), initOffsets[1].down(), initOffsets[2].down(), initOffsets[3].down(),
+					targetPos.down(), targetPos.up(),
 					initOffsets[0].up(), initOffsets[1].up(), initOffsets[2].up(), initOffsets[3].up(),
 				};
 			}
 		
 			// Check each candidate to see if we can stand there
 			for (BlockPos pos : offsets) {
-				if (worldObj.isAirBlock(pos) && worldObj.isSideSolid(pos.down(), EnumFacing.UP)) {
+				if ((worldObj.isAirBlock(pos) || !worldObj.getBlockState(pos).getMaterial().blocksMovement())
+						&& worldObj.isSideSolid(pos.down(), EnumFacing.UP)) {
 					targetPos = pos;
 					break;
 				}
@@ -297,7 +299,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 //		}
 		
 		if (allOrNothing) {
-			if (!worldObj.isAirBlock(targetPos)) {
+			if (!worldObj.isAirBlock(targetPos) && worldObj.getBlockState(targetPos).getMaterial().blocksMovement()) {
 				targetPos = null;
 			}
 		}
@@ -500,13 +502,13 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		// See if we're too far away from our home block
 		if (this.navigator.noPath()) {
 			BlockPos home = this.getHome();
-			if (home != null && !this.canReach(this.getPosition(), false)) {
+			if (home != null && (this.getDistanceSq(home) > 100 || this.ticksExisted % (20 * 10) == 0 && rand.nextBoolean())) {
 				
 				// Go to a random place around our home
 				final BlockPos center = home;
 				BlockPos targ = null;
 				int attempts = 20;
-				final double maxDistSq = Math.min(25, this.wanderDistanceSq);
+				final double maxDistSq = Math.min(100, this.wanderDistanceSq);
 				do {
 					double dist = this.rand.nextDouble() * Math.sqrt(maxDistSq);
 					float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
@@ -882,5 +884,48 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void onCombatTick() {
 		this.setPose(ArmPose.ATTACKING);
+	}
+	
+	@Override
+	protected int getDefaultSwingAnimationDuration() {
+		return 18;
+	}
+	
+	@Override
+	protected void onCientTick() {
+		;
+	}
+	
+	@Override
+	public boolean isPushedByWater() {
+		return false;
+	}
+	
+	protected float getWaterSlowDown() {
+		//return super.getWaterSlowDown();
+		return .7f;
+	}
+	
+	@Override
+	public boolean isInWater() {
+		return false;//super.isInWater();
+	}
+	
+	@Override
+	public boolean isInLava() {
+		return false;
+	}
+	
+	@Override
+	public boolean canBreatheUnderwater() {
+		return false;
+	}
+	
+	@Override
+	protected int decreaseAirSupply(int air) {
+		if (this.ticksExisted % 3 == 0) {
+			return super.decreaseAirSupply(air);
+		}
+		return air;
 	}
 }

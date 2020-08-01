@@ -110,6 +110,10 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			return false;
 		}
 		
+		if (block.getX() == -266 && block.getZ() == 259) {
+			System.out.print(".");
+		}
+		
 		LogisticsNetwork network = worker.getLogisticsNetwork();
 		if (network == null) {
 			return false;
@@ -117,7 +121,11 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		
 		for (LogisticsTaskMineBlock prereq : prereqs) {
 			boolean found = false;
-			if (prereq.isActive() || prereq.isComplete()) {
+			if (prereq == null) {
+				continue;
+			}
+			
+			if ((prereq.isComplete() || prereq.phase == Phase.RETURNING) || (prereq.isActive() && prereq.fairy == worker)) {
 				found = true;
 				break;
 			}
@@ -271,9 +279,14 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			// TODO different tools for dwarves?
 			IBlockState state = world.getBlockState(block);
 			float secs = (state.getBlockHardness(world, block)) * 5;
+			
+			if (state.getMaterial().isLiquid()) {
+				secs = .5f;
+			}
+			
 			// could put tool stuff here
 			
-			animCount = (int) Math.ceil(secs * 1.5); // 1.5 break completes per second?
+			animCount = (int) Math.ceil(secs * 1); // 1 break completes per second
 		}
 		
 		return true;
