@@ -300,11 +300,11 @@ public class MiningBlock extends BlockContainer {
 			}
 		}
 		
-		private void makeMineTask(BlockPos pos) {
-			makeMineTask(pos, null);
+		private void makeMineTask(BlockPos pos, @Nullable LogisticsTaskMineBlock[] prereqs) {
+			makeMineTask(pos, null, prereqs);
 		} 
 		
-		private void makeMineTask(BlockPos pos, BlockPos mineAt) {
+		private void makeMineTask(BlockPos pos, BlockPos mineAt, @Nullable LogisticsTaskMineBlock[] prereqs) {
 			LogisticsNetwork network = this.getNetwork();
 			if (network == null) {
 				return;
@@ -316,12 +316,13 @@ public class MiningBlock extends BlockContainer {
 				// on the constructor
 				LogisticsTaskMineBlock task;
 				if (mineAt == null) {
-					task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", worldObj, pos);
+					task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", worldObj, pos, prereqs);
 				} else {
-					task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", worldObj, pos, mineAt.toImmutable());
+					task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", worldObj, pos, mineAt.toImmutable(), prereqs);
 				}
 				this.taskMap.put(pos, task);
 				network.getTaskRegistry().register(task, null);
+				this.markDirty();
 			}
 		}
 		
@@ -473,21 +474,42 @@ public class MiningBlock extends BlockContainer {
 				tasked = true;
 			}
 			
-			// check for 3-high air
-			if (!isEmpty(base)) {
-				makeMineTask(base);
-				tasked = true;
-			}
-			if (!isEmpty(base.up())) {
-				makeMineTask(base.up());
-				tasked = true;
-			}
-			if (tall) {
-				if (!isEmpty(base.up().up())) {
-					makeMineTask(base.up().up());
+			// check for 2 or 3 high air
+			// Make a prereq from lastPos if it's there.
+			// TODO could try and use above and below blocks as prereqs? Would that help?
+			MutableBlockPos lastCursor = lastPos == null ? null : new MutableBlockPos(lastPos);
+			BlockPos[] range = (tall ? new BlockPos[]{base, base.up(), base.up().up(), base.up().up()} : new BlockPos[]{base, base.up(), base.up()});
+			for (BlockPos pos : range) {
+				if (!isEmpty(pos)) {
+					LogisticsTaskMineBlock[] prereq = null;
+					if (lastCursor != null) {
+						lastCursor.setY(pos.getY());
+						ILogisticsTask otherTask = taskMap.get(lastCursor);
+						prereq = (otherTask == null || !(otherTask instanceof LogisticsTaskMineBlock) ? null
+								: new LogisticsTaskMineBlock[]{(LogisticsTaskMineBlock)otherTask});
+					}
+					makeMineTask(pos, prereq);
 					tasked = true;
 				}
 			}
+//			if (!isEmpty(base.up())) {
+//				ILogisticsTask otherTask = (lastPos == null ? null : taskMap.get(lastCursor));
+//				LogisticsTaskMineBlock[] prereq = (otherTask == null || !(otherTask instanceof LogisticsTaskMineBlock) ? null
+//						: new LogisticsTaskMineBlock[]{(LogisticsTaskMineBlock)otherTask});
+//				
+//				makeMineTask(base.up(), prereq);
+//				tasked = true;
+//			}
+//			if (tall) {
+//				if (!isEmpty(base.up().up())) {
+//					ILogisticsTask otherTask = (lastPos == null ? null : taskMap.get(lastCursor));
+//					LogisticsTaskMineBlock[] prereq = (otherTask == null || !(otherTask instanceof LogisticsTaskMineBlock) ? null
+//							: new LogisticsTaskMineBlock[]{(LogisticsTaskMineBlock)otherTask});
+//					
+//					makeMineTask(base.up().up(), prereq);
+//					tasked = true;
+//				}
+//			}
 			
 			return tasked;
 		}
@@ -565,7 +587,7 @@ public class MiningBlock extends BlockContainer {
 			}
 			
 			// Then queue up the actual mining task
-			makeMineTask(pos, cursor);
+			makeMineTask(pos, cursor, new LogisticsTaskMineBlock[]{(LogisticsTaskMineBlock) taskMap.get(cursor)});
 			
 			// And mark that we're going there in the first place
 			oreLocations.add(pos.toImmutable());
@@ -631,7 +653,7 @@ public class MiningBlock extends BlockContainer {
 			
 			final int bounds = STAIRCASE_RADIUS + PLATFORM_WIDTH;
 			MutableBlockPos cursor = new MutableBlockPos();
-			MutableBlockPos last = null;
+			//MutableBlockPos last = null;
 			boolean clear = true;
 			final int y = getYFromLevel(level);
 			
@@ -648,13 +670,13 @@ public class MiningBlock extends BlockContainer {
 					final int x = pos.getX() + i;
 					final int z = pos.getZ() + j;
 					
-					if (last == null) {
-						last = new MutableBlockPos(x, y, z);
-					} else {
-						last.setPos(cursor);
-					}
+//					if (last == null) {
+//						last = new MutableBlockPos(x, y, z);
+//					} else {
+//						last.setPos(cursor);
+//					}
 					cursor.setPos(x, y, z);
-					if (clearBlock(cursor, false, last)) {
+					if (clearBlock(cursor, false, null)) {
 						clear = false;
 					}
 				} 
@@ -876,6 +898,13 @@ public class MiningBlock extends BlockContainer {
 				}
 				
 				if (!didWork) {
+					// If this is the first layer after a platform is made, wait for the platform to finish
+					if (scanLevel == platformToLevel(nextPlatform - 1) + 1) {
+						if (this.taskMap.size() > 0) {
+							break;
+						}
+					}
+					
 					didWork = scanLayer(scanLevel);
 					if (this.scanProgress == 0) { // if no 'pickup' location was set
 						System.out.println("Finished scanning level " + scanLevel);
@@ -992,6 +1021,12 @@ public class MiningBlock extends BlockContainer {
 				nbt.setTag(NBT_TORCHES, this.torches.serializeNBT());
 			}
 			
+			list = new NBTTagList();
+			for (BlockPos pos : taskMap.keySet()) {
+				list.appendTag(new NBTTagLong(pos.toLong()));
+			}
+			nbt.setTag("paths", list);
+			
 			return nbt;
 		}
 		
@@ -1005,6 +1040,12 @@ public class MiningBlock extends BlockContainer {
 				for (int i = 0; i < list.tagCount(); i++) {
 					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
 					oreLocations.add(pos);
+				}
+				this.taskMap.clear();
+				list = nbt.getTagList("paths", NBT.TAG_LONG);
+				for (int i = 0; i < list.tagCount(); i++) {
+					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
+					taskMap.put(pos, null);
 				}
 			} else {
 				NBTTagList list = nbt.getTagList(NBT_BEACONS, NBT.TAG_LONG);
@@ -1216,6 +1257,50 @@ public class MiningBlock extends BlockContainer {
 						tessellator.draw();
 						GlStateManager.popMatrix();
 					}
+					
+//					red = 0f;
+//					blue = 0f;
+//					green = 1f;
+//					alpha = .7f;
+//					
+//					for (BlockPos target : te.taskMap.keySet()) {
+//						
+//						GlStateManager.pushMatrix();
+//						GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
+//						buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
+//						
+//						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
+//						
+//						tessellator.draw();
+//						
+//						buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
+//						
+//						buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
+//						
+//						tessellator.draw();
+//						
+//						buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+//						
+//						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
+//							buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
+//							buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
+//							buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
+//						buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
+//							buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
+//						
+//						tessellator.draw();
+//						GlStateManager.popMatrix();
+//					}
 					
 					GlStateManager.enableDepth();
 					GlStateManager.enableTexture2D();

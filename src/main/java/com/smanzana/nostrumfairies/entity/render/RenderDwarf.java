@@ -46,10 +46,7 @@ public class RenderDwarf extends RenderLiving<EntityDwarf> {
 		// Model is 30/16ths of a block. Want to be .95 (dwarf height).
 		float scale = entity.height / (30f/16f);
 		GlStateManager.scale(scale, scale, scale);
-		x = 0;
-		y = 0;
-		z = 0;
-		super.doRender(entity, x, y, z, entityYaw, partialTicks);
+		super.doRender(entity, 0, 0, 0, entityYaw, partialTicks);
 		
 		GlStateManager.popMatrix();
 	}

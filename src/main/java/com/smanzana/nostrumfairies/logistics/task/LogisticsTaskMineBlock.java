@@ -37,6 +37,8 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 	private BlockPos block;
 	private BlockPos mineAt;
 	private ILogisticsComponent owningComponent;
+	private @Nullable LogisticsTaskMineBlock[] prereqs; // Pre-req tasks if any. Useful for mines which create paths
+														// themselves, eliminating the need for pathfinding checks
 	
 	private @Nullable List<ILogisticsTask> mergedTasks;
 	private @Nullable LogisticsTaskMineBlock compositeTask; // Task we were merged into
@@ -51,23 +53,26 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 	private long lastOreCheck;
 	private boolean lastOreResult;
 
-	public LogisticsTaskMineBlock(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos) {
-		this(owningComponent, displayName, world, pos, pos);
+	public LogisticsTaskMineBlock(ILogisticsComponent owningComponent, String displayName,
+			World world, BlockPos pos, @Nullable LogisticsTaskMineBlock[] prereqs) {
+		this(owningComponent, displayName, world, pos, pos, prereqs);
 	}
 	
-	public LogisticsTaskMineBlock(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos, BlockPos mineAt) {
+	public LogisticsTaskMineBlock(ILogisticsComponent owningComponent, String displayName,
+			World world, BlockPos pos, BlockPos mineAt, @Nullable LogisticsTaskMineBlock[] prereqs) {
 		this.displayName = displayName;
 		this.block = pos;
 		this.mineAt = mineAt;
 		this.world = world;
 		this.owningComponent = owningComponent;
+		this.prereqs = (prereqs == null ? new LogisticsTaskMineBlock[0] : prereqs);
 		phase = Phase.IDLE;
 	}
 	
 	private static LogisticsTaskMineBlock makeComposite(LogisticsTaskMineBlock left, LogisticsTaskMineBlock right) {
 		LogisticsTaskMineBlock composite;
 		// Just take left's pos for now
-		composite = new LogisticsTaskMineBlock(left.owningComponent, left.displayName, left.world, left.block, left.mineAt);
+		composite = new LogisticsTaskMineBlock(left.owningComponent, left.displayName, left.world, left.block, left.mineAt, left.prereqs);
 		
 		// pull registry stuff
 		composite.fairy = left.fairy;
@@ -83,6 +88,10 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		left.compositeTask = composite;
 		right.compositeTask = composite;
 		return composite;
+	}
+	
+	public boolean hasPrereqs() {
+		return prereqs.length > 0;
 	}
 
 	@Override
@@ -104,6 +113,17 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		LogisticsNetwork network = worker.getLogisticsNetwork();
 		if (network == null) {
 			return false;
+		}
+		
+		for (LogisticsTaskMineBlock prereq : prereqs) {
+			boolean found = false;
+			if (prereq.isActive() || prereq.isComplete()) {
+				found = true;
+				break;
+			}
+			if (!found) {
+				return false;
+			}
 		}
 		
 		if (!world.isAreaLoaded(block, 1)) {

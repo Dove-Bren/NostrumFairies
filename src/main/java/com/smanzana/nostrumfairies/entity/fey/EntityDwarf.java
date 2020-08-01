@@ -93,6 +93,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		this.height = .95f;
 		this.workDistanceSq = 24 * 24;
 		this.inventory = new InventoryBasic("Dwarf Inv", false, INV_SIZE);
+		this.isImmuneToFire = true;
 	}
 	
 	@Override
@@ -184,56 +185,116 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		return true;
 	}
 	
-	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
+	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing, boolean repair) {
 		
-		if (!worldObj.isAirBlock(targetPos)) {
-			do {
-				if (worldObj.isAirBlock(targetPos.north())) {
-					if (worldObj.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
-						targetPos = targetPos.north();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.north().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.south())) {
-					if (worldObj.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
-						targetPos = targetPos.south();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.south().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.east())) {
-					if (worldObj.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
-						targetPos = targetPos.east();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.east().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.west())) {
-					if (worldObj.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
-						targetPos = targetPos.west();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.west().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.up())) {
-					targetPos = targetPos.up();
+		// repair tasks are going to add the block, so don't stand there! Stand above -- up to 2 blocks above
+		// We also change the order we evaluate spots based on the same thing. we prefer above for repair, and prefer at or below
+		// for non-repair
+		
+		if ((repair) || (!worldObj.isAirBlock(targetPos) || !worldObj.isSideSolid(targetPos.down(), EnumFacing.UP))) {
+			// could get enum facing from diffs in dir to start at the side closest!
+			BlockPos[] initOffsets = {targetPos.north(), targetPos.east(), targetPos.south(), targetPos.west()};
+			BlockPos[] offsets;
+			if (repair) {
+				// Prefer up, same, double up, then down
+				offsets = new BlockPos[] {
+					initOffsets[0].up(), initOffsets[1].up(), initOffsets[2].up(), initOffsets[3].up(),
+					initOffsets[0], initOffsets[1], initOffsets[2], initOffsets[3],
+					initOffsets[0].up().up(), initOffsets[1].up().up(), initOffsets[2].up().up(), initOffsets[3].up().up(),
+					targetPos.down(), initOffsets[0].down(), initOffsets[1].down(), initOffsets[2].down(), initOffsets[3].down(),
+				};
+			} else {
+				// Prefer same, below, above
+				offsets = new BlockPos[] {
+					initOffsets[0], initOffsets[1], initOffsets[2], initOffsets[3],
+					targetPos.down(), targetPos.up(),
+					initOffsets[0].down(), initOffsets[1].down(), initOffsets[2].down(), initOffsets[3].down(),
+					initOffsets[0].up(), initOffsets[1].up(), initOffsets[2].up(), initOffsets[3].up(),
+				};
+			}
+		
+			// Check each candidate to see if we can stand there
+			for (BlockPos pos : offsets) {
+				if (worldObj.isAirBlock(pos) && worldObj.isSideSolid(pos.down(), EnumFacing.UP)) {
+					targetPos = pos;
 					break;
 				}
-				if (worldObj.isAirBlock(targetPos.down()) && worldObj.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
-					targetPos = targetPos.down();
-					break;
-				}
-			} while (false);
+			}
 		}
+		
+//		
+//		if ((repair) || (!worldObj.isAirBlock(targetPos) || !worldObj.isSideSolid(targetPos.down(), EnumFacing.UP))) {
+//			do {
+//				if (worldObj.isAirBlock(targetPos.north())) {
+//					if (worldObj.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
+//						targetPos = targetPos.north();
+//						break;
+//					} else if (worldObj.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
+//						targetPos = targetPos.north().down();
+//						break;
+//					} else if (worldObj.isSideSolid(targetPos.north(), EnumFacing.UP)) {
+//						targetPos = targetPos.north().up();
+//						break;
+//					} else if (repair && worldObj.isSideSolid(targetPos.north().up(), EnumFacing.UP)) {
+//						targetPos = targetPos.north().up().up();
+//						break;
+//					}
+//				}
+//				if (worldObj.isAirBlock(targetPos.south())) {
+//					if (worldObj.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
+//						targetPos = targetPos.south();
+//						break;
+//					} else if (worldObj.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
+//						targetPos = targetPos.south().down();
+//						break;
+//					} else if (worldObj.isSideSolid(targetPos.south(), EnumFacing.UP)) {
+//						targetPos = targetPos.south().up();
+//						break;
+//					} else if (repair && worldObj.isSideSolid(targetPos.south().up(), EnumFacing.UP)) {
+//						targetPos = targetPos.south().up().up();
+//						break;
+//					}
+//				}
+//				if (worldObj.isAirBlock(targetPos.east())) {
+//					if (worldObj.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
+//						targetPos = targetPos.east();
+//						break;
+//					} else if (worldObj.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
+//						targetPos = targetPos.east().down();
+//						break;
+//					} else if (worldObj.isSideSolid(targetPos.east(), EnumFacing.UP)) {
+//						targetPos = targetPos.east().up();
+//						break;
+//					} else if (repair && worldObj.isSideSolid(targetPos.east().up(), EnumFacing.UP)) {
+//						targetPos = targetPos.east().up().up();
+//						break;
+//					}
+//				}
+//				if (worldObj.isAirBlock(targetPos.west())) {
+//					if (worldObj.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
+//						targetPos = targetPos.west();
+//						break;
+//					} else if (worldObj.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
+//						targetPos = targetPos.west().down();
+//						break;
+//					} else if (worldObj.isSideSolid(targetPos.west(), EnumFacing.UP)) {
+//						targetPos = targetPos.west().up();
+//						break;
+//					} else if (repair && worldObj.isSideSolid(targetPos.west().up(), EnumFacing.UP)) {
+//						targetPos = targetPos.west().up().up();
+//						break;
+//					}
+//				}
+//				if (!repair && worldObj.isAirBlock(targetPos.up()) && worldObj.isSideSolid(targetPos, EnumFacing.UP)) {
+//					targetPos = targetPos.up();
+//					break;
+//				}
+//				if (worldObj.isAirBlock(targetPos.down()) && worldObj.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
+//					targetPos = targetPos.down();
+//					break;
+//				}
+//			} while (false);
+//		}
 		
 		if (allOrNothing) {
 			if (!worldObj.isAirBlock(targetPos)) {
@@ -247,22 +308,17 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
 		if (task instanceof LogisticsTaskMineBlock) {
-			long start = System.currentTimeMillis();
 			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
 			
 			if (mine.getWorld() != this.worldObj) {
-				//System.out.println("\t\t Exit A: " + (System.currentTimeMillis() - start));
 				return false;
 			}
 			
 			// Dwarves only perform tasks from their mine
 			if (this.getHome() == null || mine.getSourceComponent() == null ||
 					!this.getHome().equals(mine.getSourceComponent().getPosition())) {
-				//System.out.println("\t\t Exit B: " + (System.currentTimeMillis() - start));
 				return false;
 			}
-			
-			//System.out.println("\t\tdelta: " + (System.currentTimeMillis() - start));
 			
 			// Check where the block is
 			// EDIT mines have things go FAR down, so we ignore the distance check here
@@ -272,20 +328,13 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				return false;
 			}
 			
-			//System.out.println("\t\tdelta: " + (System.currentTimeMillis() - start));
-			
 			if (this.getCurrentTask() != null
 					&& this.getCurrentTask() instanceof LogisticsTaskMineBlock) {
 				
-				//System.out.println("\t\t--- delta: " + (System.currentTimeMillis() - start));
-				
 				// Try to stay around the other tasks
 				if (((LogisticsTaskMineBlock)this.getCurrentTask()).getTargetMineLoc().distanceSq(mine.getTargetMineLoc()) > 25) {
-					//System.out.println("\t\t Exit D: " + (System.currentTimeMillis() - start));
 					return false;
 				}
-				
-				//System.out.println("\t\t*** delta: " + (System.currentTimeMillis() - start));
 				
 				// If we already have a mining task, we ask the mine to see if we'll be able to get to this task
 				// with what we already have.
@@ -293,46 +342,47 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				if (mine.getSourceComponent() != null) {
 					TileEntity te = worldObj.getTileEntity(mine.getSourceComponent().getPosition());
 					if (te != null && te instanceof MiningBlock.MiningBlockTileEntity) {
-						//System.out.println("\t\t Exit E: " + (System.currentTimeMillis() - start));
 						return ((MiningBlock.MiningBlockTileEntity) te).taskAccessibleWithTasks(mine, this);
 					}
-					
-					//return taskAccessibleWithTasks
 				}
-				//System.out.println("\t\tdelta: " + (System.currentTimeMillis() - start));
 			}
 			
-			// else
-			
-			target = findEmptySpot(target, true);
-			if (target == null) {
-				//System.out.println("\t\t Exit F: " + (System.currentTimeMillis() - start));
-				return false;
-			}
-			
-			// Check for pathing
-			if (this.getDistanceSq(target) < .2) {
-				//System.out.println("\t\t Exit G: " + (System.currentTimeMillis() - start));
+			// If this is a mine task that the mine set up a prereq, trust that that's been checked and
+			// that pathfinding will work.
+			if (mine.hasPrereqs()) {
 				return true;
-			}
-			Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
-			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
-			}
-			if (currentPath == null) {
-				if (!success) {
+			} else {
+				// Attempt to pathfind
+				
+				// Find a better block to stand, if we weren't told explicitely to stand there
+				if (target == mine.getTargetBlock()) {
+					target = findEmptySpot(target, true, false);
+					if (target == null) {
+						return false;
+					}
+				}
+				
+				// Check for pathing
+				if (this.getDistanceSq(target) < .2) {
+					return true;
+				}
+				Path currentPath = navigator.getPath();
+				boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+				if (success) {
+					success = Paths.IsComplete(navigator.getPath(), target, 2);
+				}
+				if (currentPath == null) {
+					if (!success) {
+						navigator.setPath(currentPath, 1.0);
+					}
+				} else {
 					navigator.setPath(currentPath, 1.0);
 				}
-			} else {
-				navigator.setPath(currentPath, 1.0);
+				if (success || this.getDistanceSq(target) < 1) {
+					// extra case for if the navigator refuses cause we're too close
+					return true;
+				}
 			}
-			if (success || this.getDistanceSq(target) < 1) {
-				// extra case for if the navigator refuses cause we're too close
-				//System.out.println("\t\t Exit : " + (System.currentTimeMillis() - start));
-				return true;
-			}
-			//System.out.println("\t\t Exit Z: " + (System.currentTimeMillis() - start));
 		} else if (task instanceof LogisticsTaskPlaceBlock) {
 			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
 			
@@ -353,9 +403,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				return false;
 			}
 			
-			target = findEmptySpot(target, true);
-			if (target == null) {
-				return false;
+			// Find a better block to stand, if we weren't told explicitely to stand there
+			if (target == place.getTargetBlock()) {
+				target = findEmptySpot(target, true, true);
+				if (target == null) {
+					return false;
+				}
 			}
 			
 			// Check for pathing
@@ -646,7 +699,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
-							movePos = findEmptySpot(movePos, false);
+							movePos = findEmptySpot(movePos, false, (task instanceof LogisticsTaskPlaceBlock));
 							
 							// Is the block we shifted to where we are?
 							if (!this.getPosition().equals(movePos) && this.getDistanceSqToCenter(movePos) > 1) {
