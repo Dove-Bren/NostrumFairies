@@ -1,0 +1,23 @@
+{
+    "ambient.pickaxe.strike":
+    {
+        "sounds":
+        [
+            "nostrumfairies:ambient/pickaxe1",
+            "nostrumfairies:ambient/pickaxe2",
+            "nostrumfairies:ambient/pickaxe3",
+            "nostrumfairies:ambient/pickaxe4",
+            "nostrumfairies:ambient/pickaxe5",
+            "nostrumfairies:ambient/pickaxe6",
+            "nostrumfairies:ambient/pickaxe7",
+            "nostrumfairies:ambient/pickaxe8",
+            "nostrumfairies:ambient/pickaxe9",
+            "nostrumfairies:ambient/pickaxe10",
+            "nostrumfairies:ambient/pickaxe11",
+            "nostrumfairies:ambient/pickaxe12",
+            "nostrumfairies:ambient/pickaxe13",
+            "nostrumfairies:ambient/pickaxe14",
+            "nostrumfairies:ambient/pickaxe15"
+        ]
+    }    
+}

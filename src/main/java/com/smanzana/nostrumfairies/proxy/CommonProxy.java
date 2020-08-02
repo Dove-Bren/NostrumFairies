@@ -17,6 +17,7 @@ import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
@@ -29,7 +30,7 @@ public class CommonProxy {
 	
 	public void preinit() {
 		NetworkHandler.getInstance();
-		
+		NostrumFairiesSounds.registerSounds();
     	
     	int entityID = 0;
     	EntityRegistry.registerModEntity(EntityTestFairy.class, "test_fairy",

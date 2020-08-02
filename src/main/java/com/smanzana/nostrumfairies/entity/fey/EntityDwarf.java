@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.entity.navigation.PathFinderPublic;
@@ -16,6 +17,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
@@ -981,6 +983,20 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void onCientTick() {
 		;
+	}
+	
+	@Override
+	public void onUpdate() {
+		super.onUpdate();
+		
+		if (worldObj.isRemote && isSwingInProgress) {
+			if (this.getPose() == ArmPose.MINING) {
+				// 20% into animation is the hit
+				if (this.swingProgressInt == Math.floor(this.getArmSwingAnimationEnd() * .2)) {
+					NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), worldObj, posX, posY, posZ);
+				}
+			}
+		}
 	}
 	
 	@Override
