@@ -9,7 +9,6 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
@@ -235,22 +234,23 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 				
 				return true;
 			}
-		} else if (task instanceof LogisticsTaskPickupItem) {
-			LogisticsTaskPickupItem pickupTask = (LogisticsTaskPickupItem) task;
-			
-			// Check where the retrieval task wants us to go to pick up
-			BlockPos pickup = pickupTask.getDestination();
-			if (pickup != null && !this.canReach(pickup, true)) {
-				return false;
-			}
-			
-			// Check for pathing
-			if (this.getDistanceSqToEntity(pickupTask.getEntityItem()) < .2) {
-				return true;
-			}
-			
-			return true;
 		}
+//		else if (task instanceof LogisticsTaskPickupItem) {
+//			LogisticsTaskPickupItem pickupTask = (LogisticsTaskPickupItem) task;
+//			
+//			// Check where the retrieval task wants us to go to pick up
+//			BlockPos pickup = pickupTask.getDestination();
+//			if (pickup != null && !this.canReach(pickup, true)) {
+//				return false;
+//			}
+//			
+//			// Check for pathing
+//			if (this.getDistanceSqToEntity(pickupTask.getEntityItem()) < .2) {
+//				return true;
+//			}
+//			
+//			return true;
+//		}
 		
 		return false;
 	}
