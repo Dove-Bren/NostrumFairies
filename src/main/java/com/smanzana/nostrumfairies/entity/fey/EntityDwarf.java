@@ -17,6 +17,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
@@ -474,7 +475,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 					return true;
 				}
 			}
-		} else if (task instanceof LogisticsTaskPlaceBlock) {
+		} else if (task instanceof LogisticsTaskPlaceBlock && !(task instanceof LogisticsTaskPlantItem)) {
 			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
 			
 			if (place.getWorld() != this.worldObj) {

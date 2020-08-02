@@ -69,7 +69,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	
 	private int animCount = 0;
 	
-	private LogisticsTaskPlaceBlock(@Nullable ILogisticsComponent owningComponent, @Nullable EntityLivingBase entity,
+	protected LogisticsTaskPlaceBlock(@Nullable ILogisticsComponent owningComponent, @Nullable EntityLivingBase entity,
 			String displayName, ItemStack item, IBlockState state, World world, BlockPos pos, BlockPos placeAt) {
 		this.displayName = displayName;
 		this.block = pos;
@@ -406,6 +406,10 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	public boolean placedBlock() {
 		return this.phase == Phase.DONE;
 	}
+	
+	protected boolean isSpotValid(World world, BlockPos pos) {
+		return world.isAirBlock(block) || !world.isSideSolid(pos, EnumFacing.UP);
+	}
 
 	@Override
 	public boolean isValid() {
@@ -449,7 +453,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 		// Make sure the block still needs placing
 		if (this.phase != Phase.DONE) {
 			if (lastPlaceCheck == 0 || this.world.getTotalWorldTime() - lastPlaceCheck > 60) {
-				lastPlaceResult = world.isAirBlock(block) || !world.isSideSolid(block, EnumFacing.UP);
+				lastPlaceResult = isSpotValid(world, block);
 				lastPlaceCheck = world.getTotalWorldTime();
 			}
 			

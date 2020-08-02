@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.blocks;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,11 +9,14 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.OreDict;
 
@@ -85,11 +89,11 @@ public class WoodcuttingBlock extends BlockContainer {
 	public static class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements ITickable{
 
 		private int tickCount;
-		private Map<BlockPos, LogisticsTaskChopTree> taskMap;
+		private Map<BlockPos, ILogisticsTask> taskMap;
 		private double radius;
 		
 		public WoodcuttingBlockTileEntity() {
-			this(10);
+			this(16);
 		}
 		
 		public WoodcuttingBlockTileEntity(double blockRadius) {
@@ -113,19 +117,34 @@ public class WoodcuttingBlock extends BlockContainer {
 			return false;
 		}
 		
-		private void makeTask(BlockPos base) {
+		private void makeChopTask(BlockPos base) {
 			LogisticsNetwork network = this.getNetwork();
 			if (network == null) {
 				return;
 			}
 			
-			LogisticsTaskChopTree task = new LogisticsTaskChopTree(this.getNetworkComponent(), "Tree Chop Task", worldObj, base);
-			this.taskMap.put(base, task);
-			network.getTaskRegistry().register(task, null);
+			if (!taskMap.containsKey(base)) {
+				LogisticsTaskChopTree task = new LogisticsTaskChopTree(this.getNetworkComponent(), "Tree Chop Task", worldObj, base);
+				this.taskMap.put(base, task);
+				network.getTaskRegistry().register(task, null);
+			}
+		}
+		
+		private void makePlantTask(BlockPos base) {
+			LogisticsNetwork network = this.getNetwork();
+			if (network == null) {
+				return;
+			}
+			
+			if (!taskMap.containsKey(base)) {
+				LogisticsTaskPlantItem task = new LogisticsTaskPlantItem(this.networkComponent, "Plant Sapling", this.getSapling(), worldObj, base);
+				this.taskMap.put(base, task);
+				network.getTaskRegistry().register(task, null);
+			}
 		}
 		
 		private void removeTask(BlockPos base) {
-			LogisticsTaskChopTree task = taskMap.remove(base);
+			ILogisticsTask task = taskMap.remove(base);
 			if (task == null) {
 				// wut
 				return;
@@ -230,7 +249,22 @@ public class WoodcuttingBlock extends BlockContainer {
 					} else {
 						// Didn't know, so record!
 						// Don't make task cause we filter better later
-						makeTask(base);
+						makeChopTask(base);
+						
+						// TODO instead of just replanting, make a 'find tree spot' func to find spots and plant
+						// up to a configurable number of sampings/trees?
+						List<BlockPos> spots = Lists.newArrayList(base.north(), base.south(), base.east(), base.west());
+						Collections.shuffle(spots);
+						for (BlockPos spot : spots) {
+							if (worldObj.isAirBlock(spot) || worldObj.getBlockState(spot).getBlock().isReplaceable(worldObj, spot)) {
+								base = spot;
+								break;
+							}
+						}
+						
+						if (worldObj.isAirBlock(base)) {
+							makePlantTask(base);
+						}
 					}
 					
 				}
@@ -281,6 +315,11 @@ public class WoodcuttingBlock extends BlockContainer {
 			if (!worldIn.isRemote) {
 				MinecraftForge.TERRAIN_GEN_BUS.register(this);
 			}
+		}
+		
+		// TODO make configurable!
+		public ItemStack getSapling() {
+			return new ItemStack(Blocks.SAPLING);
 		}
 	}
 	

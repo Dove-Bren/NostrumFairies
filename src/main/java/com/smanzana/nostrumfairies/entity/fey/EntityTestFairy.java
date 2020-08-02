@@ -9,10 +9,9 @@ import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
@@ -204,90 +203,134 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		if (task instanceof LogisticsTaskChopTree) {
-			LogisticsTaskChopTree chop = (LogisticsTaskChopTree) task;
+//		if (task instanceof LogisticsTaskChopTree) {
+//			LogisticsTaskChopTree chop = (LogisticsTaskChopTree) task;
+//			
+//			if (chop.getWorld() != this.worldObj) {
+//				return false;
+//			}
+//			
+//			// Check where the tree is
+//			BlockPos pickup = chop.getTrunkPos();
+//			if (pickup == null || !this.canReach(pickup, true)) {
+//				return false;
+//			}
+//			
+//			pickup = findEmptySpot(pickup, true);
+//			if (null == pickup) {
+//				return false;
+//			}
+//			
+//			// Check for pathing
+//			if (this.getDistanceSq(pickup) < .2) {
+//				return true;
+//			}
+//			if (this.navigator.tryMoveToXYZ(pickup.getX(), pickup.getY(), pickup.getZ(), 1.0)) {
+//				navigator.clearPathEntity();
+//				return true;
+//			}
+//		} else if (task instanceof LogisticsTaskMineBlock) {
+//			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
+//			
+//			if (mine.getWorld() != this.worldObj) {
+//				return false;
+//			}
+//			
+//			// Check where the block is
+//			// EDIT mines have things go FAR down, so we ignore the distance check here
+//			BlockPos target = mine.getTargetMineLoc();
+//			if (target == null) {
+//				return false;
+//			}
+//			
+//			target = findEmptySpot(target, true);
+//			if (target == null) {
+//				return false;
+//			}
+//			
+//			// Check for pathing
+//			if (this.getDistanceSq(target) < .2) {
+//				return true;
+//			}
+//			Path currentPath = navigator.getPath();
+//			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+//			if (success) {
+//				success = Paths.IsComplete(navigator.getPath(), target, 2);
+//			}
+//			if (currentPath == null) {
+//				if (!success) {
+//					navigator.setPath(currentPath, 1.0);
+//				}
+//			} else {
+//				navigator.setPath(currentPath, 1.0);
+//			}
+//			if (success) {
+//				return true;
+//			} else if (this.getDistanceSq(target) < 1) {
+//				// extra case for if the navigator refuses cause we're too close
+//				return true;
+//			}
+//		} else if (task instanceof LogisticsTaskPlaceBlock) {
+//			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
+//			
+//			if (place.getWorld() != this.worldObj) {
+//				return false;
+//			}
+//			
+//			// Check where the block is
+//			// EDIT mines have things go FAR down, so we ignore the distance check here
+//			BlockPos target = place.getTargetPlaceLoc();
+//			if (target == null) {
+//				return false;
+//			}
+//			
+//			target = findEmptySpot(target, true);
+//			if (target == null) {
+//				return false;
+//			}
+//			
+//			// Check for pathing
+//			if (this.getDistanceSq(target) < .2) {
+//				return true;
+//			}
+//			Path currentPath = navigator.getPath();
+//			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+//			if (success) {
+//				success = Paths.IsComplete(navigator.getPath(), target, 2);
+//			}
+//			if (currentPath == null) {
+//				if (!success) {
+//					navigator.setPath(currentPath, 1.0);
+//				}
+//			} else {
+//				navigator.setPath(currentPath, 1.0);
+//			}
+//			if (success) {
+//				return true;
+//			} else if (this.getDistanceSq(target) < 1) {
+//				// extra case for if the navigator refuses cause we're too close
+//				return true;
+//			}
+//		} else
+		if (task instanceof LogisticsTaskPlantItem) {
+			LogisticsTaskPlantItem plant = (LogisticsTaskPlantItem) task;
 			
-			if (chop.getWorld() != this.worldObj) {
+			if (plant.getWorld() != this.worldObj) {
 				return false;
 			}
 			
-			// Check where the tree is
-			BlockPos pickup = chop.getTrunkPos();
-			if (pickup == null || !this.canReach(pickup, true)) {
+			// Check where the spot is
+			BlockPos target = plant.getTargetPlaceLoc();
+			if (target == null || !this.canReach(target, true)) {
 				return false;
 			}
 			
-			pickup = findEmptySpot(pickup, true);
-			if (null == pickup) {
-				return false;
-			}
-			
-			// Check for pathing
-			if (this.getDistanceSq(pickup) < .2) {
-				return true;
-			}
-			if (this.navigator.tryMoveToXYZ(pickup.getX(), pickup.getY(), pickup.getZ(), 1.0)) {
-				navigator.clearPathEntity();
-				return true;
-			}
-		} else if (task instanceof LogisticsTaskMineBlock) {
-			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
-			
-			if (mine.getWorld() != this.worldObj) {
-				return false;
-			}
-			
-			// Check where the block is
-			// EDIT mines have things go FAR down, so we ignore the distance check here
-			BlockPos target = mine.getTargetMineLoc();
-			if (target == null) {
-				return false;
-			}
-			
-			target = findEmptySpot(target, true);
-			if (target == null) {
-				return false;
-			}
-			
-			// Check for pathing
-			if (this.getDistanceSq(target) < .2) {
-				return true;
-			}
-			Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
-			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
-			}
-			if (currentPath == null) {
-				if (!success) {
-					navigator.setPath(currentPath, 1.0);
+			// Find a better block to stand, if we weren't told explicitely to stand there
+			if (target == plant.getTargetBlock()) {
+				target = findEmptySpot(target, true);
+				if (target == null) {
+					return false;
 				}
-			} else {
-				navigator.setPath(currentPath, 1.0);
-			}
-			if (success) {
-				return true;
-			} else if (this.getDistanceSq(target) < 1) {
-				// extra case for if the navigator refuses cause we're too close
-				return true;
-			}
-		} else if (task instanceof LogisticsTaskPlaceBlock) {
-			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
-			
-			if (place.getWorld() != this.worldObj) {
-				return false;
-			}
-			
-			// Check where the block is
-			// EDIT mines have things go FAR down, so we ignore the distance check here
-			BlockPos target = place.getTargetPlaceLoc();
-			if (target == null) {
-				return false;
-			}
-			
-			target = findEmptySpot(target, true);
-			if (target == null) {
-				return false;
 			}
 			
 			// Check for pathing
