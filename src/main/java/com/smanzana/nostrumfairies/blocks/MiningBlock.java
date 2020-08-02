@@ -489,10 +489,37 @@ public class MiningBlock extends BlockContainer {
 				tasked = true;
 			}
 			
-			// And above (but only if there's liquid flowing in
-			if (worldObj.getBlockState(tall ? base.up().up().up() : base.up().up()
-					).getMaterial().isLiquid()) {
-				makeRepairTask(tall ? base.up().up().up() : base.up().up(), lastPos);
+			// And above and sides (but only if there's liquid flowing in
+			BlockPos[] around;
+			if (lastPos == null) {
+				around = new BlockPos[]{tall ? base.up().up().up() : base.up().up()};
+			} else {
+				// Figure out which ways are the sides
+				if (lastPos.getX() == base.getX()) {
+					if (tall) {
+						around = new BlockPos[] {base.up().up().up(),
+								base.east(), base.east().up(), base.east().up().up(),
+								base.west(), base.west().up(), base.west().up().up()};
+					} else {
+						around = new BlockPos[] {base.up().up(),
+								base.east(), base.east().up(), base.west(), base.west().up()};
+					}
+				} else {
+					if (tall) {
+						around = new BlockPos[] {base.up().up().up(),
+								base.north(), base.north().up(), base.north().up().up(),
+								base.south(), base.south().up(), base.south().up().up()};
+					} else {
+						around = new BlockPos[] {base.up().up().up(),
+								base.north(), base.north().up(), base.south(), base.south().up()};
+					}
+				}
+				
+			}
+			for (BlockPos aroundCurs : around) {
+				if (worldObj.getBlockState(aroundCurs).getMaterial().isLiquid()) {
+					makeRepairTask(aroundCurs, lastPos);
+				}
 			}
 			
 			
@@ -550,62 +577,75 @@ public class MiningBlock extends BlockContainer {
 			int y = platformToY(platformForY(pos.getY()));
 			int x;
 			int z;
-			boolean outside = true;
-			if (effX <= this.pos.getX() - (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
-				x = this.pos.getX() - (PLATFORM_WIDTH + STAIRCASE_RADIUS);
-				z = this.pos.getZ();
-			} else if (effX >= this.pos.getX() + (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
-				x = this.pos.getX() + (PLATFORM_WIDTH + STAIRCASE_RADIUS);
-				z = this.pos.getZ();
-			} else if (pos.getZ() <= this.pos.getZ() - (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
+			int centerX = this.pos.getX();
+			int centerZ = this.pos.getZ();
+			boolean outside = true; // outside the platform ring
+			boolean inside = false;
+			if (effX >= centerX - PLATFORM_WIDTH && effX <= centerX + PLATFORM_WIDTH
+					&& pos.getZ() >= centerZ - PLATFORM_WIDTH && pos.getZ() <= centerZ + PLATFORM_WIDTH) {
+				inside = true;
+				// inner staircase ring. Mine on perimeter of staircase
+				x = (effX < centerX) ? centerX - (PLATFORM_WIDTH + 1) : centerX + (PLATFORM_WIDTH + 1);
+				z = centerZ;
+			} else if (effX <= centerX - (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
+				x = centerX - (PLATFORM_WIDTH + STAIRCASE_RADIUS);
+				z = centerZ;
+			} else if (effX >= centerX + (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
+				x = centerX + (PLATFORM_WIDTH + STAIRCASE_RADIUS);
+				z = centerZ;
+			} else if (pos.getZ() <= centerZ - (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
 				x = effX;
-				z = this.pos.getZ() - (PLATFORM_WIDTH + STAIRCASE_RADIUS);
-			} else if (pos.getZ() >= this.pos.getZ() + (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
+				z = centerZ - (PLATFORM_WIDTH + STAIRCASE_RADIUS);
+			} else if (pos.getZ() >= centerZ + (PLATFORM_WIDTH + STAIRCASE_RADIUS)) {
 				x = effX;
-				z = this.pos.getZ() + (PLATFORM_WIDTH + STAIRCASE_RADIUS);
+				z = centerZ + (PLATFORM_WIDTH + STAIRCASE_RADIUS);
 			} else {
 				// inside the platform area??
+				outside = false;
 				x = effX;
 				z = pos.getZ();
-				outside = false;
 			}
-			
-			// Set the start location (and create a beacon!)
 			
 			cursor.setPos(x, y, z);
-			this.addBeacon(cursor.toImmutable());
-			
-			// Keep track of last for platform building
-			MutableBlockPos last = new MutableBlockPos(cursor);
-			
-			// First, get to the right x
-			int spaces = 0;
-			while (cursor.getX() != effX) {
-				clearBlock(cursor, false, last);
-				last.setPos(cursor);
-				cursor.move(effX > cursor.getX() ? EnumFacing.EAST : EnumFacing.WEST);
+			if (!inside) {
 				
-				if (spaces++ % 16 == 0) {
-					// Set a new beacon every once in a while
+				// Set the start location (and create a beacon!)
+				if (outside) {
 					this.addBeacon(cursor.toImmutable());
 				}
-			}
-			
-			// Then walk to Z
-			while (cursor.getZ() != pos.getZ()) {
-				clearBlock(cursor, false, last);
-				last.setPos(cursor);
-				cursor.move(pos.getZ() > cursor.getZ() ? EnumFacing.SOUTH : EnumFacing.NORTH);
 				
-				if (spaces++ % 16 == 0) {
-					// Set a new beacon every once in a while
-					this.addBeacon(cursor.toImmutable());
+				// Keep track of last for platform building
+				MutableBlockPos last = new MutableBlockPos(cursor);
+				
+				// First, get to the right x
+				int spaces = 0;
+				while (cursor.getX() != effX) {
+					clearBlock(cursor, false, last);
+					last.setPos(cursor);
+					cursor.move(effX > cursor.getX() ? EnumFacing.EAST : EnumFacing.WEST);
+					
+					if (spaces++ % 16 == 0) {
+						// Set a new beacon every once in a while
+						this.addBeacon(cursor.toImmutable());
+					}
 				}
-			}
-			
-			// Clear last (or first) block, if there is one
-			if (outside) {
-				clearBlock(cursor, false, last);
+				
+				// Then walk to Z
+				while (cursor.getZ() != pos.getZ()) {
+					clearBlock(cursor, false, last);
+					last.setPos(cursor);
+					cursor.move(pos.getZ() > cursor.getZ() ? EnumFacing.SOUTH : EnumFacing.NORTH);
+					
+					if (spaces++ % 16 == 0) {
+						// Set a new beacon every once in a while
+						this.addBeacon(cursor.toImmutable());
+					}
+				}
+				
+				// Clear last (or first) block, if there is one
+				if (outside) {
+					clearBlock(cursor, false, last);
+				}
 			}
 			
 			// Then queue up the actual mining task

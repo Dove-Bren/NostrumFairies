@@ -110,10 +110,6 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			return false;
 		}
 		
-		if (block.getX() == -266 && block.getZ() == 259) {
-			System.out.print(".");
-		}
-		
 		LogisticsNetwork network = worker.getLogisticsNetwork();
 		if (network == null) {
 			return false;

@@ -10,11 +10,20 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
+import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
 import com.smanzana.nostrummagica.loretag.Lore;
+import com.smanzana.nostrummagica.spells.EAlteration;
+import com.smanzana.nostrummagica.spells.EMagicElement;
+import com.smanzana.nostrummagica.spells.Spell;
+import com.smanzana.nostrummagica.spells.Spell.SpellPart;
+import com.smanzana.nostrummagica.spells.components.shapes.SingleShape;
+import com.smanzana.nostrummagica.spells.components.triggers.AITargetTrigger;
+import com.smanzana.nostrummagica.spells.components.triggers.MagicCutterTrigger;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -63,6 +72,23 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey {
 		public static final PoseSerializer Serializer = new PoseSerializer();
 	}
 	
+	private static Spell SPELL_VINES = null;
+	private static Spell SPELL_POISON_WIND = null;
+	
+	private static void initSpells() {
+		if (SPELL_VINES == null) {
+			SPELL_VINES = new Spell("Ancient Vines");
+			SPELL_VINES.addPart(new SpellPart(AITargetTrigger.instance()));
+			SPELL_VINES.addPart(new SpellPart(SingleShape.instance(), EMagicElement.EARTH, 2, EAlteration.INFLICT));
+			SPELL_VINES.addPart(new SpellPart(SingleShape.instance(), EMagicElement.LIGHTNING, 1, EAlteration.INFLICT));
+			
+			SPELL_POISON_WIND = new Spell("Poison Wind");
+			SPELL_POISON_WIND.addPart(new SpellPart(MagicCutterTrigger.instance()));
+			SPELL_POISON_WIND.addPart(new SpellPart(SingleShape.instance(), EMagicElement.WIND, 1, null));
+			SPELL_POISON_WIND.addPart(new SpellPart(SingleShape.instance(), EMagicElement.WIND, 1, EAlteration.INFLICT));
+		}
+	}
+	
 	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityFeyBase.class, ArmPose.Serializer);
 	
 	private @Nullable BlockPos movePos;
@@ -72,6 +98,8 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey {
 		super(world);
 		this.height = 0.99f;
 		this.workDistanceSq = 24 * 24;
+		
+		initSpells();
 	}
 
 	@Override
@@ -443,7 +471,16 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected void initEntityAI() {
-		; // for now, no combat for elves
+		int priority = 1;
+		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityElf>(this, 60, 10, true, (elf) -> {
+			return elf.getAttackTarget() != null;
+		}, new Spell[]{SPELL_VINES}));
+		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityElf>(this, 20, 4, true, (elf) -> {
+			return elf.getAttackTarget() != null;
+		}, new Spell[]{SPELL_POISON_WIND}));
+		
+		priority = 1;
+		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]));
 	}
 
 	@Override

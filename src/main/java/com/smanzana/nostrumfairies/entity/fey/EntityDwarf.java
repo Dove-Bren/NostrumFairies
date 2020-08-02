@@ -7,6 +7,8 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
+import com.smanzana.nostrumfairies.entity.navigation.PathFinderPublic;
+import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -20,6 +22,13 @@ import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockFence;
+import net.minecraft.block.BlockFenceGate;
+import net.minecraft.block.BlockRailBase;
+import net.minecraft.block.BlockWall;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.IEntityLivingData;
@@ -27,6 +36,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackMelee;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.init.Blocks;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -37,6 +47,9 @@ import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
+import net.minecraft.pathfinding.PathFinder;
+import net.minecraft.pathfinding.PathNodeType;
+import net.minecraft.pathfinding.WalkNodeProcessor;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -45,6 +58,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -94,6 +108,77 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		this.workDistanceSq = 24 * 24;
 		this.inventory = new InventoryBasic("Dwarf Inv", false, INV_SIZE);
 		this.isImmuneToFire = true;
+		
+		this.navigator = new PathNavigatorLogistics(this, world) {
+			@Override
+			protected PathFinder getPathFinder() {
+				this.nodeProcessor = new WalkNodeProcessor(){
+					// Naturally, copied from vanilla since there isn't a good way to override
+					@Override
+					public PathNodeType getPathNodeType(IBlockAccess blockaccessIn, int x, int y, int z) {
+						PathNodeType pathnodetype = this.getPathNodeTypeRaw(blockaccessIn, x, y, z);
+	
+						if (pathnodetype == PathNodeType.OPEN && y >= 1)
+						{
+							Block block = blockaccessIn.getBlockState(new BlockPos(x, y - 1, z)).getBlock();
+							PathNodeType pathnodetype1 = this.getPathNodeTypeRaw(blockaccessIn, x, y - 1, z);
+							pathnodetype = pathnodetype1 != PathNodeType.WALKABLE && pathnodetype1 != PathNodeType.OPEN && pathnodetype1 != PathNodeType.WATER && pathnodetype1 != PathNodeType.LAVA ? PathNodeType.WALKABLE : PathNodeType.OPEN;
+	
+							if (pathnodetype1 == PathNodeType.DAMAGE_FIRE || block == Blocks.MAGMA)
+							{
+								pathnodetype = PathNodeType.DAMAGE_FIRE;
+							}
+	
+							if (pathnodetype1 == PathNodeType.DAMAGE_CACTUS)
+							{
+								pathnodetype = PathNodeType.DAMAGE_CACTUS;
+							}
+						}
+	
+						BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
+	
+						if (pathnodetype == PathNodeType.WALKABLE)
+						{
+							for (int j = -1; j <= 1; ++j)
+							{
+								for (int i = -1; i <= 1; ++i)
+								{
+									if (j != 0 || i != 0)
+									{
+										Block block1 = blockaccessIn.getBlockState(blockpos$pooledmutableblockpos.setPos(j + x, y, i + z)).getBlock();
+	
+										if (block1 == Blocks.CACTUS)
+										{
+											pathnodetype = PathNodeType.DANGER_CACTUS;
+										}
+										else if (block1 == Blocks.FIRE)
+										{
+											pathnodetype = PathNodeType.DANGER_FIRE;
+										}
+									}
+								}
+							}
+						}
+	
+						blockpos$pooledmutableblockpos.release();
+						return pathnodetype;
+					}
+					
+					private PathNodeType getPathNodeTypeRaw(IBlockAccess access, int x, int y, int z) {
+						BlockPos blockpos = new BlockPos(x, y, z);
+						IBlockState iblockstate = access.getBlockState(blockpos);
+						Block block = iblockstate.getBlock();
+						Material material = iblockstate.getMaterial();
+						return (material == Material.AIR || material == Material.LAVA) ? PathNodeType.OPEN : (block != Blocks.TRAPDOOR && block != Blocks.IRON_TRAPDOOR && block != Blocks.WATERLILY ? (block == Blocks.FIRE ? PathNodeType.DAMAGE_FIRE : (block == Blocks.CACTUS ? PathNodeType.DAMAGE_CACTUS : (block instanceof BlockDoor && material == Material.WOOD && !((Boolean)iblockstate.getValue(BlockDoor.OPEN)).booleanValue() ? PathNodeType.DOOR_WOOD_CLOSED : (block instanceof BlockDoor && material == Material.IRON && !((Boolean)iblockstate.getValue(BlockDoor.OPEN)).booleanValue() ? PathNodeType.DOOR_IRON_CLOSED : (block instanceof BlockDoor && ((Boolean)iblockstate.getValue(BlockDoor.OPEN)).booleanValue() ? PathNodeType.DOOR_OPEN : (block instanceof BlockRailBase ? PathNodeType.RAIL : (!(block instanceof BlockFence) && !(block instanceof BlockWall) && (!(block instanceof BlockFenceGate) || ((Boolean)iblockstate.getValue(BlockFenceGate.OPEN)).booleanValue()) ? (material == Material.WATER ? PathNodeType.WATER : (material == Material.LAVA ? PathNodeType.LAVA : (block.isPassable(access, blockpos) ? PathNodeType.OPEN : PathNodeType.BLOCKED))) : PathNodeType.FENCE))))))) : PathNodeType.TRAPDOOR);
+					}
+				};
+				this.nodeProcessor.setCanEnterDoors(true);
+				this.nodeProcessor.setCanSwim(true);
+				this.pathFinder = new PathFinderPublic(this.nodeProcessor);
+				return new PathFinder(this.nodeProcessor);
+			}
+		};
+		
 	}
 	
 	@Override
@@ -191,7 +276,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		// We also change the order we evaluate spots based on the same thing. we prefer above for repair, and prefer at or below
 		// for non-repair
 		
-		if (repair || ((!worldObj.isAirBlock(targetPos) && worldObj.getBlockState(targetPos).getMaterial().blocksMovement())
+		if (repair || ((!worldObj.isAirBlock(targetPos) && worldObj.getBlockState(targetPos).getMaterial().blocksMovement() && worldObj.getBlockState(targetPos).getMaterial() != Material.LAVA)
 						|| !worldObj.isSideSolid(targetPos.down(), EnumFacing.UP))) {
 			// could get enum facing from diffs in dir to start at the side closest!
 			BlockPos[] initOffsets = {targetPos.north(), targetPos.east(), targetPos.south(), targetPos.west()};
@@ -216,7 +301,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		
 			// Check each candidate to see if we can stand there
 			for (BlockPos pos : offsets) {
-				if ((worldObj.isAirBlock(pos) || !worldObj.getBlockState(pos).getMaterial().blocksMovement())
+				if ((worldObj.isAirBlock(pos) || worldObj.getBlockState(pos).getMaterial() == Material.LAVA || !worldObj.getBlockState(pos).getMaterial().blocksMovement())
 						&& worldObj.isSideSolid(pos.down(), EnumFacing.UP)) {
 					targetPos = pos;
 					break;
@@ -299,7 +384,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 //		}
 		
 		if (allOrNothing) {
-			if (!worldObj.isAirBlock(targetPos) && worldObj.getBlockState(targetPos).getMaterial().blocksMovement()) {
+			if (!worldObj.isAirBlock(targetPos)
+					&& worldObj.getBlockState(targetPos).getMaterial().blocksMovement()
+					&& worldObj.getBlockState(targetPos).getMaterial() != Material.LAVA) {
 				targetPos = null;
 			}
 		}
