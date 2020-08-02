@@ -13,6 +13,7 @@ import net.minecraft.util.ResourceLocation;
 public class RenderGnome extends RenderLiving<EntityGnome> {
 	
 	private static ResourceLocation TEXT_GNOME_1 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/gnome_1.png");
+	private static ResourceLocation TEXT_GNOME_2 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/gnome_2.png");
 	
 	public RenderGnome(RenderManager renderManagerIn, float shadowSizeIn) {
 		super(renderManagerIn, new ModelGnome(), .25f);
@@ -24,8 +25,12 @@ public class RenderGnome extends RenderLiving<EntityGnome> {
 
 	@Override
 	protected ResourceLocation getEntityTexture(EntityGnome entity) {
-		// TODO different textures?
-		return TEXT_GNOME_1;
+		// TODO base off of something else
+		if ((entity.getUniqueID().getLeastSignificantBits() & 1) == 0) {
+			return TEXT_GNOME_1;
+		} else {
+			return TEXT_GNOME_2;
+		}
 	}
 	
 	@Override
