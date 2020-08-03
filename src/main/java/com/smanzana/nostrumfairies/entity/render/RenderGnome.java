@@ -2,12 +2,16 @@ package com.smanzana.nostrumfairies.entity.render;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
+import com.smanzana.nostrumfairies.entity.fey.EntityGnome.ArmPose;
 import com.smanzana.nostrumfairies.entity.render.ModelGnomeHat.Type;
 import com.smanzana.nostrumfairies.entity.render.layers.LayerGnomeHat;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderGnome extends RenderLiving<EntityGnome> {
@@ -43,6 +47,17 @@ public class RenderGnome extends RenderLiving<EntityGnome> {
 		GlStateManager.scale(scale, scale, scale);
 		super.doRender(entity, 0, 0, 0, entityYaw, partialTicks);
 		
+		
+		if (entity.getPose() == ArmPose.CARRYING) {
+			ItemStack held = entity.getCarriedItem();
+			if (held != null) {
+				GlStateManager.pushMatrix();
+				GlStateManager.rotate(-entityYaw, 0, 1, 0);
+				GlStateManager.translate(0, 1.1, 0.475);
+				Minecraft.getMinecraft().getRenderItem().renderItem(held, TransformType.GROUND);
+				GlStateManager.popMatrix();
+			}
+		}
 		GlStateManager.popMatrix();
 	}
 	

@@ -1,16 +1,16 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
+import java.io.IOException;
+
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
-import com.smanzana.nostrumfairies.blocks.MagicLight;
+import com.google.common.base.Optional;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
@@ -19,31 +19,62 @@ import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializer;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
-
-	private static final String NBT_ITEMS = "helditems";
-	private static final int INV_SIZE = 5;
 	
-	private InventoryBasic inventory;
+	public static enum ArmPose {
+		IDLE,
+		WORKING,
+		CARRYING;
+		
+		public final static class PoseSerializer implements DataSerializer<ArmPose> {
+			
+			private PoseSerializer() {
+				DataSerializers.registerSerializer(this);
+			}
+			
+			@Override
+			public void write(PacketBuffer buf, ArmPose value) {
+				buf.writeEnumValue(value);
+			}
+
+			@Override
+			public ArmPose read(PacketBuffer buf) throws IOException {
+				return buf.readEnumValue(ArmPose.class);
+			}
+
+			@Override
+			public DataParameter<ArmPose> createKey(int id) {
+				return new DataParameter<>(id, this);
+			}
+		}
+		
+		public static final PoseSerializer Serializer = new PoseSerializer();
+	}
+	
+	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityGnome.class, ArmPose.Serializer);
+	private static final DataParameter<Optional<ItemStack>> DATA_HELD_ITEM = EntityDataManager.<Optional<ItemStack>>createKey(EntityFairy.class, DataSerializers.OPTIONAL_ITEM_STACK);
+
+	private static final String NBT_ITEM = "helditem";
+	
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	
@@ -52,7 +83,6 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		this.height = .6f;
 		this.width = .3f;
 		this.workDistanceSq = 24 * 24;
-		this.inventory = new InventoryBasic("Gnome Inv", false, INV_SIZE);
 	}
 
 	@Override
@@ -79,48 +109,62 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	public InfoScreenTabs getTab() {
 		return InfoScreenTabs.INFO_ENTITY;
 	}
+	
+	public @Nullable ItemStack getCarriedItem() {
+		return this.dataManager.get(DATA_HELD_ITEM).orNull();
+	}
 
 	@Override
 	public ItemStack[] getCarriedItems() {
-		ItemStack[] stacks = new ItemStack[INV_SIZE];
-		int idx = 0;
-		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack stack = inventory.getStackInSlot(i);
-			if (stack != null) {
-				stacks[idx++] = stack;
-			}
-		}
-		return stacks;
+		return new ItemStack[]{getCarriedItem()};
 	}
 
 	@Override
 	public boolean canAccept(ItemStack stack) {
-		return ItemStacks.canFit(inventory, stack);
+		ItemStack heldItem = getCarriedItem();
+		return heldItem == null ||
+				(ItemStacks.stacksMatch(heldItem, stack) && heldItem.stackSize + stack.stackSize < heldItem.getMaxStackSize());
 	}
 	
 	@Override
 	public boolean canAccept(ItemDeepStack stack) {
-		return ItemStacks.canFitAll(inventory, Lists.newArrayList(stack));
+		// we know we can't if it's more than one regular ItemStack
+		if (stack.getCount() > stack.getTemplate().getMaxStackSize()) {
+			return false;
+		}
+		
+		// Looks like it's only actually one stack.
+		return canAccept(stack.copy().splitStack(stack.getTemplate().getMaxStackSize()));
 	}
 
 	@Override
 	public void addItem(ItemStack stack) {
-		ItemStacks.addItem(inventory, stack);
+		ItemStack heldItem = getCarriedItem();
+		if (heldItem == null) {
+			heldItem = stack.copy();
+		} else {
+			// Just assume canAccept was called
+			heldItem.stackSize += stack.stackSize; 
+		}
+		this.dataManager.set(DATA_HELD_ITEM, Optional.of(heldItem));
 	}
 	
 	@Override
 	public void removeItem(ItemStack stack) {
-		ItemStacks.remove(inventory, stack);
+		ItemStack heldItem = getCarriedItem();
+		if (heldItem != null) {
+			if (ItemStacks.stacksMatch(stack, heldItem)) {
+				heldItem.stackSize -= stack.stackSize;
+				if (heldItem.stackSize <= 0) {
+					heldItem = null;
+				}
+			}
+		}
+		this.dataManager.set(DATA_HELD_ITEM, Optional.fromNullable(heldItem));
 	}
 	
 	protected boolean hasItems() {
-		for (int i = 0; i < INV_SIZE; i++) {
-			if (inventory.getStackInSlot(i) != null) {
-				return true;
-			}
-		}
-		
-		return false;
+		return getCarriedItem() != null;
 	}
 
 	@Override
@@ -268,16 +312,10 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		return false;
 	}
 	
-	private void dropItems() {
-		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack heldItem = inventory.getStackInSlot(i);
-			if (heldItem == null) {
-				continue;
-			}
-			EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, heldItem);
-			worldObj.spawnEntityInWorld(item);
-		}
-		inventory.clear();
+	private void dropItem() {
+		EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, getCarriedItem());
+		worldObj.spawnEntityInWorld(item);
+		this.dataManager.set(DATA_HELD_ITEM, Optional.absent());
 	}
 
 	@Override
@@ -300,35 +338,28 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	protected void onIdleTick() {
+		this.setPose(ArmPose.IDLE);
+		
 		// We could play some idle animation or something
 		// For now, the only thing we care about is if we're idle but have an item. If so, make
 		// a quick task to go and deposit it
 		if (hasItems()) {
-			ItemStack held = null;
+			ItemStack held = getCarriedItem();
 			
-			for (int i = 0; i < INV_SIZE; i++) {
-				held = inventory.getStackInSlot(i);
-				if (held != null) {
-					break;
-				}
-			}
-			
-			if (held != null) {
-				LogisticsNetwork network = this.getLogisticsNetwork();
-				if (network != null) {
-					@Nullable ILogisticsComponent storage = network.getStorageForItem(worldObj, getPosition(), held);
-					if (storage != null) {
-						ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", held.copy());
-						network.getTaskRegistry().register(task, null);
-						network.getTaskRegistry().claimTask(task, this);
-						forceSetTask(task);
-						return;
-					}
+			LogisticsNetwork network = this.getLogisticsNetwork();
+			if (network != null) {
+				@Nullable ILogisticsComponent storage = network.getStorageForItem(worldObj, getPosition(), held);
+				if (storage != null) {
+					ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", held.copy());
+					network.getTaskRegistry().register(task, null);
+					network.getTaskRegistry().claimTask(task, this);
+					forceSetTask(task);
+					return;
 				}
 			}
 			
 			// no return means we couldn't set up a task to drop it
-			dropItems();
+			dropItem();
 			
 		}
 		
@@ -388,57 +419,45 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void onTaskTick(ILogisticsTask task) {
 		
-		// Mining dwarves should place down lights in the mines and refresh those around them
-		if (task instanceof LogisticsTaskMineBlock && this.ticksExisted % 5 == 0) {
-			if (!this.worldObj.canBlockSeeSky(this.getPosition())) {
-				// No light from the 'sky' which means we're underground
-				// Refreseh magic lights around. Then see if it's too dark
-				IBlockState state;
-				MutableBlockPos cursor = new MutableBlockPos();
-				for (int x = -1; x <= 1; x++)
-				for (int y = -1; y <= 1; y++)
-				for (int z = -1; z <= 1; z++) {
-					cursor.setPos(x, y, z);
-					state = worldObj.getBlockState(cursor);
-					if (state != null && state.getBlock() instanceof MagicLight) {
-						MagicLight.Bright().refresh(worldObj, cursor.toImmutable());
-					}
-				}
-				
-				if (this.worldObj.getLightFor(EnumSkyBlock.BLOCK, this.getPosition()) < 8) {
-					if (this.worldObj.isAirBlock(this.getPosition().up().up())) {
-						worldObj.setBlockState(this.getPosition().up().up(), MagicLight.Bright().getDefaultState());
-					} else if (this.worldObj.isAirBlock(this.getPosition().up())) {
-						worldObj.setBlockState(this.getPosition().up(), MagicLight.Bright().getDefaultState());
-					}
-				}
-			}
-		}
-		
 		LogisticsSubTask sub = task.getActiveSubtask();
 		if (sub != null) {
 			switch (sub.getType()) {
 			case ATTACK:
 				this.faceEntity(sub.getEntity(), 30, 180);
 				break;
-			case BREAK:
-				// this is where we'd play some animation?
-				if (this.onGround) {
-					BlockPos pos = sub.getPos();
-					double d0 = pos.getX() - this.posX;
-			        double d2 = pos.getZ() - this.posZ;
-					float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
-					
-					this.rotationYaw = desiredYaw;
-					
+			case BREAK: {
+				BlockPos pos = sub.getPos();
+				double d0 = pos.getX() - this.posX;
+		        double d2 = pos.getZ() - this.posZ;
+				float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
+				
+				this.setPose(ArmPose.WORKING);
+				this.rotationYaw = desiredYaw;
+				if (this.isSwingInProgress) {
+					// On the client, spawn some particles if we're using our wand
+					// lel what if we sweat? xD
+//					if (ticksExisted % 5 == 0 && getPose() == ArmPose.CHOPPING) {
+//						worldObj.spawnParticle(EnumParticleTypes.DRAGON_BREATH,
+//								posX, posY, posZ,
+//								0, 0.3, 0,
+//								new int[0]);
+//					}
+				} else {
 					task.markSubtaskComplete();
 					if (task.getActiveSubtask() != sub) {
+						setPose(ArmPose.IDLE);
 						break;
 					}
-					this.jump();
+					this.swingArm(this.getActiveHand());
 				}
 				break;
+			}
 			case IDLE:
+				if (this.hasItems()) {
+					this.setPose(ArmPose.CARRYING);
+				} else {
+					this.setPose(ArmPose.IDLE);
+				}
 				if (this.navigator.noPath()) {
 					if (movePos == null) {
 						final BlockPos center = sub.getPos();
@@ -495,6 +514,11 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 				break;
 			case MOVE:
 				{
+					if (this.hasItems()) {
+						this.setPose(ArmPose.CARRYING);
+					} else {
+						this.setPose(ArmPose.IDLE);
+					}
 					if (this.navigator.noPath()) {
 						// First time through?
 						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
@@ -532,48 +556,26 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected void initEntityAI() {
-		// TODO Auto-generated method stub
-		// I guess we should wander and check if tehre's a home nearby and if so make it our home and stop wandering.
-		// Or if we're revolting... just quit for this test one?
-		// Or if we're working, dont use AI
-		// Or if we're idle... wander?
+		; // Could panic when they are attacked!
 	}
 
 	@Override
 	protected void applyEntityAttributes() {
 		super.applyEntityAttributes();
-		this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.24D);
-		this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(2.0D);
+		this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.21D);
+		this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(8.0D);
 		//this.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(0.0D);
 		this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(0.0D);
 		this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
-	}
-	
-	private NBTTagList inventoryToNBT() {
-		NBTTagList list = new NBTTagList();
-		
-		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack stack = inventory.getStackInSlot(i);
-			if (stack != null) {
-				list.appendTag(stack.serializeNBT());
-			}
-		}
-		
-		return list;
 	}
 	
 	@Override
 	public void writeEntityToNBT(NBTTagCompound compound) {
 		super.writeEntityToNBT(compound);
 		
-		compound.setTag(NBT_ITEMS, inventoryToNBT());
-	}
-	
-	private void loadInventoryFromNBT(NBTTagList list) {
-		inventory.clear();
-		
-		for (int i = 0; i < list.tagCount(); i++) {
-			inventory.setInventorySlotContents(i, ItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i)));
+		ItemStack held = getCarriedItem();
+		if (held != null) {
+			compound.setTag(NBT_ITEM, held.serializeNBT());
 		}
 	}
 	
@@ -581,7 +583,9 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	public void readEntityFromNBT(NBTTagCompound compound) {
 		super.readEntityFromNBT(compound);
 		
-		loadInventoryFromNBT(compound.getTagList(NBT_ITEMS, NBT.TAG_COMPOUND));
+		if (compound.hasKey(NBT_ITEM, NBT.TAG_COMPOUND)) {
+			dataManager.set(DATA_HELD_ITEM, Optional.fromNullable(ItemStack.loadItemStackFromNBT(compound.getCompoundTag(NBT_ITEM))));
+		}
 	}
 
 	@Override
@@ -591,20 +595,74 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	protected void collideWithEntity(Entity entityIn) {
-		if (this.getCurrentTask() != null && this.getCurrentTask() instanceof LogisticsTaskMineBlock
-				&& entityIn instanceof IFeyWorker) {
-			ILogisticsTask theirs = ((IFeyWorker) entityIn).getCurrentTask();
-			if (theirs != null && theirs instanceof LogisticsTaskMineBlock) {
-				return;
-			}
-		}
-		
 		super.collideWithEntity(entityIn);
 	}
 
 	@Override
 	protected String getRandomName() {
-		return "Test Fairy " + rand.nextInt();
+		final String[] names = new String[] {
+			"Smookep",
+			"Tyrbit",
+			"Clynsbyg",
+			"Smimtart",
+			"Frynsbit",
+			"Lampicom",
+			"Kneeddnimag",
+			"Cabukpert",
+			"Laibunsnep",
+			"Knidingnap",
+			"Slukar",
+			"Shigla",
+			"Klopryt",
+			"Doklu",
+			"Fliddwim",
+			"Julnubap",
+			"Gliddlegol",
+			"Blulallba",
+			"Bahylmel",
+			"Hisellbis",
+			"Fnukwop",
+			"Clebbnat",
+			"Cival",
+			"Smemmi",
+			"Mansmith",
+			"Ginsmeefe",
+			"Agnunal",
+			"Slilyngnas",
+			"Thidoobnyss",
+			"Iwinsma",
+			"Pepna",
+			"Cidnip",
+			"Snedbom",
+			"Padny",
+			"Smebblan",
+			"Gnaankosee",
+			"Fuknidup",
+			"Smeniblyp",
+			"Polagneth",
+			"Sneehaansnill"
+		};
+		return names[rand.nextInt(names.length)];
+	}
+	
+	@Override
+	protected void entityInit() {
+		super.entityInit();
+		dataManager.register(POSE, ArmPose.IDLE);
+		dataManager.register(DATA_HELD_ITEM, Optional.absent());
+	}
+	
+	public ArmPose getPose() {
+		return dataManager.get(POSE);
+	}
+	
+	public void setPose(ArmPose pose) {
+		this.dataManager.set(POSE, pose);
+	}
+
+	@Override
+	protected int getDefaultSwingAnimationDuration() {
+		return 18;
 	}
 	
 	@Override

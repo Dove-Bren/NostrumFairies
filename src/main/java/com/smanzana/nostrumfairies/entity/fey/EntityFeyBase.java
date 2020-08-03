@@ -451,22 +451,17 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			
 			// Sort so nearest tasks are first in the list
 			Collections.sort(list, (l, r) -> {
+				
+				if (l.equals(r)) {
+					return 0;
+				}
+				
 				BlockPos lPos = ILogisticsTask.GetSourcePosition(l);
-				World lWorld = ILogisticsTask.GetSourceWorld(l);
 				BlockPos rPos = ILogisticsTask.GetSourcePosition(r);
-				World rWorld = ILogisticsTask.GetSourceWorld(r);
-				
-				if (!lWorld.equals(this.worldObj)) {
-					return 1;
-				}
-				if (!rWorld.equals(this.worldObj)) {
-					return -1;
-				}
-				
 				BlockPos fairyPos = this.getPosition();
 				double lDist = lPos.distanceSq(fairyPos);
 				double rDist = rPos.distanceSq(fairyPos);
-				return lDist < rDist ? -1 : 1;
+				return lDist < rDist ? -1 : lDist == rDist ? 0 : 1;
 			});
 			
 			if (list != null && !list.isEmpty()) {

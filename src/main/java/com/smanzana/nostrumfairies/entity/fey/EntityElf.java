@@ -89,7 +89,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey {
 		}
 	}
 	
-	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityFeyBase.class, ArmPose.Serializer);
+	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityElf.class, ArmPose.Serializer);
 	
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;

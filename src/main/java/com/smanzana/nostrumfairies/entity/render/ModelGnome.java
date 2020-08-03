@@ -1,5 +1,8 @@
 package com.smanzana.nostrumfairies.entity.render;
 
+import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
+import com.smanzana.nostrumfairies.entity.fey.EntityGnome.ArmPose;
+
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
@@ -45,7 +48,7 @@ public class ModelGnome extends ModelBase {
 		legLeft.setTextureOffset(4, 28);
 		legLeft.addBox(-1.5f, 3, -6, 3, 2, 2);
 		legLeft.offsetY = (5f / 16f);
-		legLeft.offsetX = (2.5f / 16f);
+		legLeft.offsetX = (2.49f / 16f);
 		body.addChild(legLeft);
 
 		legRight = new ModelRenderer(this, 0, 16);
@@ -58,7 +61,7 @@ public class ModelGnome extends ModelBase {
 		legRight.setTextureOffset(4, 28);
 		legRight.addBox(-1.5f, 3, -6, 3, 2, 2);
 		legRight.offsetY = (5f / 16f);
-		legRight.offsetX = (-2.5f / 16f);
+		legRight.offsetX = (-2.49f / 16f);
 		body.addChild(legRight);
 		
 		armLeft = new ModelRenderer(this, 48, 16);
@@ -80,89 +83,66 @@ public class ModelGnome extends ModelBase {
 	}
 	
 	@Override
-	public void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks,
-			float headAngleY, float headAngleX, float scale) {
+	public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, Entity entity) {
+		EntityGnome gnome = (EntityGnome) entity;
 		
-		//EntityGnome gnome = (EntityGnome) entity;
-		
-		head.rotateAngleX = headAngleX * 0.017453292F;
-		head.rotateAngleY = headAngleY * 0.017453292F;
+		head.rotateAngleX = headPitch * 0.017453292F;
+		head.rotateAngleY = netHeadYaw * 0.017453292F;
 		
 		// gnomes move their small legs and arms fast
 		limbSwing *= 2;
 		
 		armRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 2.0F * limbSwingAmount * 0.5F;
+		armRight.rotateAngleY = (float) -(Math.PI * .05);
 		armRight.rotateAngleZ = 0;
 		armLeft.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F;
+		armLeft.rotateAngleY = (float) (Math.PI * .05);
 		armLeft.rotateAngleZ = 0;
 		
 		legRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
 		legLeft.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
 		
-//		if (dwarf.isSwingInProgress || dwarf.getPose() != ArmPose.IDLE) {
-//			int sign = 1;//(dwarf.isLeftHanded() ? -1 : 1);
-//			ModelRenderer hand = (dwarf.isLeftHanded() ? armLeft : armRight);
-//			
-//			if (dwarf.getPose() == ArmPose.MINING) {
-//				double lowX = -sign * (Math.PI * .75);
-//				double diffX = sign * (Math.PI * .4);
-//				float periodFirst = .4f;
-//				if (this.swingProgress < periodFirst) {
-//					float progress = (swingProgress / periodFirst);
-//					hand.rotateAngleZ = 0;
-//					hand.rotateAngleY = 0;
-//					hand.rotateAngleX = (float) (lowX + (diffX * Math.sin(Math.PI * progress)));
-//				} else {
-//					// Waiting for the next strike
-//					hand.rotateAngleZ = 0;
-//					hand.rotateAngleX = (float) lowX;
-//					hand.rotateAngleY = 0;
-//				}
-//			} else if (dwarf.getPose() == ArmPose.ATTACKING) {
-//				// Have pick raised and do full swings
-//				double lowX = -sign * (Math.PI * .95);
-//				double diffX = sign * (Math.PI * .8);
-//				float periodFirst = .3f;
-//				if (this.swingProgress < periodFirst) {
-//					float progress = (swingProgress / periodFirst);
-//					hand.rotateAngleZ = 0;
-//					hand.rotateAngleY = 0;
-//					hand.rotateAngleX = (float) (lowX + (diffX * Math.sin(Math.PI * progress)));
-//				} else {
-//					// Waiting for the next strike
-//					hand.rotateAngleZ = 0;
-//					hand.rotateAngleX = (float) lowX;
-//					hand.rotateAngleY = 0;
-//				}
-//			} else {
-//				final double peakX = -sign * (Math.PI * 1.15);
-//				float periodFirst = .2f;
-//				float periodSecond = .1f;
-//				float periodThird = 1 - (periodFirst + periodSecond);
-//				if (this.swingProgress < periodFirst) {
-//					// first part. Wind up!
-//					// from (0, 0, 0) to (-(PI-peakX), pi, pi)
-//					float progress = (swingProgress / periodFirst);
-//					hand.rotateAngleZ = 0;
-//					hand.rotateAngleY = 0;
-//					hand.rotateAngleX = (float) (peakX * Math.sin(.5 * Math.PI * progress));
-//				}
-//				else if (this.swingProgress < (periodFirst + periodSecond)) {
-//	//				// stall and build anticipation
-//					hand.rotateAngleZ = 0;//(float) (sign * Math.PI);
-//					hand.rotateAngleX = (float) peakX;
-//					hand.rotateAngleY = 0;
-//				}
-//				else {
-//					// swing
-//					float progress = (swingProgress - (periodFirst + periodSecond)) / periodThird;
-//					hand.rotateAngleZ = 0;
-//					hand.rotateAngleY = 0;
-//					hand.rotateAngleX = (float) (peakX * Math.sin((Math.PI * .5) + (.5 * Math.PI * progress)));
-//					
-//				}
-//			}
-//		}
+		body.offsetY = 0;
+		body.rotateAngleX = 0;
+		legLeft.offsetY = (5f / 16f);
+		legLeft.offsetZ = 0;
+		legRight.offsetY = (5f / 16f);
+		legRight.offsetZ = 0;
+		
+		if (gnome.isSwingInProgress || gnome.getPose() != ArmPose.IDLE) {
+			
+			// Either squatting down and trying to pick something up, or carrying something.
+			if (gnome.getPose() == ArmPose.WORKING || gnome.isSwingInProgress) {
+				float bend = (float) (Math.sin(swingProgress * Math.PI) * (Math.PI * .1));
+				float offsetY = (float) (Math.sin(swingProgress * Math.PI) * (1f / 16f));
+				body.offsetY += offsetY;
+				body.rotateAngleX = bend;
+				legLeft.offsetY -= offsetY;
+				legLeft.offsetZ -= offsetY;
+				legLeft.rotateAngleX = -bend;
+				legRight.offsetY -= offsetY;
+				legRight.offsetZ -= offsetY;
+				legRight.rotateAngleX = -bend;
+				
+				armRight.rotateAngleX = (float) -(Math.PI * .3);
+				armLeft.rotateAngleX = (float) -(Math.PI * .3);
+				armRight.rotateAngleY = 0f;
+				armLeft.rotateAngleY = 0f;
+			} else if (gnome.getPose() == ArmPose.CARRYING) {
+				armRight.rotateAngleX = (float) -(Math.PI * .5);
+				armRight.rotateAngleY = (float) -(Math.PI * .1);
+				armLeft.rotateAngleX = (float) -(Math.PI * .5);
+				armLeft.rotateAngleY = (float) (Math.PI * .1);
+			}
+		}
+	}
+	
+	@Override
+	public void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks,
+			float headAngleY, float headAngleX, float scale) {
+		
+		//EntityGnome gnome = (EntityGnome) entity;
+		this.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, headAngleY, headAngleX, scale, entity);
 		
 		body.render(scale);
 	}

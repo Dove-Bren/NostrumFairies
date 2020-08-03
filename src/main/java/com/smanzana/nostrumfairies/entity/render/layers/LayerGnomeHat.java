@@ -54,10 +54,17 @@ public class LayerGnomeHat implements LayerRenderer<EntityGnome> {
 		
 		renderer.bindTexture(text);
 		
-		// translate up to head, then render?
+		// translate up to head, then render.
+		// Unfortunately, has a copy of rotations from animations to match the head :/
+		//float bend = (float) (Math.sin(gnome.getSwingProgress(partialTicks) * Math.PI) * (Math.PI * .1));
+		//float offsetY = (float) (Math.sin(gnome.getSwingProgress(partialTicks * Math.PI) * (1f / 16f));
+		float bend = (float) (Math.sin(gnome.getSwingProgress(partialTicks) * Math.PI) * (180 * .1));
+		float offsetY = (float) (Math.sin(gnome.getSwingProgress(partialTicks) * Math.PI) * (1f / 16f));
 		GlStateManager.pushMatrix();
 		GlStateManager.scale(1.05f, 1.05f, 1.05f);
-		GlStateManager.translate(0, (8f / 16f), 0);
+		GlStateManager.translate(0, ((8 + 5) / 16f) + offsetY, 0);
+		GlStateManager.rotate(bend, 1, 0, 0);
+		GlStateManager.translate(0, (-5f / 16f), 0);
 		model.render(gnome, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
 		GlStateManager.popMatrix();
 	}

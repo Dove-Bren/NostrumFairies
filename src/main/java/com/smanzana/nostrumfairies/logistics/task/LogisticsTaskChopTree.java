@@ -216,8 +216,11 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 			return;
 		}
 		
-		if (WoodcuttingBlock.isTrunkMaterial(world, pos)) {
-			world.destroyBlock(pos, true);
+		boolean isTrunk = WoodcuttingBlock.isTrunkMaterial(world, pos);
+		if (isTrunk || WoodcuttingBlock.isLeafMaterial(world, pos)) {
+			if (isTrunk) {
+				world.destroyBlock(pos, true);
+			}
 			
 			visitted.add(pos);
 			
