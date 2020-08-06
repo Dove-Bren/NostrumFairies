@@ -395,23 +395,23 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			// TODO maybe both should search for tasks if the task is dropable?
 		case WORKING:
 			if (currentTask != null) {
-				if (currentTask.isComplete()) {
+				this.taskTickCount++;
+				
+				if (this.taskTickCount % 5 == 0) {
+					// Make sure task is still okay
+					if (!this.currentTask.isValid()) {
+						forfitTask();
+					} else if (this.canMergeMoreJobs()) {
+						this.searchForJobs();
+					}
+				}
+				
+				if (currentTask != null) {
+					this.onTaskTick(currentTask);
+				}
+				
+				if (currentTask != null && currentTask.isComplete()) {
 					finishTask();
-				} else {
-					this.taskTickCount++;
-					
-					if (this.taskTickCount % 5 == 0) {
-						// Make sure task is still okay
-						if (!this.currentTask.isValid()) {
-							forfitTask();
-						} else if (this.canMergeMoreJobs()) {
-							this.searchForJobs();
-						}
-					}
-					
-					if (currentTask != null) {
-						this.onTaskTick(currentTask);
-					}
 				}
 			}
 			

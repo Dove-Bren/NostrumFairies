@@ -71,7 +71,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityGnome.class, ArmPose.Serializer);
-	private static final DataParameter<Optional<ItemStack>> DATA_HELD_ITEM = EntityDataManager.<Optional<ItemStack>>createKey(EntityFairy.class, DataSerializers.OPTIONAL_ITEM_STACK);
+	private static final DataParameter<Optional<ItemStack>> DATA_HELD_ITEM = EntityDataManager.<Optional<ItemStack>>createKey(EntityGnome.class, DataSerializers.OPTIONAL_ITEM_STACK);
 
 	private static final String NBT_ITEM = "helditem";
 	
@@ -521,8 +521,8 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 					}
 					if (this.navigator.noPath()) {
 						// First time through?
-						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
-							|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < 1)) {
+						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 2)
+							|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < 2)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;

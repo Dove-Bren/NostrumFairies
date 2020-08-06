@@ -217,7 +217,8 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 		}
 		
 		boolean isTrunk = WoodcuttingBlock.isTrunkMaterial(world, pos);
-		if (isTrunk || WoodcuttingBlock.isLeafMaterial(world, pos)) {
+		//if (isTrunk || WoodcuttingBlock.isLeafMaterial(world, pos)) { // ends up chopping nearby trees to easily
+		if (isTrunk) {
 			if (isTrunk) {
 				world.destroyBlock(pos, true);
 			}
@@ -228,6 +229,13 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 			breakTreeInternal(visitted, pos.west());
 			breakTreeInternal(visitted, pos.north());
 			breakTreeInternal(visitted, pos.south());
+			
+			// corners
+			breakTreeInternal(visitted, pos.north().east());
+			breakTreeInternal(visitted, pos.north().west());
+			breakTreeInternal(visitted, pos.south().east());
+			breakTreeInternal(visitted, pos.south().west());
+			
 			breakTreeInternal(visitted, pos.up());
 		}
 		// else die here ;-;

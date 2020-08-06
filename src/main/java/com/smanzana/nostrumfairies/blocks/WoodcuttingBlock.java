@@ -1,7 +1,7 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -9,12 +9,13 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
@@ -86,7 +87,7 @@ public class WoodcuttingBlock extends BlockContainer {
 		return false;
 	}
 	
-	public static class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements ITickable{
+	public static class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements ITickable,  ILogisticsTaskListener {
 
 		private int tickCount;
 		private Map<BlockPos, ILogisticsTask> taskMap;
@@ -126,7 +127,7 @@ public class WoodcuttingBlock extends BlockContainer {
 			if (!taskMap.containsKey(base)) {
 				LogisticsTaskChopTree task = new LogisticsTaskChopTree(this.getNetworkComponent(), "Tree Chop Task", worldObj, base);
 				this.taskMap.put(base, task);
-				network.getTaskRegistry().register(task, null);
+				network.getTaskRegistry().register(task, this);
 			}
 		}
 		
@@ -139,7 +140,7 @@ public class WoodcuttingBlock extends BlockContainer {
 			if (!taskMap.containsKey(base)) {
 				LogisticsTaskPlantItem task = new LogisticsTaskPlantItem(this.networkComponent, "Plant Sapling", this.getSapling(), worldObj, base);
 				this.taskMap.put(base, task);
-				network.getTaskRegistry().register(task, null);
+				network.getTaskRegistry().register(task, this);
 			}
 		}
 		
@@ -168,6 +169,16 @@ public class WoodcuttingBlock extends BlockContainer {
 			// Look for trees nearby and record their base. Also mark off ones we already know about.
 			Set<BlockPos> known = Sets.newHashSet(taskMap.keySet());
 			List<BlockPos> trunks = new LinkedList<>();
+			
+			// Remove any 'plant' tasks from the 'known' list
+			Iterator<BlockPos> it = known.iterator();
+			while (it.hasNext()) {
+				BlockPos pos = it.next();
+				ILogisticsTask task = taskMap.get(pos);
+				if (task == null || task instanceof LogisticsTaskPlantItem) {
+					it.remove();
+				}
+			}
 			
 			MutableBlockPos pos = new MutableBlockPos();
 			BlockPos center = this.getPos();
@@ -250,21 +261,6 @@ public class WoodcuttingBlock extends BlockContainer {
 						// Didn't know, so record!
 						// Don't make task cause we filter better later
 						makeChopTask(base);
-						
-						// TODO instead of just replanting, make a 'find tree spot' func to find spots and plant
-						// up to a configurable number of sampings/trees?
-						List<BlockPos> spots = Lists.newArrayList(base.north(), base.south(), base.east(), base.west());
-						Collections.shuffle(spots);
-						for (BlockPos spot : spots) {
-							if (worldObj.isAirBlock(spot) || worldObj.getBlockState(spot).getBlock().isReplaceable(worldObj, spot)) {
-								base = spot;
-								break;
-							}
-						}
-						
-						if (worldObj.isAirBlock(base)) {
-							makePlantTask(base);
-						}
 					}
 					
 				}
@@ -320,6 +316,33 @@ public class WoodcuttingBlock extends BlockContainer {
 		// TODO make configurable!
 		public ItemStack getSapling() {
 			return new ItemStack(Blocks.SAPLING);
+		}
+
+		@Override
+		public void onTaskDrop(ILogisticsTask task, IFeyWorker worker) {
+			; 
+		}
+
+		@Override
+		public void onTaskAccept(ILogisticsTask task, IFeyWorker worker) {
+			;
+		}
+
+		@Override
+		public void onTaskComplete(ILogisticsTask task, IFeyWorker worker) {
+			// Cleanup used to be automatically handled by the requester. However, we want to
+			// queue up replanting sometimes if the tree comes down. So do that here.
+			if (task instanceof LogisticsTaskChopTree) {
+				LogisticsTaskChopTree chopTask = (LogisticsTaskChopTree) task;
+				BlockPos pos = chopTask.getTrunkPos();
+				if (taskMap.remove(pos) != null) {
+					makePlantTask(pos);
+				}
+			} else if (task instanceof LogisticsTaskPlantItem) {
+				LogisticsTaskPlantItem plantTask = (LogisticsTaskPlantItem) task;
+				BlockPos pos = plantTask.getTargetBlock();
+				taskMap.remove(pos);
+			}
 		}
 	}
 	
