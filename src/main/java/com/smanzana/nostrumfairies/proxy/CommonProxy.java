@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.proxy;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.FarmingBlock;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
@@ -147,6 +148,12 @@ public class CommonProxy {
     			new ResourceLocation(NostrumFairies.MODID, MagicLight.MediumID));
     	GameRegistry.register(MagicLight.Dim(),
     			new ResourceLocation(NostrumFairies.MODID, MagicLight.DimID));
+    	
+    	GameRegistry.register(FarmingBlock.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, FarmingBlock.ID));
+    	GameRegistry.register(
+    			(new ItemBlock(FarmingBlock.instance())).setRegistryName(FarmingBlock.ID));
+    	FarmingBlock.init();
     }
 
 	public EntityPlayer getPlayer() {

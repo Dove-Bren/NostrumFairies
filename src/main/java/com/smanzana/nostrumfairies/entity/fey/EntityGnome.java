@@ -11,6 +11,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskHarvest;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
@@ -227,7 +228,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 						break;
 					}
 				}
-				if (worldObj.isAirBlock(targetPos.up())) {
+				if (worldObj.isAirBlock(targetPos.up()) && worldObj.isSideSolid(targetPos, EnumFacing.UP)) {
 					targetPos = targetPos.up();
 					break;
 				}
@@ -307,6 +308,41 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 			}
 			
 			return true;
+		} else if (task instanceof LogisticsTaskHarvest) {
+			LogisticsTaskHarvest harvest = (LogisticsTaskHarvest) task;
+			
+			if (harvest.getWorld() != this.worldObj) {
+				return false;
+			}
+			
+			// Check where the spot is
+			BlockPos target = harvest.getCropPos();
+			if (target == null || !this.canReach(target, true)) {
+				return false;
+			}
+			
+			// Check for pathing
+			if (this.getDistanceSq(target) < .2) {
+				return true;
+			}
+			Path currentPath = navigator.getPath();
+			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			if (success) {
+				success = Paths.IsComplete(navigator.getPath(), target, 2);
+			}
+			if (currentPath == null) {
+				if (!success) {
+					navigator.setPath(currentPath, 1.0);
+				}
+			} else {
+				navigator.setPath(currentPath, 1.0);
+			}
+			if (success) {
+				return true;
+			} else if (this.getDistanceSq(target) < 1) {
+				// extra case for if the navigator refuses cause we're too close
+				return true;
+			}
 		}
 		
 		return false;

@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.proxy;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.FarmingBlock;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
@@ -122,6 +123,9 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(MiningBlock.instance()),
 				0,
 				MiningBlock.ID);
+		registerModel(Item.getItemFromBlock(FarmingBlock.instance()),
+				0,
+				FarmingBlock.ID);
 		
 	}
 	

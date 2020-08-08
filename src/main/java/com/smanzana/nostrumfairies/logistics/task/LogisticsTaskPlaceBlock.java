@@ -186,7 +186,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	@Override
 	public void onAccept(IFeyWorker worker) {
 		this.fairy = (IItemCarrierFey) worker;
-		phase = Phase.MOVING;
+		phase = Phase.PICKUP;
 		tryTasks(worker);
 		
 		if (this.pickupTask != null && this.pickupComponent != null) {
@@ -323,11 +323,11 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 		case WAITING:
 			return idleTask;
 		case PICKUP:
-				return pickupTask;
+			return pickupTask;
 		case MOVING:
 			return moveTask;
 		case PLACING:
-				return workTask;
+			return workTask;
 		case DONE:
 			return null;
 		}
@@ -386,6 +386,8 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 		world.setBlockState(block, state);
 		SoundType soundtype = world.getBlockState(block).getBlock().getSoundType(world.getBlockState(block), world, block, null);
 		world.playSound(null, block, soundtype.getPlaceSound(), SoundCategory.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
+		
+		fairy.removeItem(item);
 	}
 	
 	private boolean canTakeItems() {
