@@ -166,7 +166,7 @@ public class NostrumFairies {
     	
     	if (e.getEntityLiving() instanceof EntityMob) {
     		EntityMob mob = (EntityMob) e.getEntityLiving();
-    		mob.targetTasks.addTask(4, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, true));
+    		mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, true));
     	}
     }
 }

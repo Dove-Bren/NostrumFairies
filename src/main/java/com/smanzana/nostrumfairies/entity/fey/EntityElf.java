@@ -10,7 +10,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
-import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
+import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.spells.EAlteration;
 import com.smanzana.nostrummagica.spells.EMagicElement;
@@ -21,7 +21,9 @@ import com.smanzana.nostrummagica.spells.components.triggers.AITargetTrigger;
 import com.smanzana.nostrummagica.spells.components.triggers.MagicCutterTrigger;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.item.ItemStack;
@@ -40,7 +42,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
 
-public class EntityElf extends EntityFeyBase implements IItemCarrierFey {
+public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRangedAttackMob {
 
 	public static enum ArmPose {
 		IDLE,
@@ -472,12 +474,25 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void initEntityAI() {
 		int priority = 1;
-		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityElf>(this, 60, 10, true, (elf) -> {
-			return elf.getAttackTarget() != null;
-		}, new Spell[]{SPELL_VINES}));
-		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityElf>(this, 20, 4, true, (elf) -> {
-			return elf.getAttackTarget() != null;
-		}, new Spell[]{SPELL_POISON_WIND}));
+		//this.tasks.addTask(priority++, new EntityAIAttackRanged(this, 1.0, 20 * 3, 10));
+		this.tasks.addTask(priority++, new EntityAIAttackRanged<EntityElf>(this, 1.0, 20 * 3, 10) {
+			@Override
+			public boolean hasWeaponEquipped(EntityElf elf) {
+				return true;
+			}
+			
+			@Override
+			protected boolean isAttackAnimationComplete() {
+				return true;
+			}
+		});
+		
+//		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityElf>(this, 60, 10, true, (elf) -> {
+//			return elf.getAttackTarget() != null;
+//		}, new Spell[]{SPELL_VINES}));
+//		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityElf>(this, 20, 4, true, (elf) -> {
+//			return elf.getAttackTarget() != null;
+//		}, new Spell[]{SPELL_POISON_WIND}));
 		
 		priority = 1;
 		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]));
@@ -597,6 +612,15 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey {
 			double x = posX - xdiff;
 			double z = posZ + zdiff;
 			worldObj.spawnParticle(EnumParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0, new int[0]);
+		}
+	}
+
+	@Override
+	public void attackEntityWithRangedAttack(EntityLivingBase target, float distanceFactor) {
+		if (rand.nextFloat() < .1) {
+			SPELL_VINES.cast(this, 1.0f);
+		} else {
+			SPELL_POISON_WIND.cast(this, 1.0f);
 		}
 	}
 }
