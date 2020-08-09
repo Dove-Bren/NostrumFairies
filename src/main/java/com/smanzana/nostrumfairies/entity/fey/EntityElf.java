@@ -46,7 +46,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 
 	public static enum ArmPose {
 		IDLE,
-		CHOPPING,
+		WORKING,
 		ATTACKING;
 		
 		public final static class PoseSerializer implements DataSerializer<ArmPose> {
@@ -354,15 +354,17 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 				this.faceEntity(sub.getEntity(), 30, 180);
 				break;
 			case BREAK:
-				setPose(ArmPose.CHOPPING);
+				setPose(ArmPose.WORKING);
 				BlockPos pos = sub.getPos();
 				double d0 = pos.getX() - this.posX;
 		        double d2 = pos.getZ() - this.posZ;
 				float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
-				this.rotationYaw = desiredYaw;
+				this.setRotation(desiredYaw, .2f);
+				//this.rotationYaw = desiredYaw;
+				//this.rotationPitch = 1;
 				if (this.isSwingInProgress) {
 					// On the client, spawn some particles if we're using our wand
-					if (ticksExisted % 5 == 0 && getPose() == ArmPose.CHOPPING) {
+					if (ticksExisted % 5 == 0 && getPose() == ArmPose.WORKING) {
 						worldObj.spawnParticle(EnumParticleTypes.DRAGON_BREATH,
 								posX, posY, posZ,
 								0, 0.3, 0,
@@ -482,7 +484,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			}
 			
 			@Override
-			protected boolean isAttackAnimationComplete() {
+			protected boolean isAttackAnimationComplete(EntityElf elf) {
 				return true;
 			}
 		});
@@ -603,7 +605,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	
 	@Override
 	protected void onCientTick() {
-		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPose.CHOPPING) {
+		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPose.WORKING) {
 			
 			double angle = this.rotationYawHead + ((this.isLeftHanded() ? -1 : 1) * 22.5);
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;

@@ -15,6 +15,7 @@ import com.smanzana.nostrumfairies.blocks.WoodcuttingBlock;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
+import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
@@ -64,6 +65,13 @@ public class CommonProxy {
     			false
     			);
     	EntityRegistry.registerModEntity(EntityGnome.class, "gnome",
+    			entityID++,
+    			NostrumFairies.instance,
+    			128,
+    			1,
+    			false
+    			);
+    	EntityRegistry.registerModEntity(EntityElfArcher.class, "elf_archer",
     			entityID++,
     			NostrumFairies.instance,
     			128,

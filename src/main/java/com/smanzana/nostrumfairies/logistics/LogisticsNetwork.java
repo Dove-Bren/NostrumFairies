@@ -96,6 +96,16 @@ public class LogisticsNetwork {
 		GROSS, // Items that are there plus any that are incoming
 	}
 	
+	private static final class ComponentGraphNode {
+		public ILogisticsComponent component;
+		public Set<ILogisticsComponent> neighbors;
+		
+		public ComponentGraphNode(ILogisticsComponent component) {
+			this.component = component;
+			this.neighbors = new HashSet<>();
+		}
+	}
+	
 	private static final String NBT_UUID = "uuid";
 	private static final String NBT_COMPONENTS = "component";
 	private static final String NBT_COMPONENT_KEY = "key";
@@ -108,7 +118,7 @@ public class LogisticsNetwork {
 	protected Set<ILogisticsComponent> components;
 	
 	// Network graph
-	protected Map<Location, Set<ILogisticsComponent>> componentGraph; // cached graphing of components set
+	protected Map<Location, ComponentGraphNode> componentGraph; // cached graphing of components set
 	
 	// Items
 	protected boolean cacheDirty;
@@ -304,11 +314,20 @@ public class LogisticsNetwork {
 	}
 	
 	public @Nullable Collection<ILogisticsComponent> getConnectedComponents(Location location) {
-		return componentGraph.get(location); // give them null if not in the graph! MWAHAHA
+		ComponentGraphNode node = componentGraph.get(location);
+		return node == null ? null : componentGraph.get(location).neighbors; // give them null if not in the graph! MWAHAHA
 	}
 	
 	public @Nullable Collection<ILogisticsComponent> getConnectedComponents(ILogisticsComponent component) {
 		return getConnectedComponents(getLocation(component));
+	}
+	
+	public @Nullable ILogisticsComponent getComponentAt(Location location) {
+		return componentGraph.get(location).component;
+	}
+	
+	public @Nullable ILogisticsComponent getComponentAt(World world, BlockPos pos) {
+		return getComponentAt(new Location(world, pos));
 	}
 	
 	/**
@@ -590,10 +609,10 @@ public class LogisticsNetwork {
 		for (int j = 0; j < components.size(); j++) {
 			ILogisticsComponent component = arr[j];
 			Location compLocation = getLocation(component);
-			Set<ILogisticsComponent> neighbors = componentGraph.get(compLocation);
-			if (neighbors == null) {
-				neighbors = new HashSet<>();
-				componentGraph.put(compLocation, neighbors);
+			ComponentGraphNode node = componentGraph.get(compLocation);
+			if (node == null) {
+				node = new ComponentGraphNode(component);
+				componentGraph.put(compLocation, node);
 			}
 			
 			for (int i = j + 1; i < components.size(); i++) {
@@ -601,17 +620,17 @@ public class LogisticsNetwork {
 				
 				// Can we reach it?
 				if (canComponentLinkReach(component, other)) {
-					neighbors.add(other);
+					node.neighbors.add(other);
 					
 					// Add to their list, too
 					Location otherLocation = getLocation(other);
-					Set<ILogisticsComponent> otherNeighbors = componentGraph.get(otherLocation);
+					ComponentGraphNode otherNode = componentGraph.get(otherLocation);
 					
-					if (otherNeighbors == null) {
-						otherNeighbors = new HashSet<>();
-						componentGraph.put(otherLocation, otherNeighbors);
+					if (otherNode == null) {
+						otherNode = new ComponentGraphNode(other);
+						componentGraph.put(otherLocation, otherNode);
 					}
-					otherNeighbors.add(component);
+					otherNode.neighbors.add(component);
 				}
 			}
 		}

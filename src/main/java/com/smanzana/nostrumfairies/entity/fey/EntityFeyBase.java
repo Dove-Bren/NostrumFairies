@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import javax.annotation.Nullable;
 
@@ -34,6 +35,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -124,7 +126,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 */
 	public void setHome(@Nullable BlockPos home) {
 		this.dataManager.set(HOME, Optional.fromNullable(home));
-		this.setHomePosAndDistance(home, (int) this.wanderDistanceSq);
+		this.setHomePosAndDistance(home, home == null ? -1 : (int) this.wanderDistanceSq);
 	}
 	
 	/**
@@ -673,5 +675,52 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		}
 
 		return flag;
+	}
+	
+	protected static boolean FeyWander(EntityFeyBase fey, BlockPos center, double maxDist) {
+		BlockPos targ = null;
+		int attempts = 20;
+		final double maxDistSq = maxDist * maxDist;
+		final Random rand = fey.rand;
+		do {
+			double dist = rand.nextDouble() * Math.sqrt(maxDistSq);
+			float angle = (float) (rand.nextDouble() * (2 * Math.PI));
+			float tilt = (float) (rand.nextDouble() * (2 * Math.PI)) * .5f;
+			
+			targ = new BlockPos(new Vec3d(
+					center.getX() + (Math.cos(angle) * dist),
+					center.getY() + (Math.cos(tilt) * dist),
+					center.getZ() + (Math.sin(angle) * dist)));
+			while (targ.getY() > 0 && fey.worldObj.isAirBlock(targ)) {
+				targ = targ.down();
+			}
+			if (targ.getY() < 256) {
+				targ = targ.up();
+			}
+			
+			// We've hit a non-air block. Make sure there's space above it
+			BlockPos airBlock = null;
+			for (int i = 0; i < Math.ceil(fey.height); i++) {
+				if (airBlock == null) {
+					airBlock = targ.up();
+				} else {
+					airBlock = airBlock.up();
+				}
+				
+				if (!fey.worldObj.isAirBlock(airBlock)) {
+					targ = null;
+					break;
+				}
+			}
+		} while (targ == null && attempts > 0);
+		
+		if (targ == null) {
+			targ = center.up();
+		}
+		if (!fey.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
+			fey.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+		}
+		
+		return true;
 	}
 }
