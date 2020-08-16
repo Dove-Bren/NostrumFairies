@@ -3,8 +3,8 @@ package com.smanzana.nostrumfairies.entity.fey;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
-import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -27,7 +27,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -132,16 +131,6 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		return true;
 	}
 
-	@Override
-	protected boolean isValidHome(BlockPos homePos) {
-		TileEntity te = worldObj.getTileEntity(homePos);
-		if (te == null || !(te instanceof StorageLogisticsChest.StorageChestTileEntity)) {
-			return false;
-		}
-		
-		return true;
-	}
-	
 	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
 		if (!worldObj.isAirBlock(targetPos)) {
 			do {
@@ -707,5 +696,37 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void onCientTick() {
 		;
+	}
+
+	@Override
+	public ResidentType getHomeType() {
+		return ResidentType.FAIRY;
+	}
+	
+	@Override
+	public String getSpecializationName() {
+		return "Test Fairy";
+	}
+
+	@Override
+	public String getActivitySummary() {
+		switch (getStatus()) {
+		case IDLE:
+			return "Relaxing";
+		case REVOLTING:
+			return "Revolting";
+		case WANDERING:
+			return "Wandering";
+		case WORKING:
+			return "Working";
+		}
+		
+		return null;
+	}
+
+	@Override
+	public String getMoodSummary() {
+		// TODO Auto-generated method stub
+		return "Seems Happy";
 	}
 }

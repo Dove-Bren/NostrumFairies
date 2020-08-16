@@ -35,16 +35,15 @@ public class RenderFairy extends RenderLiving<EntityFairy> {
 	public void doRender(EntityFairy entity, double x, double y, double z, float entityYaw, float partialTicks) {
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(x, y, z);
+		GlStateManager.pushMatrix();
 		GlStateManager.scale(.25, .25, .25);
-		x = 0;
-		y = 0;
-		z = 0;
-		super.doRender(entity, x, y, z, entityYaw, partialTicks);
+		super.doRender(entity, 0, 0, 0, entityYaw, partialTicks);
+		GlStateManager.popMatrix();
 		
 		// Now item time!
 		@Nullable ItemStack item = (entity.getCarriedItems()[0]);
 		if (item != null) {
-			GlStateManager.translate(0, 1.25, 0);
+			GlStateManager.translate(0, .25, 0);
 			GlStateManager.rotate(-entityYaw, 0, 1, 0);
 			Minecraft.getMinecraft().getRenderItem().renderItem(item, TransformType.GROUND);
 		}

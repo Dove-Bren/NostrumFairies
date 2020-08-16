@@ -1,8 +1,12 @@
 package com.smanzana.nostrumfairies.proxy;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
@@ -24,15 +28,19 @@ import com.smanzana.nostrumfairies.entity.render.RenderElfArcher;
 import com.smanzana.nostrumfairies.entity.render.RenderFairy;
 import com.smanzana.nostrumfairies.entity.render.RenderGnome;
 import com.smanzana.nostrumfairies.entity.render.RenderTestFairy;
+import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
@@ -98,6 +106,16 @@ public class ClientProxy extends CommonProxy {
 				return new RenderElfArcher(manager, 1.0f);
 			}
 		});
+		
+		List<ItemStack> stones = new LinkedList<>();
+		FeyStone.instance().getSubItems(FeyStone.instance(), null, stones);
+		ResourceLocation variants[] = new ResourceLocation[stones.size()];
+		int i = 0;
+		for (ItemStack stone : stones) {
+			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
+					FeyStone.instance().getModelName(stone));
+		}
+		ModelBakery.registerItemVariants(FeyStone.instance(), variants);
 	}
 	
 	@Override
@@ -135,7 +153,16 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(FarmingBlock.instance()),
 				0,
 				FarmingBlock.ID);
+		registerModel(Item.getItemFromBlock(FeyHomeBlock.instance()),
+				0,
+				FeyHomeBlock.ID);
 		
+		
+		List<ItemStack> stones = new LinkedList<>();
+		FeyStone.instance().getSubItems(FeyStone.instance(), null, stones);
+		for (ItemStack stone : stones) {
+			registerModel(FeyStone.instance(), stone.getMetadata(), FeyStone.instance().getModelName(stone));
+		}
 	}
 	
 	@Override

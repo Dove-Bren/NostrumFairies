@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.proxy;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
@@ -19,6 +20,7 @@ import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
+import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 
@@ -92,7 +94,9 @@ public class CommonProxy {
 	}
     
     private void registerItems() {
-    	;
+    	GameRegistry.register(
+    			FeyStone.instance().setRegistryName(FeyStone.ID));
+    	FeyStone.init();
     }
     
     private void registerBlocks() {
@@ -162,6 +166,12 @@ public class CommonProxy {
     	GameRegistry.register(
     			(new ItemBlock(FarmingBlock.instance())).setRegistryName(FarmingBlock.ID));
     	FarmingBlock.init();
+    	
+    	GameRegistry.register(FeyHomeBlock.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, FeyHomeBlock.ID));
+    	GameRegistry.register(
+    			(new ItemBlock(FeyHomeBlock.instance())).setRegistryName(FeyHomeBlock.ID).setHasSubtypes(true));
+    	FeyHomeBlock.init();
     }
 
 	public EntityPlayer getPlayer() {

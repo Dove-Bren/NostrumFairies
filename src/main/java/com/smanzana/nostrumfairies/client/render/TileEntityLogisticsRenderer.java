@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.lwjgl.opengl.GL11;
@@ -42,6 +43,8 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				if (neighbors == null) {
 					return;
 				}
+				
+				neighbors = new ArrayList<>(neighbors);
 				
 				BlockPos origin = te.getPos();
 				Tessellator tessellator = Tessellator.getInstance();

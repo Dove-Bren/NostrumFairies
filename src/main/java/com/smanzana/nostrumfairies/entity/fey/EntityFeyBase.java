@@ -9,12 +9,14 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
-import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -46,11 +48,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 
 	protected static final DataParameter<Optional<BlockPos>> HOME  = EntityDataManager.<Optional<BlockPos>>createKey(EntityFeyBase.class, DataSerializers.OPTIONAL_BLOCK_POS);
 	protected static final DataParameter<String> NAME = EntityDataManager.<String>createKey(EntityFeyBase.class, DataSerializers.STRING);
-	
-	/**
-	 * Current general status of the worker.
-	 */
-	private FairyGeneralStatus generalStatus;
+	protected static final DataParameter<FairyGeneralStatus> STATUS  = EntityDataManager.<FairyGeneralStatus>createKey(EntityFeyBase.class, FairyGeneralStatus.Serializer);
+	protected static final DataParameter<String> ACTIVITY = EntityDataManager.<String>createKey(EntityFeyBase.class, DataSerializers.STRING);
 	
 	/**
 	 * Maximum amount of distance (squared) a fairy will freely wander away from its home.
@@ -79,7 +78,6 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	public EntityFeyBase(World world, double wanderDistanceSq, double workDistanceSq) {
 		super(world);
-		generalStatus = FairyGeneralStatus.WANDERING;
 		this.wanderDistanceSq = wanderDistanceSq;
 		this.workDistanceSq = workDistanceSq;
 		
@@ -88,7 +86,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	@Override
 	public FairyGeneralStatus getStatus() {
-		return this.generalStatus;
+		return dataManager.get(STATUS);
 	}
 	
 	/**
@@ -98,8 +96,12 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 * @return true when the status change went thr ough
 	 */
 	protected boolean changeStatus(FairyGeneralStatus status) {
+		if (worldObj.isRemote) {
+			return true;
+		}
+		
 		if (onStatusChange(getStatus(), status)) {
-			this.generalStatus = status;
+			dataManager.set(STATUS, status);
 			return true;
 		}
 		
@@ -120,13 +122,52 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		return this.dataManager.get(HOME).orNull();
 	}
 	
+	protected @Nullable HomeBlockTileEntity getHomeEnt(BlockPos pos) {
+		if (!worldObj.isBlockLoaded(pos)) {
+			return null;
+		}
+		
+		IBlockState state = worldObj.getBlockState(pos);
+		if (state == null || !(state.getBlock() instanceof FeyHomeBlock)) {
+			return null;
+		}
+		
+		BlockPos center = ((FeyHomeBlock) state.getBlock()).getMasterPos(worldObj, pos, state);
+		TileEntity te = worldObj.getTileEntity(center);
+		if (te == null || !(te instanceof HomeBlockTileEntity)) {
+			return null;
+		}
+		
+		return (HomeBlockTileEntity) te;
+	}
+	
+	protected @Nullable HomeBlockTileEntity getHomeEnt() {
+		BlockPos homePos = this.getHome();
+		if (homePos == null) {
+			return null;
+		}
+		
+		return getHomeEnt(homePos);
+	}
+	
 	/**
 	 * Set the block the fairy will consider its home, and try to stay close to.
 	 * @return
 	 */
 	public void setHome(@Nullable BlockPos home) {
+		HomeBlockTileEntity ent = getHomeEnt();
+		if (ent != null) {
+			ent.removeResident(this);
+		}
 		this.dataManager.set(HOME, Optional.fromNullable(home));
 		this.setHomePosAndDistance(home, home == null ? -1 : (int) this.wanderDistanceSq);
+		
+		if (home != null) {
+			ent = getHomeEnt();
+			if (ent != null) {
+				ent.addResident(this);
+			}
+		}
 	}
 	
 	/**
@@ -134,7 +175,14 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 * @param homePos
 	 * @return
 	 */
-	protected abstract boolean isValidHome(BlockPos homePos);
+	protected boolean isValidHome(BlockPos homePos) {
+		HomeBlockTileEntity ent = getHomeEnt(homePos);
+		if (ent != null) {
+			return ent.canAccept(this);
+		}
+		
+		return false;
+	}
 	
 	/**
 	 * Checks whether or not the provided location is within this worker's reach
@@ -159,17 +207,12 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 */
 	public @Nullable LogisticsNetwork getLogisticsNetwork() {
 		verifyHome();
-		BlockPos home = getHome();
-		if (home == null) {
-			return null;
+		HomeBlockTileEntity ent = getHomeEnt();
+		if (ent != null) {
+			return ent.getNetwork();
 		}
 		
-		TileEntity te = worldObj.getTileEntity(home);
-		if (te != null && te instanceof LogisticsTileEntity) {
-			return ((LogisticsTileEntity) te).getNetwork();
-		}
-		
-		return null;
+		 return null;
 	}
 	
 	@Override
@@ -381,7 +424,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		// If we're supposed to have a home, verify it's still there and fix state.
 		verifyHome();
 		
-		switch (generalStatus) {
+		switch (getStatus()) {
 		case IDLE:
 			onIdleTick();
 			
@@ -537,16 +580,17 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	}
 	
 	private void verifyHome() {
-		BlockPos home = this.getHome();
-		if (home != null) {
-			if (!this.isValidHome(home)) {
-				this.setHome(null);
-				home = null; // Home is no longer valid
-				
-				if (generalStatus != FairyGeneralStatus.WANDERING) {
-					// Don't have a home, and we expected to. Homeless!
-					this.changeStatus(FairyGeneralStatus.WANDERING);
-				}
+		HomeBlockTileEntity ent = getHomeEnt();
+		if (ent == null || !ent.isResident(this)) {
+			if (ent != null) {
+				ent.removeResident(this);
+			}
+			
+			this.setHome(null);
+			
+			if (getStatus() != FairyGeneralStatus.WANDERING) {
+				// Don't have a home, and we expected to. Homeless!
+				this.changeStatus(FairyGeneralStatus.WANDERING);
 			}
 		}
 	}
@@ -559,6 +603,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		
 		this.dataManager.register(HOME, Optional.absent());
 		this.dataManager.register(NAME, getRandomName());
+		this.dataManager.register(STATUS, FairyGeneralStatus.WANDERING);
+		this.dataManager.register(ACTIVITY, "status.generic.working");
 	}
 	
 	private static final String NBT_HOME = "home";
@@ -591,7 +637,13 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		boolean hasHome = false;
 		if (compound.hasKey(NBT_HOME)) {
 			hasHome = true;
-			this.setHome(BlockPos.fromLong(compound.getLong(NBT_HOME)));
+			BlockPos home =  BlockPos.fromLong(compound.getLong(NBT_HOME));
+			this.dataManager.set(HOME, Optional.fromNullable(home));
+			this.setHomePosAndDistance(home, home == null ? -1 : (int) this.wanderDistanceSq);
+			
+			// Don't use the helper func since that also tries to make sure there's a TE and what not, and the TE may not
+			// have loaded yet.
+			//this.setHome(BlockPos.fromLong(compound.getLong(NBT_HOME)));
 		}
 		
 		if (compound.getBoolean(NBT_REVOLTING)) {
@@ -612,6 +664,10 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	@Override
 	public void setDead() {
 		forfitTask();
+		HomeBlockTileEntity ent = getHomeEnt();
+		if (ent != null) {
+			ent.removeResident(this);
+		}
 		super.setDead();
 	}
 	
@@ -722,5 +778,21 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		}
 		
 		return true;
+	}
+	
+	public abstract FeyHomeBlock.ResidentType getHomeType();
+	
+	@SideOnly(Side.CLIENT)
+	public abstract String getSpecializationName();
+	
+	@SideOnly(Side.CLIENT)
+	public abstract String getMoodSummary();
+	
+	public String getActivitySummary() {
+		return dataManager.get(ACTIVITY);
+	}
+	
+	protected void setActivitySummary(String unloc) {
+		dataManager.set(ACTIVITY, unloc);
 	}
 }

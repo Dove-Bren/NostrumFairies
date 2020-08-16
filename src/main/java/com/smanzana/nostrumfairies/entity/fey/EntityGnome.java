@@ -5,7 +5,7 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
-import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -31,7 +31,6 @@ import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -176,17 +175,26 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 			this.forfitTask();
 		}
 		
+		switch (to) {
+		case IDLE:
+			setActivitySummary("status.gnome.relax");
+			break;
+		case REVOLTING:
+			setActivitySummary("status.gnome.revolt");
+			break;
+		case WANDERING:
+			setActivitySummary("status.gnome.wander");
+			break;
+		case WORKING:
+			; // set by task
+		}
+		
 		return true;
 	}
 
 	@Override
-	protected boolean isValidHome(BlockPos homePos) {
-		TileEntity te = worldObj.getTileEntity(homePos);
-		if (te == null || !(te instanceof StorageLogisticsChest.StorageChestTileEntity)) {
-			return false;
-		}
-		
-		return true;
+	public ResidentType getHomeType() {
+		return ResidentType.GNOME;
 	}
 	
 	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
@@ -370,6 +378,20 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		// Assuming it did, our current inventory is fine. We'll do that task, maybe use our
 		// inventory, and then be idle with an item afterwards -- whicih will prompt
 		// us to go return it.
+		
+		if (newTask != null) {
+			if (newTask instanceof LogisticsTaskPickupItem) {
+				setActivitySummary("status.gnome.work.pickup");
+			} else if (newTask instanceof LogisticsTaskHarvest) {
+				setActivitySummary("status.gnome.work.harvest");
+			} else if (newTask instanceof LogisticsTaskPlantItem) {
+				setActivitySummary("status.gnome.work.plant");
+			} else if (newTask instanceof LogisticsTaskDepositItem) {
+				setActivitySummary("status.generic.return");
+			} else {
+				setActivitySummary("status.generic.working");
+			}
+		}
 	}
 	
 	@Override
@@ -709,5 +731,16 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void onCientTick() {
 		;
+	}
+	
+	@Override
+	public String getSpecializationName() {
+		return "Garden Gnome";
+	}
+
+	@Override
+	public String getMoodSummary() {
+		// TODO Auto-generated method stub
+		return "Seems Happy";
 	}
 }

@@ -323,7 +323,8 @@ public class LogisticsNetwork {
 	}
 	
 	public @Nullable ILogisticsComponent getComponentAt(Location location) {
-		return componentGraph.get(location).component;
+		ComponentGraphNode node = componentGraph.get(location);
+		return node == null ? null : node.component;
 	}
 	
 	public @Nullable ILogisticsComponent getComponentAt(World world, BlockPos pos) {

@@ -1,10 +1,16 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
+import java.io.IOException;
+
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializer;
+import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.util.math.BlockPos;
 
 public interface IFeyWorker {
@@ -13,7 +19,31 @@ public interface IFeyWorker {
 		WANDERING, // Not attached to a home, and therefore incapable of working
 		IDLE, // Able to work, but with no work to do
 		WORKING, // Working
-		REVOLTING, // Refusing to work
+		REVOLTING; // Refusing to work
+		
+		public final static class FairyStatusSerializer implements DataSerializer<FairyGeneralStatus> {
+			
+			private FairyStatusSerializer() {
+				DataSerializers.registerSerializer(this);
+			}
+			
+			@Override
+			public void write(PacketBuffer buf, FairyGeneralStatus value) {
+				buf.writeEnumValue(value);
+			}
+
+			@Override
+			public FairyGeneralStatus read(PacketBuffer buf) throws IOException {
+				return buf.readEnumValue(FairyGeneralStatus.class);
+			}
+
+			@Override
+			public DataParameter<FairyGeneralStatus> createKey(int id) {
+				return new DataParameter<>(id, this);
+			}
+		}
+		
+		public static final FairyStatusSerializer Serializer = new FairyStatusSerializer();
 	}
 	
 	// Suggested maximum fairy work distance.

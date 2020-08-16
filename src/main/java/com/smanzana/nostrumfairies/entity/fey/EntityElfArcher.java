@@ -370,4 +370,9 @@ public class EntityElfArcher extends EntityElf {
 			slashAt(target, distanceFactor);
 		}
 	}
+	
+	@Override
+	public String getSpecializationName() {
+		return "Elven Warrior";
+	}
 }

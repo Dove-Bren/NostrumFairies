@@ -9,12 +9,18 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.text.ITextComponent;
 
 public class ItemStacks {
 	
-	public static boolean stacksMatch(@Nullable ItemStack stack1, @Nullable ItemStack stack2) {
+	public static final boolean stacksMatch(@Nullable ItemStack stack1, @Nullable ItemStack stack2) {
 		if (stack1 == null || stack2 == null) {
 			return stack1 == null && stack2 == null;
 		}
@@ -24,7 +30,7 @@ public class ItemStacks {
         		&& Objects.equals(stack1.getTagCompound(), stack2.getTagCompound());
 	}
 	
-	private static ItemStack attemptAddToInventory(IInventory inventory, @Nullable ItemStack stack, boolean commit) {
+	private static final ItemStack attemptAddToInventory(IInventory inventory, @Nullable ItemStack stack, boolean commit) {
     	if (stack == null) {
     		return null;
     	}
@@ -68,15 +74,23 @@ public class ItemStacks {
         return itemstack;
     }
 	 
-	public static ItemStack addItem(IInventory inventory, @Nullable ItemStack stack) {
+	public static final ItemStack addItem(IInventory inventory, @Nullable ItemStack stack) {
 		return attemptAddToInventory(inventory, stack, true);
 	}
 	
-	public static boolean canFit(IInventory inventory, @Nullable ItemStack stack) {
+	public static final ItemStack addItem(ItemStack[] inventory, @Nullable ItemStack stack) {
+		return addItem(new ItemStackArrayWrapper(inventory), stack);
+	}
+	
+	public static final boolean canFit(IInventory inventory, @Nullable ItemStack stack) {
 		return null == attemptAddToInventory(inventory, stack, false);
 	}
 	
-	public static @Nullable List<ItemDeepStack> addAllItems(IInventory inventory, Collection<ItemDeepStack> stacks) {
+	public static final boolean canFit(ItemStack[] inventory, @Nullable ItemStack stack) {
+		return canFit(new ItemStackArrayWrapper(inventory), stack);
+	}
+	
+	public static final @Nullable List<ItemDeepStack> addAllItems(IInventory inventory, Collection<ItemDeepStack> stacks) {
 		// Just go through each and try to add
 		List<ItemDeepStack> ret = null;
 		
@@ -105,7 +119,11 @@ public class ItemStacks {
 		return ret;
 	}
 	
-	public static boolean canFitAll(IInventory inventory, Collection<ItemDeepStack> stacks) {
+	public static final @Nullable List<ItemDeepStack> addAllItems(ItemStack[] inventory, Collection<ItemDeepStack> stacks) {
+		return addAllItems(new ItemStackArrayWrapper(inventory), stacks);
+	}
+	
+	public static final boolean canFitAll(IInventory inventory, Collection<ItemDeepStack> stacks) {
 		// Instead of just trying to add all (with commit = false, which would mean no state saved) we need
 		// to try and quantify how much FREE SPACE there is instead.
 		
@@ -182,7 +200,11 @@ public class ItemStacks {
 		return stacks.isEmpty();
 	}
 	
-	private static ItemStack attemptRemoveFromInventory(IInventory inventory, @Nullable ItemStack stack, boolean commit) {
+	public static final boolean canFitAll(ItemStack[] inventory, Collection<ItemDeepStack> stacks) {
+		return canFitAll(new ItemStackArrayWrapper(inventory), stacks);
+	}
+	
+	private static final ItemStack attemptRemoveFromInventory(IInventory inventory, @Nullable ItemStack stack, boolean commit) {
 		if (stack == null) {
     		return null;
     	}
@@ -221,12 +243,20 @@ public class ItemStacks {
         return itemstack;
 	}
 	
-	public static boolean contains(IInventory inventory, @Nullable ItemStack items) {
+	public static final boolean contains(IInventory inventory, @Nullable ItemStack items) {
 		return null == attemptRemoveFromInventory(inventory, items, false);
 	}
 	
-	public static ItemStack remove(IInventory inventory, @Nullable ItemStack items) {
+	public static final boolean contains(ItemStack[] inventory, @Nullable ItemStack items) {
+		return contains(new ItemStackArrayWrapper(inventory), items);
+	}
+	
+	public static final ItemStack remove(IInventory inventory, @Nullable ItemStack items) {
 		return attemptRemoveFromInventory(inventory, items, true);
+	}
+	
+	public static final ItemStack remove(ItemStack[] inventory, @Nullable ItemStack items) {
+		return remove(new ItemStackArrayWrapper(inventory), items);
 	}
 	
 	/**
@@ -236,7 +266,7 @@ public class ItemStacks {
 	 * @param subset
 	 * @return
 	 */
-	public static boolean isSubset(Collection<ItemDeepStack> largeList, Collection<ItemDeepStack> subset) {
+	public static final boolean isSubset(Collection<ItemDeepStack> largeList, Collection<ItemDeepStack> subset) {
 		for (ItemDeepStack deep : subset) {
 			boolean found = false;
 			
@@ -258,4 +288,137 @@ public class ItemStacks {
 		return true;
 	}
 	
+	public static final NBTBase serializeInventory(IInventory inv) {
+		NBTTagList list = new NBTTagList();
+		for (int i = 0; i < inv.getSizeInventory(); i++) {
+			@Nullable ItemStack stack = inv.getStackInSlot(i);
+			if (stack != null) {
+				list.appendTag(stack.serializeNBT());
+			} else {
+				list.appendTag(new NBTTagCompound());
+			}
+		}
+		
+		return list;
+	}
+	
+	public static final boolean deserializeInventory(IInventory base, NBTBase nbt) {
+		if (base == null || nbt == null || !(nbt instanceof NBTTagList)) {
+			return false;
+		}
+		
+		base.clear();
+		NBTTagList list = (NBTTagList) nbt;
+		for (int i = 0; i < list.tagCount(); i++) {
+			NBTTagCompound tag = list.getCompoundTagAt(i);
+			@Nullable ItemStack stack = ItemStack.loadItemStackFromNBT(tag);
+			base.setInventorySlotContents(i, stack);
+		}
+		
+		return true;
+	}
+	
+	private static final class ItemStackArrayWrapper implements IInventory {
+
+		private final ItemStack[] array;
+		
+		public ItemStackArrayWrapper(ItemStack array[]) {
+			this.array = array;
+		}
+		
+		@Override
+		public String getName() {
+			return null;
+		}
+
+		@Override
+		public boolean hasCustomName() {
+			return false;
+		}
+
+		@Override
+		public ITextComponent getDisplayName() {
+			return null;
+		}
+
+		@Override
+		public int getSizeInventory() {
+			return array.length;
+		}
+
+		@Override
+		public ItemStack getStackInSlot(int index) {
+			return array[index];
+		}
+
+		@Override
+		public ItemStack decrStackSize(int index, int count) {
+			return ItemStackHelper.getAndSplit(array, index, count);
+		}
+
+		@Override
+		public ItemStack removeStackFromSlot(int index) {
+			ItemStack stack = array[index];
+			array[index] = null;
+			return stack;
+		}
+
+		@Override
+		public void setInventorySlotContents(int index, ItemStack stack) {
+			array[index] = stack;
+		}
+
+		@Override
+		public int getInventoryStackLimit() {
+			return 256;
+		}
+
+		@Override
+		public void markDirty() {
+			;
+		}
+
+		@Override
+		public boolean isUseableByPlayer(EntityPlayer player) {
+			return false;
+		}
+
+		@Override
+		public void openInventory(EntityPlayer player) {
+			;
+		}
+
+		@Override
+		public void closeInventory(EntityPlayer player) {
+			;
+		}
+
+		@Override
+		public boolean isItemValidForSlot(int index, ItemStack stack) {
+			return true;
+		}
+
+		@Override
+		public int getField(int id) {
+			return 0;
+		}
+
+		@Override
+		public void setField(int id, int value) {
+			;
+		}
+
+		@Override
+		public int getFieldCount() {
+			return 0;
+		}
+
+		@Override
+		public void clear() {
+			for (int i = 0; i < array.length; i++) {
+				array[i] = null;
+			}
+		}
+		
+	}
 }

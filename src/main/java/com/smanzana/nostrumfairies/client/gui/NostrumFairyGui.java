@@ -1,12 +1,14 @@
 package com.smanzana.nostrumfairies.client.gui;
 
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest.BufferChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest.InputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest.OutputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest.StorageChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui.BufferChestGuiContainer;
+import com.smanzana.nostrumfairies.client.gui.container.HomeBlockGui;
 import com.smanzana.nostrumfairies.client.gui.container.InputChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.InputChestGui.InputChestGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui;
@@ -27,6 +29,7 @@ public class NostrumFairyGui implements IGuiHandler {
 	public static final int bufferChestID = 2;
 	public static final int outputChestID = 3;
 	public static final int inputChestID = 4;
+	public static final int homeBlockID = 5;
 	
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
@@ -69,6 +72,15 @@ public class NostrumFairyGui implements IGuiHandler {
 		
 		if (ID == storageMonitorID) {
 			; // nothing on server
+		}
+		
+		if (ID == homeBlockID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof HomeBlockTileEntity) {
+				return new HomeBlockGui.HomeBlockContainer(
+						player.inventory,
+						(HomeBlockTileEntity) ent); // should be tile inventory
+			}
 		}
 		
 		return null;
@@ -121,6 +133,15 @@ public class NostrumFairyGui implements IGuiHandler {
 				// oh, here's the problem. The client network is unlinked, because we don't actually send
 				// fake networks when we're integrated. But that means that the client copy of things
 				// like tile entities are wrong.
+			}
+		}
+		
+		if (ID == homeBlockID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof HomeBlockTileEntity) {
+				return new HomeBlockGui.HomeBlockGuiContainer(new HomeBlockGui.HomeBlockContainer(
+						player.inventory,
+						(HomeBlockTileEntity) ent)); // should be tile inventory
 			}
 		}
 		

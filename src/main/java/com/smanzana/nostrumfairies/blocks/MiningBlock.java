@@ -207,8 +207,13 @@ public class MiningBlock extends BlockContainer {
 		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
 			super.setNetworkComponent(component);
 			
-			if (worldObj != null && !worldObj.isRemote && materialRequester == null) {
-				refreshRequester();
+			if (worldObj != null && !worldObj.isRemote) {
+				if (component != null) {
+					if (materialRequester != null) {
+						materialRequester.setNetwork(component.getNetwork());
+					}
+					refreshRequester();
+				}
 			}
 		}
 		
@@ -237,6 +242,7 @@ public class MiningBlock extends BlockContainer {
 		public void onJoinNetwork(LogisticsNetwork network) {
 			if (!worldObj.isRemote) {
 				if (materialRequester != null) {
+					materialRequester.setNetwork(network);
 					refreshRequester();
 				}
 				
@@ -1005,11 +1011,13 @@ public class MiningBlock extends BlockContainer {
 				return;
 			}
 			
+			if (this.getNetwork() == null) {
+				return;
+			}
+			
 			if (this.tickCount == 0) {
-				if (this.getNetwork() != null) {
-					for (BlockPos pos : this.beacons) {
-						this.getNetwork().addBeacon(worldObj, pos);
-					}
+				for (BlockPos pos : this.beacons) {
+					this.getNetwork().addBeacon(worldObj, pos);
 				}
 			}
 			

@@ -4,10 +4,11 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.blocks.WoodcuttingBlock;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
@@ -33,7 +34,6 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
@@ -164,17 +164,27 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			this.forfitTask();
 		}
 		
+		switch (to) {
+		case IDLE:
+			setActivitySummary("status.elf.relax");
+			break;
+		case REVOLTING:
+			setActivitySummary("status.elf.revolt");
+			break;
+		case WANDERING:
+			setActivitySummary("status.elf.wander");
+			break;
+		case WORKING:
+			; // set by task
+			break;
+		}
+		
 		return true;
 	}
 
 	@Override
-	protected boolean isValidHome(BlockPos homePos) {
-		TileEntity te = worldObj.getTileEntity(homePos);
-		if (te == null || !(te instanceof WoodcuttingBlock.WoodcuttingBlockTileEntity)) {
-			return false;
-		}
-		
-		return true;
+	public ResidentType getHomeType() {
+		return ResidentType.ELF;
 	}
 	
 	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
@@ -285,6 +295,16 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		// Assuming it did, our current inventory is fine. We'll do that task, maybe use our
 		// inventory, and then be idle with an item afterwards -- whicih will prompt
 		// us to go return it.
+		
+		if (newTask == null) {
+			;
+		} else if (newTask instanceof LogisticsTaskChopTree) {
+			setActivitySummary("status.elf.work.chop");
+		} else if (newTask instanceof LogisticsTaskDepositItem) {
+			setActivitySummary("status.generic.return");
+		} else {
+			setActivitySummary("status.generic.work");
+		}
 	}
 	
 	@Override
@@ -624,5 +644,16 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		} else {
 			SPELL_POISON_WIND.cast(this, 1.0f);
 		}
+	}
+	
+	@Override
+	public String getSpecializationName() {
+		return "Wood Elf";
+	}
+
+	@Override
+	public String getMoodSummary() {
+		// TODO Auto-generated method stub
+		return "Seems Happy";
 	}
 }

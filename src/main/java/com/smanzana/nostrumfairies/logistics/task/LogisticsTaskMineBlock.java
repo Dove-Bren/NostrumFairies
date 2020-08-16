@@ -175,6 +175,17 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			return false;
 		}
 		
+		// Don't grab more tasks if you've already mined at least one of the children.
+		// This should ease up on gravel disasters by the first dwarf in the list.
+		if (this.mergedTasks != null) {
+			for (ILogisticsTask task : mergedTasks) {
+				LogisticsTaskMineBlock subtask = (LogisticsTaskMineBlock) task;
+				if (subtask.phase == Phase.RETURNING || subtask.phase == Phase.DONE) {
+					return false;
+				}
+			}
+		}
+		
 		if (other instanceof LogisticsTaskMineBlock) {
 			LogisticsTaskMineBlock otherTask = (LogisticsTaskMineBlock) other;
 			

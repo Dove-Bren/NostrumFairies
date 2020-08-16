@@ -6,8 +6,10 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
+import com.smanzana.nostrumfairies.entity.ItemArraySerializer;
 import com.smanzana.nostrumfairies.entity.navigation.PathFinderPublic;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -40,7 +42,6 @@ import net.minecraft.entity.ai.EntityAIAttackMelee;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
-import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -98,10 +99,11 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityDwarf.class, ArmPose.Serializer);
+	protected static final DataParameter<ItemStack[]> ITEMS = EntityDataManager.<ItemStack[]>createKey(EntityDwarf.class, ItemArraySerializer.Serializer);
+	
 	private static final String NBT_ITEMS = "helditems";
 	private static final int INV_SIZE = 5;
 	
-	private InventoryBasic inventory;
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	
@@ -109,7 +111,6 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		super(world);
 		this.height = .95f;
 		this.workDistanceSq = 24 * 24;
-		this.inventory = new InventoryBasic("Dwarf Inv", false, INV_SIZE);
 		this.isImmuneToFire = true;
 		
 		this.navigator = new PathNavigatorLogistics(this, world) {
@@ -211,40 +212,41 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	public ItemStack[] getCarriedItems() {
-		ItemStack[] stacks = new ItemStack[INV_SIZE];
-		int idx = 0;
-		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack stack = inventory.getStackInSlot(i);
-			if (stack != null) {
-				stacks[idx++] = stack;
-			}
-		}
-		return stacks;
+		return dataManager.get(ITEMS);
 	}
 
 	@Override
 	public boolean canAccept(ItemStack stack) {
-		return ItemStacks.canFit(inventory, stack);
+		return ItemStacks.canFit(getCarriedItems(), stack);
 	}
 	
 	@Override
 	public boolean canAccept(ItemDeepStack stack) {
-		return ItemStacks.canFitAll(inventory, Lists.newArrayList(stack));
+		return ItemStacks.canFitAll(getCarriedItems(), Lists.newArrayList(stack));
+	}
+	
+	protected void updateItems(ItemStack items[]) {
+		dataManager.set(ITEMS, items);
+		dataManager.setDirty(ITEMS);
 	}
 
 	@Override
 	public void addItem(ItemStack stack) {
-		ItemStacks.addItem(inventory, stack);
+		ItemStack[] items = dataManager.get(ITEMS);
+		ItemStacks.addItem(items, stack);
+		updateItems(items);
 	}
 	
 	@Override
 	public void removeItem(ItemStack stack) {
-		ItemStacks.remove(inventory, stack);
+		ItemStack[] items = dataManager.get(ITEMS);
+		ItemStacks.remove(items, stack);
+		updateItems(items);
 	}
 	
 	protected boolean hasItems() {
 		for (int i = 0; i < INV_SIZE; i++) {
-			if (inventory.getStackInSlot(i) != null) {
+			if (getCarriedItems()[i] != null) {
 				return true;
 			}
 		}
@@ -260,17 +262,26 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			this.forfitTask();
 		}
 		
+		switch (to) {
+		case IDLE:
+			setActivitySummary("status.dwarf.relax");
+			break;
+		case REVOLTING:
+			setActivitySummary("status.dwarf.revolt");
+			break;
+		case WANDERING:
+			setActivitySummary("status.dwarf.wander");
+			break;
+		case WORKING:
+			; // Set by task
+		}
+		
 		return true;
 	}
 
 	@Override
-	protected boolean isValidHome(BlockPos homePos) {
-		TileEntity te = worldObj.getTileEntity(homePos);
-		if (te == null || !(te instanceof MiningBlock.MiningBlockTileEntity)) {
-			return false;
-		}
-		
-		return true;
+	public ResidentType getHomeType() {
+		return ResidentType.DWARF;
 	}
 	
 	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing, boolean repair) {
@@ -407,10 +418,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			}
 			
 			// Dwarves only perform tasks from their mine
-			if (this.getHome() == null || mine.getSourceComponent() == null ||
-					!this.getHome().equals(mine.getSourceComponent().getPosition())) {
-				return false;
-			}
+//			if (this.getHome() == null || mine.getSourceComponent() == null ||
+//					!this.getHome().equals(mine.getSourceComponent().getPosition())) {
+//				return false;
+//			}
 			
 			// Check where the block is
 			// EDIT mines have things go FAR down, so we ignore the distance check here
@@ -532,14 +543,14 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	private void dropItems() {
 		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack heldItem = inventory.getStackInSlot(i);
+			ItemStack heldItem = dataManager.get(ITEMS)[i];
 			if (heldItem == null) {
 				continue;
 			}
 			EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, heldItem);
 			worldObj.spawnEntityInWorld(item);
 		}
-		inventory.clear();
+		updateItems(new ItemStack[INV_SIZE]);
 	}
 
 	@Override
@@ -551,6 +562,16 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	protected void onTaskChange(ILogisticsTask oldTask, ILogisticsTask newTask) {
 		if (newTask == null) {
 			this.setPose(ArmPose.IDLE);
+		} else {
+		if (newTask instanceof LogisticsTaskMineBlock) {
+				setActivitySummary("status.dwarf.work.mine");
+			} else if (newTask instanceof LogisticsTaskPlaceBlock) {
+				setActivitySummary("status.dwarf.work.repair");
+			}  else if (newTask instanceof LogisticsTaskDepositItem) {
+				setActivitySummary("status.generic.return");
+			} else {
+				setActivitySummary("status.dwarf.work.generic");
+			}
 		}
 	}
 	
@@ -564,7 +585,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			ItemStack held = null;
 			
 			for (int i = 0; i < INV_SIZE; i++) {
-				held = inventory.getStackInSlot(i);
+				held = dataManager.get(ITEMS)[i];
 				if (held != null) {
 					break;
 				}
@@ -841,8 +862,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	private NBTTagList inventoryToNBT() {
 		NBTTagList list = new NBTTagList();
 		
+		ItemStack items[] = dataManager.get(ITEMS);
 		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack stack = inventory.getStackInSlot(i);
+			ItemStack stack = items[i];
 			if (stack != null) {
 				list.appendTag(stack.serializeNBT());
 			}
@@ -859,11 +881,13 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	private void loadInventoryFromNBT(NBTTagList list) {
-		inventory.clear();
+		ItemStack items[] = new ItemStack[INV_SIZE];
 		
 		for (int i = 0; i < list.tagCount(); i++) {
-			inventory.setInventorySlotContents(i, ItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i)));
+			items[i] = ItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i));
 		}
+		
+		updateItems(items);
 	}
 	
 	@Override
@@ -961,6 +985,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	protected void entityInit() {
 		super.entityInit();
 		dataManager.register(POSE, ArmPose.IDLE);
+		dataManager.register(ITEMS, new ItemStack[INV_SIZE]);
 	}
 	
 	public ArmPose getPose() {
@@ -1031,5 +1056,16 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			return super.decreaseAirSupply(air);
 		}
 		return air;
+	}
+
+	@Override
+	public String getSpecializationName() {
+		return "Mining Dwarf";
+	}
+
+	@Override
+	public String getMoodSummary() {
+		// TODO Auto-generated method stub
+		return "Seems Happy";
 	}
 }
