@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
@@ -1067,5 +1068,39 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	public String getMoodSummary() {
 		// TODO Auto-generated method stub
 		return "Seems Happy";
+	}
+
+	@Override
+	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+		return rand.nextBoolean() && rand.nextBoolean();
+	}
+
+	@Override
+	protected void onWanderTick() {
+		// Wander around
+		if (this.navigator.noPath() && ticksExisted % 100 == 0 && rand.nextBoolean()) {
+			if (!EntityFeyBase.FeyLazyFollowNearby(this, EntityFeyBase.DOMESTIC_FEY_AND_PLAYER_FILTER, 15, 3, 6)) {
+				// Go to a random place
+				EntityFeyBase.FeyWander(this, this.getPosition(), Math.min(10, Math.sqrt(this.wanderDistanceSq)));
+			}
+		}
+	}
+
+	@Override
+	protected void onRevoltTick() {
+		// TODO Auto-generated method stub
+		;
+	}
+	
+	@Override
+	protected float getGrowthForTask(ILogisticsTask task) {
+		if (task instanceof LogisticsTaskMineBlock) {
+			return 1.2f;
+		}
+		if (task instanceof LogisticsTaskPlaceBlock) {
+			return 1.2f;
+		}
+		
+		return 0f;
 	}
 }

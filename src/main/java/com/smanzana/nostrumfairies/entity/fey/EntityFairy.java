@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.entity.fey;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -15,6 +16,7 @@ import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -699,5 +701,33 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	public String getMoodSummary() {
 		// TODO Auto-generated method stub
 		return "Seems Happy";
+	}
+	
+	@Override
+	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+		return rand.nextBoolean() && rand.nextBoolean();
+	}
+
+	@Override
+	protected void onWanderTick() {
+		// Wander around
+		//System.out.println(this.getPosition());
+		if (this.navigator.noPath() && ticksExisted % 50 == 0 && rand.nextBoolean() && rand.nextBoolean()) {
+			if (!EntityFeyBase.FeyLazyFollowNearby(this, EntityFeyBase.DOMESTIC_FEY_AND_PLAYER_FILTER, 20, 2, 5)) {
+				// Go to a random place
+				EntityFeyBase.FeyWander(this, this.getPosition(), Math.min(10, Math.sqrt(this.wanderDistanceSq)));
+			}
+		}
+	}
+
+	@Override
+	protected void onRevoltTick() {
+		// TODO Auto-generated method stub
+		;
+	}
+	
+	@Override
+	protected float getGrowthForTask(ILogisticsTask task) {
+		return 0.2f;
 	}
 }

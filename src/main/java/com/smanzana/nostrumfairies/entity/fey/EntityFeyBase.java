@@ -9,6 +9,7 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
@@ -34,8 +35,11 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SPacketAnimation;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -70,6 +74,11 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 * Number of ticks the current task has been being run
 	 */
 	private int taskTickCount;
+	
+	/**
+	 * Slowly updates pos used to figure out if we get stuck while on the job!
+	 */
+	private BlockPos lastTaskPos;
 	
 	
 	public EntityFeyBase(World world) {
@@ -158,6 +167,10 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		HomeBlockTileEntity ent = getHomeEnt();
 		if (ent != null) {
 			ent.removeResident(this);
+		}
+		
+		if (home != null) {
+			home = home.toImmutable();
 		}
 		this.dataManager.set(HOME, Optional.fromNullable(home));
 		this.setHomePosAndDistance(home, home == null ? -1 : (int) this.wanderDistanceSq);
@@ -274,16 +287,26 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 */
 	protected abstract boolean shouldPerformTask(ILogisticsTask task);
 	
+	protected float getGrowthForTask(ILogisticsTask task) {
+		return .1f;
+	}
+	
 	protected void finishTask() {
 		// This _could_ immediately look for a new task.
 		// For now, I think 1 frame delay between having a new job is okay.
 		// That'll also mean that code that calls this and then looks at the task after will get NULL instead
 		// of possibly the same task or possibly a new one, which might make debugging easier.
 		if (this.currentTask != null) {
+			float amt = 0;
 			for (ILogisticsTask task : this.currentTask.unmerge()) {
 				this.getLogisticsNetwork().getTaskRegistry().completeTask(task);
+				amt += getGrowthForTask(task);
 			}
 			forceSetTask(null);
+			HomeBlockTileEntity home = this.getHomeEnt();
+			if (home != null) {
+				home.addGrowth(amt); // TODO multiply by happiness?
+			}
 		}
 	}
 	
@@ -307,6 +330,16 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	protected abstract void onTaskChange(@Nullable ILogisticsTask oldTask, @Nullable ILogisticsTask newTask);
 	
 	/**
+	 * Called while wandering for each prospective housing location.
+	 * The home block has already been checked for availability and for basic type compatibility.
+	 * @param pos
+	 * @param state
+	 * @param te
+	 * @return
+	 */
+	protected abstract boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te);
+	
+	/**
 	 * Called every tick that a task is active.
 	 * @param task
 	 */
@@ -315,6 +348,10 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	protected abstract void onIdleTick();
 	
 	protected abstract void onCombatTick();
+	
+	protected abstract void onWanderTick();
+	
+	protected abstract void onRevoltTick();
 	
 	@SideOnly(Side.CLIENT)
 	protected abstract void onCientTick();
@@ -365,6 +402,11 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				((WorldServer)this.worldObj).getEntityTracker().sendToAllTrackingEntity(this, new SPacketAnimation(this, hand == EnumHand.MAIN_HAND ? 0 : 3));
 			}
 		}
+	}
+	
+	protected void teleportHome() {
+		BlockPos target = findEmptySpot(this.getHome(), false);
+		this.attemptTeleport(target.getX() + .5, target.getY() + .05, target.getZ() + .5);
 	}
 	
 	@Override
@@ -452,6 +494,16 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				}
 				
 				if (currentTask != null) {
+					if (taskTickCount > 0 && taskTickCount % (20 * 60) == 0) {
+						BlockPos pos = this.getPosition();
+						if (pos.equals(lastTaskPos)) {
+							// Stuck! Teleport!
+							teleportHome();
+							lastTaskPos = null;
+						} else {
+							lastTaskPos = pos;
+						}
+					}
 					this.onTaskTick(currentTask);
 				}
 				
@@ -469,8 +521,49 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			}
 			break;
 		case REVOLTING:
+			onRevoltTick();
+			break;
 		case WANDERING:
-			// Implementation should say what these do
+			// Look for nearby homes
+			if (this.ticksExisted % 100 == 0) {
+				int radius = 3;
+				MutableBlockPos cursor = new MutableBlockPos();
+				for (int x = -radius; x <= radius; x++)
+				for (int z = -radius; z <= radius; z++)
+				for (int y = -radius; y <= radius; y++) {
+					cursor.setPos(posX + x, posY + y, posZ + z);
+					if (!worldObj.isBlockLoaded(cursor)) {
+						continue;
+					}
+					
+					IBlockState state = worldObj.getBlockState(cursor);
+					if (state.getBlock() instanceof FeyHomeBlock) {
+						FeyHomeBlock block = (FeyHomeBlock) state.getBlock();
+						if (!block.isCenter(state)) {
+							continue;
+						}
+						
+						TileEntity te = worldObj.getTileEntity(cursor);
+						if (te == null || !(te instanceof HomeBlockTileEntity)) {
+							continue;
+						}
+						
+						HomeBlockTileEntity ent = (HomeBlockTileEntity) te;
+						if (ent.canAccept(this) && isValidHome(cursor) && this.shouldJoin(cursor, state, ent)) {
+							if (this.changeStatus(FairyGeneralStatus.IDLE)) {
+								this.setHome(cursor);
+							}
+							break;
+						}
+					}
+				}
+			}
+			
+			if (this.getStatus() == FairyGeneralStatus.WANDERING) {
+				// still wandering
+				onWanderTick();
+			}
+			
 			break;
 		}
 	}
@@ -580,6 +673,11 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	}
 	
 	private void verifyHome() {
+		if (this.getHome() != null && !worldObj.isBlockLoaded(this.getHome())) {
+			// Can't actually verify, so just pretend it's fine.
+			return;
+		}
+		
 		HomeBlockTileEntity ent = getHomeEnt();
 		if (ent == null || !ent.isResident(this)) {
 			if (ent != null) {
@@ -733,13 +831,87 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		return flag;
 	}
 	
-	protected static boolean FeyWander(EntityFeyBase fey, BlockPos center, double maxDist) {
+	public abstract FeyHomeBlock.ResidentType getHomeType();
+	
+	@SideOnly(Side.CLIENT)
+	public abstract String getSpecializationName();
+	
+	@SideOnly(Side.CLIENT)
+	public abstract String getMoodSummary();
+	
+	public String getActivitySummary() {
+		return dataManager.get(ACTIVITY);
+	}
+	
+	protected void setActivitySummary(String unloc) {
+		dataManager.set(ACTIVITY, unloc);
+	}
+	
+	protected @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
+		if (!worldObj.isAirBlock(targetPos)) {
+			do {
+				if (worldObj.isAirBlock(targetPos.north())) {
+					if (worldObj.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
+						targetPos = targetPos.north();
+						break;
+					} else if (worldObj.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
+						targetPos = targetPos.north().down();
+						break;
+					}
+				}
+				if (worldObj.isAirBlock(targetPos.south())) {
+					if (worldObj.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
+						targetPos = targetPos.south();
+						break;
+					} else if (worldObj.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
+						targetPos = targetPos.south().down();
+						break;
+					}
+				}
+				if (worldObj.isAirBlock(targetPos.east())) {
+					if (worldObj.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
+						targetPos = targetPos.east();
+						break;
+					} else if (worldObj.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
+						targetPos = targetPos.east().down();
+						break;
+					}
+				}
+				if (worldObj.isAirBlock(targetPos.west())) {
+					if (worldObj.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
+						targetPos = targetPos.west();
+						break;
+					} else if (worldObj.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
+						targetPos = targetPos.west().down();
+						break;
+					}
+				}
+				if (worldObj.isAirBlock(targetPos.up()) && worldObj.isSideSolid(targetPos, EnumFacing.UP)) {
+					targetPos = targetPos.up();
+					break;
+				}
+				if (worldObj.isAirBlock(targetPos.down()) && worldObj.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
+					targetPos = targetPos.down();
+					break;
+				}
+			} while (false);
+		}
+		
+		if (allOrNothing) {
+			if (!worldObj.isAirBlock(targetPos)) {
+				targetPos = null;
+			}
+		}
+		
+		return targetPos;
+	}
+	
+	protected static boolean FeyWander(EntityFeyBase fey, BlockPos center, double minDist, double maxDist) {
 		BlockPos targ = null;
 		int attempts = 20;
-		final double maxDistSq = maxDist * maxDist;
 		final Random rand = fey.rand;
 		do {
-			double dist = rand.nextDouble() * Math.sqrt(maxDistSq);
+			double dist = minDist + (rand.nextDouble() * (maxDist - minDist));
 			float angle = (float) (rand.nextDouble() * (2 * Math.PI));
 			float tilt = (float) (rand.nextDouble() * (2 * Math.PI)) * .5f;
 			
@@ -780,19 +952,88 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		return true;
 	}
 	
-	public abstract FeyHomeBlock.ResidentType getHomeType();
-	
-	@SideOnly(Side.CLIENT)
-	public abstract String getSpecializationName();
-	
-	@SideOnly(Side.CLIENT)
-	public abstract String getMoodSummary();
-	
-	public String getActivitySummary() {
-		return dataManager.get(ACTIVITY);
+	protected static boolean FeyWander(EntityFeyBase fey, BlockPos center, double maxDist) {
+		return FeyWander(fey, center, maxDist * .4, maxDist);
 	}
 	
-	protected void setActivitySummary(String unloc) {
-		dataManager.set(ACTIVITY, unloc);
+	protected static boolean FeyFollow(EntityFeyBase fey, EntityLivingBase target, double minDist, double maxDist) {
+		return FeyWander(fey, target.getPosition(), minDist, maxDist);
 	}
+	
+	protected static boolean FeyFollow(EntityFeyBase fey, EntityLivingBase target, double maxDist) {
+		return FeyFollow(fey, target, maxDist * .4, maxDist);
+	}
+	
+	protected static boolean FeyFollowNearby(EntityFeyBase fey, Predicate<? super Entity> filter, boolean lazy, double maxSightDist, double minFollowDist, double maxFollowDist) {
+		List<Entity> ents = fey.worldObj.getEntitiesInAABBexcluding(fey,
+				new AxisAlignedBB(fey.posX - maxSightDist, fey.posY - maxSightDist, fey.posZ - maxSightDist, fey.posX + maxSightDist, fey.posY + maxSightDist, fey.posZ + maxSightDist),
+				filter);
+		
+		EntityLivingBase target = null;
+		double minDist = 0;
+		if (ents != null && !ents.isEmpty()) {
+			// pick the closest
+			for (Entity ent : ents) {
+				if (!(ent instanceof EntityLivingBase)) {
+					continue;
+				}
+				
+				double dist = fey.getDistanceSqToEntity(ent);
+				if (target == null || dist < minDist) {
+					target = (EntityLivingBase) ent;
+					minDist = dist;
+				}
+			}
+		}
+		
+		if (target != null && (lazy || minDist > minFollowDist)) {
+			return FeyFollow(fey, target, minFollowDist, maxFollowDist);
+		}
+		
+		return false;
+	}
+	
+	protected static boolean FeyLazyFollowNearby(EntityFeyBase fey, Predicate<? super Entity> filter, double maxSightDist, double minFollowDist, double maxFollowDist) {
+		return FeyFollowNearby(fey, filter, true, maxSightDist, minFollowDist, maxFollowDist);
+	}
+	
+	protected static boolean FeyActiveFollowNearby(EntityFeyBase fey, Predicate<? super Entity> filter, double maxSightDist, double minFollowDist, double maxFollowDist) {
+		return FeyFollowNearby(fey, filter, false, maxSightDist, minFollowDist, maxFollowDist);
+	}
+	
+	protected static final Predicate<? super Entity> DOMESTIC_FEY_FILTER = new Predicate<Entity>() {
+
+		@Override
+		public boolean apply(Entity input) {
+			if (input == null || !(input instanceof EntityFeyBase)) {
+				return false;
+			}
+			
+			EntityFeyBase fey = (EntityFeyBase) input;
+			return fey.getStatus() == FairyGeneralStatus.IDLE || fey.getStatus() == FairyGeneralStatus.WORKING;
+		}
+		
+	};
+	
+	protected static final Predicate<? super Entity> DOMESTIC_FEY_AND_PLAYER_FILTER = new Predicate<Entity>() {
+
+		@Override
+		public boolean apply(Entity input) {
+			if (input == null) {
+				return false;
+			}
+			
+			if (input instanceof EntityFeyBase) {
+				EntityFeyBase fey = (EntityFeyBase) input;
+				return fey.getStatus() == FairyGeneralStatus.IDLE || fey.getStatus() == FairyGeneralStatus.WORKING;
+			}
+			
+			if (input instanceof EntityPlayer) {
+				return !((EntityPlayer) input).isSpectator();
+			}
+			
+			return false;
+		}
+		
+	};
 }

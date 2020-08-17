@@ -2,12 +2,17 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity.FeyAwayRecord;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity.HomeBlockSlotInventory;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
@@ -171,7 +176,7 @@ public class HomeBlockGui {
 		private HomeBlockContainer container;
 		protected int selection = -1;
 		
-		protected EntityFeyBase feyArray[];
+		protected FeyAwayRecord feyArray[];
 		private long feyArrayCacheTimer;
 		
 		public HomeBlockGuiContainer(HomeBlockContainer container) {
@@ -208,7 +213,7 @@ public class HomeBlockGui {
 			float scale = .75f;
 			int count = 0;
 			int maxcount = 0;
-			for (EntityFeyBase fey : this.feyArray) {
+			for (FeyAwayRecord fey : this.feyArray) {
 				if (fey != null) {
 					count++;
 				}
@@ -230,7 +235,7 @@ public class HomeBlockGui {
 			GlStateManager.pushMatrix();
 			GlStateManager.translate(0, 14, 0);
 			GlStateManager.scale(scale, scale, scale);
-			fontRendererObj.drawString(String.format("%.0f%% Growth", container.home.getGrowth()),
+			fontRendererObj.drawString(String.format("%.0f%% Growth", (container.home.getGrowth() * 100)),
 					0, 0, 0xFFA0A0A0);
 			GlStateManager.popMatrix();
 			
@@ -250,16 +255,22 @@ public class HomeBlockGui {
 			GlStateManager.popMatrix();
 		}
 		
-		private void drawListItem(int x, int y, boolean hasStone, boolean mouseOver, @Nullable EntityFeyBase fey) {
+		private void drawListItem(int x, int y, boolean hasStone, boolean mouseOver, @Nullable FeyAwayRecord record) {
 			mc.getTextureManager().bindTexture(TEXT);
 			GlStateManager.color(1f, 1f, 1f, 1f);
 			this.drawTexturedModalRect(x, y, GUI_TEXT_LIST_ITEM_HOFFSET + (mouseOver ? GUI_LIST_ITEM_WIDTH : 0), GUI_TEXT_LIST_ITEM_vOFFSET,
 					GUI_LIST_ITEM_WIDTH, GUI_LIST_ITEM_HEIGHT);
 			
 			if (hasStone) {
-				if (fey != null) {
+				if (record == null) {
+					// Show a 'VACANT' notice lol
+					String str = "Vacant";
+					this.fontRendererObj.drawStringWithShadow("Vacant",
+							x + (GUI_LIST_ITEM_WIDTH - fontRendererObj.getStringWidth(str)) / 2,
+							y + 1 + ((GUI_LIST_ITEM_HEIGHT - fontRendererObj.FONT_HEIGHT) / 2), 0xFFFFFFFF);
+				} else {
 					// display information about the fey for selection
-					String name = fey.getName();
+					String name = record.name;
 					if (fontRendererObj.getStringWidth(name) * .75f > GUI_LIST_ITEM_WIDTH - 4) {
 						int len = 0;
 						int index = 0;
@@ -276,25 +287,19 @@ public class HomeBlockGui {
 					GlStateManager.scale(.75f, .75f, .75f);
 					this.fontRendererObj.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 					GlStateManager.popMatrix();
-				} else {
-					// Show a 'VACANT' notice lol
-					String str = "Vacant";
-					this.fontRendererObj.drawStringWithShadow("Vacant",
-							x + (GUI_LIST_ITEM_WIDTH - fontRendererObj.getStringWidth(str)) / 2,
-							y + 1 + ((GUI_LIST_ITEM_HEIGHT - fontRendererObj.FONT_HEIGHT) / 2), 0xFFFFFFFF);
 				}
 			}
 		}
 		
-		private void drawList(int x, int y, EntityFeyBase[] feyArray, int mouseIndex) {
-			for (int i = 0; i < container.home.getSlots(); i++) {
-				@Nullable EntityFeyBase fey = (i >= feyArray.length ? null : feyArray[i]);
+		private void drawList(int x, int y, Map<UUID, FeyAwayRecord> feyMap, int mouseIndex) {
+			for (int i = 0; i < container.home.getRawSlots(); i++) {
+				@Nullable FeyAwayRecord fey = (i >= feyArray.length ? null : feyArray[i]);
 				drawListItem(x, y + (i * GUI_LIST_ITEM_HEIGHT), container.home.getSlotInventory().hasStone(i), mouseIndex == i, fey);
 			}
 		}
 		
-		private void drawDetails(int x, int y, @Nullable EntityFeyBase fey) {
-			if (fey == null) {
+		private void drawDetails(int x, int y, @Nullable FeyAwayRecord record) {
+			if (record == null) {
 				return;
 			}
 			
@@ -310,7 +315,7 @@ public class HomeBlockGui {
 			drawRect(x, y, x + GUI_DETAILS_WIDTH, y + previewSize + previewMargin + previewMargin, 0x40000000);
 
 			// -> Name
-			String name = fey.getName();
+			String name = record.name;
 			if (fontRendererObj.getStringWidth(name) * nameScale > nameSpace) {
 				int len = 0;
 				int index = 0;
@@ -328,65 +333,75 @@ public class HomeBlockGui {
 			this.fontRendererObj.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 			GlStateManager.popMatrix();
 			
-			// -> Title
-			name = fey.getSpecializationName();
-			GlStateManager.pushMatrix();
-			GlStateManager.translate(x + 2 + (nameSpace - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
-			GlStateManager.scale(nameScale, nameScale, nameScale);
-			this.fontRendererObj.drawString(name, 0, 0, 0xFFF0A0FF);
-			GlStateManager.popMatrix();
-			
-			// -> Status
-			name = fey.getMoodSummary();
-			GlStateManager.pushMatrix();
-			GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
-			GlStateManager.scale(nameScale, nameScale, nameScale);
-			this.fontRendererObj.drawString(name, 0, 0, 0xFFE0E0E0);
-			GlStateManager.popMatrix();
-			
-			// -> Activity report
-			name = fey.getActivitySummary();
-			GlStateManager.pushMatrix();
-			GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
-			GlStateManager.scale(nameScale, nameScale, nameScale);
-			this.fontRendererObj.drawString(name, 0, 0, 0xFFE0E0E0);
-			GlStateManager.popMatrix();
-			
-			// render preview
-			drawRect(x + GUI_DETAILS_WIDTH - (previewMargin + previewSize), y + previewMargin,
-					x + GUI_DETAILS_WIDTH - (previewMargin), y + (previewMargin + previewSize),
-					0xFFAAAAAA);
-			//RenderHelper.disableStandardItemLighting();
-			// in render terms, 24 is one block, and scale seems to be how big a block is. So figure out how many blocks
-			// the fey is, and then make that fit in 24 units.
-			float length = Math.max(fey.height, fey.width);
-			int scale = (int) Math.floor((previewSize - 2) / (length));
-			GlStateManager.color(1f, 1f, 1f, 1f);
-			GuiInventory.drawEntityOnScreen(x + GUI_DETAILS_WIDTH - ((previewSize / 2) + previewMargin),
-					y + (previewMargin + previewSize),
-					scale, 0, 0, fey);
-			
-			// Render inventory
-			if (fey instanceof IItemCarrierFey) {
-				IItemCarrierFey carrier = (IItemCarrierFey) fey;
-				ItemStack items[] = carrier.getCarriedItems();
-				if (items != null && items.length > 0) {
-					int cells = Math.min(5, items.length);
-					int offsetX = (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH * cells)) / 2;
-					RenderHelper.enableGUIStandardItemLighting();
-					GlStateManager.color(1f, 1f, 1f, 1f);
-					for (int i = 0; i < cells; i++) {
-						int cellX = x + offsetX + (i * GUI_INV_CELL_LENGTH);
-						int cellY = y + 62;
-						mc.getTextureManager().bindTexture(TEXT);
-						Gui.drawModalRectWithCustomSizedTexture(cellX, cellY,
-								GUI_TEXT_LIST_ITEM_HOFFSET, GUI_TEXT_LIST_ITEM_vOFFSET + GUI_LIST_ITEM_HEIGHT,
-								GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH, 256, 256);
-						GlStateManager.enableDepth();
-			            this.itemRender.renderItemAndEffectIntoGUI(this.mc.thePlayer, items[i], cellX + 1, cellY + 1);
-			            this.itemRender.renderItemOverlayIntoGUI(this.fontRendererObj, items[i], cellX + 1, cellY + 1, null);
+			if (record.cache != null) {
+				EntityFeyBase fey = record.cache;
+				// -> Title
+				name = fey.getSpecializationName();
+				GlStateManager.pushMatrix();
+				GlStateManager.translate(x + 2 + (nameSpace - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
+				GlStateManager.scale(nameScale, nameScale, nameScale);
+				this.fontRendererObj.drawString(name, 0, 0, 0xFFF0A0FF);
+				GlStateManager.popMatrix();
+				
+				// -> Status
+				name = fey.getMoodSummary();
+				GlStateManager.pushMatrix();
+				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
+				GlStateManager.scale(nameScale, nameScale, nameScale);
+				this.fontRendererObj.drawString(name, 0, 0, 0xFFE0E0E0);
+				GlStateManager.popMatrix();
+				
+				// -> Activity report
+				name = fey.getActivitySummary();
+				GlStateManager.pushMatrix();
+				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
+				GlStateManager.scale(nameScale, nameScale, nameScale);
+				this.fontRendererObj.drawString(name, 0, 0, 0xFFE0E0E0);
+				GlStateManager.popMatrix();
+				
+				// render preview
+				drawRect(x + GUI_DETAILS_WIDTH - (previewMargin + previewSize), y + previewMargin,
+						x + GUI_DETAILS_WIDTH - (previewMargin), y + (previewMargin + previewSize),
+						0xFFAAAAAA);
+				//RenderHelper.disableStandardItemLighting();
+				// in render terms, 24 is one block, and scale seems to be how big a block is. So figure out how many blocks
+				// the fey is, and then make that fit in 24 units.
+				float length = Math.max(fey.height, fey.width);
+				int scale = (int) Math.floor((previewSize - 2) / (length));
+				GlStateManager.color(1f, 1f, 1f, 1f);
+				GuiInventory.drawEntityOnScreen(x + GUI_DETAILS_WIDTH - ((previewSize / 2) + previewMargin),
+						y + (previewMargin + previewSize),
+						scale, 0, 0, fey);
+				
+				// Render inventory
+				if (fey instanceof IItemCarrierFey) {
+					IItemCarrierFey carrier = (IItemCarrierFey) fey;
+					ItemStack items[] = carrier.getCarriedItems();
+					if (items != null && items.length > 0) {
+						int cells = Math.min(5, items.length);
+						int offsetX = (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH * cells)) / 2;
+						RenderHelper.enableGUIStandardItemLighting();
+						GlStateManager.color(1f, 1f, 1f, 1f);
+						for (int i = 0; i < cells; i++) {
+							int cellX = x + offsetX + (i * GUI_INV_CELL_LENGTH);
+							int cellY = y + 62;
+							mc.getTextureManager().bindTexture(TEXT);
+							Gui.drawModalRectWithCustomSizedTexture(cellX, cellY,
+									GUI_TEXT_LIST_ITEM_HOFFSET, GUI_TEXT_LIST_ITEM_vOFFSET + GUI_LIST_ITEM_HEIGHT,
+									GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH, 256, 256);
+							GlStateManager.enableDepth();
+				            this.itemRender.renderItemAndEffectIntoGUI(this.mc.thePlayer, items[i], cellX + 1, cellY + 1);
+				            this.itemRender.renderItemOverlayIntoGUI(this.fontRendererObj, items[i], cellX + 1, cellY + 1, null);
+						}
 					}
 				}
+			} else {
+				name = "Away";
+				GlStateManager.pushMatrix();
+				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
+				GlStateManager.scale(nameScale, nameScale, nameScale);
+				this.fontRendererObj.drawString(name, 0, 0, 0xFFE0E0E0);
+				GlStateManager.popMatrix();
 			}
 		}
 		
@@ -426,7 +441,7 @@ public class HomeBlockGui {
 			
 			refreshFeyArray();
 			drawSummary(horizontalMargin + GUI_INFO_HOFFSET, verticalMargin + GUI_INFO_VOFFSET);
-			drawList(horizontalMargin + GUI_LIST_HOFFSET, verticalMargin + GUI_LIST_VOFFSET, feyArray, mouseIndex);
+			drawList(horizontalMargin + GUI_LIST_HOFFSET, verticalMargin + GUI_LIST_VOFFSET, container.home.getFeyEntries(), mouseIndex);
 			drawDetails(horizontalMargin + GUI_DETAILS_HOFFSET, verticalMargin + GUI_DETAILS_VOFFSET, getSelected());
 			drawSlots();
 
@@ -471,7 +486,7 @@ public class HomeBlockGui {
 			if (mouseX > GUI_LIST_HOFFSET && mouseX < GUI_LIST_HOFFSET + GUI_LIST_ITEM_WIDTH
 					&& mouseY > GUI_LIST_VOFFSET && mouseY < GUI_LIST_VOFFSET + (GUI_LIST_ITEM_HEIGHT * 5)) {
 				int index = (mouseY - (GUI_LIST_VOFFSET + 1)) / GUI_LIST_ITEM_HEIGHT;
-				if (index < container.home.getSlots() && container.home.getSlotInventory().hasStone(index)) {
+				if (index < container.home.getEffectiveSlots() && container.home.getSlotInventory().hasStone(index)) {
 					return index;
 				}
 			}
@@ -479,7 +494,7 @@ public class HomeBlockGui {
 			return -1;
 		}
 		
-		protected @Nullable EntityFeyBase getSelected() {
+		protected @Nullable FeyAwayRecord getSelected() {
 			if (selection < 0 || selection >= this.feyArray.length) {
 				return null;
 			}
@@ -490,8 +505,11 @@ public class HomeBlockGui {
 		protected void refreshFeyArray() {
 			long now = System.currentTimeMillis();
 			if (feyArray == null || now - feyArrayCacheTimer > 1000) {
-				List<EntityFeyBase> list = container.home.getAvailableFeyEntities();
-				feyArray = list == null ? new EntityFeyBase[0] : list.toArray(new EntityFeyBase[list.size()]);
+				
+				List<FeyAwayRecord> records = Lists.newArrayList(container.home.getFeyEntries().values());
+				Collections.sort(records, (l, r) -> { return l.name.compareTo(r.name); });
+				
+				feyArray = records.toArray(new FeyAwayRecord[records.size()]);
 				feyArrayCacheTimer = now;
 			}
 		}
@@ -530,7 +548,7 @@ public class HomeBlockGui {
 			// Otherwise, check if a soul stone is socketted && this index selected.
 			if (isSoul) {
 				final int index = HomeBlockSlotInventory.getIndexFromSlot(slot);
-				if (index >= te.getSlots() || inventoryIn.hasStone(index)) {
+				if (index >= te.getRawSlots() || inventoryIn.hasStone(index)) {
 					return false;
 				}
 				

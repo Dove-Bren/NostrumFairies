@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -20,6 +21,7 @@ import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.EntityItem;
@@ -31,7 +33,6 @@ import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -197,65 +198,6 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		return ResidentType.GNOME;
 	}
 	
-	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
-		if (!worldObj.isAirBlock(targetPos)) {
-			do {
-				if (worldObj.isAirBlock(targetPos.north())) {
-					if (worldObj.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
-						targetPos = targetPos.north();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.north().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.south())) {
-					if (worldObj.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
-						targetPos = targetPos.south();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.south().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.east())) {
-					if (worldObj.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
-						targetPos = targetPos.east();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.east().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.west())) {
-					if (worldObj.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
-						targetPos = targetPos.west();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.west().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.up()) && worldObj.isSideSolid(targetPos, EnumFacing.UP)) {
-					targetPos = targetPos.up();
-					break;
-				}
-				if (worldObj.isAirBlock(targetPos.down()) && worldObj.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
-					targetPos = targetPos.down();
-					break;
-				}
-			} while (false);
-		}
-		
-		if (allOrNothing) {
-			if (!worldObj.isAirBlock(targetPos)) {
-				targetPos = null;
-			}
-		}
-		
-		return targetPos;
-	}
-
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
 		if (task instanceof LogisticsTaskPlantItem) {
@@ -742,5 +684,44 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	public String getMoodSummary() {
 		// TODO Auto-generated method stub
 		return "Seems Happy";
+	}
+	
+	@Override
+	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+		return rand.nextBoolean() && rand.nextBoolean();
+	}
+
+	@Override
+	protected void onWanderTick() {
+		// Wander around
+		if (this.navigator.noPath()) {
+			if (!EntityFeyBase.FeyActiveFollowNearby(this, EntityFeyBase.DOMESTIC_FEY_AND_PLAYER_FILTER, 20, 2, 5)) {
+				// Go to a random place
+				if (ticksExisted % 60 == 0 && rand.nextBoolean() && rand.nextBoolean()) {
+					EntityFeyBase.FeyWander(this, this.getPosition(), Math.min(10, Math.sqrt(this.wanderDistanceSq)));
+				}
+			}
+		}
+	}
+
+	@Override
+	protected void onRevoltTick() {
+		// TODO Auto-generated method stub
+		;
+	}
+	
+	@Override
+	protected float getGrowthForTask(ILogisticsTask task) {
+		if (task instanceof LogisticsTaskPickupItem) {
+			return 0.2f;
+		}
+		if (task instanceof LogisticsTaskPlantItem) {
+			return 0.3f;
+		}
+		if (task instanceof LogisticsTaskHarvest) {
+			return 0.6f;
+		}
+		
+		return 0f;
 	}
 }

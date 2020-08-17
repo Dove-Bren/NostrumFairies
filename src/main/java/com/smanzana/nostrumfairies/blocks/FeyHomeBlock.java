@@ -1,17 +1,21 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.utils.ItemStacks;
@@ -33,12 +37,12 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -333,14 +337,14 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		return pos.down();
 	}
 	
-	public static class HomeBlockTileEntity extends LogisticsTileEntity {
+	public static class HomeBlockTileEntity extends LogisticsTileEntity implements ITickable {
 		
 		public static class HomeBlockSlotInventory extends InventoryBasic {
 
 			private final HomeBlockTileEntity owner;
 			
 			public HomeBlockSlotInventory(HomeBlockTileEntity owner, String title, boolean customName) {
-				super(title, customName, MAX_SLOTS * 2);
+				super(title, customName, MAX_TOTAL_SLOTS * 2);
 				this.owner = owner;
 			}
 			
@@ -349,18 +353,18 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			}
 			
 			protected static final int getSpecializationSlot(int index) {
-				return index + MAX_SLOTS;
+				return index + MAX_TOTAL_SLOTS;
 			}
 			
 			public static final boolean isSoulSlot(int slot) {
-				return slot < MAX_SLOTS;
+				return slot < MAX_TOTAL_SLOTS;
 			}
 			
 			public static final int getIndexFromSlot(int slot) {
 				if (isSoulSlot(slot)) {
 					return slot;
 				} else {
-					return slot - MAX_SLOTS;
+					return slot - MAX_TOTAL_SLOTS;
 				}
 			}
 			
@@ -516,10 +520,18 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				return inv;
 			}
 		}
+		
+		public static class FeyAwayRecord {
+			public String name;
+			public int tickLastSeen;
+			public EntityFeyBase cache;
+		}
 
-		private static final int MAX_SLOTS = 5;
+		private static final int MAX_TOTAL_SLOTS = 5;
+		private static final int MAX_NATURAL_SLOTS = 5;
 		private static final int DEFAULT_SLOTS = 1;
 		private static final int MAX_UPGRADES = 2;
+		private static final int ABANDON_TICKS = (20 * 120);
 		private static final String NBT_TYPE = "type";
 		private static final String NBT_NAME = "name";
 		private static final String NBT_SLOT_COUNT = "slot_count";
@@ -527,6 +539,8 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		private static final String NBT_SLOT_AETHER_CAP = "aether_cap";
 		private static final String NBT_SLOT_GROWTH = "growth";
 		private static final String NBT_FEY = "fey";
+		private static final String NBT_FEY_UUID = "fey_uuid";
+		private static final String NBT_FEY_NAME = "fey_name";
 		private static final String NBT_UPGRADES = "upgrades";
 		private static final String NBT_SLOT_INV = "slot_inv";
 		
@@ -536,9 +550,10 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		private int aether;
 		private int aetherCapacity;
 		private float growth;
-		protected Set<UUID> feyList;
+		protected Map<UUID, FeyAwayRecord> feyMap;
 		protected HomeBlockSlotInventory slotInv;
 		protected HomeBlockUpgradeInventory upgradeInv;
+		private int ticksExisted;
 		
 		public HomeBlockTileEntity(ResidentType type) {
 			this();
@@ -547,11 +562,12 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		
 		public HomeBlockTileEntity() {
 			super();
-			this.feyList = new HashSet<>();
+			//this.feyList = new HashSet<>();
 			this.slots = DEFAULT_SLOTS;
 			this.slotInv = new HomeBlockSlotInventory(this, "", false);
 			this.upgradeInv = new HomeBlockUpgradeInventory(this, "", false);
 			this.name = generateRandomName();
+			feyMap = new HashMap<>();
 		}
 
 		@Override
@@ -568,8 +584,26 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			return type;
 		}
 
-		public int getSlots() {
+		public int getRawSlots() {
 			return slots;
+		}
+		
+		/**
+		 * Returns the number of slots that ahve 
+		 * @return
+		 */
+		public int getEffectiveSlots() {
+			int count = 0;
+			for (int i = 0; i < slots; i++) {
+				if (slotInv.hasStone(i)) {
+					count++;
+				}
+			}
+			return count;
+		}
+		
+		public int getBonusSlots() {
+			return 0; // TODO
 		}
 
 		public void setSlots(int slots) {
@@ -577,33 +611,62 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		}
 		
 		public boolean isResident(EntityFeyBase fey) {
-			UUID id = fey.getPersistentID();
-			return this.feyList.contains(id);
+			UUID id = fey.getUniqueID();
+			return this.feyMap.containsKey(id);
+		}
+		
+		protected void refreshFeyList() {
+			for (Entry<UUID, FeyAwayRecord> entry : feyMap.entrySet()) {
+				entry.getValue().cache = null;
+			}
+			
+			for (Entity ent : worldObj.loadedEntityList) {
+				if (ent instanceof EntityFeyBase && feyMap.containsKey(ent.getUniqueID())) {
+					FeyAwayRecord record = feyMap.get(ent.getUniqueID());
+					record.cache = (EntityFeyBase) ent;
+					record.tickLastSeen = ticksExisted;
+				}
+			}
+		}
+		
+		protected void purgeFeyList() {
+			Set<UUID> ids = Sets.newHashSet(feyMap.keySet());
+			for (UUID id : ids) {
+				FeyAwayRecord record = feyMap.get(id);
+				if (ticksExisted - record.tickLastSeen > ABANDON_TICKS
+					|| (record.cache != null && record.cache.getStatus() == FairyGeneralStatus.WANDERING)) {
+					System.out.println("Discarding " + id);
+					if (ticksExisted - record.tickLastSeen > ABANDON_TICKS) {
+						System.out.println("Expired");
+					} else {
+						System.out.println(record.cache.getStatus());
+					}
+					removeResident(id);
+				}
+			}
+			
+			
 		}
 		
 		/**
 		 * Returns a list of fey that live at this block.
-		 * Note this is the list of entities that are loaded.
-		 * This is not a cached list and involves entity lookup each time.
+		 * Note this is the list of entities is cached. Some of the entities may be marked dead, NULL, etc.
 		 * @return
 		 */
 		public List<EntityFeyBase> getAvailableFeyEntities() {
-			List<EntityFeyBase> list = new ArrayList<>(feyList.size());
-			for (Entity ent : worldObj.loadedEntityList) {
-				if (ent instanceof EntityFeyBase && feyList.contains(ent.getUniqueID())) {
-					list.add((EntityFeyBase) ent);
-					
-					// Gamble: is adding this conditional faster than always finishing the list??
-					if (list.size() == feyList.size()) {
-						break;
-					}
-				}
+			List<EntityFeyBase> list = new ArrayList<>(feyMap.size());
+			for (Entry<UUID, FeyAwayRecord> entry : feyMap.entrySet()) {
+				list.add(entry.getValue().cache);
 			}
 			return list;
 		}
 		
+		public Map<UUID, FeyAwayRecord> getFeyEntries() {
+			return feyMap;
+		}
+		
 		public boolean canAccept(EntityFeyBase fey) {
-			if (feyList.size() >= this.slots) {
+			if (feyMap.size() >= this.getEffectiveSlots()) {
 				return false;
 			}
 			
@@ -615,14 +678,23 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				return false;
 			}
 			
-			this.feyList.add(fey.getPersistentID());
+			FeyAwayRecord record = new FeyAwayRecord();
+			record.tickLastSeen = ticksExisted;
+			record.name = fey.getName();
+			record.cache = fey;
+			
+			this.feyMap.put(fey.getUniqueID(), record);
 			this.markDirty();
 			return true;
 		}
 		
-		public void removeResident(EntityFeyBase fey) {
-			this.feyList.remove(fey.getPersistentID());
+		public void removeResident(UUID id) {
+			this.feyMap.remove(id);
 			this.markDirty();
+		}
+		
+		public void removeResident(EntityFeyBase fey) {
+			removeResident(fey.getUniqueID());
 		}
 		
 		public HomeBlockSlotInventory getSlotInventory() {
@@ -691,7 +763,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		}
 		
 		protected void checkLevel() {
-			if (slots >= MAX_SLOTS) {
+			if (slots >= MAX_NATURAL_SLOTS) {
 				this.growth = 0f;
 				return;
 			}
@@ -712,7 +784,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		 * @param growth
 		 */
 		public void addGrowth(float growth) {
-			if (slots >= MAX_SLOTS) {
+			if (slots >= MAX_NATURAL_SLOTS) {
 				return;
 			}
 			
@@ -757,8 +829,11 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			nbt.setInteger(NBT_SLOT_AETHER_CAP, aetherCapacity);
 			
 			NBTTagList list = new NBTTagList();
-			for (UUID id : feyList) {
-				list.appendTag(new NBTTagString(id.toString()));
+			for (Entry<UUID, FeyAwayRecord> entry : feyMap.entrySet()) {
+				NBTTagCompound tag = new NBTTagCompound();
+				tag.setString(NBT_FEY_NAME, entry.getValue().name);
+				tag.setString(NBT_FEY_UUID, entry.getKey().toString());
+				list.appendTag(tag);
 			}
 			nbt.setTag(NBT_FEY, list);
 			
@@ -776,7 +851,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			this.type = ResidentType.valueOf(ResidentType.class, type.toUpperCase());
 			this.name = nbt.getString(NBT_NAME);
 			if (nbt.hasKey(NBT_SLOT_COUNT, NBT.TAG_INT)) {
-				this.slots = Math.max(1, Math.min(MAX_SLOTS, nbt.getInteger(NBT_SLOT_COUNT)));
+				this.slots = Math.max(1, Math.min(MAX_NATURAL_SLOTS, nbt.getInteger(NBT_SLOT_COUNT)));
 			} else {
 				this.slots = DEFAULT_SLOTS; 
 			}
@@ -784,14 +859,39 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			this.aether = nbt.getInteger(NBT_SLOT_AETHER);
 			this.aetherCapacity = nbt.getInteger(NBT_SLOT_AETHER_CAP);
 			
-			feyList.clear();
-			NBTTagList list = nbt.getTagList(NBT_FEY, NBT.TAG_STRING);
+			feyMap.clear();
+			NBTTagList list = nbt.getTagList(NBT_FEY, NBT.TAG_COMPOUND);
 			for (int i = 0; i < list.tagCount(); i++) {
-				feyList.add(UUID.fromString(list.getStringTagAt(i)));
+				NBTTagCompound tag = list.getCompoundTagAt(i);
+				FeyAwayRecord record = new FeyAwayRecord();
+				record.tickLastSeen = ticksExisted;
+				record.name = tag.getString(NBT_FEY_NAME);
+				feyMap.put(UUID.fromString(tag.getString(NBT_FEY_UUID)), record);
 			}
 			
 			this.slotInv = HomeBlockSlotInventory.fromNBT(this, nbt.getCompoundTag(NBT_SLOT_INV));
 			this.upgradeInv = HomeBlockUpgradeInventory.fromNBT(this, nbt.getCompoundTag(NBT_UPGRADES));
+		}
+
+		@Override
+		public void update() {
+			ticksExisted++;
+			
+			if (this.ticksExisted % 20 == 0) {
+				// Check on fey. Are they missing?
+				refreshFeyList();
+				if (!worldObj.isRemote) {
+					purgeFeyList();
+				}
+			}
+		}
+		
+		@Override
+		public void markDirty() {
+			super.markDirty();
+			if (worldObj != null && !worldObj.isRemote) {
+				worldObj.notifyBlockUpdate(pos, worldObj.getBlockState(pos), worldObj.getBlockState(pos), 2);
+			}
 		}
 	}
 }

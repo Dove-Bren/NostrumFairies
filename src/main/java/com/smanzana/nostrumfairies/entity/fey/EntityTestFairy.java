@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.entity.fey;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -27,7 +28,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -129,65 +129,6 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		}
 		
 		return true;
-	}
-
-	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
-		if (!worldObj.isAirBlock(targetPos)) {
-			do {
-				if (worldObj.isAirBlock(targetPos.north())) {
-					if (worldObj.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
-						targetPos = targetPos.north();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.north().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.south())) {
-					if (worldObj.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
-						targetPos = targetPos.south();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.south().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.east())) {
-					if (worldObj.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
-						targetPos = targetPos.east();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.east().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.west())) {
-					if (worldObj.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
-						targetPos = targetPos.west();
-						break;
-					} else if (worldObj.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.west().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.up())) {
-					targetPos = targetPos.up();
-					break;
-				}
-				if (worldObj.isAirBlock(targetPos.down()) && worldObj.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
-					targetPos = targetPos.down();
-					break;
-				}
-			} while (false);
-		}
-		
-		if (allOrNothing) {
-			if (!worldObj.isAirBlock(targetPos)) {
-				targetPos = null;
-			}
-		}
-		
-		return targetPos;
 	}
 
 	@Override
@@ -709,24 +650,28 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	public String getActivitySummary() {
-		switch (getStatus()) {
-		case IDLE:
-			return "Relaxing";
-		case REVOLTING:
-			return "Revolting";
-		case WANDERING:
-			return "Wandering";
-		case WORKING:
-			return "Working";
-		}
-		
-		return null;
-	}
-
-	@Override
 	public String getMoodSummary() {
 		// TODO Auto-generated method stub
 		return "Seems Happy";
+	}
+	
+	@Override
+	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+		return rand.nextBoolean() && rand.nextBoolean();
+	}
+
+	@Override
+	protected void onWanderTick() {
+		// Wander around
+		if (this.navigator.noPath() && ticksExisted % 200 == 0 && rand.nextBoolean()) {
+			// Go to a random place
+			EntityFeyBase.FeyWander(this, this.getPosition(), Math.min(100, this.wanderDistanceSq));
+		}
+	}
+
+	@Override
+	protected void onRevoltTick() {
+		// TODO Auto-generated method stub
+		;
 	}
 }

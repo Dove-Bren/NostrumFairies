@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
@@ -21,6 +22,7 @@ import com.smanzana.nostrummagica.spells.components.shapes.SingleShape;
 import com.smanzana.nostrummagica.spells.components.triggers.AITargetTrigger;
 import com.smanzana.nostrummagica.spells.components.triggers.MagicCutterTrigger;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
@@ -34,7 +36,6 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -187,65 +188,6 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		return ResidentType.ELF;
 	}
 	
-	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
-		if (!worldObj.isAirBlock(targetPos)) {
-			do {
-				if (worldObj.isAirBlock(targetPos.north())) {
-					if (worldObj.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
-						targetPos = targetPos.north();
-						break;
-					} else if (worldObj.isAirBlock(targetPos.north().down()) && worldObj.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.north().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.south())) {
-					if (worldObj.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
-						targetPos = targetPos.south();
-						break;
-					} else if (worldObj.isAirBlock(targetPos.south().down()) && worldObj.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.south().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.east())) {
-					if (worldObj.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
-						targetPos = targetPos.east();
-						break;
-					} else if (worldObj.isAirBlock(targetPos.east().down()) && worldObj.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.east().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.west())) {
-					if (worldObj.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
-						targetPos = targetPos.west();
-						break;
-					} else if (worldObj.isAirBlock(targetPos.west().down()) && worldObj.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
-						targetPos = targetPos.west().down();
-						break;
-					}
-				}
-				if (worldObj.isAirBlock(targetPos.up())) {
-					targetPos = targetPos.up();
-					break;
-				}
-				if (worldObj.isAirBlock(targetPos.down()) && worldObj.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
-					targetPos = targetPos.down();
-					break;
-				}
-			} while (false);
-		}
-		
-		if (allOrNothing) {
-			if (!worldObj.isAirBlock(targetPos)) {
-				targetPos = null;
-			}
-		}
-		
-		return targetPos;
-	}
-
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
 		if (task instanceof LogisticsTaskChopTree) {
@@ -655,5 +597,36 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	public String getMoodSummary() {
 		// TODO Auto-generated method stub
 		return "Seems Happy";
+	}
+	
+	@Override
+	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+		return rand.nextBoolean() && rand.nextBoolean();
+	}
+
+	@Override
+	protected void onWanderTick() {
+		// Wander around
+		if (this.navigator.noPath() && ticksExisted % 50 == 0 && rand.nextBoolean() && rand.nextBoolean()) {
+			if (!EntityFeyBase.FeyLazyFollowNearby(this, EntityFeyBase.DOMESTIC_FEY_AND_PLAYER_FILTER, 20, 4, 8)) {
+				// Go to a random place
+				EntityFeyBase.FeyWander(this, this.getPosition(), Math.min(10, Math.sqrt(this.wanderDistanceSq)));
+			}
+		}
+	}
+
+	@Override
+	protected void onRevoltTick() {
+		// TODO Auto-generated method stub
+		;
+	}
+	
+	@Override
+	protected float getGrowthForTask(ILogisticsTask task) {
+		if (task instanceof LogisticsTaskChopTree) {
+			return 1.2f;
+		}
+		
+		return 0f;
 	}
 }
