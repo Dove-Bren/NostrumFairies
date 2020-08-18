@@ -34,6 +34,7 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 	private String displayName;
 	private World world;
 	private BlockPos trunk;
+	private BlockPos chopAt;
 	private ILogisticsComponent owningComponent;
 	
 	private IItemCarrierFey fairy;
@@ -46,12 +47,17 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 	private long lastTreeCheck;
 	private boolean lastTreeResult;
 
-	public LogisticsTaskChopTree(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos) {
+	public LogisticsTaskChopTree(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos, BlockPos chopAt) {
 		this.displayName = displayName;
 		this.world = world;
 		this.trunk = pos;
+		this.chopAt = chopAt;
 		this.owningComponent = owningComponent;
 		phase = Phase.IDLE;
+	}
+	
+	public LogisticsTaskChopTree(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos) {
+		this(owningComponent, displayName, world, pos, pos);
 	}
 	
 	@Override
@@ -132,6 +138,10 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 		return trunk;
 	}
 	
+	public BlockPos getChopLocation() {
+		return chopAt;
+	}
+	
 	public World getWorld() {
 		return world;
 	}
@@ -145,7 +155,7 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 		releaseTasks();
 		
 		// Make move task
-		moveTask = LogisticsSubTask.Move(trunk);
+		moveTask = LogisticsSubTask.Move(chopAt);
 		workTask = LogisticsSubTask.Break(trunk);
 				
 		return true;
@@ -236,7 +246,20 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 			breakTreeInternal(visitted, pos.south().east());
 			breakTreeInternal(visitted, pos.south().west());
 			
-			breakTreeInternal(visitted, pos.up());
+			BlockPos up = pos.up();
+			
+			breakTreeInternal(visitted, up);
+			
+			breakTreeInternal(visitted, up.east());
+			breakTreeInternal(visitted, up.west());
+			breakTreeInternal(visitted, up.north());
+			breakTreeInternal(visitted, up.south());
+			
+			// corners
+			breakTreeInternal(visitted, up.north().east());
+			breakTreeInternal(visitted, up.north().west());
+			breakTreeInternal(visitted, up.south().east());
+			breakTreeInternal(visitted, up.south().west());
 		}
 		// else die here ;-;
 	}
@@ -257,7 +280,7 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 		if (this.phase != Phase.DONE) {
 			if (lastTreeCheck == 0 || this.world.getTotalWorldTime() - lastTreeCheck > 100) {
 				// Validate there's still a tree there
-				lastTreeResult = WoodcuttingBlock.isTree(world, trunk);
+				lastTreeResult = WoodcuttingBlock.isTrunkMaterial(world, trunk);
 				lastTreeCheck = world.getTotalWorldTime();
 			}
 			

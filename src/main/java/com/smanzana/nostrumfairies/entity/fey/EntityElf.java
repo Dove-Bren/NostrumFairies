@@ -100,7 +100,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	public EntityElf(World world) {
 		super(world);
 		this.height = 0.99f;
-		this.workDistanceSq = 24 * 24;
+		this.workDistanceSq = 32 * 32;
 		
 		initSpells();
 	}
@@ -198,7 +198,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			}
 			
 			// Check where the tree is
-			BlockPos pickup = chop.getTrunkPos();
+			BlockPos pickup = chop.getChopLocation();
 			if (pickup == null || !this.canReach(pickup, true)) {
 				return false;
 			}

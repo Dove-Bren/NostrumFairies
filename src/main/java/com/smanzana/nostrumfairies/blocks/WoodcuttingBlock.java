@@ -118,7 +118,7 @@ public class WoodcuttingBlock extends BlockContainer {
 			return false;
 		}
 		
-		private void makeChopTask(BlockPos base) {
+		private void makeChopTreeTask(BlockPos base) {
 			LogisticsNetwork network = this.getNetwork();
 			if (network == null) {
 				return;
@@ -126,6 +126,25 @@ public class WoodcuttingBlock extends BlockContainer {
 			
 			if (!taskMap.containsKey(base)) {
 				LogisticsTaskChopTree task = new LogisticsTaskChopTree(this.getNetworkComponent(), "Tree Chop Task", worldObj, base);
+				this.taskMap.put(base, task);
+				network.getTaskRegistry().register(task, this);
+			}
+		}
+		
+		private void makeChopBranchTask(BlockPos base) {
+			LogisticsNetwork network = this.getNetwork();
+			if (network == null) {
+				return;
+			}
+			
+			if (!taskMap.containsKey(base)) {
+				// Find spot underneath on ground\
+				BlockPos target = base;
+				while (!worldObj.isSideSolid(target.down(), EnumFacing.UP)) {
+					target = target.down();
+				}
+				
+				LogisticsTaskChopTree task = new LogisticsTaskChopTree(this.getNetworkComponent(), "Tree Chop Task", worldObj, base, target);
 				this.taskMap.put(base, task);
 				network.getTaskRegistry().register(task, this);
 			}
@@ -169,6 +188,7 @@ public class WoodcuttingBlock extends BlockContainer {
 			// Look for trees nearby and record their base. Also mark off ones we already know about.
 			Set<BlockPos> known = Sets.newHashSet(taskMap.keySet());
 			List<BlockPos> trunks = new LinkedList<>();
+			List<BlockPos> branches = new LinkedList<>();
 			
 			// Remove any 'plant' tasks from the 'known' list
 			Iterator<BlockPos> it = known.iterator();
@@ -203,6 +223,8 @@ public class WoodcuttingBlock extends BlockContainer {
 						pos.move(EnumFacing.UP);
 						y++;
 					} while (y < (endY - 1) && isTrunkMaterial(worldObj, pos));
+				} else if (isBranch(worldObj, pos)) {
+					branches.add(pos.toImmutable());
 				}
 			}
 			
@@ -260,7 +282,20 @@ public class WoodcuttingBlock extends BlockContainer {
 					} else {
 						// Didn't know, so record!
 						// Don't make task cause we filter better later
-						makeChopTask(base);
+						makeChopTreeTask(base);
+					}
+					
+				}
+			}
+			
+			if (!branches.isEmpty()) {
+				for (BlockPos base : branches) {
+					if (known.remove(base)) {
+						; // We already knew about it, so don't create a new one
+					} else {
+						// Didn't know, so record!
+						// Don't make task cause we filter better later
+						makeChopBranchTask(base);
 					}
 					
 				}
@@ -284,7 +319,7 @@ public class WoodcuttingBlock extends BlockContainer {
 			}
 			
 			this.tickCount++;
-			if (this.tickCount % 100 == 0) {
+			if (this.tickCount % (20 * 10) == 0) {
 				scan();
 			}
 		}
@@ -436,6 +471,33 @@ public class WoodcuttingBlock extends BlockContainer {
 		
 		if (!isLeafMaterial(world, pos)) {
 			return false;
+		}
+		
+		return true;
+	}
+	
+	public static boolean isBranch(World world, BlockPos base) {
+		// First, check if current block is even trunk material
+		if (!isTrunkMaterial(world, base)) {
+			return false;
+		}
+		
+		// Then, check if there's also trunk material below. We only count the base.
+		if (isTrunkMaterial(world, base.down())) {
+			return false;
+		}
+		
+		// A branch is NOT on the ground
+		if (world.isSideSolid(base.down(), EnumFacing.UP)) {
+			return false;
+		}
+		
+		// We count the northern, western-most connected log as the branch... so if any are below, north, or west,
+		// don't count this as the branch
+		for (BlockPos pos : new BlockPos[]{base.down(), base.north(), base.west()}) {
+			if (isTrunkMaterial(world, pos)) {
+				return false;
+			}
 		}
 		
 		return true;
