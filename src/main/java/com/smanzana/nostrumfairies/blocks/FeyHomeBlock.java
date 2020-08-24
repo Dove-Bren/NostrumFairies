@@ -12,6 +12,12 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
+import com.smanzana.nostrumaetheria.api.aether.IAetherHandler;
+import com.smanzana.nostrumaetheria.api.aether.IAetherHandlerProvider;
+import com.smanzana.nostrumaetheria.api.aether.IAetherFlowHandler.AetherFlowConnection;
+import com.smanzana.nostrumaetheria.api.blocks.IAetherCapableBlock;
+import com.smanzana.nostrumaetheria.api.component.AetherHandlerComponent;
+import com.smanzana.nostrumaetheria.api.component.AetherHandlerComponent.AetherComponentListener;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
@@ -337,7 +343,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		return pos.down();
 	}
 	
-	public static class HomeBlockTileEntity extends LogisticsTileEntity implements ITickable {
+	public static class HomeBlockTileEntity extends LogisticsTileEntity implements ITickable, IAetherHandlerProvider, AetherComponentListener {
 		
 		public static class HomeBlockSlotInventory extends InventoryBasic {
 
@@ -418,7 +424,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			@Override
 			public void markDirty() {
 				super.markDirty();
-				owner.markDirty();
+				owner.dirtyAndUpdate();
 			}
 			
 			public boolean setSoulStone(int index, ItemStack soulStone) {
@@ -493,7 +499,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			@Override
 			public void markDirty() {
 				super.markDirty();
-				owner.markDirty();
+				owner.dirtyAndUpdate();
 			}
 			
 			private static final String NBT_NAME = "name";
@@ -535,25 +541,25 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		private static final String NBT_TYPE = "type";
 		private static final String NBT_NAME = "name";
 		private static final String NBT_SLOT_COUNT = "slot_count";
-		private static final String NBT_SLOT_AETHER = "aether";
-		private static final String NBT_SLOT_AETHER_CAP = "aether_cap";
 		private static final String NBT_SLOT_GROWTH = "growth";
 		private static final String NBT_FEY = "fey";
 		private static final String NBT_FEY_UUID = "fey_uuid";
 		private static final String NBT_FEY_NAME = "fey_name";
 		private static final String NBT_UPGRADES = "upgrades";
 		private static final String NBT_SLOT_INV = "slot_inv";
+		private static final String NBT_HANDLER = "aether_handler";
 		
 		private ResidentType type;
 		private String name;
 		private int slots;
-		private int aether;
-		private int aetherCapacity;
 		private float growth;
 		protected Map<UUID, FeyAwayRecord> feyMap;
 		protected HomeBlockSlotInventory slotInv;
 		protected HomeBlockUpgradeInventory upgradeInv;
 		private int ticksExisted;
+		protected AetherHandlerComponent handler;
+		
+		private boolean aetherDirtyFlag;
 		
 		public HomeBlockTileEntity(ResidentType type) {
 			this();
@@ -568,6 +574,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			this.upgradeInv = new HomeBlockUpgradeInventory(this, "", false);
 			this.name = generateRandomName();
 			feyMap = new HashMap<>();
+			handler = new AetherHandlerComponent(this, 0, 500);
 		}
 
 		@Override
@@ -684,13 +691,13 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			record.cache = fey;
 			
 			this.feyMap.put(fey.getUniqueID(), record);
-			this.markDirty();
+			dirtyAndUpdate();
 			return true;
 		}
 		
 		public void removeResident(UUID id) {
 			this.feyMap.remove(id);
-			this.markDirty();
+			dirtyAndUpdate();
 		}
 		
 		public void removeResident(EntityFeyBase fey) {
@@ -773,7 +780,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				slots++;
 				this.growth = (leftover / 2f); // each level multiplies the old requirement by 2
 				checkLevel();
-				this.markDirty();
+				dirtyAndUpdate();
 			}
 		}
 		
@@ -790,26 +797,20 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			
 			this.growth += adjustGrowth(growth);
 			checkLevel();
-			this.markDirty();
+			dirtyAndUpdate();
 		}
 		
 		public int getAether() {
-			return aether;
+			return handler.getAether(null);
 		}
 		
 		public int getAetherCapacity() {
-			return aetherCapacity;
-		}
-		
-		public int addAether(int amt) {
-			aether += amt;
-			int leftover = aether > aetherCapacity ? aether - aetherCapacity : 0;
-			aether -= leftover;
-			this.markDirty();
-			return leftover;
+			return handler.getMaxAether(null);
 		}
 		
 		public float getAetherLevel() {
+			int aether = getAether();
+			int aetherCapacity = getAetherCapacity();
 			if (aetherCapacity <= 0 || aether < 0) {
 				return 0f;
 			}
@@ -825,8 +826,6 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			nbt.setString(NBT_NAME, getName());
 			nbt.setInteger(NBT_SLOT_COUNT, slots);
 			nbt.setFloat(NBT_SLOT_GROWTH, growth);
-			nbt.setInteger(NBT_SLOT_AETHER, aether);
-			nbt.setInteger(NBT_SLOT_AETHER_CAP, aetherCapacity);
 			
 			NBTTagList list = new NBTTagList();
 			for (Entry<UUID, FeyAwayRecord> entry : feyMap.entrySet()) {
@@ -839,6 +838,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			
 			nbt.setTag(NBT_UPGRADES, this.upgradeInv.toNBT());
 			nbt.setTag(NBT_SLOT_INV, slotInv.toNBT());
+			nbt.setTag(NBT_HANDLER, handler.writeToNBT(new NBTTagCompound()));
 			
 			return nbt;
 		}
@@ -856,8 +856,6 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				this.slots = DEFAULT_SLOTS; 
 			}
 			this.growth = nbt.getFloat(NBT_SLOT_GROWTH);
-			this.aether = nbt.getInteger(NBT_SLOT_AETHER);
-			this.aetherCapacity = nbt.getInteger(NBT_SLOT_AETHER_CAP);
 			
 			feyMap.clear();
 			NBTTagList list = nbt.getTagList(NBT_FEY, NBT.TAG_COMPOUND);
@@ -868,14 +866,22 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				record.name = tag.getString(NBT_FEY_NAME);
 				feyMap.put(UUID.fromString(tag.getString(NBT_FEY_UUID)), record);
 			}
+			if (this.worldObj != null) {
+				this.refreshFeyList();
+			}
 			
 			this.slotInv = HomeBlockSlotInventory.fromNBT(this, nbt.getCompoundTag(NBT_SLOT_INV));
 			this.upgradeInv = HomeBlockUpgradeInventory.fromNBT(this, nbt.getCompoundTag(NBT_UPGRADES));
+			handler.readFromNBT(nbt.getCompoundTag(NBT_HANDLER));
 		}
 
 		@Override
 		public void update() {
 			ticksExisted++;
+			
+			if (!worldObj.isRemote && this.ticksExisted == 1) {
+				this.handler.setAutoFill(true);
+			}
 			
 			if (this.ticksExisted % 20 == 0) {
 				// Check on fey. Are they missing?
@@ -884,14 +890,97 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 					purgeFeyList();
 				}
 			}
+			
+			if (!worldObj.isRemote) {
+				int AETHER_PER_TICK = 1;
+				int debt = AETHER_PER_TICK * this.getAvailableFeyEntities().size();
+				if (this.handler.drawAether(null, debt) != debt) {
+					// Didn't have enough. Deactivate!
+					//deactivate();
+				} else {
+					// Try to fill up what we just spent
+					this.handler.fillAether(1000);
+				}
+			}
+
+			handler.tick();
+			
+			if (!worldObj.isRemote && aetherDirtyFlag && (ticksExisted == 1 || ticksExisted % 5 == 0)) {
+				dirtyAndUpdate();
+				aetherDirtyFlag = false;
+			}
+			
+		}
+		
+		protected void dirtyAndUpdate() {
+			markDirty();
+			if (worldObj != null && !worldObj.isRemote) {
+				worldObj.notifyBlockUpdate(pos, worldObj.getBlockState(pos), worldObj.getBlockState(pos), 2);
+			}
 		}
 		
 		@Override
 		public void markDirty() {
 			super.markDirty();
-			if (worldObj != null && !worldObj.isRemote) {
-				worldObj.notifyBlockUpdate(pos, worldObj.getBlockState(pos), worldObj.getBlockState(pos), 2);
+		}
+		
+		@Override
+		public void addConnections(List<AetherFlowConnection> connections) {
+			for (EnumFacing dir : EnumFacing.values()) {
+				if (!handler.getSideEnabled(dir)) {
+					continue;
+				}
+				
+				BlockPos neighbor = pos.offset(dir);
+				
+				// First check for a TileEntity
+				TileEntity te = worldObj.getTileEntity(neighbor);
+				if (te != null && te instanceof IAetherHandler) {
+					connections.add(new AetherFlowConnection((IAetherHandler) te, dir.getOpposite()));
+					continue;
+				}
+				if (te != null && te instanceof IAetherHandlerProvider) {
+					connections.add(new AetherFlowConnection(((IAetherHandlerProvider) te).getHandler(), dir.getOpposite()));
+					continue;
+				}
+				
+				// See if block boasts being able to get us a handler
+				IBlockState attachedState = worldObj.getBlockState(neighbor);
+				Block attachedBlock = attachedState.getBlock();
+				if (attachedBlock instanceof IAetherCapableBlock) {
+					connections.add(new AetherFlowConnection(((IAetherCapableBlock) attachedBlock).getAetherHandler(worldObj, attachedState, neighbor, dir), dir.getOpposite()));
+					continue;
+				}
 			}
+		}
+		
+		@Override
+		public void dirty() {
+			this.markDirty();
+		}
+		
+		@Override
+		public void onAetherFlowTick(int diff, boolean added, boolean taken) {
+			aetherDirtyFlag = true;
+		}
+		
+		@Override
+		public void invalidate() {
+			super.invalidate();
+			
+			// Clean up connections
+			handler.clearConnections();
+		}
+		
+		@Override
+		public void onChunkUnload() {
+			super.onChunkUnload();
+			handler.clearConnections();
+		}
+		
+		@Override
+		public IAetherHandler getHandler() {
+			return handler;
 		}
 	}
 }

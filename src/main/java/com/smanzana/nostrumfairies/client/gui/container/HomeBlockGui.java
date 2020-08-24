@@ -309,7 +309,12 @@ public class HomeBlockGui {
 			GlStateManager.color(1f, 1f, 1f, 1f);
 			
 			// Details
-			int nameSpace = GUI_DETAILS_WIDTH - (2 + 2 + previewSize + previewMargin + previewMargin);
+			int nameSpace;
+			if (record.cache != null) {
+				nameSpace = GUI_DETAILS_WIDTH - (2 + 2 + previewSize + previewMargin + previewMargin);
+			} else {
+				nameSpace = GUI_DETAILS_WIDTH - (2 + 2);
+			}
 			
 			// -> Backplate
 			drawRect(x, y, x + GUI_DETAILS_WIDTH, y + previewSize + previewMargin + previewMargin, 0x40000000);
@@ -425,6 +430,17 @@ public class HomeBlockGui {
 			GlStateManager.popMatrix();
 		}
 		
+		private void drawSummaryOverlay(int mouseX, int mouseY) {
+			//26
+			//215 - string length x
+			
+			if (mouseY > (GUI_LIST_VOFFSET + -5 + -10) && mouseX > 115 && mouseX < (GUI_UPGRADE_HOFFSET - 5) && mouseY < (GUI_LIST_VOFFSET - 5)) {
+				this.drawHoveringText(Lists.newArrayList(
+						container.home.getAether() + "/" + container.home.getAetherCapacity()
+						), mouseX, mouseY);
+			}
+		}
+		
 		@Override
 		protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
 			
@@ -452,6 +468,14 @@ public class HomeBlockGui {
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 			setIsItemRender(false);
+			
+			int horizontalMargin = (width - xSize) / 2;
+			int verticalMargin = (height - ySize) / 2;
+			
+			if (mouseX >= horizontalMargin + GUI_INFO_HOFFSET && mouseX <= horizontalMargin + GUI_UPGRADE_HOFFSET
+					&& mouseY >= verticalMargin + GUI_INFO_VOFFSET && mouseY <= verticalMargin + GUI_LIST_VOFFSET) {
+				drawSummaryOverlay(mouseX - horizontalMargin, mouseY - verticalMargin);
+			}
 		}
 		
 		@Override

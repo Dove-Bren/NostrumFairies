@@ -2,7 +2,7 @@
 {
   "modid": "nostrumfairies",
   "name": "Nostrum Fairies",
-  "description": "Fairy Logistics Add-On For Nostrum Magica",
+  "description": "Fairy-based logistics add-on for Nostrum Magica",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
