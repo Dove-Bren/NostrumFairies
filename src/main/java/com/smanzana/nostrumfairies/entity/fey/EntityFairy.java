@@ -12,9 +12,9 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
+import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;

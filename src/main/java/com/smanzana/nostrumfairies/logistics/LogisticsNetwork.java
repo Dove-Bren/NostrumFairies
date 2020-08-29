@@ -23,8 +23,8 @@ import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisti
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrumfairies.utils.Location;
+import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;

@@ -12,7 +12,7 @@ import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;

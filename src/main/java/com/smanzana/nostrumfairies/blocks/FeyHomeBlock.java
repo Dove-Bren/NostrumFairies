@@ -12,9 +12,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
+import com.smanzana.nostrumaetheria.api.aether.IAetherFlowHandler.AetherFlowConnection;
 import com.smanzana.nostrumaetheria.api.aether.IAetherHandler;
 import com.smanzana.nostrumaetheria.api.aether.IAetherHandlerProvider;
-import com.smanzana.nostrumaetheria.api.aether.IAetherFlowHandler.AetherFlowConnection;
 import com.smanzana.nostrumaetheria.api.blocks.IAetherCapableBlock;
 import com.smanzana.nostrumaetheria.api.component.AetherHandlerComponent;
 import com.smanzana.nostrumaetheria.api.component.AetherHandlerComponent.AetherComponentListener;
@@ -24,7 +24,7 @@ import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FeyStone;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -456,7 +456,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				
 				nbt.setString(NBT_NAME, this.getName());
 				nbt.setBoolean(NBT_CUSTOM, this.hasCustomName());
-				nbt.setTag(NBT_ITEMS, ItemStacks.serializeInventory(this));
+				nbt.setTag(NBT_ITEMS, Inventories.serializeInventory(this));
 				
 				return nbt;
 			}
@@ -466,7 +466,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				boolean custom = nbt.getBoolean(NBT_CUSTOM);
 				
 				HomeBlockSlotInventory inv = new HomeBlockSlotInventory(owner, name, custom);
-				ItemStacks.deserializeInventory(inv, nbt.getTag(NBT_ITEMS));
+				Inventories.deserializeInventory(inv, nbt.getTag(NBT_ITEMS));
 				
 				return inv;
 			}
@@ -511,7 +511,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				
 				nbt.setString(NBT_NAME, this.getName());
 				nbt.setBoolean(NBT_CUSTOM, this.hasCustomName());
-				nbt.setTag(NBT_ITEMS, ItemStacks.serializeInventory(this));
+				nbt.setTag(NBT_ITEMS, Inventories.serializeInventory(this));
 				
 				return nbt;
 			}
@@ -521,7 +521,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				boolean custom = nbt.getBoolean(NBT_CUSTOM);
 				
 				HomeBlockUpgradeInventory inv = new HomeBlockUpgradeInventory(owner, name, custom);
-				ItemStacks.deserializeInventory(inv, nbt.getTag(NBT_ITEMS));
+				Inventories.deserializeInventory(inv, nbt.getTag(NBT_ITEMS));
 				
 				return inv;
 			}
@@ -575,6 +575,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			this.name = generateRandomName();
 			feyMap = new HashMap<>();
 			handler = new AetherHandlerComponent(this, 0, 500);
+			handler.configureInOut(true, false);
 		}
 
 		@Override
@@ -710,6 +711,19 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		
 		public HomeBlockUpgradeInventory getUpgradeInventory() {
 			return this.upgradeInv;
+		}
+		
+		protected int getAetherCost() {
+			int AETHER_PER_TICK = 1;
+			return AETHER_PER_TICK * this.getAvailableFeyEntities().size();
+		}
+		
+		/**
+		 * Check whether residents of this building should be allowed to work, given aether levels.
+		 * @return
+		 */
+		public boolean canWork() {
+			return this.getAether() >= this.getAetherCost();
 		}
 		
 		public String getName() {
@@ -892,8 +906,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			}
 			
 			if (!worldObj.isRemote) {
-				int AETHER_PER_TICK = 1;
-				int debt = AETHER_PER_TICK * this.getAvailableFeyEntities().size();
+				final int debt = this.getAetherCost();
 				if (this.handler.drawAether(null, debt) != debt) {
 					// Didn't have enough. Deactivate!
 					//deactivate();

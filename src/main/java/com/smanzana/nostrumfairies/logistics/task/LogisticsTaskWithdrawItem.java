@@ -19,7 +19,8 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.RequestedItemRecord;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
+import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
@@ -461,7 +462,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	private boolean canTakeItems() {
 		Collection<ItemStack> available = pickupComponent.getItems();
 		
-		return ItemStacks.isSubset(ItemDeepStack.toDeepList(available), Lists.newArrayList(this.item));
+		return ItemDeepStacks.isSubset(ItemDeepStack.toDeepList(available), Lists.newArrayList(this.item));
 	}
 	
 	private void takeItems() {

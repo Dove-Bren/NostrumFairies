@@ -4,7 +4,7 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest.StorageChestTileEntity;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -84,7 +84,7 @@ public class StorageChestGui {
 					}
 				} else {
 					// shift-click in player inventory
-					ItemStack leftover = ItemStacks.addItem(chest, cur);
+					ItemStack leftover = Inventories.addItem(chest, cur);
 					slot.putStack(leftover != null && leftover.stackSize <= 0 ? null : leftover);
 					if (leftover != null && leftover.stackSize == prev.stackSize) {
 						prev = null;

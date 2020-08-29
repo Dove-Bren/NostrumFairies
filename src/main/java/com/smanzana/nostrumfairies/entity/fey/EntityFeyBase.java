@@ -287,6 +287,15 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 */
 	protected abstract boolean shouldPerformTask(ILogisticsTask task);
 	
+	/**
+	 * Check whether this entity's needs (and home) are in line and work tasks can be picked up.
+	 * @return
+	 */
+	protected boolean canWork() {
+		this.verifyHome();
+		return (getHomeEnt() != null && getHomeEnt().canWork());
+	}
+	
 	protected float getGrowthForTask(ILogisticsTask task) {
 		return .1f;
 	}
@@ -437,21 +446,9 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			onCientTick();
 		}
 		
-		// TODO communiate status with DAtaParamater
 		if (worldObj.isRemote || this.isDead) {
 			return;
 		}
-		
-		// TODO remove. Testing code!
-		{
-			if (getHome() == null) {
-				if (isValidHome(getPosition().add(0,-1,0))) {
-					setHome(getPosition().add(0,-1,0));
-					changeStatus(FairyGeneralStatus.IDLE);
-				}
-			}
-		}
-		
 		
 		// If we're in combat, ignore all the rest
 		if (this.getAttackTarget() != null) {
@@ -471,7 +468,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			onIdleTick();
 			
 			// Note: idle may decide to do task stuff on its own. We'll respect that.
-			if (currentTask == null) {
+			if (currentTask == null && canWork()) {
 				if (!searchForJobs()) {
 					break;
 				}

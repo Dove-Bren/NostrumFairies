@@ -23,10 +23,11 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
+import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
@@ -218,12 +219,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	public boolean canAccept(ItemStack stack) {
-		return ItemStacks.canFit(getCarriedItems(), stack);
+		return Inventories.canFit(getCarriedItems(), stack);
 	}
 	
 	@Override
 	public boolean canAccept(ItemDeepStack stack) {
-		return ItemStacks.canFitAll(getCarriedItems(), Lists.newArrayList(stack));
+		return ItemDeepStacks.canFitAll(getCarriedItems(), Lists.newArrayList(stack));
 	}
 	
 	protected void updateItems(ItemStack items[]) {
@@ -234,14 +235,14 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	public void addItem(ItemStack stack) {
 		ItemStack[] items = dataManager.get(ITEMS);
-		ItemStacks.addItem(items, stack);
+		Inventories.addItem(items, stack);
 		updateItems(items);
 	}
 	
 	@Override
 	public void removeItem(ItemStack stack) {
 		ItemStack[] items = dataManager.get(ITEMS);
-		ItemStacks.remove(items, stack);
+		Inventories.remove(items, stack);
 		updateItems(items);
 	}
 	

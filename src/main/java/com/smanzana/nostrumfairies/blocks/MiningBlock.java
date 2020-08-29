@@ -23,10 +23,10 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrumfairies.utils.OreDict;
 import com.smanzana.nostrummagica.blocks.EssenceOre;
 import com.smanzana.nostrummagica.blocks.ManiOre;
+import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;

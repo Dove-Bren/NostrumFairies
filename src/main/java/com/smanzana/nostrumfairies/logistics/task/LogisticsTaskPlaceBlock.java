@@ -17,7 +17,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.RequestedItemRecord;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
 import net.minecraft.block.SoundType;
 import net.minecraft.block.state.IBlockState;
@@ -393,7 +393,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	private boolean canTakeItems() {
 		Collection<ItemStack> available = pickupComponent.getItems();
 		
-		return ItemStacks.isSubset(ItemDeepStack.toDeepList(available), Lists.newArrayList(new ItemDeepStack(this.item)));
+		return ItemDeepStacks.isSubset(ItemDeepStack.toDeepList(available), Lists.newArrayList(new ItemDeepStack(this.item)));
 	}
 	
 	private void takeItems() {

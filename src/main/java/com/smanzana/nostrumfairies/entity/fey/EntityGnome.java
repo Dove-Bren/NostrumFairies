@@ -16,10 +16,10 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskHarvest;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
+import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;

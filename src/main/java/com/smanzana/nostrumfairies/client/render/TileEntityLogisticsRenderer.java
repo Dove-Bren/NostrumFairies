@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import org.lwjgl.opengl.GL11;
 
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -13,10 +12,10 @@ import com.smanzana.nostrummagica.utils.Curves;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
@@ -57,7 +56,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				Tessellator tessellator = Tessellator.getInstance();
 				VertexBuffer buffer = tessellator.getBuffer();
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + .5, y + 1, z + .5);
+				GlStateManager.translate(x + .5, y + 1.05, z + .5);
 				GlStateManager.disableColorMaterial();
 				GlStateManager.disableTexture2D();
 				GlStateManager.disableLighting();
@@ -76,7 +75,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 					final Vec3d dist = offset.scale(.25);
 					final Vec3d control1 = dist.add(dist.rotateYaw((float) (Math.PI * .5)));
 					final Vec3d control2 = offset.subtract(dist).subtract(dist.rotateYaw((float) (Math.PI * .5)));
-					buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+					buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
 					for (int i = 0; i <= intervals; i++) {
 						
 						

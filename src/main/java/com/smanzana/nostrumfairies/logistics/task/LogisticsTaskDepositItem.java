@@ -15,7 +15,8 @@ import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.IncomingItemRecord;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -371,7 +372,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 				// take items from the entity
 				if (entity instanceof EntityPlayer) {
 					EntityPlayer player = (EntityPlayer) entity;
-					ItemStacks.remove(player.inventory, stack);
+					Inventories.remove(player.inventory, stack);
 				} else if (entity instanceof IItemCarrierFey) {
 					IItemCarrierFey carrier = (IItemCarrierFey) entity;
 					carrier.removeItem(stack);

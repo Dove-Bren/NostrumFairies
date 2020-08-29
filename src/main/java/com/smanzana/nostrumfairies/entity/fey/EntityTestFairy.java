@@ -14,10 +14,11 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
+import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -92,22 +93,22 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	public boolean canAccept(ItemStack stack) {
-		return ItemStacks.canFit(inventory, stack);
+		return Inventories.canFit(inventory, stack);
 	}
 	
 	@Override
 	public boolean canAccept(ItemDeepStack stack) {
-		return ItemStacks.canFitAll(inventory, Lists.newArrayList(stack));
+		return ItemDeepStacks.canFitAll(inventory, Lists.newArrayList(stack));
 	}
 
 	@Override
 	public void addItem(ItemStack stack) {
-		ItemStacks.addItem(inventory, stack);
+		Inventories.addItem(inventory, stack);
 	}
 	
 	@Override
 	public void removeItem(ItemStack stack) {
-		ItemStacks.remove(inventory, stack);
+		Inventories.remove(inventory, stack);
 	}
 	
 	protected boolean hasItems() {

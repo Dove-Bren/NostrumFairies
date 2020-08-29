@@ -8,7 +8,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemStacks;
+import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
@@ -114,7 +114,7 @@ public class StorageLogisticsChest extends BlockContainer {
 		
 		@Override
 		public boolean canAccept(List<ItemDeepStack> stacks) {
-			return ItemStacks.canFitAll(this, stacks);
+			return ItemDeepStacks.canFitAll(this, stacks);
 		}
 	}
 	
