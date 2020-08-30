@@ -223,4 +223,9 @@ public class LogisticsTaskHarvest implements ILogisticsTask {
 		
 		return true;
 	}
+	
+	@Override
+	public BlockPos getStartPosition() {
+		return crop;
+	}
 }

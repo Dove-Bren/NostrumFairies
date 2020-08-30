@@ -466,4 +466,9 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 		
 		return true;
 	}
+	
+	@Override
+	public BlockPos getStartPosition() {
+		return null; // Pickup location determined after task is picked up, so a hint location doesn't work.
+	}
 }

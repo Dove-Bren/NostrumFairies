@@ -14,6 +14,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ILogisticsTaskUniqueData;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
@@ -49,6 +50,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class WoodcuttingBlock extends BlockContainer {
 	
 	public static final String ID = "logistics_woodcutting_block";
+	protected static final ILogisticsTaskUniqueData<BlockPos> WOODCUTTING_POSITION = new ILogisticsTaskUniqueData<BlockPos>() { };
 	
 	private static WoodcuttingBlock instance = null;
 	public static WoodcuttingBlock instance() {
@@ -124,7 +126,7 @@ public class WoodcuttingBlock extends BlockContainer {
 				return;
 			}
 			
-			if (!taskMap.containsKey(base)) {
+			if (!taskMap.containsKey(base) && network.taskDataAdd(WOODCUTTING_POSITION, base)) {
 				LogisticsTaskChopTree task = new LogisticsTaskChopTree(this.getNetworkComponent(), "Tree Chop Task", worldObj, base);
 				this.taskMap.put(base, task);
 				network.getTaskRegistry().register(task, this);
@@ -137,7 +139,7 @@ public class WoodcuttingBlock extends BlockContainer {
 				return;
 			}
 			
-			if (!taskMap.containsKey(base)) {
+			if (!taskMap.containsKey(base) && network.taskDataAdd(WOODCUTTING_POSITION, base)) {
 				// Find spot underneath on ground\
 				BlockPos target = base;
 				while (!worldObj.isSideSolid(target.down(), EnumFacing.UP)) {
@@ -176,6 +178,7 @@ public class WoodcuttingBlock extends BlockContainer {
 			}
 			
 			network.getTaskRegistry().revoke(task);
+			network.taskDataRemove(WOODCUTTING_POSITION, base);
 		}
 		
 		private void scan() {
@@ -372,6 +375,10 @@ public class WoodcuttingBlock extends BlockContainer {
 				BlockPos pos = chopTask.getTrunkPos();
 				if (taskMap.remove(pos) != null) {
 					makePlantTask(pos);
+					LogisticsNetwork network = this.getNetwork();
+					if (network != null) {
+						network.taskDataRemove(WOODCUTTING_POSITION, pos);
+					}
 				}
 			} else if (task instanceof LogisticsTaskPlantItem) {
 				LogisticsTaskPlantItem plantTask = (LogisticsTaskPlantItem) task;

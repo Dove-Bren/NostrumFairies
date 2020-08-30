@@ -9,6 +9,9 @@ import org.apache.logging.log4j.Logger;
 
 import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
+import com.smanzana.nostrumfairies.inventory.FeySlotType;
+import com.smanzana.nostrumfairies.items.FeyStone;
+import com.smanzana.nostrumfairies.items.FeyStone.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
 import com.smanzana.nostrumfairies.proxy.CommonProxy;
@@ -17,7 +20,6 @@ import com.smanzana.nostrummagica.NostrumMagica;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.monster.EntityMob;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
@@ -76,9 +78,16 @@ public class NostrumFairies {
 	    	@Override
 	        @SideOnly(Side.CLIENT)
 	        public Item getTabIconItem(){
-	    		return Items.ELYTRA;
+	    		return FeyStone.instance();
 	        }
+	    	
+	    	@Override
+	        @SideOnly(Side.CLIENT)
+	    	public int getIconItemDamage() {
+	    		return FeyStone.create(FeySlotType.SOUL, FeyStoneMaterial.AMETHYST, 1).getMetadata();
+	    	}
 	    };
+	    FeyStone.instance().setCreativeTab(NostrumFairies.creativeTab);
 	    
     	proxy.preinit();
     }

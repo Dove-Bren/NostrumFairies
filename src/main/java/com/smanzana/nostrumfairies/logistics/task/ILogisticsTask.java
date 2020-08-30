@@ -124,6 +124,14 @@ public interface ILogisticsTask {
 	public boolean isComplete();
 	
 	/**
+	 * Possibly return a position where a worker could expect to need to go to start the task.
+	 * This is used as a hint for sorting jobs to make it easier for workers to pick tasks that have objectives they
+	 * are closed to.
+	 * @return A hint position, or null if that doesn't make sense for this task.
+	 */
+	public @Nullable BlockPos getStartPosition();
+	
+	/**
 	 * Check whether the task is still valid, of if it should be dropped.
 	 * @return
 	 */
@@ -150,6 +158,14 @@ public interface ILogisticsTask {
 			pos = comp.getPosition();
 		}
 		
+		return pos;
+	}
+	
+	public static BlockPos GetStartPosition(ILogisticsTask task) {
+		BlockPos pos = task.getStartPosition();
+		if (pos == null) {
+			pos = GetSourcePosition(task);
+		}
 		return pos;
 	}
 }

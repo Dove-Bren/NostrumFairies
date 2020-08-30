@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
@@ -62,7 +61,7 @@ public static final String ID = "fey_stone";
 		this.setUnlocalizedName(ID);
 		this.setMaxDamage(0);
 		this.setMaxStackSize(1);
-		this.setCreativeTab(NostrumFairies.creativeTab);
+		//this.setCreativeTab(NostrumFairies.creativeTab);
 		this.setHasSubtypes(true);
 	}
 	
@@ -89,10 +88,14 @@ public static final String ID = "fey_stone";
     	for (FeySlotType slot : FeySlotType.values())
     	for (FeyStoneMaterial material : FeyStoneMaterial.values()) {
     		if (material.existsForSlot(slot)) {
-    			subItems.add(new ItemStack(this, 1, getMeta(slot, material)));
+    			subItems.add(create(slot, material, 1));
     		}
     	}
 	}
+    
+    public static ItemStack create(FeySlotType slot, FeyStoneMaterial material, int count) {
+    	return new ItemStack(instance(), count, getMeta(slot, material));
+    }
 	
 	protected static int getMeta(FeySlotType type, FeyStoneMaterial material) {
 		// bottom 3 bits are material. bits above are type.

@@ -294,4 +294,9 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 		
 		return true;
 	}
+	
+	@Override
+	public BlockPos getStartPosition() {
+		return trunk;
+	}
 }

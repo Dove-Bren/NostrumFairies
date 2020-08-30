@@ -434,4 +434,9 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 		
 		return null;
 	}
+	
+	@Override
+	public BlockPos getStartPosition() {
+		return null; // source component/entity is the start location
+	}
 }

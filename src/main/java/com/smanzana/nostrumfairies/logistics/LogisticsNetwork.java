@@ -106,6 +106,20 @@ public class LogisticsNetwork {
 		}
 	}
 	
+	/**
+	 * Key value marking a set of objects that tasks use to coordinate work.
+	 * For example, could be WOODCUTTING_DATA with T "BlockPos" allowing woodcutting blocks to
+	 * make sure only one block makes a task for trees that fall in two or more blocks' range.
+	 * @author Skyler
+	 *
+	 * @param <T>
+	 */
+	public static interface ILogisticsTaskUniqueData<T> {
+		public boolean equals(Object o);
+		
+		public int hashCode();
+	}
+	
 	private static final String NBT_UUID = "uuid";
 	private static final String NBT_COMPONENTS = "component";
 	private static final String NBT_COMPONENT_KEY = "key";
@@ -135,6 +149,9 @@ public class LogisticsNetwork {
 	protected Set<Location> extraBeacons;
 	protected Set<Location> cacheBeaconSet; // Cached set of logistics component and beacon locations
 	
+	// Task Data
+	protected Map<ILogisticsTaskUniqueData<?>, Set<?>> taskData;
+	
 	public LogisticsNetwork() {
 		this(UUID.randomUUID(), true);
 	}
@@ -149,6 +166,7 @@ public class LogisticsNetwork {
 		this.cacheKey = UUID.randomUUID();
 		this.taskRegistry = new LogisticsTaskRegistry();
 		this.extraBeacons = new HashSet<>();
+		this.taskData = new HashMap<>();
 		cacheDirty = false;
 		
 		if (register) {
@@ -907,5 +925,48 @@ public class LogisticsNetwork {
 	
 	public void removeBeacon(World world, BlockPos pos) {
 		this.removeBeacon(new Location(world, pos));
+	}
+	
+	public <T> boolean taskDataContains(ILogisticsTaskUniqueData<T> dataType, T data) {
+		try {
+			@SuppressWarnings("unchecked")
+			Set<T> set = (Set<T>) taskData.get(dataType);
+			if (set == null) {
+				set = new HashSet<T>();
+				taskData.put(dataType, set);
+			}
+			return set.contains(data);
+		} catch (ClassCastException e) {
+			return false;
+		}
+		
+	}
+	
+	public <T> boolean taskDataAdd(ILogisticsTaskUniqueData<T> dataType, T data) {
+		try {
+			@SuppressWarnings("unchecked")
+			Set<T> set = (Set<T>) taskData.get(dataType);
+			if (set == null) {
+				set = new HashSet<T>();
+				taskData.put(dataType, set);
+			}
+			return set.add(data);
+		} catch (ClassCastException e) {
+			return false;
+		}
+	}
+	
+	public <T> boolean taskDataRemove(ILogisticsTaskUniqueData<T> dataType, T data) {
+		try {
+			@SuppressWarnings("unchecked")
+			Set<T> set = (Set<T>) taskData.get(dataType);
+			if (set == null) {
+				set = new HashSet<T>();
+				taskData.put(dataType, set);
+			}
+			return set.remove(data);
+		} catch (ClassCastException e) {
+			return false;
+		}
 	}
 }

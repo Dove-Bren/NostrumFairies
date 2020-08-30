@@ -522,4 +522,9 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		
 		return true;
 	}
+	
+	@Override
+	public BlockPos getStartPosition() {
+		return mineAt;
+	}
 }

@@ -10,7 +10,11 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ILogisticsTaskUniqueData;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
@@ -44,6 +48,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class GatheringBlock extends BlockContainer {
 	
 	public static final String ID = "logistics_gathering_block";
+	protected static final ILogisticsTaskUniqueData<EntityItem> GATHERING_ITEM = new ILogisticsTaskUniqueData<EntityItem>() { };
 	
 	private static GatheringBlock instance = null;
 	public static GatheringBlock instance() {
@@ -82,7 +87,7 @@ public class GatheringBlock extends BlockContainer {
 		return false;
 	}
 	
-	public static class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickable{
+	public static class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener{
 
 		private int tickCount;
 		private Map<EntityItem, LogisticsTaskPickupItem> taskMap;
@@ -122,9 +127,11 @@ public class GatheringBlock extends BlockContainer {
 				return;
 			}
 			
-			LogisticsTaskPickupItem task = new LogisticsTaskPickupItem(this.getNetworkComponent(), "Item Pickup Task", item);
-			this.taskMap.put(item, task);
-			network.getTaskRegistry().register(task, null);
+			if (network.taskDataAdd(GATHERING_ITEM, item)) {
+				LogisticsTaskPickupItem task = new LogisticsTaskPickupItem(this.getNetworkComponent(), "Item Pickup Task", item);
+				this.taskMap.put(item, task);
+				network.getTaskRegistry().register(task, this);
+			}
 		}
 		
 		private void removeTask(EntityItem item) {
@@ -140,6 +147,7 @@ public class GatheringBlock extends BlockContainer {
 			}
 			
 			network.getTaskRegistry().revoke(task);
+			network.taskDataRemove(GATHERING_ITEM, item);
 		}
 		
 		private void scan() {
@@ -226,6 +234,24 @@ public class GatheringBlock extends BlockContainer {
 			super.setWorldObj(worldIn);
 			if (!worldIn.isRemote) {
 				MinecraftForge.EVENT_BUS.register(this);
+			}
+		}
+
+		@Override
+		public void onTaskDrop(ILogisticsTask task, IFeyWorker worker) {
+			;
+		}
+
+		@Override
+		public void onTaskAccept(ILogisticsTask task, IFeyWorker worker) {
+			;
+		}
+
+		@Override
+		public void onTaskComplete(ILogisticsTask task, IFeyWorker worker) {
+			if (task != null && task instanceof LogisticsTaskPickupItem) {
+				LogisticsTaskPickupItem pickup = (LogisticsTaskPickupItem) task;
+				this.removeTask(pickup.getEntityItem());
 			}
 		}
 	}

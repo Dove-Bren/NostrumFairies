@@ -303,4 +303,9 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 		
 		return null;
 	}
+	
+	@Override
+	public BlockPos getStartPosition() {
+		return item == null ? null : item.getPosition();
+	}
 }

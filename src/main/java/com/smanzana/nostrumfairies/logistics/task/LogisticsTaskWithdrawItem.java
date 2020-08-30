@@ -565,4 +565,9 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 		
 		return null;
 	}
+
+	@Override
+	public BlockPos getStartPosition() {
+		return null; // Pickup location determined after task is picked up, so a hint location doesn't work.
+	}
 }
