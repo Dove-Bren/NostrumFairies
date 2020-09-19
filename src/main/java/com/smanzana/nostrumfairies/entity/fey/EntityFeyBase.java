@@ -15,6 +15,7 @@ import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
 import net.minecraft.block.state.IBlockState;
@@ -54,6 +55,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	protected static final DataParameter<String> NAME = EntityDataManager.<String>createKey(EntityFeyBase.class, DataSerializers.STRING);
 	protected static final DataParameter<FairyGeneralStatus> STATUS  = EntityDataManager.<FairyGeneralStatus>createKey(EntityFeyBase.class, FairyGeneralStatus.Serializer);
 	protected static final DataParameter<String> ACTIVITY = EntityDataManager.<String>createKey(EntityFeyBase.class, DataSerializers.STRING);
+	protected static final DataParameter<Float> HAPPINESS = EntityDataManager.<Float>createKey(EntityFeyBase.class, DataSerializers.FLOAT);
 	
 	/**
 	 * Maximum amount of distance (squared) a fairy will freely wander away from its home.
@@ -79,6 +81,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 * Slowly updates pos used to figure out if we get stuck while on the job!
 	 */
 	private BlockPos lastTaskPos;
+	private ILogisticsTask lastTask;
+	private LogisticsSubTask lastSubTask;
 	
 	
 	public EntityFeyBase(World world) {
@@ -124,6 +128,19 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 * @return true to allow the change, or false to reject it
 	 */
 	protected abstract boolean onStatusChange(FairyGeneralStatus from, FairyGeneralStatus to);
+	
+	public float getHappiness() {
+		return dataManager.get(HAPPINESS);
+	}
+	
+	protected void setHappiness(float happiness) {
+		dataManager.set(HAPPINESS, Math.max(0, Math.min(100f, happiness)));
+	}
+	
+	protected void addHappiness(float diff) {
+		float now = getHappiness();
+		setHappiness(now + diff);
+	}
 	
 	@Override
 	@Nullable
@@ -236,7 +253,10 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	protected void forceSetTask(@Nullable ILogisticsTask task) {
 		ILogisticsTask oldtask = this.getCurrentTask();
 		this.currentTask = task;
-		this.taskTickCount = 0;
+		
+		if (task != oldtask) {
+			this.taskTickCount = 0;
+		}
 		this.onTaskChange(oldtask, task);
 	}
 	
@@ -287,13 +307,20 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 */
 	protected abstract boolean shouldPerformTask(ILogisticsTask task);
 	
+	protected boolean canWorkTimeCheck() {
+		return worldObj.isDaytime();
+	}
+	
 	/**
 	 * Check whether this entity's needs (and home) are in line and work tasks can be picked up.
 	 * @return
 	 */
 	protected boolean canWork() {
 		this.verifyHome();
-		return (getHomeEnt() != null && getHomeEnt().canWork());
+		if (this.getHappiness() < 10f) {
+			return false; // TODO make this cause a revolt, not just no work
+		}
+		return (canWorkTimeCheck() && getHomeEnt() != null && getHomeEnt().canWork());
 	}
 	
 	protected float getGrowthForTask(ILogisticsTask task) {
@@ -316,6 +343,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			if (home != null) {
 				home.addGrowth(amt); // TODO multiply by happiness?
 			}
+			this.addHappiness(rand.nextFloat() * .1f); // Regain some happiness for finishing tasks
 		}
 	}
 	
@@ -376,6 +404,10 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	@Override
 	protected abstract void initEntityAI();
 	
+	protected void teleportFromStuck() {
+		this.teleportHome();
+	}
+	
 	protected int getDefaultSwingAnimationDuration() {
 		return 6;
 	}
@@ -415,7 +447,9 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	protected void teleportHome() {
 		BlockPos target = findEmptySpot(this.getHome(), false);
-		this.attemptTeleport(target.getX() + .5, target.getY() + .05, target.getZ() + .5);
+		if (this.attemptTeleport(target.getX() + .5, target.getY() + .05, target.getZ() + .5)) {
+			this.navigator.clearPathEntity();
+		}
 	}
 	
 	@Override
@@ -465,6 +499,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		
 		switch (getStatus()) {
 		case IDLE:
+			adjustHappiness();
 			onIdleTick();
 			
 			// Note: idle may decide to do task stuff on its own. We'll respect that.
@@ -491,14 +526,28 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				}
 				
 				if (currentTask != null) {
-					if (taskTickCount > 0 && taskTickCount % (20 * 60) == 0) {
+					if (taskTickCount > 0 && taskTickCount % (20 * 30) == 0) {
+						
+						// Stuck check!
+						// Same task?
+						boolean reset = false;
 						BlockPos pos = this.getPosition();
-						if (pos.equals(lastTaskPos)) {
-							// Stuck! Teleport!
-							teleportHome();
-							lastTaskPos = null;
-						} else {
-							lastTaskPos = pos;
+						if (currentTask == lastTask && currentTask.getActiveSubtask() == lastSubTask) {
+							pos = (lastTaskPos == null ? BlockPos.ORIGIN : pos.subtract(lastTaskPos));
+							if (pos.getX() + pos.getY() + pos.getZ() < 3) {
+								// Stuck! Teleport!
+								teleportFromStuck();
+								lastTaskPos = null;
+								lastTask = null;
+								lastSubTask = null;
+								reset = true;
+							}
+						}
+						
+						if (!reset) {
+							lastTaskPos = this.getPosition();
+							lastTask = currentTask;
+							lastSubTask = currentTask.getActiveSubtask();
 						}
 					}
 					this.onTaskTick(currentTask);
@@ -658,6 +707,9 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				}
 				
 				if (foundTask != null) {
+					if (this.currentTask == null) {
+						this.addHappiness(-rand.nextFloat() * 1f);
+					}
 					forceSetTask(foundTask);
 					return true;
 				}
@@ -690,6 +742,17 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		}
 	}
 	
+	protected void adjustHappiness() {
+		// If idling, adjust happiness.
+		// TODO base chance of regaining happiness on some feature of homes
+		if (ticksExisted % 20 == 0) {
+			this.verifyHome();
+			if (this.getHome() != null && rand.nextFloat() < .5f) {
+				this.addHappiness(rand.nextFloat() * 1f);
+			}
+		}
+	}
+	
 	protected abstract String getRandomName();
 	
 	@Override
@@ -700,6 +763,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		this.dataManager.register(NAME, getRandomName());
 		this.dataManager.register(STATUS, FairyGeneralStatus.WANDERING);
 		this.dataManager.register(ACTIVITY, "status.generic.working");
+		this.dataManager.register(HAPPINESS, 100f);
 	}
 	
 	private static final String NBT_HOME = "home";
@@ -828,13 +892,37 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		return flag;
 	}
 	
+	protected abstract String getUnlocPrefix();
+	
 	public abstract FeyHomeBlock.ResidentType getHomeType();
 	
 	@SideOnly(Side.CLIENT)
 	public abstract String getSpecializationName();
 	
 	@SideOnly(Side.CLIENT)
-	public abstract String getMoodSummary();
+	protected String getMoodPrefix() {
+		return "fey"; // could be getUnlocPrefix
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public  String getMoodSummary() {
+		final float happiness = this.getHappiness();
+		final String prefix = this.getMoodPrefix();
+		final String unloc;
+		if (happiness > 90f) {
+			unloc = "info.mood." + prefix + ".great";
+		} else if (happiness > 70f) {
+			unloc = "info.mood." + prefix + ".good";
+		} else if (happiness > 50f) {
+			unloc = "info.mood." + prefix + ".average";
+		} else if (happiness > 20f) {
+			unloc = "info.mood." + prefix + ".bad";
+		} else {
+			unloc = "info.mood." + prefix + ".awful";
+		}
+		
+		return unloc;
+	}
 	
 	public String getActivitySummary() {
 		return dataManager.get(ACTIVITY);

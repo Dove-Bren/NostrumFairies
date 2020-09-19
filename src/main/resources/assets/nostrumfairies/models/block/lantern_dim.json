@@ -1,0 +1,7 @@
+{
+    "parent": "nostrumfairies:block/lantern",
+    "textures": {
+        "particle": "nostrumfairies:blocks/lantern_dim",
+        "all": "nostrumfairies:blocks/lantern_dim"
+    }
+}

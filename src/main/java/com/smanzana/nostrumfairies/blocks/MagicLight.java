@@ -16,7 +16,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -30,17 +29,22 @@ public class MagicLight extends Block {
 		BRIGHT,
 		MEDIUM,
 		DIM,
+		UNLIT
 	}
+	
+	protected static AxisAlignedBB LANTERN_AABB = new AxisAlignedBB(0.375D, 0.5D, 0.375D, 0.625D, 1D, 0.625D);
 	
 	public static final PropertyInteger Age = PropertyInteger.create("age", 0, 4);
 	
 	public static final String BrightID = "magic_light_bright";
 	public static final String MediumID = "magic_light_medium";
 	public static final String DimID = "magic_light_dim";
+	public static final String UnlitID = "magic_light_unlit";
 	
 	private static MagicLight bright = null;
 	private static MagicLight medium = null;
 	private static MagicLight dim = null;
+	private static MagicLight unlit = null;
 	
 	private final Brightness brightness;
 	
@@ -65,8 +69,15 @@ public class MagicLight extends Block {
 		return dim;
 	}
 	
+	public static MagicLight Unlit() {
+		if (unlit == null)
+			unlit = new MagicLight(Brightness.UNLIT);
+		
+		return unlit;
+	}
+	
 	private MagicLight(Brightness brightness) {
-		super(Material.AIR, MapColor.BLUE);
+		super(Material.CIRCUITS, MapColor.BLUE);
 		this.setHardness(0.0f);
 		this.setResistance(100.0f);
 		this.setLightOpacity(0);
@@ -85,6 +96,10 @@ public class MagicLight extends Block {
 		case DIM:
 			this.setUnlocalizedName(DimID);
 			this.setLightLevel(0.5f);
+			break;
+		case UNLIT:
+			this.setUnlocalizedName(UnlitID);
+			this.setLightLevel(0f);
 			break;
 		}
 	}
@@ -105,6 +120,12 @@ public class MagicLight extends Block {
     }
 	
 	@Override
+	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
+		return worldIn.getBlockState(pos.up()).isSideSolid(worldIn, pos.up(), EnumFacing.DOWN)
+				&& worldIn.getBlockState(pos.up()).getMaterial() == Material.ROCK;
+	}
+	
+	@Override
 	public int getMetaFromState(IBlockState state) {
 		return state.getValue(Age);
 	}
@@ -121,7 +142,7 @@ public class MagicLight extends Block {
 	
 	@Override
 	public EnumBlockRenderType getRenderType(IBlockState state) {
-		return EnumBlockRenderType.INVISIBLE;
+		return EnumBlockRenderType.MODEL;
 	}
 	
 	@Override
@@ -150,6 +171,12 @@ public class MagicLight extends Block {
 	}
 	
 	@Override
+	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+		//LANTERN_AABB = new AxisAlignedBB(0.375D, 0.5D, 0.375D, 0.625D, 1D, 0.625D)
+		return LANTERN_AABB;
+	}
+	
+	@Override
 	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
         return true;
     }
@@ -157,6 +184,10 @@ public class MagicLight extends Block {
 	@Override
 	public void randomTick(World worldIn, BlockPos pos, IBlockState state, Random random) {
 		super.randomTick(worldIn, pos, state, random);
+		
+		if (this.brightness == Brightness.UNLIT) {
+			return;
+		}
 		
 		// Age
 		int age = state.getValue(Age) + 1;
@@ -169,7 +200,9 @@ public class MagicLight extends Block {
 				worldIn.setBlockState(pos, MagicLight.Dim().getDefaultState());
 				break;
 			case DIM:
-				worldIn.setBlockToAir(pos);
+				worldIn.setBlockState(pos, MagicLight.Unlit().getDefaultState());
+				break;
+			case UNLIT:
 				break;
 			}
 			
@@ -183,33 +216,40 @@ public class MagicLight extends Block {
 	public void randomDisplayTick(IBlockState stateIn, World worldIn, BlockPos pos, Random rand) {
 		super.randomDisplayTick(stateIn, worldIn, pos, rand);
 		
-		switch (brightness) {
-		case BRIGHT:
-			; // always
-			break;
-		case MEDIUM:
-			// 75% effects
-			if (rand.nextFloat() < .25f) {
-				return;
-			}
-			break;
-		case DIM:
-			// 50%
-			if (rand.nextFloat() < .5f) {
-				return;
-			}
-			break;
-		}
-		
-		double x = (double)pos.getX() + 0.25D + (rand.nextFloat() * .5f);
-		double y = (double)pos.getY() + 0.6D + (rand.nextFloat() * .2f);
-		double z = (double)pos.getZ() + 0.25D + (rand.nextFloat() * .5f);
-
-		worldIn.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, y, z, 0.0D, 0.0D, 0.0D, new int[0]);
-		worldIn.spawnParticle(EnumParticleTypes.FLAME, x, y, z, 0.0D, 0.0D, 0.0D, new int[0]);
+//		switch (brightness) {
+//		case BRIGHT:
+//			; // always
+//			break;
+//		case MEDIUM:
+//			// 75% effects
+//			if (rand.nextFloat() < .25f) {
+//				return;
+//			}
+//			break;
+//		case DIM:
+//			// 50%
+//			if (rand.nextFloat() < .5f) {
+//				return;
+//			}
+//			break;
+//		}
+//		
+//		double x = (double)pos.getX() + 0.25D + (rand.nextFloat() * .5f);
+//		double y = (double)pos.getY() + 0.6D + (rand.nextFloat() * .2f);
+//		double z = (double)pos.getZ() + 0.25D + (rand.nextFloat() * .5f);
+//
+//		worldIn.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, y, z, 0.0D, 0.0D, 0.0D, new int[0]);
+//		worldIn.spawnParticle(EnumParticleTypes.FLAME, x, y, z, 0.0D, 0.0D, 0.0D, new int[0]);
 	}
 	
 	public void refresh(World worldIn, BlockPos pos) {
 		worldIn.setBlockState(pos, Bright().getDefaultState());
+	}
+	
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+		if (!canPlaceBlockAt(worldIn, pos)) {
+			this.dropBlockAsItem(worldIn, pos, state, 0);
+			worldIn.setBlockToAir(pos);
+		}
 	}
 }

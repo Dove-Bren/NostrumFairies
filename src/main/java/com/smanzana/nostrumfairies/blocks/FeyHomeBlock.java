@@ -16,8 +16,8 @@ import com.smanzana.nostrumaetheria.api.aether.IAetherFlowHandler.AetherFlowConn
 import com.smanzana.nostrumaetheria.api.aether.IAetherHandler;
 import com.smanzana.nostrumaetheria.api.aether.IAetherHandlerProvider;
 import com.smanzana.nostrumaetheria.api.blocks.IAetherCapableBlock;
-import com.smanzana.nostrumaetheria.api.component.AetherHandlerComponent;
-import com.smanzana.nostrumaetheria.api.component.AetherHandlerComponent.AetherComponentListener;
+import com.smanzana.nostrumaetheria.api.component.IAetherComponentListener;
+import com.smanzana.nostrumaetheria.component.AetherHandlerComponent;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
@@ -343,7 +343,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		return pos.down();
 	}
 	
-	public static class HomeBlockTileEntity extends LogisticsTileEntity implements ITickable, IAetherHandlerProvider, AetherComponentListener {
+	public static class HomeBlockTileEntity extends LogisticsTileEntity implements ITickable, IAetherHandlerProvider, IAetherComponentListener {
 		
 		public static class HomeBlockSlotInventory extends InventoryBasic {
 

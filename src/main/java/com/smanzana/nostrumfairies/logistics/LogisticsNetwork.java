@@ -24,11 +24,13 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.Location;
+import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -149,6 +151,9 @@ public class LogisticsNetwork {
 	protected Set<Location> extraBeacons;
 	protected Set<Location> cacheBeaconSet; // Cached set of logistics component and beacon locations
 	
+	// Movement cache
+	protected Map<Location, Map<Location, Path>> cachePaths;
+	
 	// Task Data
 	protected Map<ILogisticsTaskUniqueData<?>, Set<?>> taskData;
 	
@@ -166,6 +171,7 @@ public class LogisticsNetwork {
 		this.cacheKey = UUID.randomUUID();
 		this.taskRegistry = new LogisticsTaskRegistry();
 		this.extraBeacons = new HashSet<>();
+		this.cachePaths = new HashMap<>();
 		this.taskData = new HashMap<>();
 		cacheDirty = false;
 		
@@ -967,6 +973,56 @@ public class LogisticsNetwork {
 			return set.remove(data);
 		} catch (ClassCastException e) {
 			return false;
+		}
+	}
+	
+	/**
+	 * Return the cached path, if any.
+	 * Returns null when null was set for these two endpoints, or if nothing has been set for the endpoints.
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	public @Nullable Path getCachedPathRaw(Location from, Location to) {
+		Map<Location, Path> submap = cachePaths.get(from);
+		if (submap != null) {
+			return Paths.ClonePath(submap.get(to));
+		}
+		return null;
+	}
+	
+	public boolean hasCachedPath(Location from, Location to) {
+		Map<Location, Path> submap = cachePaths.get(from);
+		if (submap != null) {
+			return submap.containsKey(to);
+		}
+		return false;
+	}
+	
+	public void setCachedPathRaw(Location from, Location to, @Nullable Path path) {
+		Map<Location, Path> submap = cachePaths.get(from);
+		if (submap == null) {
+			submap = new HashMap<>();
+			cachePaths.put(from, submap);
+		}
+		submap.put(to, Paths.ClonePath(path));
+	}
+	
+	/**
+	 * Notifies the path cache that the provided path is not a good one, and should not be used.
+	 * Path is the actual path object, which helps this only remove the path if it's the same one that's still in the cache.
+	 * @param from
+	 * @param to
+	 * @param path
+	 */
+	public void removeCachedPath(Location from, Location to, Path path) {
+		Map<Location, Path> submap = cachePaths.get(from);
+		if (submap == null) {
+			return;
+		}
+		Path existing = submap.get(to);
+		if (existing == path) {
+			submap.put(to, null);
 		}
 	}
 }

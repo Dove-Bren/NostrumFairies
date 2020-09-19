@@ -1,0 +1,29 @@
+itemGroup.nostrumfairies=Nostrum Fairies
+
+tile.logistics_storage_chest.name=Logistics Chest
+tile.logistics_buffer_chest.name=Logistics Buffer
+tile.logistics_output_chest.name=Output Chest
+tile.logistics_storage_monitor.name=Logistics Storage Monitor
+tile.logistics_input_chest.name=Input Chest
+tile.logistics_gathering_block.name=Gathering Factory
+tile.logistics_pylon.name=Logistics Pylon
+tile.logistics_woodcutting_block.name=Woodcutting Factory
+tile.logistics_mining_block.name=Mining Factory
+tile.logistics_farming_block.name=Farming Factory
+
+tile.home_block.name=
+
+item.fey_stone.soul_amethyst.name=Soul Gem
+item.fey_stone.specialization_emerald.name=Emerald Specialization Stone
+item.fey_stone.specialization_garnet.name=Garnet Specialization Stone
+item.fey_stone.specialization_aquamarine.name=Aquamarine Specialization Stone
+item.fey_stone.upgrade_ruby.name=Ruby Upgrade
+item.fey_stone.upgrade_sapphire.name=Sapphire Upgrade
+item.fey_stone.downgrade_ruby.name=Ruby Downgrade
+item.fey_stone.downgrade_sapphire.name=Sapphire Downgrade
+
+info.mood.fey.great=Great
+info.mood.fey.good=Good
+info.mood.fey.average=Average
+info.mood.fey.bad=Bad
+info.mood.fey.awful=Awful

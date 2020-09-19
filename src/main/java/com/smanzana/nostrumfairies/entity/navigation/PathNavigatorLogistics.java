@@ -20,6 +20,7 @@ import com.smanzana.nostrumfairies.utils.Paths;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
+import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -56,6 +57,33 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 		super.getPathFinder(); // dumbly sets up stuff so we have to call it still
 		this.pathFinder = new PathFinderPublic(this.nodeProcessor);
 		return this.pathFinder;
+	}
+	
+	protected void clearStuckEntity() {
+		// If entity was on a part of a path we got from the logistics network, notify the network that the path is bad
+		if (currentPath != null) {
+			final Path subpath;
+			final BlockPos start;
+			final BlockPos end;
+			if (currentPath instanceof CompositePath) {
+				subpath = ((CompositePath) currentPath).getCurrentPath();
+				start = ((CompositePath) currentPath).getSegmentStart();
+				end = ((CompositePath) currentPath).getSegmentEnd();
+			} else {
+				subpath = currentPath;
+				PathPoint point = subpath.getPathPointFromIndex(0);
+				start = new BlockPos(point.xCoord, point.yCoord, point.zCoord);
+				point = subpath.getFinalPathPoint();
+				end = new BlockPos(point.xCoord, point.yCoord, point.zCoord);
+			}
+			
+			if (subpath != null) {
+				LogisticsNetwork network = fey.getLogisticsNetwork();
+				Location startL = new Location(theEntity.worldObj, start);
+				Location endL = new Location(theEntity.worldObj, end);
+				network.removeCachedPath(startL, endL, subpath);
+			}
+		}
 	}
 	
 	private boolean shouldAttempt(BlockPos target) {
@@ -95,16 +123,28 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 		return target.distanceSq(pos);
 	}
 	
-	private double getEdgeCost(BlockPos source, BlockPos dest) {
-		// just using distance
-		return source.distanceSq(dest);
+	private double getEdgeCost(Path path) {
+		double cost = 0;
+		if (path == null) {
+			;
+		//} else if (path instanceof CompositePath) {
+		//	for (PathPoint point : ((CompositePath) path).)
+		} else {
+			// start at 1
+			for (int i = 0; i < path.getCurrentPathLength(); i++) {
+				cost += path.getPathPointFromIndex(i).distanceToNext;
+			}
+		}
+			
+		return cost;
 	}
 	
 	private @Nullable Path getMinorPathTo(BlockPos src, BlockPos dest, float range) {
 		Path path = pathFinder.findPath(theEntity.worldObj, theEntity,
-				src.getX() + .5, src.getY() + .5, src.getZ() + .5,
-				dest.getX() + .5, dest.getY() + .5, dest.getZ() + .5,
-				range);
+			src.getX() + .5, src.getY() + .5, src.getZ() + .5,
+			dest.getX() + .5, dest.getY() + .5, dest.getZ() + .5,
+			range);
+		
 		if (path != null && !Paths.IsComplete(path, dest, 2)) {
 			path = null;
 		}
@@ -135,8 +175,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			for (Location beacon : beacons) {
 				Path subpath = super.getPathToPos(beacon.getPos());
 				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), theEntity.worldObj.isAirBlock(beacon.getPos()) ? 0 : 1)) {
-					LogisticsNode node = new LogisticsNode(beacon.getPos(), null, 0, getH(target, beacon.getPos()));
-					node.path = subpath;
+					LogisticsNode node = new LogisticsNode(beacon.getPos(), null, subpath, 0, getH(target, beacon.getPos()));
 					return node;
 					
 				}
@@ -159,7 +198,8 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 		
 		// Reverse order
 		Collections.reverse(inputs);
-		return Paths.Combine(inputs);
+		//return Paths.Combine(inputs);
+		return new CompositePath(inputs);
 	}
 	
 	protected @Nullable Path pathfindTo(BlockPos target, float range) {
@@ -205,16 +245,6 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 				continue;
 			}
 			
-			// See if we can even path to this node.
-			if (node.path == null) {
-				node.path = getMinorPathTo(node.from.pos, node.pos, range);
-			}
-			
-			if (node.path == null) {
-				// We can't reach this node from its predecessor :(
-				continue;
-			}
-			
 			// Is this the final node???? AKA can we path from it straight to the destination?
 			finalPath = getMinorPathTo(node.pos, target, range);
 			if (finalPath != null) {
@@ -223,6 +253,10 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			}
 
 			seen.add(node.pos);
+			
+			if (node.path == null) {
+				continue;
+			}
 			// Adding pos to seen means this is the only node for this pos that can exist now.
 			// We ARE the way to get to this pos.
 			
@@ -236,8 +270,30 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 					}
 					
 					// DUPED BELOW
-					double cost = node.cost + getEdgeCost(node.pos, comp.getPosition());
-					openSet.add(new LogisticsNode(comp.getPosition(), node, cost, cost + getH(target, comp.getPosition())));
+					// See if we can even path to this node.
+					boolean newPath = false;
+					final Path path;
+					final Location locStart = new Location(theEntity.worldObj, node.pos);
+					final Location locEnd = new Location(theEntity.worldObj, comp.getPosition());
+					if (network.hasCachedPath(locStart, locEnd)) {
+						path = network.getCachedPathRaw(locStart, locEnd); 
+					} else {
+						path = getMinorPathTo(node.pos, comp.getPosition(), range);
+						newPath = true;
+					}
+					
+					if (newPath) {
+						// Created a new path. Cache it!
+						network.setCachedPathRaw(locStart, locEnd, path);
+					}
+					
+					if (path == null) {
+						// We can't reach this node from its predecessor :(
+						continue;
+					}
+					
+					double cost = node.cost + getEdgeCost(path);
+					openSet.add(new LogisticsNode(comp.getPosition(), node, path, cost, cost + getH(target, comp.getPosition())));
 				}
 			}
 			
@@ -252,8 +308,30 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 					continue;
 				}
 				
-				double cost = node.cost + getEdgeCost(node.pos, beacon.getPos());
-				openSet.add(new LogisticsNode(beacon.getPos(), node, cost, cost + getH(target, beacon.getPos())));
+				// See if we can even path to this node.
+				boolean newPath = false;
+				final Path path;
+				final Location locStart = new Location(theEntity.worldObj, node.pos);
+				final Location locEnd = new Location(theEntity.worldObj, beacon.getPos());
+				if (network.hasCachedPath(locStart, locEnd)) {
+					path = network.getCachedPathRaw(locStart, locEnd); 
+				} else {
+					path = getMinorPathTo(node.pos, beacon.getPos(), range);
+					newPath = true;
+				}
+				
+				if (newPath) {
+					// Created a new path. Cache it!
+					network.setCachedPathRaw(locStart, locEnd, path);
+				}
+				
+				if (path == null) {
+					// We can't reach this node from its predecessor :(
+					continue;
+				}
+				
+				double cost = node.cost + getEdgeCost(path);
+				openSet.add(new LogisticsNode(beacon.getPos(), node, path, cost, cost + getH(target, beacon.getPos())));
 			}
 		}
 		
@@ -307,16 +385,16 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	 */
 	private final class LogisticsNode implements Comparable<LogisticsNode> {
 		
-		public BlockPos pos; // Node we represent
-		public LogisticsNode from; // Node we got here from
-		public Path path; // The path between this node and the 'from' one. Starts out null and is filled in when being evaluated!
-		public double cost; // Total cost to get to this node
-		public double estimate; // This is the one we sort on!
+		final public BlockPos pos; // Node we represent
+		final public LogisticsNode from; // Node we got here from
+		final public Path path; // The path between this node and the 'from' one. Starts out null and is filled in when being evaluated!
+		final public double cost; // Total cost to get to this node
+		final public double estimate; // This is the one we sort on!
 		
-		public LogisticsNode(BlockPos pos, LogisticsNode from, double cost, double estimate) {
+		public LogisticsNode(BlockPos pos, LogisticsNode from, Path path, double cost, double estimate) {
 			this.pos = pos;
 			this.from = from;
-			this.path = null;
+			this.path = path;
 			this.cost = cost;
 			this.estimate = estimate;
 		}

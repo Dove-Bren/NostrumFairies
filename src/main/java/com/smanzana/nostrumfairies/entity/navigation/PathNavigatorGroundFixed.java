@@ -14,6 +14,10 @@ public class PathNavigatorGroundFixed extends PathNavigateGround {
 	public PathNavigatorGroundFixed(EntityLiving entitylivingIn, World worldIn) {
 		super(entitylivingIn, worldIn);
 	}
+	
+	protected void clearStuckEntity() {
+		this.clearPathEntity();
+	}
 
 	@Override
 	protected void checkForStuck(Vec3d positionVec3) {
@@ -53,13 +57,14 @@ public class PathNavigatorGroundFixed extends PathNavigateGround {
 					timeoutCachedNodeField.set(this, Vec3d.ZERO);
 					timeoutTimerField.setLong(this, 0L);
 					timeoutLimitField.setDouble(this, 0.0D);
-					this.clearPathEntity();
+					clearStuckEntity();
 				}
 	
 				lastTimeoutCheckField.setLong(this, System.currentTimeMillis());
 			}
 		} catch (Exception e) {
-			System.out.println("lol");
+			System.out.println("lol: " + e);
+			e.printStackTrace();
 		}
 	}
 

@@ -594,9 +594,8 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 
 	@Override
-	public String getMoodSummary() {
-		// TODO Auto-generated method stub
-		return "Seems Happy";
+	protected String getUnlocPrefix() {
+		return "elf";
 	}
 	
 	@Override

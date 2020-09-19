@@ -495,11 +495,11 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				return false;
 			}
 			
-			// Dwarves only perform tasks from their mine
-			if (this.getHome() == null || place.getSourceComponent() == null ||
-					!this.getHome().equals(place.getSourceComponent().getPosition())) {
-				return false;
-			}
+//			// Dwarves only perform tasks from their mine
+//			if (this.getHome() == null || place.getSourceComponent() == null ||
+//					!this.getHome().equals(place.getSourceComponent().getPosition())) {
+//				return false;
+//			}
 			
 			// Check where the block is
 			// EDIT mines have things go FAR down, so we ignore the distance check here
@@ -675,10 +675,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				// Refreseh magic lights around. Then see if it's too dark
 				IBlockState state;
 				MutableBlockPos cursor = new MutableBlockPos();
-				for (int x = -1; x <= 1; x++)
+				for (int x = -3; x <= 3; x++)
 				for (int y = -1; y <= 1; y++)
-				for (int z = -1; z <= 1; z++) {
-					cursor.setPos(x, y, z);
+				for (int z = -3; z <= 3; z++) {
+					cursor.setPos(posX + x, posY + y, posZ + z);
 					state = worldObj.getBlockState(cursor);
 					if (state != null && state.getBlock() instanceof MagicLight) {
 						MagicLight.Bright().refresh(worldObj, cursor.toImmutable());
@@ -686,9 +686,11 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				}
 				
 				if (this.worldObj.getLightFor(EnumSkyBlock.BLOCK, this.getPosition()) < 8) {
-					if (this.worldObj.isAirBlock(this.getPosition().up().up())) {
+					if (!this.worldObj.isAirBlock(this.getPosition().up().up().up())
+							&& this.worldObj.isAirBlock(this.getPosition().up().up())) {
 						worldObj.setBlockState(this.getPosition().up().up(), MagicLight.Bright().getDefaultState());
-					} else if (this.worldObj.isAirBlock(this.getPosition().up())) {
+					} else if (!this.worldObj.isAirBlock(this.getPosition().up().up())
+							&& this.worldObj.isAirBlock(this.getPosition().up())) {
 						worldObj.setBlockState(this.getPosition().up(), MagicLight.Bright().getDefaultState());
 					}
 				}
@@ -1064,11 +1066,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	public String getSpecializationName() {
 		return "Mining Dwarf";
 	}
-
+	
 	@Override
-	public String getMoodSummary() {
-		// TODO Auto-generated method stub
-		return "Seems Happy";
+	protected String getUnlocPrefix() {
+		return "dwarf";
 	}
 
 	@Override
@@ -1096,12 +1097,23 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected float getGrowthForTask(ILogisticsTask task) {
 		if (task instanceof LogisticsTaskMineBlock) {
-			return 1.2f;
+			return 0.8f;
 		}
 		if (task instanceof LogisticsTaskPlaceBlock) {
-			return 1.2f;
+			return 0.65f;
 		}
 		
 		return 0f;
+	}
+	
+	@Override
+	protected void teleportFromStuck() {
+		if (this.getCurrentTask() != null && this.getCurrentTask() instanceof LogisticsTaskMineBlock) {
+			BlockPos target = findEmptySpot(((LogisticsTaskMineBlock) this.getCurrentTask()).getTargetMineLoc(), false);
+			this.attemptTeleport(target.getX() + .5, target.getY() + .05, target.getZ() + .5);
+		} else {
+			super.teleportFromStuck();
+		}
+		
 	}
 }

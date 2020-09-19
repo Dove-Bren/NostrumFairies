@@ -12,11 +12,14 @@ import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
+import net.minecraft.block.BlockFalling;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 
 /*
@@ -433,8 +436,23 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 	
 	private void mineBlock() {
 		IBlockState state = world.getBlockState(block);
-		List<ItemStack> drops = state.getBlock().getDrops(world, block, state, 0); // Fortune?
-		world.destroyBlock(block, false);
+		
+		List<ItemStack> drops;
+		if (state.getBlock() instanceof BlockFalling) {
+			drops = new LinkedList<>();
+			// Walk and DESTROY ALL GRAVEL that's up
+			MutableBlockPos cursor = new MutableBlockPos(block);
+			do {
+				drops.addAll(state.getBlock().getDrops(world, cursor, state, 0)); // Fortune?
+				world.destroyBlock(cursor, false);
+				
+				cursor.move(EnumFacing.UP);
+				state = world.getBlockState(cursor);
+			} while (cursor.getY() < 256 && state.getBlock() instanceof BlockFalling);
+		} else {
+			drops = state.getBlock().getDrops(world, block, state, 0); // Fortune?
+			world.destroyBlock(block, false);
+		}
 		
 		// Try to add them all to the dwarf
 		for (ItemStack drop : drops) {

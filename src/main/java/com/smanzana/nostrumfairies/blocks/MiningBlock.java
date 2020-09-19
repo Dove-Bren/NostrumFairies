@@ -135,6 +135,7 @@ public class MiningBlock extends BlockContainer {
 		
 		// Rendering variables
 		protected Set<BlockPos> oreLocations;
+		protected Set<BlockPos> repairLocations;
 		
 		public MiningBlockTileEntity() {
 			this(32);
@@ -145,6 +146,7 @@ public class MiningBlock extends BlockContainer {
 			this.radius = blockRadius;
 			taskMap = new HashMap<>();
 			oreLocations = new HashSet<>();
+			repairLocations = new HashSet<>();
 			beacons = new HashSet<>();
 			
 			lowestLevel = -1;
@@ -376,6 +378,7 @@ public class MiningBlock extends BlockContainer {
 				
 				this.taskMap.put(pos, task);
 				network.getTaskRegistry().register(task, null);
+				this.repairLocations.add(pos);
 			}
 			
 			
@@ -395,6 +398,7 @@ public class MiningBlock extends BlockContainer {
 			
 			network.getTaskRegistry().revoke(task);
 			oreLocations.remove(base);
+			repairLocations.remove(base);
 			this.dirty();
 		}
 		
@@ -672,8 +676,6 @@ public class MiningBlock extends BlockContainer {
 			boolean[] result = new boolean[]{false};
 			int[] counter = new int[]{0};
 			boolean[] earlyOut = new boolean[]{false};
-			
-			System.out.println("Scanning layer " + level + (scanProgress > 0 ? " (resuming)" : ""));
 			
 			final long startTime = System.currentTimeMillis();
 			forEachOnLayer(level, (pos) -> {
@@ -967,7 +969,6 @@ public class MiningBlock extends BlockContainer {
 					
 					didWork = makeMine(nextPlatform, false);
 					nextPlatform++;
-					System.out.println("Making next platform: " + (nextPlatform - 1));
 				}
 				
 				if (!didWork) {
@@ -980,7 +981,6 @@ public class MiningBlock extends BlockContainer {
 					
 					didWork = scanLayer(scanLevel);
 					if (this.scanProgress == 0) { // if no 'pickup' location was set
-						System.out.println("Finished scanning level " + scanLevel);
 						scanLevel++;
 					}
 				}
@@ -1000,6 +1000,7 @@ public class MiningBlock extends BlockContainer {
 				if (task != null && task.isComplete()) {
 					removeTask(pos);
 					oreLocations.remove(pos);
+					repairLocations.remove(pos);
 					this.dirty();
 				}
 			}
@@ -1067,6 +1068,7 @@ public class MiningBlock extends BlockContainer {
 		}
 		
 		public static final String NBT_ORES = "ores";
+		public static final String NBT_REPAIRS = "repairs";
 		public static final String NBT_BEACONS = "beacons";
 		public static final String NBT_PLATFORMS = "platforms";
 		public static final String NBT_TORCHES = "torches";
@@ -1082,6 +1084,12 @@ public class MiningBlock extends BlockContainer {
 				list.appendTag(new NBTTagLong(pos.toLong()));
 			}
 			nbt.setTag(NBT_ORES, list);
+			
+			list = new NBTTagList();
+			for (BlockPos pos : repairLocations) {
+				list.appendTag(new NBTTagLong(pos.toLong()));
+			}
+			nbt.setTag(NBT_REPAIRS, list);
 			
 			list = new NBTTagList();
 			for (BlockPos pos : beacons) {
@@ -1110,11 +1118,17 @@ public class MiningBlock extends BlockContainer {
 			super.readFromNBT(nbt);
 			
 			this.oreLocations.clear();
+			this.repairLocations.clear();
 			if (worldObj != null && worldObj.isRemote) {
 				NBTTagList list = nbt.getTagList(NBT_ORES, NBT.TAG_LONG);
 				for (int i = 0; i < list.tagCount(); i++) {
 					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
 					oreLocations.add(pos);
+				}
+				list = nbt.getTagList(NBT_REPAIRS, NBT.TAG_LONG);
+				for (int i = 0; i < list.tagCount(); i++) {
+					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
+					repairLocations.add(pos);
 				}
 				this.taskMap.clear();
 				list = nbt.getTagList("paths", NBT.TAG_LONG);
@@ -1261,6 +1275,46 @@ public class MiningBlock extends BlockContainer {
 					new MiningBlockRenderer());
 		}
 		
+		protected void renderCube(BlockPos origin, BlockPos target, float red, float green, float blue, float alpha) {
+			Tessellator tessellator = Tessellator.getInstance();
+			VertexBuffer buffer = tessellator.getBuffer();
+			GlStateManager.pushMatrix();
+			GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
+			buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
+			
+			buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
+			buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
+			buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
+			buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
+			buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
+			
+			tessellator.draw();
+			
+			buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
+			
+			buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
+			buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
+			buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
+			buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
+			buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
+			
+			tessellator.draw();
+			
+			buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+			
+			buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
+				buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
+			buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
+				buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
+			buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
+				buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
+			buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
+				buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
+			
+			tessellator.draw();
+			GlStateManager.popMatrix();
+		}
+		
 		@Override
 		public void renderTileEntityAt(MiningBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
 			super.renderTileEntityAt(te, x, y, z, partialTicks, destroyStage);
@@ -1269,25 +1323,21 @@ public class MiningBlock extends BlockContainer {
 			EntityPlayer player = mc.thePlayer;
 			
 			// TODO make a capability and see if they can see logistics stuff / its turned on
-			if (player != null) { // REPLACE ME
+			if (player != null && player.isSpectator() || player.isCreative()) { // REPLACE ME
 				LogisticsNetwork network = te.getNetwork();
 				if (network != null) {
 					
-					Tessellator tessellator = Tessellator.getInstance();
-					VertexBuffer buffer = tessellator.getBuffer();
 					BlockPos origin = te.getPos();
-					
-					float red = 1f;
-					float blue = 0f;
-					float green = 0f;
-					float alpha = 1f;
 					
 					GlStateManager.pushMatrix();
 					GlStateManager.translate(x, y, z);
 					
 					GlStateManager.glLineWidth(3f);
 					GlStateManager.disableLighting();
+					GlStateManager.enableTexture2D();
 					GlStateManager.disableTexture2D();
+					GlStateManager.enableAlpha();
+					GlStateManager.enableBlend();
 					GlStateManager.disableAlpha();
 					GlStateManager.disableBlend();
 					GlStateManager.disableDepth();
@@ -1295,42 +1345,11 @@ public class MiningBlock extends BlockContainer {
 					OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 					
 					for (BlockPos target : te.oreLocations) {
-						
-						GlStateManager.pushMatrix();
-						GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
-						buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-						
-						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-						buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
-						buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
-						buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
-						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-						
-						tessellator.draw();
-						
-						buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-						
-						buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-						buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
-						buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
-						buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
-						buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-						
-						tessellator.draw();
-						
-						buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-						
-						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-							buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-						buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
-							buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
-						buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
-							buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
-						buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
-							buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
-						
-						tessellator.draw();
-						GlStateManager.popMatrix();
+						renderCube(origin, target, 1, 0, 0, 1);
+					}
+					
+					for (BlockPos target : te.repairLocations) {
+						renderCube(origin, target, 0, 1, 0, 1);
 					}
 					
 //					red = 0f;

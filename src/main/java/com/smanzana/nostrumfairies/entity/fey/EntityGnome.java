@@ -679,13 +679,12 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	public String getSpecializationName() {
 		return "Garden Gnome";
 	}
-
-	@Override
-	public String getMoodSummary() {
-		// TODO Auto-generated method stub
-		return "Seems Happy";
-	}
 	
+	@Override
+	protected String getUnlocPrefix() {
+		return "gnome";
+	}
+
 	@Override
 	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
 		return rand.nextBoolean() && rand.nextBoolean();

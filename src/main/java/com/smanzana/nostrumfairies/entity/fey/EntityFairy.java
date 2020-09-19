@@ -698,9 +698,8 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	public String getMoodSummary() {
-		// TODO Auto-generated method stub
-		return "Seems Happy";
+	protected String getUnlocPrefix() {
+		return "fairy";
 	}
 	
 	@Override

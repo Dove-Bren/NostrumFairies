@@ -160,6 +160,8 @@ public class CommonProxy {
     			new ResourceLocation(NostrumFairies.MODID, MagicLight.MediumID));
     	GameRegistry.register(MagicLight.Dim(),
     			new ResourceLocation(NostrumFairies.MODID, MagicLight.DimID));
+    	GameRegistry.register(MagicLight.Unlit(),
+    			new ResourceLocation(NostrumFairies.MODID, MagicLight.UnlitID));
     	
     	GameRegistry.register(FarmingBlock.instance(),
     			new ResourceLocation(NostrumFairies.MODID, FarmingBlock.ID));

@@ -39,7 +39,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 		EntityPlayer player = mc.thePlayer;
 		
 		// TODO make a capability and see if they can see logistics stuff / its turned on
-		if (player != null) { // REPLACE ME
+		if (player != null && player.isSpectator() || player.isCreative()) { // REPLACE ME
 			LogisticsNetwork network = te.getNetwork();
 			if (network != null) {
 				Collection<ILogisticsComponent> neighbors = network.getConnectedComponents(te.getNetworkComponent());
@@ -57,10 +57,14 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				VertexBuffer buffer = tessellator.getBuffer();
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(x + .5, y + 1.05, z + .5);
-				GlStateManager.disableColorMaterial();
+				//GlStateManager.disableColorMaterial();
+				GlStateManager.enableTexture2D();
 				GlStateManager.disableTexture2D();
+				GlStateManager.enableLighting();
 				GlStateManager.disableLighting();
 				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+				GlStateManager.disableBlend();
+				GlStateManager.disableAlpha();
 				GlStateManager.enableBlend();
 				GlStateManager.enableAlpha();
 				GlStateManager.glLineWidth(3f);
