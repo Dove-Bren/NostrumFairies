@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf.ArmPose;
+import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
@@ -108,15 +109,26 @@ public class ModelElf extends ModelBase {
 	}
 	
 	public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX, float scaleFactor, Entity entity) {
-		EntityElf elf = (EntityElf) entity;
-//		final float period = (20f * .15f); //.15f
-//		float progress = (ageInTicks % period) / period;
-//		
-//		float angle = (float) (Math.sin(progress * Math.PI * 2) * (Math.PI / 4));
-//		wingLeft.rotateAngleZ = angle;
-//		wingLeftBack.rotateAngleZ = angle;
-//		wingRight.rotateAngleZ = -angle;
-//		wingRightBack.rotateAngleZ = -angle;
+		
+		final boolean isWorking;
+		final boolean isIdle;
+		final boolean leftHanded;
+		
+		if (entity instanceof EntityElf) {
+			EntityElf elf = (EntityElf) entity;
+			isWorking = elf.getPose() == ArmPose.WORKING;
+			isIdle = elf.getPose() == ArmPose.IDLE;
+			leftHanded = elf.isLeftHanded();
+		} else if (entity instanceof EntityShadowFey) {
+			EntityShadowFey shadow = (EntityShadowFey) entity;
+			isWorking = false;
+			isIdle = shadow.getStance() == EntityShadowFey.BattleStance.IDLE;
+			leftHanded = shadow.isLeftHanded();
+		} else {
+			isWorking = false;
+			isIdle = false;
+			leftHanded = false; 
+		}
 		
 		body.rotateAngleY = 0;
 		body.rotateAngleX = 0;
@@ -125,11 +137,10 @@ public class ModelElf extends ModelBase {
 		head.rotateAngleY = headAngleY * 0.017453292F;
 		
 		// Artificially adjust head pitch when working to look up at tree
-		if (elf.getPose() == ArmPose.WORKING) {
+		if (isWorking) {
 			head.rotateAngleX -= (float) (Math.PI * .25);
 		}
 		
-		// dwarves move their small legs and arms fast
 		limbSwing *= 2;
 		
 		armRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 2.0F * limbSwingAmount * 0.5F;
@@ -155,13 +166,14 @@ public class ModelElf extends ModelBase {
 		legLeft.offsetX = (2f / 16f);
 		legLeft.offsetZ = 0;
 		
-		if (elf.isSwingInProgress || elf.getPose() != ArmPose.IDLE) {
+		//if (elf.isSwingInProgress || elf.getPose() != ArmPose.IDLE) {
+		if (swingProgress > 0 || !isIdle) {
 			if (heldMain != null) {
 				heldMain.rotateAngleX = (float) (.9 * Math.PI);
 				//heldMain.rotateAngleY = 0;
 			}
 			
-			ModelRenderer hand = (elf.isLeftHanded() ? armLeft : armRight);
+			ModelRenderer hand = (leftHanded ? armLeft : armRight);
 			
 			//if (elf.getPose() == ArmPose.CHOPPING)
 			{

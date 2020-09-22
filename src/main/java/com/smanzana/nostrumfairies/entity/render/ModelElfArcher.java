@@ -3,9 +3,11 @@ package com.smanzana.nostrumfairies.entity.render;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf.ArmPose;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher.BattleStance;
+import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.math.MathHelper;
 
 public class ModelElfArcher extends ModelElf {
@@ -15,9 +17,11 @@ public class ModelElfArcher extends ModelElf {
 	
 	protected ModelRenderer bow;
 	protected ModelRenderer dagger;
+	protected final boolean leftHanded;
 	
 	public ModelElfArcher(boolean leftHanded) {
 		super(leftHanded);
+		this.leftHanded = leftHanded;
 	}
 	
 	protected ModelRenderer makeBow() {
@@ -64,8 +68,21 @@ public class ModelElfArcher extends ModelElf {
 	public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX, float scaleFactor, Entity entity) {
 		super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, headAngleY, headAngleX, scaleFactor, entity);
 		
-		EntityElfArcher elf = (EntityElfArcher) entity;
-		boolean useBow = elf.getStance() == BattleStance.RANGED;;
+		final boolean isAttacking;
+		final boolean useBow;
+		
+		if (entity instanceof EntityElfArcher) {
+			EntityElfArcher elf = (EntityElfArcher) entity;
+			isAttacking = elf.getPose() == ArmPose.ATTACKING;
+			useBow = elf.getStance() == BattleStance.RANGED;
+		} else if (entity instanceof EntityShadowFey) {
+			EntityShadowFey shadow = (EntityShadowFey) entity;
+			isAttacking = shadow.getStance() != EntityShadowFey.BattleStance.IDLE;
+			useBow = shadow.getStance() != EntityShadowFey.BattleStance.MELEE;
+		} else {
+			isAttacking = (entity instanceof EntityLivingBase ? ((EntityLivingBase) entity).getAITarget() != null : false);
+			useBow = false;
+		}
 		
 		dagger.rotateAngleZ = 0;
 		dagger.rotateAngleY = 0;
@@ -75,18 +92,18 @@ public class ModelElfArcher extends ModelElf {
 		bow.rotateAngleY = -(float) (Math.PI/2);;
 		bow.rotateAngleZ = 0;
 		
-		if (elf.getPose() == ArmPose.ATTACKING) {
+		if (isAttacking) {
 			if (useBow) {
 				double targetDist = 0;
 				//EntityLivingBase target = elf.getAttackTarget();
 				ModelRenderer mainArm = this.armLeft;
 				ModelRenderer offArm = this.armRight;
 				
-				if (elf.isLeftHanded()) {
+				if (leftHanded) {
 					mainArm = this.armRight;
 					offArm = this.armLeft;
 				}
-				float sign = (elf.isLeftHanded() ? -1 : 1);
+				float sign = (leftHanded ? -1 : 1);
 //				if (target != null) {
 //					targetDist = elf.getDistanceSqToEntity(target);
 //				}
@@ -97,18 +114,19 @@ public class ModelElfArcher extends ModelElf {
 				mainArm.rotateAngleX = (float) -(Math.PI * (.5 + .2 * Math.min(1, targetDist / 64)));
 				offArm.rotateAngleX = (float) -(Math.PI * (.5 + .2 * Math.min(1, targetDist / 64)));
 				offArm.rotateAngleY = .1f;
-				offArm.offsetX += (sign) * elf.width / 2;
-				offArm.offsetZ -= elf.width / 4;
-				offArm.offsetY += elf.height / 24;
+				offArm.offsetX += (sign) * entity.width / 2;
+				offArm.offsetZ -= entity.width / 4;
+				offArm.offsetY += entity.height / 24;
 				
-				if (elf.isSwingInProgress || swingProgress > 0f) {
+				//if (elf.isSwingInProgress || swingProgress > 0f) {
+				if (swingProgress > 0f) {
 					// .1 to reach string and notch arrow
 					if (swingProgress < .1f) {
 						float progress = swingProgress / .1f;
-						offArm.offsetX += (sign) * (elf.width / 3) * Math.sin(Math.PI * .5 * progress);
+						offArm.offsetX += (sign) * (entity.width / 3) * Math.sin(Math.PI * .5 * progress);
 					} else if (swingProgress < .5f) { // .4 to draw it back
 						float progress = (swingProgress - .1f) / .4f;
-						offArm.offsetX += (sign) * (elf.width / 3) * Math.sin(Math.PI * (.5 + .5 * progress));
+						offArm.offsetX += (sign) * (entity.width / 3) * Math.sin(Math.PI * (.5 + .5 * progress));
 					} else {
 						; //hold initial position
 					}
@@ -135,10 +153,10 @@ public class ModelElfArcher extends ModelElf {
 			} else {
 				ModelRenderer mainArm = this.armRight;
 				
-				if (elf.isLeftHanded()) {
+				if (leftHanded) {
 					mainArm = this.armLeft;
 				}
-				float sign = (elf.isLeftHanded() ? -1 : 1);
+				float sign = (leftHanded ? -1 : 1);
 				double magnitude = .075;
 				float bend = (float) (Math.PI * magnitude);
 				float offsetY = (float) magnitude / 8;
@@ -155,7 +173,8 @@ public class ModelElfArcher extends ModelElf {
 				mainArm.rotateAngleY = sign * (float) -(Math.PI * 0);
 				mainArm.rotateAngleX = (float) -(Math.PI * .2);
 				
-				if (elf.isSwingInProgress || swingProgress > 0f) {
+				//if (elf.isSwingInProgress || swingProgress > 0f) {
+				if (swingProgress > 0f) {
 					// .5 to dip in before exploding out
 					if (swingProgress < .5f) {
 						float progress = swingProgress / .5f;
@@ -183,8 +202,18 @@ public class ModelElfArcher extends ModelElf {
 	@Override
 	public void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks,
 			float headAngleY, float headAngleX, float scale) {
-		EntityElfArcher elf = (EntityElfArcher) entity;
-		boolean useBow = elf.getStance() == BattleStance.RANGED;
+		
+		final boolean useBow;
+		
+		if (entity instanceof EntityElfArcher) {
+			EntityElfArcher elf = (EntityElfArcher) entity;
+			useBow = elf.getStance() == BattleStance.RANGED;
+		} else if (entity instanceof EntityShadowFey) {
+			EntityShadowFey shadow = (EntityShadowFey) entity;
+			useBow = shadow.getStance() == EntityShadowFey.BattleStance.RANGED;
+		} else {
+			useBow = false;
+		}
 		
 		// Hide whichever weapon we're not using
 		bow.showModel = useBow;

@@ -13,6 +13,8 @@ import com.google.common.base.Predicate;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
+import com.smanzana.nostrumfairies.items.FeyResource;
+import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
@@ -34,6 +36,7 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SPacketAnimation;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
@@ -56,6 +59,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	protected static final DataParameter<FairyGeneralStatus> STATUS  = EntityDataManager.<FairyGeneralStatus>createKey(EntityFeyBase.class, FairyGeneralStatus.Serializer);
 	protected static final DataParameter<String> ACTIVITY = EntityDataManager.<String>createKey(EntityFeyBase.class, DataSerializers.STRING);
 	protected static final DataParameter<Float> HAPPINESS = EntityDataManager.<Float>createKey(EntityFeyBase.class, DataSerializers.FLOAT);
+	protected static final DataParameter<Boolean> CURSED = EntityDataManager.<Boolean>createKey(EntityFeyBase.class, DataSerializers.BOOLEAN);
 	
 	/**
 	 * Maximum amount of distance (squared) a fairy will freely wander away from its home.
@@ -140,6 +144,17 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	protected void addHappiness(float diff) {
 		float now = getHappiness();
 		setHappiness(now + diff);
+	}
+	
+	public boolean isCursed() {
+		return dataManager.get(CURSED);
+	}
+	
+	public void setCursed(boolean cursed) {
+		dataManager.set(CURSED, cursed);
+		if (cursed) {
+			this.addPotionEffect(new PotionEffect(MobEffects.WITHER, 20 * 500, 1));
+		}
 	}
 	
 	@Override
@@ -484,6 +499,12 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			return;
 		}
 		
+		if (this.isCursed()) {
+			if (this.getActivePotionEffect(MobEffects.WITHER) == null) {
+				this.addPotionEffect(new PotionEffect(MobEffects.WITHER, 20 * 500, 1));
+			}
+		}
+		
 		// If we're in combat, ignore all the rest
 		if (this.getAttackTarget() != null) {
 			if (this.getAttackTarget().isDead) {
@@ -721,7 +742,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		return false;
 	}
 	
-	private void verifyHome() {
+	protected void verifyHome() {
 		if (this.getHome() != null && !worldObj.isBlockLoaded(this.getHome())) {
 			// Can't actually verify, so just pretend it's fine.
 			return;
@@ -764,11 +785,14 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		this.dataManager.register(STATUS, FairyGeneralStatus.WANDERING);
 		this.dataManager.register(ACTIVITY, "status.generic.working");
 		this.dataManager.register(HAPPINESS, 100f);
+		this.dataManager.register(CURSED, false);
 	}
 	
 	private static final String NBT_HOME = "home";
 	private static final String NBT_REVOLTING = "revolt";
 	private static final String NBT_NAME = "default_name";
+	private static final String NBT_HAPPINESS = "happiness";
+	private static final String NBT_CURSED = "cursed";
 	
 	@Override
 	public boolean writeToNBTOptional(NBTTagCompound compound) {
@@ -787,6 +811,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			compound.setBoolean(NBT_REVOLTING, true);
 		}
 		compound.setString(NBT_NAME, dataManager.get(NAME));
+		compound.setFloat(NBT_HAPPINESS, dataManager.get(HAPPINESS));
+		compound.setBoolean(NBT_CURSED, dataManager.get(CURSED));
 	}
 	
 	@Override
@@ -818,6 +844,11 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		if (compound.hasKey(NBT_NAME, NBT.TAG_STRING)) {
 			dataManager.set(NAME, compound.getString(NBT_NAME));
 		} // else default is a random one
+		
+		dataManager.set(CURSED, compound.getBoolean(NBT_CURSED));
+		if (compound.hasKey(NBT_HAPPINESS)) {
+			dataManager.set(HAPPINESS, compound.getFloat(NBT_HAPPINESS));
+		}
 	}
 	
 	@Override
@@ -989,6 +1020,18 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		}
 		
 		return targetPos;
+	}
+	
+	@Override
+	protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
+		if (isCursed() && !worldObj.isRemote) {
+			if (rand.nextInt(5) == 0) {
+				this.entityDropItem(FeyResource.create(FeyResourceType.TEARS, 1), 0);
+			}
+			if (wasRecentlyHit && rand.nextInt(20) < (1 + lootingModifier)) {
+				this.entityDropItem(FeyResource.create(FeyResourceType.ESSENCE, rand.nextInt(2) + 1), 0);
+			}
+		}
 	}
 	
 	protected static boolean FeyWander(EntityFeyBase fey, BlockPos center, double minDist, double maxDist) {

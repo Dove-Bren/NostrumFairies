@@ -185,6 +185,11 @@ public class MagicLight extends Block {
 	public void randomTick(World worldIn, BlockPos pos, IBlockState state, Random random) {
 		super.randomTick(worldIn, pos, state, random);
 		
+		if (!canPlaceBlockAt(worldIn, pos)) {
+			worldIn.setBlockToAir(pos);
+			return;
+		}
+		
 		if (this.brightness == Brightness.UNLIT) {
 			return;
 		}

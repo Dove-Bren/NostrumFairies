@@ -1,13 +1,16 @@
 package com.smanzana.nostrumfairies.client.gui;
 
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest.BufferChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest.InputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest.OutputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest.StorageChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
+import com.smanzana.nostrumfairies.capabilities.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui.BufferChestGuiContainer;
+import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.client.gui.container.HomeBlockGui;
 import com.smanzana.nostrumfairies.client.gui.container.InputChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.InputChestGui.InputChestGuiContainer;
@@ -30,6 +33,7 @@ public class NostrumFairyGui implements IGuiHandler {
 	public static final int outputChestID = 3;
 	public static final int inputChestID = 4;
 	public static final int homeBlockID = 5;
+	public static final int fairyGuiID = 6;
 	
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
@@ -80,6 +84,13 @@ public class NostrumFairyGui implements IGuiHandler {
 				return new HomeBlockGui.HomeBlockContainer(
 						player.inventory,
 						(HomeBlockTileEntity) ent); // should be tile inventory
+			}
+		}
+		
+		if (ID == fairyGuiID) {
+			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
+			if (attr != null && attr.isUnlocked()) {
+				return new FairyScreenGui.FairyScreenContainer(player.inventory, attr.getFairyInventory());
 			}
 		}
 		
@@ -142,6 +153,13 @@ public class NostrumFairyGui implements IGuiHandler {
 				return new HomeBlockGui.HomeBlockGuiContainer(new HomeBlockGui.HomeBlockContainer(
 						player.inventory,
 						(HomeBlockTileEntity) ent)); // should be tile inventory
+			}
+		}
+		
+		if (ID == fairyGuiID) {
+			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
+			if (attr != null && attr.isUnlocked()) {
+				return new FairyScreenGui.FairyScreenGuiContainer(new FairyScreenGui.FairyScreenContainer(player.inventory, attr.getFairyInventory()));
 			}
 		}
 		

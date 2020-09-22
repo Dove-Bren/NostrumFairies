@@ -1,6 +1,7 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,10 @@ import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
-import com.smanzana.nostrumfairies.items.FeyStone;
+import com.smanzana.nostrumfairies.inventory.IFeySlotted;
+import com.smanzana.nostrumfairies.items.FeySoulStone;
+import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
+import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.Block;
@@ -31,7 +35,6 @@ import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyEnum;
-import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
@@ -98,67 +101,69 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		}
 	}
 	
-	public static final PropertyEnum<ResidentType> TYPE = PropertyEnum.<ResidentType>create("type", ResidentType.class);
+	//public static final PropertyEnum<ResidentType> TYPE = PropertyEnum.<ResidentType>create("type", ResidentType.class);
 	public static final PropertyEnum<BlockFunction> BLOCKFUNC = PropertyEnum.<BlockFunction>create("func", BlockFunction.class);
-	public static final PropertyInteger Age = PropertyInteger.create("age", 0, 4);
+	//public static final PropertyInteger Age = PropertyInteger.create("age", 0, 4);
 	
-	public static final String ID = "home_block";
+	protected static final String ID = "home_block";
 	
-	private static FeyHomeBlock instance = null;
+	private static Map<ResidentType, FeyHomeBlock> instances = null;
 	
-	public static FeyHomeBlock instance() {
-		if (instance == null)
-			instance = new FeyHomeBlock();
+	public static FeyHomeBlock instance(ResidentType type) {
+		if (instances == null) {
+			instances = new EnumMap<>(ResidentType.class);
+			for (ResidentType t : ResidentType.values()) {
+				instances.put(t, new FeyHomeBlock(t));
+			}
+		}
 		
-		return instance;
+		return instances.get(type);
+	}
+	
+	public static String ID(ResidentType type) {
+		return ID + "_" + type.name().toLowerCase();
 	}
 	
 	public static void init() {
 		GameRegistry.registerTileEntity(HomeBlockTileEntity.class, "home_block_te");
 	}
 	
-	private FeyHomeBlock() {
+	private final ResidentType type;
+	
+	private FeyHomeBlock(ResidentType type) {
 		super(Material.WOOD, MapColor.BLUE);
-		this.setUnlocalizedName(ID);
+		this.setUnlocalizedName(ID(type));
 		this.setHardness(0.0f);
 		this.setResistance(100.0f);
 		this.setLightOpacity(0);
 		this.setTickRandomly(true);
 		this.setCreativeTab(NostrumFairies.creativeTab);
+		
+		this.type = type;
 	}
 	
 	@Override
 	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, TYPE, BLOCKFUNC);
-	}
-	
-	private ResidentType typeFromMeta(int meta) {
-		return ResidentType.values()[meta % ResidentType.values().length];
-	}
-	
-	private int metaFromType(ResidentType type) {
-		return type.ordinal();
+		return new BlockStateContainer(this, BLOCKFUNC);
 	}
 	
 	private BlockFunction functionFromMeta(int meta) {
-		meta = meta >> 3;
 		return BlockFunction.values()[meta % BlockFunction.values().length];
 	}
 	
 	private int metaFromFunc(BlockFunction func) {
-		return (func.ordinal() << 3);
+		return (func.ordinal());
 	}
 	
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
 		return getDefaultState()
-				.withProperty(TYPE, typeFromMeta(meta))
 				.withProperty(BLOCKFUNC, functionFromMeta(meta));
 	}
 	
 	@Override
 	public int getMetaFromState(IBlockState state) {
-		return metaFromType(state.getValue(TYPE)) | metaFromFunc(state.getValue(BLOCKFUNC));
+		return metaFromFunc(state.getValue(BLOCKFUNC));
 	}
 	
 	@Override
@@ -243,7 +248,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	}
 	
 	public ResidentType getType(IBlockState state) {
-		return state.getValue(TYPE);
+		return type;
 	}
 	
 	private void destroy(World world, BlockPos pos, IBlockState state) {
@@ -294,22 +299,20 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	@Override
 	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
 		return this.getDefaultState()
-				.withProperty(BLOCKFUNC, BlockFunction.CENTER)
-				.withProperty(TYPE, typeFromMeta(stack.getMetadata()));
+				.withProperty(BLOCKFUNC, BlockFunction.CENTER);
 				
 	}
 	
 	@Override
 	public int damageDropped(IBlockState state) {
-		return metaFromType(state.getValue(TYPE));
+//		return metaFromType(state.getValue(TYPE));
+		return 0;
 	}
 
 	@SideOnly(Side.CLIENT)
 	@Override
 	public void getSubBlocks(Item itemIn, CreativeTabs tab, List<ItemStack> list) {
-		for (ResidentType type : ResidentType.values()) {
-			list.add(new ItemStack(this, 1, metaFromType(type)));
-		}
+		super.getSubBlocks(itemIn, tab, list);
 	}
 	
 	@Override
@@ -318,15 +321,14 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		// Auto-create slave state
 		
 		worldIn.setBlockState(pos.up(), this.getDefaultState()
-				.withProperty(BLOCKFUNC, BlockFunction.TOP)
-				.withProperty(TYPE, typeFromMeta(stack.getMetadata())));
+				.withProperty(BLOCKFUNC, BlockFunction.TOP));
 	}
 	
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		IBlockState state = this.getStateFromMeta(meta);
 		if (isCenter(state)) {
-			return new HomeBlockTileEntity(typeFromMeta(meta));
+			return new HomeBlockTileEntity(type);
 		}
 		
 		return null;
@@ -343,15 +345,40 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		return pos.down();
 	}
 	
+	public static boolean SpecializationMaterialAllowed(ResidentType type, FeyStoneMaterial material) {
+		if (type == ResidentType.FAIRY) {
+			return false;
+		}
+		
+		if (!material.existsForSlot(FeySlotType.SPECIALIZATION)) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	protected static FeyStoneMaterial[] GetSpecMaterials(ResidentType type) {
+		ArrayList<FeyStoneMaterial> mats = new ArrayList<>();
+		for (FeyStoneMaterial mat : FeyStoneMaterial.values()) {
+			if (SpecializationMaterialAllowed(type, mat)) {
+				mats.add(mat);
+			}
+		}
+		
+		return mats.toArray(new FeyStoneMaterial[Math.max(1, mats.size())]);
+	}
+	
 	public static class HomeBlockTileEntity extends LogisticsTileEntity implements ITickable, IAetherHandlerProvider, IAetherComponentListener {
 		
 		public static class HomeBlockSlotInventory extends InventoryBasic {
 
 			private final HomeBlockTileEntity owner;
+			private final FeyStoneMaterial[] allowedSpecs;
 			
-			public HomeBlockSlotInventory(HomeBlockTileEntity owner, String title, boolean customName) {
+			public HomeBlockSlotInventory(HomeBlockTileEntity owner, FeyStoneMaterial[] allowedSpecMaterials, String title, boolean customName) {
 				super(title, customName, MAX_TOTAL_SLOTS * 2);
 				this.owner = owner;
+				this.allowedSpecs = allowedSpecMaterials;
 			}
 			
 			protected static final int getSoulSlot(int index) {
@@ -374,10 +401,18 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				}
 			}
 			
+			public SoulStoneType getPrimarySoulType() {
+				for (SoulStoneType type : SoulStoneType.values()) {
+					if (type.canHold(owner.type)) {
+						return type;
+					}
+				}
+				return SoulStoneType.GEM;
+			}
+			
 			protected boolean isValidSoulStone(@Nullable ItemStack stack) {
-				if (stack != null && stack.getItem() instanceof FeyStone) {
-					FeyStone stone = (FeyStone) stack.getItem();
-					return stone.getSlot(stack) == FeySlotType.SOUL;
+				if (stack != null && stack.getItem() instanceof FeySoulStone) {
+					return FeySoulStone.getTypeOf(stack).canHold(owner.type);
 					// also could add that the material is correct for the type of home here.
 				}
 				
@@ -385,9 +420,16 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			}
 			
 			protected boolean isValidSpecialization(@Nullable ItemStack stack) {
-				if (stack != null && stack.getItem() instanceof FeyStone) {
-					FeyStone stone = (FeyStone) stack.getItem();
-					return stone.getSlot(stack) == FeySlotType.SPECIALIZATION;
+				if (stack != null && stack.getItem() instanceof IFeySlotted) {
+					IFeySlotted stone = (IFeySlotted) stack.getItem();
+					if (stone.getFeySlot(stack) == FeySlotType.SPECIALIZATION) {
+						FeyStoneMaterial material = stone.getStoneMaterial(stack);
+						for (FeyStoneMaterial allowed : this.allowedSpecs) {
+							if (allowed == material) {
+								return true;
+							}
+						}
+					}
 				}
 				
 				return false;
@@ -465,7 +507,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				String name = nbt.getString(NBT_NAME);
 				boolean custom = nbt.getBoolean(NBT_CUSTOM);
 				
-				HomeBlockSlotInventory inv = new HomeBlockSlotInventory(owner, name, custom);
+				HomeBlockSlotInventory inv = new HomeBlockSlotInventory(owner, GetSpecMaterials(owner.type), name, custom);
 				Inventories.deserializeInventory(inv, nbt.getTag(NBT_ITEMS));
 				
 				return inv;
@@ -482,9 +524,9 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			}
 			
 			protected boolean isValidUpgrade(@Nullable ItemStack stack) {
-				if (stack != null && stack.getItem() instanceof FeyStone) {
-					FeyStone stone = (FeyStone) stack.getItem();
-					return stone.getSlot(stack) == FeySlotType.UPGRADE;
+				if (stack != null && stack.getItem() instanceof IFeySlotted) {
+					IFeySlotted stone = (IFeySlotted) stack.getItem();
+					return stone.getFeySlot(stack) == FeySlotType.UPGRADE;
 				}
 				
 				return false;
@@ -564,13 +606,14 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		public HomeBlockTileEntity(ResidentType type) {
 			this();
 			this.type = type;
+			this.slotInv = new HomeBlockSlotInventory(this, GetSpecMaterials(type), "", false);
 		}
 		
 		public HomeBlockTileEntity() {
 			super();
 			//this.feyList = new HashSet<>();
 			this.slots = DEFAULT_SLOTS;
-			this.slotInv = new HomeBlockSlotInventory(this, "", false);
+			this.slotInv = new HomeBlockSlotInventory(this, GetSpecMaterials(ResidentType.FAIRY), "", false);
 			this.upgradeInv = new HomeBlockUpgradeInventory(this, "", false);
 			this.name = generateRandomName();
 			feyMap = new HashMap<>();
@@ -902,6 +945,18 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				refreshFeyList();
 				if (!worldObj.isRemote) {
 					purgeFeyList();
+				}
+			}
+			
+			// If any soul gems in our inventory have souls in them, free them!
+			for (int i = 0; i < this.slotInv.getSizeInventory(); i++) {
+				if (HomeBlockSlotInventory.isSoulSlot(i) && slotInv.hasStone(i)) {
+					ItemStack stone = slotInv.getStackInSlot(i);
+					if (FeySoulStone.hasStoredFey(stone)) {
+						EntityFeyBase fey = FeySoulStone.spawnStoredEntity(stone, worldObj, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5);
+						fey.setHome(this.getPos());
+						slotInv.setInventorySlotContents(i, FeySoulStone.clearEntity(stone));
+					}
 				}
 			}
 			

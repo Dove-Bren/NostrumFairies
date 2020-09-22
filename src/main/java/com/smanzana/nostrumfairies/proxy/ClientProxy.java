@@ -6,7 +6,9 @@ import java.util.List;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
+import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
@@ -21,15 +23,26 @@ import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
+import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 import com.smanzana.nostrumfairies.entity.render.RenderDwarf;
 import com.smanzana.nostrumfairies.entity.render.RenderElf;
 import com.smanzana.nostrumfairies.entity.render.RenderElfArcher;
 import com.smanzana.nostrumfairies.entity.render.RenderFairy;
 import com.smanzana.nostrumfairies.entity.render.RenderGnome;
+import com.smanzana.nostrumfairies.entity.render.RenderShadowFey;
 import com.smanzana.nostrumfairies.entity.render.RenderTestFairy;
+import com.smanzana.nostrumfairies.items.FairyGael;
+import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
+import com.smanzana.nostrumfairies.items.FairyInstrument;
+import com.smanzana.nostrumfairies.items.FairyInstrument.InstrumentType;
+import com.smanzana.nostrumfairies.items.FeyResource;
+import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
+import com.smanzana.nostrumfairies.items.FeySoulStone;
+import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
+import com.smanzana.nostrumfairies.network.messages.CapabilityRequest;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 
 import net.minecraft.client.Minecraft;
@@ -106,6 +119,13 @@ public class ClientProxy extends CommonProxy {
 				return new RenderElfArcher(manager, 1.0f);
 			}
 		});
+
+		RenderingRegistry.registerEntityRenderingHandler(EntityShadowFey.class, new IRenderFactory<EntityShadowFey>() {
+			@Override
+			public Render<? super EntityShadowFey> createRenderFor(RenderManager manager) {
+				return new RenderShadowFey(manager, 1.0f);
+			}
+		});
 		
 		List<ItemStack> stones = new LinkedList<>();
 		FeyStone.instance().getSubItems(FeyStone.instance(), null, stones);
@@ -116,6 +136,42 @@ public class ClientProxy extends CommonProxy {
 					FeyStone.instance().getModelName(stone));
 		}
 		ModelBakery.registerItemVariants(FeyStone.instance(), variants);
+		
+		variants = new ResourceLocation[FeyResourceType.values().length];
+		i = 0;
+		for (FeyResourceType type : FeyResourceType.values()) {
+			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
+					FeyResource.instance().getModelName(type));
+		}
+		ModelBakery.registerItemVariants(FeyResource.instance(), variants);
+		
+		variants = new ResourceLocation[SoulStoneType.values().length * 2];
+		i = 0;
+		for (SoulStoneType type : SoulStoneType.values()) {
+			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
+					FeySoulStone.instance().getModelName(type));
+			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
+					FeySoulStone.instance().getModelName(type) + "_filled");
+		}
+		ModelBakery.registerItemVariants(FeySoulStone.instance(), variants);
+		
+		variants = new ResourceLocation[FairyGaelType.values().length * 2];
+		i = 0;
+		for (FairyGaelType type : FairyGaelType.values()) {
+			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
+					FairyGael.instance().getModelName(type, false));
+			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
+					FairyGael.instance().getModelName(type, true));
+		}
+		ModelBakery.registerItemVariants(FairyGael.instance(), variants);
+		
+		variants = new ResourceLocation[InstrumentType.values().length];
+		i = 0;
+		for (InstrumentType type : InstrumentType.values()) {
+			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
+					FairyInstrument.instance().getModelName(type));
+		}
+		ModelBakery.registerItemVariants(FairyInstrument.instance(), variants);
 	}
 	
 	@Override
@@ -153,15 +209,39 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(FarmingBlock.instance()),
 				0,
 				FarmingBlock.ID);
-		registerModel(Item.getItemFromBlock(FeyHomeBlock.instance()),
-				0,
-				FeyHomeBlock.ID);
+		for (ResidentType type : ResidentType.values()) {
+			registerModel(Item.getItemFromBlock(FeyHomeBlock.instance(type)),
+					0,
+					FeyHomeBlock.ID(type));
+		}
 		
 		
 		List<ItemStack> stones = new LinkedList<>();
 		FeyStone.instance().getSubItems(FeyStone.instance(), null, stones);
 		for (ItemStack stone : stones) {
 			registerModel(FeyStone.instance(), stone.getMetadata(), FeyStone.instance().getModelName(stone));
+		}
+		
+		for (FeyResourceType type : FeyResourceType.values()) {
+			registerModel(FeyResource.instance(), FeyResource.create(type, 1).getMetadata(), FeyResource.instance().getModelName(type));
+		}
+		
+		registerModel(Item.getItemFromBlock(FeyBush.instance()),
+				0,
+				FeyBush.ID);
+		
+		for (FairyInstrument.InstrumentType type : FairyInstrument.InstrumentType.values()) {
+			registerModel(FairyInstrument.instance(), FairyInstrument.create(type).getMetadata(), FairyInstrument.instance().getModelName(type));
+		}
+		
+		for (FeySoulStone.SoulStoneType type : FeySoulStone.SoulStoneType.values()) {
+			registerModel(FeySoulStone.instance(), FeySoulStone.create(type).getMetadata(), FeySoulStone.instance().getModelName(type));
+			registerModel(FeySoulStone.instance(), FeySoulStone.create(type).getMetadata() | 1, FeySoulStone.instance().getModelName(type) + "_filled");
+		}
+		
+		for (FairyGael.FairyGaelType type : FairyGael.FairyGaelType.values()) {
+			registerModel(FairyGael.instance(), type.ordinal() << 1, FairyGael.instance().getModelName(type, false));
+			registerModel(FairyGael.instance(), type.ordinal() << 1 | 1, FairyGael.instance().getModelName(type, true));
 		}
 	}
 	
@@ -249,7 +329,18 @@ public class ClientProxy extends CommonProxy {
 			
 			NostrumFairies.logger.info("Requested automatic logistics network refresh");
 			NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest());
+			NostrumFairies.proxy.requestCapabilityRefresh();
 		}
+	}
+	
+	@Override
+	public void requestCapabilityRefresh() {
+		NetworkHandler.getSyncChannel().sendToServer(new CapabilityRequest());
+	}
+	
+	@Override
+	public void pushCapabilityRefresh(EntityPlayer player) {
+		; // Nothing on client
 	}
 	
 }

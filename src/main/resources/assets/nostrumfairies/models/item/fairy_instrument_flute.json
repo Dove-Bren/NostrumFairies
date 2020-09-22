@@ -1,0 +1,6 @@
+{
+    "parent": "item/handheld",
+    "textures": {
+        "layer0": "nostrumfairies:items/fairy_instrument_flute"
+    }
+}

@@ -2,7 +2,6 @@ package com.smanzana.nostrumfairies.inventory;
 
 public enum FeySlotType {
 	
-	SOUL("soul"),
 	SPECIALIZATION("specialization"),
 	UPGRADE("upgrade"),
 	DOWNGRADE("downgrade"),

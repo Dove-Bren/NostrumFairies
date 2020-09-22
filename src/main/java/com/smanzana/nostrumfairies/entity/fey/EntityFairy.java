@@ -54,12 +54,12 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	public String getLoreKey() {
-		return "testfairy";
+		return "fairy";
 	}
 
 	@Override
 	public String getLoreDisplayName() {
-		return "testfairy";
+		return "Fairies";
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		return InfoScreenTabs.INFO_ENTITY;
 	}
 	
-	private @Nullable ItemStack getHeldItem() {
+	protected @Nullable ItemStack getHeldItem() {
 		return this.dataManager.get(DATA_HELD_ITEM).orNull();
 	}
 
@@ -262,7 +262,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		return false;
 	}
 	
-	private void dropItem() {
+	protected void dropItem() {
 		EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, getHeldItem());
 		worldObj.spawnEntityInWorld(item);
 		this.dataManager.set(DATA_HELD_ITEM, Optional.absent());

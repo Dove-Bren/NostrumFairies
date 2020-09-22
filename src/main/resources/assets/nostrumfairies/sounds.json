@@ -19,5 +19,32 @@
             "nostrumfairies:ambient/pickaxe14",
             "nostrumfairies:ambient/pickaxe15"
         ]
-    }    
+    },
+    "items.instrument.lyre":
+    {
+        "sounds":
+        [
+            "nostrumfairies:items/lyre1",
+            "nostrumfairies:items/lyre2",
+            "nostrumfairies:items/lyre3"
+        ]
+    },
+    "items.instrument.flute":
+    {
+        "sounds":
+        [
+            "nostrumfairies:items/flute1",
+            "nostrumfairies:items/flute2",
+            "nostrumfairies:items/flute3"
+        ]
+    },
+    "items.instrument.ocarina":
+    {
+        "sounds":
+        [
+            "nostrumfairies:items/ocarina1",
+            "nostrumfairies:items/ocarina2",
+            "nostrumfairies:items/ocarina3"
+        ]
+    }
 }

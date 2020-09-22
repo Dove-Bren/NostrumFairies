@@ -1,0 +1,7 @@
+{
+    "variants": {
+        "func=center": { "model": "nostrumfairies:fey_bush" },
+        "func=top": { "model": "nostrumfairies:fey_bush" },
+        "inventory": { "model": "nostrumfairies:fey_bush" }
+    }
+}

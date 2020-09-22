@@ -4,7 +4,7 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.gui.container.FeyContainerSlot;
+import com.smanzana.nostrumfairies.client.gui.container.FeyStoneContainerSlot;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 
 import net.minecraft.client.Minecraft;
@@ -45,7 +45,7 @@ public final class FeySlotIcon {
         GlStateManager.enableLighting();
 	}
 	
-	public static void draw(FeyContainerSlot slot, float scale) {
+	public static void draw(FeyStoneContainerSlot slot, float scale) {
 		// offset to center based on scale, since slots always have a hover of 16x16
 		int offset = (int) (16 * (1f - scale) * .5);
 		draw(slot.xDisplayPosition + offset, slot.yDisplayPosition + offset, scale, slot.getType());

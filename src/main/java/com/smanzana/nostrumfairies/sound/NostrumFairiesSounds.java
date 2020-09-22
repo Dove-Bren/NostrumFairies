@@ -13,7 +13,10 @@ import net.minecraft.world.World;
 
 public enum NostrumFairiesSounds {
 	
-	PICKAXE_HIT("ambient.pickaxe.strike", SoundCategory.AMBIENT);
+	PICKAXE_HIT("ambient.pickaxe.strike", SoundCategory.AMBIENT),
+	LYRE("items.instrument.lyre", SoundCategory.PLAYERS),
+	FLUTE("items.instrument.flute", SoundCategory.PLAYERS),
+	OCARINA("items.instrument.ocarina", SoundCategory.PLAYERS);
 	
 	private ResourceLocation resource;
 	private SoundCategory category;

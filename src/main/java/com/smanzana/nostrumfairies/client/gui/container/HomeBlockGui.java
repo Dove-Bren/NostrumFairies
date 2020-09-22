@@ -15,6 +15,7 @@ import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity.FeyAwayRecord;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity.HomeBlockSlotInventory;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
+import com.smanzana.nostrumfairies.client.gui.FeySoulIcon;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
@@ -69,9 +70,9 @@ public class HomeBlockGui {
 		
 		protected HomeBlockTileEntity home;
 		private final int homeIDStart;
-		private final int specializationIDStart;
 		private final List<ResidentSlot> residentSlots;
-		private final List<FeyContainerSlot> upgradeSlots;
+		private final List<SpecializationSlot> specializationSlots;
+		private final List<FeyStoneContainerSlot> upgradeSlots;
 		
 		public HomeBlockContainer(IInventory playerInv, HomeBlockTileEntity home) {
 			this.home = home;
@@ -93,7 +94,7 @@ public class HomeBlockGui {
 			
 			// Add upgrade slots, which are static
 			for (int i = 0; i < 2; i++) {
-				FeyContainerSlot slot = new FeyContainerSlot(home.getUpgradeInventory(), i,
+				FeyStoneContainerSlot slot = new FeyStoneContainerSlot(home.getUpgradeInventory(), i,
 						GUI_UPGRADE_HOFFSET,
 						GUI_UPGRADE_VOFFSET + (i * (GUI_INV_CELL_LENGTH + 3)),
 						FeySlotType.UPGRADE);
@@ -101,7 +102,7 @@ public class HomeBlockGui {
 				upgradeSlots.add(slot);
 			}
 			
-			residentSlots = new ArrayList<>(home.getSlotInventory().getSizeInventory());
+			residentSlots = new ArrayList<>(home.getSlotInventory().getSizeInventory() / 2);
 			int i;
 			for (i = 0; i < home.getSlotInventory().getSizeInventory(); i++) {
 				if (!HomeBlockSlotInventory.isSoulSlot(i)) {
@@ -115,14 +116,13 @@ public class HomeBlockGui {
 				residentSlots.add(slot);
 			}
 			
-			specializationIDStart = i;
-			
+			specializationSlots = new ArrayList<>(home.getSlotInventory().getSizeInventory() / 2);
 			for (; i < home.getSlotInventory().getSizeInventory(); i++) {
-				ResidentSlot slot = new ResidentSlot(home, i,
+				SpecializationSlot slot = new SpecializationSlot(home, i,
 						GUI_DETAILS_HOFFSET + (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH - 2)) / 2,
 						GUI_DETAILS_VOFFSET + GUI_DETAILS_HEIGHT - (GUI_INV_CELL_LENGTH * 2));
 				this.addSlotToContainer(slot);
-				residentSlots.add(slot);
+				specializationSlots.add(slot);
 			}
 		}
 		
@@ -220,7 +220,7 @@ public class HomeBlockGui {
 			}
 			for (ResidentSlot slot : container.residentSlots) {
 				slot.isItemDisplay = false;
-				if (slot.getType() == FeySlotType.SOUL && slot.getHasStack()) {
+				if (slot.getHasStack()) {
 					maxcount++;
 				}
 				slot.isItemDisplay = true;
@@ -417,12 +417,19 @@ public class HomeBlockGui {
 			GlStateManager.translate(horizontalMargin, verticalMargin, 0);
 			for (ResidentSlot slot : container.residentSlots) {
 				if (slot.isActive()) {
-					float scale = (slot.isSoul ? (12f / 16f) : 1f);
+					float scale = (12f / 16f) ;
+					GlStateManager.color(1f, 1f, 1f, 1f);
+					FeySoulIcon.draw(slot, scale);
+				}
+			}
+			for (SpecializationSlot slot : container.specializationSlots) {
+				if (slot.isActive()) {
+					float scale = 1f;
 					GlStateManager.color(1f, 1f, 1f, 1f);
 					FeySlotIcon.draw(slot, scale);
 				}
 			}
-			for (FeyContainerSlot slot : container.upgradeSlots) {
+			for (FeyStoneContainerSlot slot : container.upgradeSlots) {
 				float scale = 1f;
 				GlStateManager.color(1f, 1f, 1f, 1f);
 				FeySlotIcon.draw(slot, scale);
@@ -484,9 +491,9 @@ public class HomeBlockGui {
 				int index = getListIndexFromMouse(mouseX, mouseY);
 				if (index != -1) {
 					if (selection != -1) {
-						container.residentSlots.get(selection + container.specializationIDStart).isSelected = false;
+						container.specializationSlots.get(selection).isSelected = false;
 					}
-					container.residentSlots.get(index + container.specializationIDStart).isSelected = true;
+					container.specializationSlots.get(index).isSelected = true;
 					this.selection = index;
 					return;
 				}
@@ -545,53 +552,40 @@ public class HomeBlockGui {
 		}
 	}
 	
-	private static class ResidentSlot extends FeyContainerSlot {
+	private static class ResidentSlot extends FeySoulContainerSlot {
 
 		private final HomeBlockTileEntity te;
 		private final HomeBlockSlotInventory inventory;
-		private final boolean isSoul;
 		
-		protected boolean isSelected;
 		protected boolean isItemDisplay;
 		
 		public ResidentSlot(HomeBlockTileEntity te, int slot, int xPosition, int yPosition) {
-			super(te.getSlotInventory(), slot, xPosition, yPosition,
-					isSoulSlot(te.getSlotInventory(), slot) ? FeySlotType.SOUL : FeySlotType.SPECIALIZATION);
+			super(te.getSlotInventory(), slot, xPosition, yPosition, te.getSlotInventory().getPrimarySoulType());
 			this.inventory = te.getSlotInventory();
 			this.te = te;
-			this.isSoul = isSoulSlot(inventory, slot);
 		}
 		
-		protected static boolean isSoulSlot(HomeBlockSlotInventory inventoryIn, int slot) {
-			return HomeBlockSlotInventory.isSoulSlot(slot);
-		}
-		
-		protected static boolean isSlotValid(boolean isSoul, boolean isSelected, HomeBlockTileEntity te, HomeBlockSlotInventory inventoryIn, int slot) {
+		protected static boolean isSlotValid(HomeBlockTileEntity te, HomeBlockSlotInventory inventoryIn, int slot) {
 			// Check if the home block is capable of using this slot.
 			// If soul slot, check number of slots and our position (and all previous positions, if applicable).
 			// Otherwise, check if a soul stone is socketted && this index selected.
-			if (isSoul) {
-				final int index = HomeBlockSlotInventory.getIndexFromSlot(slot);
-				if (index >= te.getRawSlots() || inventoryIn.hasStone(index)) {
+			final int index = HomeBlockSlotInventory.getIndexFromSlot(slot);
+			if (index >= te.getRawSlots() || inventoryIn.hasStone(index)) {
+				return false;
+			}
+			
+			// Make sure predecessors are filled
+			for (int i = index-1; i >= 0; i--) {
+				if (!inventoryIn.hasStone(i)) {
 					return false;
 				}
-				
-				// Make sure predecessors are filled
-				for (int i = index-1; i >= 0; i--) {
-					if (!inventoryIn.hasStone(i)) {
-						return false;
-					}
-				}
-				
-				return true;
-			} else {
-				final int index = HomeBlockSlotInventory.getIndexFromSlot(slot);
-				return inventoryIn.hasStone(index) && isSelected;
 			}
+			
+			return true;
 		}
 		
 		public boolean isActive() {
-			return isSlotValid(isSoul, isSelected, te, inventory, this.getSlotIndex());
+			return isSlotValid(te, inventory, this.getSlotIndex());
 		}
 		
 		@Override
@@ -616,15 +610,68 @@ public class HomeBlockGui {
 		
 		@Override
 		public boolean canTakeStack(EntityPlayer playerIn) {
-			return !isSoul;
+			return false;
 		}
 		
 		@Override
 		public ItemStack getStack() {
-			if (isSoul && isItemDisplay) {
+			if (isItemDisplay) {
 				return null;
 			}
 			
+			return super.getStack();
+		}
+	}
+	
+	private static class SpecializationSlot extends FeyStoneContainerSlot {
+
+		private final HomeBlockTileEntity te;
+		private final HomeBlockSlotInventory inventory;
+		
+		protected boolean isSelected;
+		
+		public SpecializationSlot(HomeBlockTileEntity te, int slot, int xPosition, int yPosition) {
+			super(te.getSlotInventory(), slot, xPosition, yPosition, FeySlotType.SPECIALIZATION);
+			this.inventory = te.getSlotInventory();
+			this.te = te;
+		}
+		
+		protected static boolean isSlotValid(boolean isSelected, HomeBlockTileEntity te, HomeBlockSlotInventory inventoryIn, int slot) {
+			final int index = HomeBlockSlotInventory.getIndexFromSlot(slot);
+			return inventoryIn.hasStone(index) && isSelected;
+		}
+		
+		public boolean isActive() {
+			return isSlotValid(isSelected, te, inventory, this.getSlotIndex());
+		}
+		
+		@Override
+		public boolean isItemValid(@Nullable ItemStack stack) {
+			if (!inventory.isItemValidForSlot(this.getSlotIndex(), stack)) {
+				return false;
+			}
+			
+			if (!super.isItemValid(stack)) {
+				return false;
+			}
+			
+			// accept it as long as this slot is active
+			return isActive();
+		}
+		
+		@Override
+		@SideOnly(Side.CLIENT)
+		public boolean canBeHovered() {
+			return isActive();
+		}
+		
+		@Override
+		public boolean canTakeStack(EntityPlayer playerIn) {
+			return true;
+		}
+		
+		@Override
+		public ItemStack getStack() {
 			return super.getStack();
 		}
 	}

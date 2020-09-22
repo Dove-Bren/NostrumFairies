@@ -11,9 +11,13 @@ tile.logistics_woodcutting_block.name=Woodcutting Factory
 tile.logistics_mining_block.name=Mining Factory
 tile.logistics_farming_block.name=Farming Factory
 
-tile.home_block.name=
+tile.home_block_fairy.name=Fairy Home
+tile.home_block_elf.name=Elf Home
+tile.home_block_gnome.name=Gnome Home
+tile.home_block_dwarf.name=Dwarf Home
 
-item.fey_stone.soul_amethyst.name=Soul Gem
+tile.fey_bush.name=Fey Flower Bush
+
 item.fey_stone.specialization_emerald.name=Emerald Specialization Stone
 item.fey_stone.specialization_garnet.name=Garnet Specialization Stone
 item.fey_stone.specialization_aquamarine.name=Aquamarine Specialization Stone
@@ -22,8 +26,42 @@ item.fey_stone.upgrade_sapphire.name=Sapphire Upgrade
 item.fey_stone.downgrade_ruby.name=Ruby Downgrade
 item.fey_stone.downgrade_sapphire.name=Sapphire Downgrade
 
+item.fey_soul_stone.gem.name=Soul Gem
+item.fey_soul_stone.gael.name=Soul Gael
+item.fairy_gael.attack.name=Aggressive Gael
+item.fairy_gael.build.name=Constructive Gael
+item.fairy_gael.logistics.name=Supporting Gael
+item.fairy_instrument.flute.name=Fairy Flute
+item.fairy_instrument.harp.name=Fairy Lyre
+item.fairy_instrument.ocarina.name=Fairy Ocarina
+
+item.fey_resource.tears.name=Fey Tear
+item.fey_resource.essence.name=Fey Essence
+item.fey_resource.essence_corrupted.name=Corrupted Fey Essence
+item.fey_resource.bell.name=Fey Bell
+item.fey_resource.flower.name=Fey Flower
+item.fey_resource.tablet.name=Fey Tablet
+
 info.mood.fey.great=Great
 info.mood.fey.good=Good
 info.mood.fey.average=Average
 info.mood.fey.bad=Bad
 info.mood.fey.awful=Awful
+
+info.tablet.fail=You already know the secrets of the fey...
+info.fairy_gael.cracked=Cracked
+info.instrument.locked=You feel as though what you did is right, but nothing happens...
+
+entity.nostrumfairies.shadow_fey.name=Shadow Fey
+
+research.tab.fey.name=Fey
+
+research.purify_essence.name=Fey Essence Purification
+research.purify_essence.desc=
+research.purify_essence.info=
+research.fey_bell.name=Fey Bells
+research.fey_bell.desc=
+research.fey_bell.info=
+research.fey_flower.name=Fey Flora
+research.fey_flower.desc=
+research.fey_flower.info=

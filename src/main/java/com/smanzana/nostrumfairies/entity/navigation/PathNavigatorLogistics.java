@@ -61,7 +61,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	
 	protected void clearStuckEntity() {
 		// If entity was on a part of a path we got from the logistics network, notify the network that the path is bad
-		if (currentPath != null) {
+		if (currentPath != null && fey.getLogisticsNetwork() != null) {
 			final Path subpath;
 			final BlockPos start;
 			final BlockPos end;

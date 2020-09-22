@@ -8,16 +8,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
+import com.smanzana.nostrumfairies.capabilities.AttributeProvider;
+import com.smanzana.nostrumfairies.capabilities.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
-import com.smanzana.nostrumfairies.inventory.FeySlotType;
-import com.smanzana.nostrumfairies.items.FeyStone;
-import com.smanzana.nostrumfairies.items.FeyStone.FeyStoneMaterial;
+import com.smanzana.nostrumfairies.items.FeySoulStone;
+import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
 import com.smanzana.nostrumfairies.proxy.CommonProxy;
 import com.smanzana.nostrummagica.NostrumMagica;
+import com.smanzana.nostrummagica.research.NostrumResearch.NostrumResearchTab;
 
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.item.Item;
@@ -52,6 +55,7 @@ public class NostrumFairies {
     public static CreativeTabs creativeTab;
     public static LogisticsComponentRegistry logisticsComponentRegistry;
     public static Random random = new Random();
+    public static NostrumResearchTab researchTab;
     
     private LogisticsRegistry logisticsRegistry; // use getter below
     private boolean logisticsRegistryInitRecurseGuard;
@@ -78,18 +82,19 @@ public class NostrumFairies {
 	    	@Override
 	        @SideOnly(Side.CLIENT)
 	        public Item getTabIconItem(){
-	    		return FeyStone.instance();
+	    		return FeySoulStone.instance();
 	        }
 	    	
 	    	@Override
 	        @SideOnly(Side.CLIENT)
 	    	public int getIconItemDamage() {
-	    		return FeyStone.create(FeySlotType.SOUL, FeyStoneMaterial.AMETHYST, 1).getMetadata();
+	    		return FeySoulStone.create(SoulStoneType.GEM).getMetadata();
 	    	}
 	    };
-	    FeyStone.instance().setCreativeTab(NostrumFairies.creativeTab);
+	    FeySoulStone.instance().setCreativeTab(NostrumFairies.creativeTab);
 	    
     	proxy.preinit();
+    	researchTab = new NostrumResearchTab("fey", FeySoulStone.create(SoulStoneType.GEM));
     }
     
     @EventHandler
@@ -177,5 +182,12 @@ public class NostrumFairies {
     		EntityMob mob = (EntityMob) e.getEntityLiving();
     		mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, true));
     	}
+    }
+    
+    public static @Nullable INostrumFeyCapability getFeyWrapper(Entity e) {
+    	if (e == null)
+    		return null;
+    	
+    	return e.getCapability(AttributeProvider.CAPABILITY, null);
     }
 }

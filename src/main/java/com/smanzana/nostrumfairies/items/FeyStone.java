@@ -4,7 +4,9 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
+import com.smanzana.nostrumfairies.inventory.IFeySlotted;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -15,34 +17,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class FeyStone extends Item implements ILoreTagged {
+public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 
-	public static enum FeyStoneMaterial {
-		EMERALD(FeySlotType.SPECIALIZATION),
-		GARNET(FeySlotType.SPECIALIZATION),
-		AQUAMARINE(FeySlotType.SPECIALIZATION),
-		AMETHYST(FeySlotType.SOUL),
-		RUBY(FeySlotType.UPGRADE, FeySlotType.DOWNGRADE),
-		SAPPHIRE(FeySlotType.UPGRADE, FeySlotType.DOWNGRADE);
-		
-		private FeySlotType[] types;
-		
-		private FeyStoneMaterial(FeySlotType ... matchingTypes) {
-			this.types = matchingTypes;
-		}
-		
-		public boolean existsForSlot(FeySlotType slot) {
-			for (FeySlotType type : types) {
-				if (type == slot) {
-					return true;
-				}
-			}
-			
-			return false;
-		}
-	}
-	
-public static final String ID = "fey_stone";
+	public static final String ID = "fey_stone";
 	
 	private static FeyStone instance = null;
 	public static FeyStone instance() {
@@ -61,7 +38,7 @@ public static final String ID = "fey_stone";
 		this.setUnlocalizedName(ID);
 		this.setMaxDamage(0);
 		this.setMaxStackSize(1);
-		//this.setCreativeTab(NostrumFairies.creativeTab);
+		this.setCreativeTab(NostrumFairies.creativeTab);
 		this.setHasSubtypes(true);
 	}
 	
@@ -113,15 +90,8 @@ public static final String ID = "fey_stone";
 		return FeyStoneMaterial.values()[meta & 0x7];
 	}
 	
-	public FeySlotType getSlot(@Nullable ItemStack stack) {
-		if (stack == null) {
-			return null;
-		}
-		
-		return slotFromMeta(stack.getMetadata());
-	}
-	
-	public FeyStoneMaterial getMaterial(@Nullable ItemStack stack) {
+	@Nullable
+	public FeyStoneMaterial getStoneMaterial(@Nullable ItemStack stack) {
 		if (stack == null) {
 			return null;
 		}
@@ -159,5 +129,14 @@ public static final String ID = "fey_stone";
 	@Override
 	public InfoScreenTabs getTab() {
 		return InfoScreenTabs.INFO_ITEMS;
+	}
+
+	@Override
+	public FeySlotType getFeySlot(ItemStack stack) {
+		if (stack == null) {
+			return null;
+		}
+		
+		return slotFromMeta(stack.getMetadata());
 	}
 }
