@@ -12,6 +12,7 @@ import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.entity.IEntityListener;
 import com.smanzana.nostrumfairies.entity.ITrackableEntity;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.IEntityTameable;
@@ -69,8 +70,12 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 
 	private static final String NBT_OWNER_ID = "owner_uuid";
 	private static final String NBT_JOB = "job";
+	private static final String NBT_ENERGY = "energy";
+	private static final String NBT_MAX_ENERGY = "max_energy";
 	private static final DataParameter<Optional<UUID>> DATA_OWNER = EntityDataManager.<Optional<UUID>>createKey(EntityPersonalFairy.class, DataSerializers.OPTIONAL_UNIQUE_ID);
 	private static final DataParameter<FairyJob> DATA_JOB = EntityDataManager.<FairyJob>createKey(EntityPersonalFairy.class, FairyJob.Serializer);
+	private static final DataParameter<Float> DATA_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
+	private static final DataParameter<Float> DATA_MAX_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
 	
 	
 	private @Nullable BlockPos movePos;
@@ -78,6 +83,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 	private List<IEntityListener<EntityPersonalFairy>> listeners;
 	
 	private EntityLivingBase ownerCache;
+	private LogisticsNetwork networkOverride;
+	private int idleTicks;
 	
 	public EntityPersonalFairy(World world) {
 		super(world);
@@ -85,6 +92,13 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 		this.width = .15f;
 		this.workDistanceSq = 20 * 20;
 		listeners = new LinkedList<>();
+	}
+	
+	public void setNetwork(LogisticsNetwork network) {
+		if (network != this.networkOverride) {
+			this.forfitTask();
+		}
+		this.networkOverride = network;
 	}
 	
 	public void setOwner(EntityLivingBase owner) {
@@ -136,7 +150,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 			resetAttributes(job);
 		}
 	}
-
+	
 	@Override
 	public String getLoreKey() {
 		return "personal_fairy";
@@ -288,6 +302,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 	
 	@Override
 	protected void onIdleTick() {
+		int unused; // should teleport to owner if too far away. And when energy is too low, should return and go back in gael.
 		EntityLivingBase owner = this.getOwner();
 		
 		if (owner == null || owner.isDead) {
@@ -299,17 +314,26 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 		// a quick task to go and deposit it
 		ItemStack heldItem = getHeldItem();
 		if (heldItem != null) {
-			if (owner instanceof EntityPlayer) {
-				if (((EntityPlayer) owner).inventory.addItemStackToInventory(heldItem)) {
-					this.removeItem(heldItem);
-					heldItem = null;
+			// Move towards owner
+			if (owner.getDistanceSqToEntity(this) > 2) {
+				this.moveHelper.setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
+			} else {
+				if (owner instanceof EntityPlayer) {
+					if (((EntityPlayer) owner).inventory.addItemStackToInventory(heldItem.copy())) {
+						this.removeItem(heldItem);
+						heldItem = null;
+					}
+				}
+				
+				if (heldItem != null) {
+					dropItem();
 				}
 			}
-			
-			if (heldItem != null) {
-				dropItem();
-			}
+			idleTicks = 0;
+			return;
 		}
+		
+		idleTicks++;
 		
 		// See if we're too far away from our owner
 		if (!this.moveHelper.isUpdating()) {
@@ -369,6 +393,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 	@Override
 	protected void onTaskTick(ILogisticsTask task) {
 		super.onTaskTick(task);
+		idleTicks = 0;
 //		LogisticsSubTask sub = task.getActiveSubtask();
 //		if (sub != null) {
 //			switch (sub.getType()) {
@@ -559,6 +584,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 		super.entityInit();
 		this.dataManager.register(DATA_OWNER, Optional.absent());
 		this.dataManager.register(DATA_JOB, FairyJob.WARRIOR);
+		this.dataManager.register(DATA_ENERGY, 100f);
+		this.dataManager.register(DATA_MAX_ENERGY, 100f);
 	}
 	
 	@Override
@@ -570,6 +597,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 		}
 		
 		compound.setString(NBT_JOB, this.getJob().name());
+		compound.setFloat(NBT_ENERGY, getEnergy());
+		compound.setFloat(NBT_MAX_ENERGY, this.getMaxEnergy());
 	}
 	
 	@Override
@@ -586,6 +615,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 		}
 		
 		this.setJob(FairyJob.valueOf(compound.getString(NBT_JOB).toUpperCase()));
+		this.setMaxEnergy(compound.getFloat(NBT_MAX_ENERGY));
+		this.setEnergy(compound.getFloat(NBT_ENERGY));
 	}
 	
 	@Override
@@ -597,6 +628,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 	@Override
 	protected void onCombatTick() {
 		; // No combat
+		idleTicks = 0;
 	}
 	
 	@Override
@@ -639,6 +671,16 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 	}
 	
 	@Override
+	protected boolean canWork() {
+		return true;
+	}
+	
+	@Override
+	public @Nullable LogisticsNetwork getLogisticsNetwork() {
+		return this.networkOverride;
+	}
+	
+	@Override
 	protected float getGrowthForTask(ILogisticsTask task) {
 		return 0f;
 	}
@@ -678,5 +720,55 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityTameable,
 		}
 		
 		super.onDeath(cause);
+	}
+
+	public float getEnergy() {
+		return dataManager.get(DATA_ENERGY);
+	}
+	
+	public float getMaxEnergy() {
+		return dataManager.get(DATA_MAX_ENERGY);
+	}
+	
+	public void setEnergy(float energy) {
+		dataManager.set(DATA_ENERGY, Math.min(energy, getMaxEnergy()));
+	}
+	
+	public void setMaxEnergy(float maxEnergy) { 
+		dataManager.set(DATA_MAX_ENERGY, maxEnergy);
+		setEnergy(getEnergy());
+	}
+	
+	public void regenEnergy() {
+		setEnergy(getEnergy() + this.rand.nextFloat() * .5f);
+	}
+	
+	public void increaseMaxEnergy(float amt) {
+		setMaxEnergy(getMaxEnergy() + amt);
+	}
+	
+	public int getIdleTicks() {
+		return this.idleTicks;
+	}
+	
+	@Override
+	protected List<ILogisticsTask> getTaskList() { 
+		List<ILogisticsTask> list = super.getTaskList();
+		
+		if (list != null) {
+			list.removeIf((task) -> {
+				return (task.getSourceEntity() != this.getOwner());
+			});
+		}
+		
+		return list;
+	}
+	
+	@Override
+	public boolean canReach(BlockPos pos, boolean work) {
+		if (this.getOwner() == null) {
+			return false;
+		}
+		return getOwner().getDistanceSq(pos) < (work ? workDistanceSq : wanderDistanceSq);
 	}
 }

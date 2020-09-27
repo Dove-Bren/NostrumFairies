@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -365,7 +366,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	protected void forfitTask() {
 		if (this.currentTask != null) {
 			if (this.getLogisticsNetwork() != null) {
-				for (ILogisticsTask task : this.currentTask.unmerge()) {
+				List<ILogisticsTask> tasks = new ArrayList<>(currentTask.unmerge());
+				for (ILogisticsTask task : tasks) {
 					this.getLogisticsNetwork().getTaskRegistry().forfitTask(task);
 				}
 			}
@@ -635,12 +637,10 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		}
 	}
 	
-	private boolean searchForJobs() {
+	protected List<ILogisticsTask> getTaskList() {
 		LogisticsNetwork network = this.getLogisticsNetwork();
-		//long start = System.currentTimeMillis();
 		if (network != null) {
-			
-			List<ILogisticsTask> list = network.getTaskRegistry().findTasks(network, this, (task) -> {
+			return network.getTaskRegistry().findTasks(network, this, (task) -> {
 				World world = ILogisticsTask.GetSourceWorld(task);
 				BlockPos pos = ILogisticsTask.GetSourcePosition(task);
 				if (world.provider.getDimension() != this.dimension) {
@@ -653,6 +653,19 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				
 				return true;
 			});
+		}
+		
+		return null;
+	}
+	
+	protected void claimTask(ILogisticsTask task) {
+		LogisticsNetwork network = this.getLogisticsNetwork();
+		network.getTaskRegistry().claimTask(task, this);
+	}
+	
+	private boolean searchForJobs() {
+		List<ILogisticsTask> list = getTaskList();
+		if (list != null) {
 			
 			// Sort so nearest tasks are first in the list, with y weighing more than xz
 			Collections.sort(list, (l, r) -> {
@@ -711,7 +724,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 								success = shouldPerformTask(task);
 								//time3 += System.currentTimeMillis() - startInner;
 								if (success) {
-									network.getTaskRegistry().claimTask(task, this);
+									this.claimTask(task);
 									if (foundTask == null) {
 										foundTask = task;
 									} else {

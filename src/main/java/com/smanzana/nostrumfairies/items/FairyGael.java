@@ -176,11 +176,37 @@ public class FairyGael extends Item implements ILoreTagged {
 		if (fey != null) {
 			NBTTagCompound tag = new NBTTagCompound();
 			tag.setString("name", fey.getName());
+			tag.setFloat("health", fey.getHealth() / Math.max(1f, fey.getMaxHealth()));
+			tag.setFloat("enegy", fey.getEnergy() / Math.max(1f, fey.getMaxEnergy()));
 			tag.setTag("data", fey.serializeNBT());
 			stack.setTagCompound(tag);
 		} else {
 			stack.setTagCompound(null);
 		}
+	}
+	
+	public static String getStoredName(ItemStack stack) {
+		if (stack.hasTagCompound()) {
+			return stack.getTagCompound().getString("name");
+		}
+		
+		return null;
+	}
+	
+	public static float getStoredHealth(ItemStack stack) {
+		if (stack.hasTagCompound()) {
+			return stack.getTagCompound().getFloat("health");
+		}
+		
+		return 0f;
+	}
+	
+	public static float getStoredEnergy(ItemStack stack) {
+		if (stack.hasTagCompound()) {
+			return stack.getTagCompound().getFloat("energy");
+		}
+		
+		return 0f;
 	}
 	
 	public static void crack(ItemStack stack) {
@@ -191,6 +217,18 @@ public class FairyGael extends Item implements ILoreTagged {
 	public static void uncrack(ItemStack stack) {
 		FairyGaelType type = getTypeOf(stack);
 		stack.setItemDamage(metaFromTypes(false, type));
+	}
+	
+	public static ItemStack upgrade(FairyGaelType type, ItemStack soulStone) {
+		if (soulStone == null || !(soulStone.getItem() instanceof FeySoulStone) || !FeySoulStone.hasStoredFey(soulStone)) {
+			return null;
+		}
+		ItemStack gael = new ItemStack(instance(), 1, metaFromTypes(false, type));
+		NBTTagCompound tag = new NBTTagCompound();
+		tag.setTag("data", FeySoulStone.getStoredEntityTag(soulStone));
+		tag.setString("name", FeySoulStone.getStoredEntityName(soulStone));
+		gael.setTagCompound(tag);
+		return gael;
 	}
 	
 	@Override
@@ -236,7 +274,7 @@ public class FairyGael extends Item implements ILoreTagged {
 			tooltip.add(ChatFormatting.DARK_RED + I18n.format("info.fairy_gael.cracked") + ChatFormatting.RESET);
 		}
 		if (stack.hasTagCompound()) {
-			String name = stack.getTagCompound().getString("name");
+			String name = getStoredName(stack);
 			if (name == null || name.isEmpty()) {
 				name = "An unknown entity";
 			}

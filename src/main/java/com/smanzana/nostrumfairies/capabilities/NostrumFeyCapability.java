@@ -1,21 +1,43 @@
 package com.smanzana.nostrumfairies.capabilities;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.entity.IEntityListener;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
+import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy.FairyJob;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 import com.smanzana.nostrumfairies.items.FairyGael;
+import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
+import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositRequester;
+import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
+import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.NostrumMagica;
+import com.smanzana.nostrummagica.capabilities.INostrumMagic;
+import com.smanzana.nostrummagica.items.PositionCrystal;
+import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -39,12 +61,29 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	
 	// Operational transient data
 	private EntityLivingBase owner;
-	private List<FairyRecord> deployedFairies;
+	private Map<FairyGaelType, List<FairyRecord>> deployedFairies;
 	private int disabledTicks;
+	private int ticksExisted;
+	
+	// Transient tick network data
+	private List<LogisticsNetwork> tickNetworks; // Networks we're in this tick
+	private LogisticsNetwork tickNetworkChoice; // Network that was ultimately picked to talk with
+	private List<ItemStack> pullItems;
+	private List<ItemStack> pushItems; // null if pull items were found
+	
+	// Task data (transient, too)
+	private List<LogisticsTaskPlaceBlock> buildTasks;
+	private LogisticsItemDepositRequester depositRequester;
+	private LogisticsItemWithdrawRequester withdrawRequester;
 	
 	public NostrumFeyCapability() {
 		this.fairyInventory = new FairyHolderInventory();
-		this.deployedFairies = new LinkedList<>();
+		this.deployedFairies = new EnumMap<>(FairyGaelType.class);
+		for (FairyGaelType type : FairyGaelType.values()) {
+			deployedFairies.put(type, new LinkedList<>());
+		}
+		this.tickNetworks = new ArrayList<>(4);
+		buildTasks = new LinkedList<>();
 		
 		// defaults...
 		this.fairySlots = 1;
@@ -114,10 +153,16 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		if (owner != this.owner) {
 			if (this.owner == null) {
 				MinecraftForge.EVENT_BUS.register(this);
+			} else {
+				this.depositRequester.clearRequests();
+				this.withdrawRequester.clearRequests();
 			}
 			this.owner = owner;
 			if (owner == null) {
 				MinecraftForge.EVENT_BUS.unregister(this);
+			} else {
+				this.depositRequester = new LogisticsItemDepositRequester(null, owner);
+				this.withdrawRequester = new LogisticsItemWithdrawRequester(null, true, owner);
 			}
 		}
 	}
@@ -135,6 +180,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			return;
 		}
 		
+		ticksExisted++;
+		
 		if (this.disabledTicks > 0) {
 			this.disabledTicks--;
 		}
@@ -148,32 +195,166 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		}
 		
 		if (fairiesEnabled()) {
-			// Check and see if fairies should come out?
-			int i = -1;
-			while (deployedFairies.size() < this.fairySlots && i < fairyInventory.getSizeInventory()) {
-				i++;
+			if (ticksExisted % 5 == 0) {
 				
-				ItemStack gael = this.fairyInventory.getStackInSlot(i);
-				if (gael == null) {
-					continue;
-				}
+				//tickNetworkChoice = null;
+				//tickNetworks.clear();
 				
-				if (FairyGael.isCracked(gael)) {
-					continue;
-				}
-				
-				boolean deployed = false;
-				for (FairyRecord record : deployedFairies) {
-					if (record.index == i) {
-						deployed = true;
+				// Check and see if fairies should come out?
+				for (FairyGaelType type : FairyGaelType.values()) {
+					
+					// Prereqs
+					switch (type) {
+					case ATTACK:
+						if (!this.attackFairyUnlocked()) {
+							continue;
+						}
+						break;
+					case BUILD:
+						if (!this.builderFairyUnlocked()) {
+							continue;
+						}
+						
+						// If player has build tasks
+						if (buildTasks.isEmpty()) {
+							continue;
+						}
+						break;
+					case LOGISTICS:
+						if (!this.logisticsFairyUnlocked()) {
+							continue;
+						}
+						
+						// If player has items to deposit or request, AND there are networks available
+						if (owner instanceof EntityPlayer) {
+							// If there's a configured anchor, use that network.
+							if (fairyInventory.getLogisticsGem() != null) {
+								tickNetworks.clear();
+								BlockPos pos = PositionCrystal.getBlockPosition(fairyInventory.getLogisticsGem());
+								int dim = PositionCrystal.getDimension(fairyInventory.getLogisticsGem());
+								
+								if (dim == owner.dimension) {
+									World world = NostrumFairies.getWorld(dim);
+									LogisticsNetwork network = NostrumFairies.instance.getLogisticsRegistry().findNetwork(world, pos);
+									if (network != null) {
+										tickNetworks.add(network);
+									}
+								}
+							} else {
+								// Otherwise get all networks and use the closest
+								NostrumFairies.instance.getLogisticsRegistry().getLogisticsNetworksFor(owner.worldObj, owner.getPosition().toImmutable(), tickNetworks);
+							}
+						}
+						
+						// We want to re-figure out network every couple of ticks to keep things updated.
+						// However, push requests immediately make push requests look like they aren't needed as soon as the fairy's going.
+						// So if there are any push requests and the old network is still connected, don't change
+						LogisticsNetwork network = null;
+						
+						if (tickNetworkChoice != null && tickNetworks.contains(tickNetworkChoice)) { // values from last tick
+							
+							// See if there are any of our deposit requests going still
+							for (ILogisticsTask task : tickNetworkChoice.getTaskRegistry().allTasks()) {
+								if (task.getSourceEntity() == this.owner && task instanceof LogisticsTaskDepositItem) {
+									if (!task.isComplete()
+											&& tickNetworkChoice.getTaskRegistry().getCurrentWorker(task) != null) {
+										network = tickNetworkChoice;
+										break;
+									}
+								}
+							}
+						}
+						
+						if (!tickNetworks.isEmpty()) {
+							pullItems = generatePullRequests();
+							pushItems = generatePushRequests();
+						} else {
+							pullItems = null;
+							pushItems = null;
+						}
+						
+						if (network == null) {
+							if (pullItems != null || pushItems != null) {
+								// Find the network to use this tick
+								network = findUsefulNetwork(tickNetworks, pullItems, pushItems, owner.worldObj, owner.getPosition());
+							}
+						}
+						
+						if (network != tickNetworkChoice) {
+							// Different network than last time
+							
+							// If previous was empty, don't bother clearing requesters
+							if (tickNetworkChoice != null) {
+								this.depositRequester.clearRequests();
+								this.withdrawRequester.clearRequests();
+							}
+							
+							// In either case, update fairies
+							for (FairyRecord record : deployedFairies.get(FairyGaelType.LOGISTICS)) {
+								record.fairy.setNetwork(network);
+							}
+						}
+						this.tickNetworkChoice = network;
+						
+						if (tickNetworkChoice == null) {
+							continue;
+						}
+						
+						// Things are going to work. Take a minute to update requesters
+						this.depositRequester.setNetwork(tickNetworkChoice);
+						this.withdrawRequester.setNetwork(tickNetworkChoice);
+						
+						withdrawRequester.updateRequestedItems(pullItems);
+						depositRequester.updateRequestedItems(pushItems);
+						
 						break;
 					}
+					
+					// Add more fairies, if needed
+					if (deployedFairies.get(type).size() >= fairySlots) {
+						continue;
+					}
+					
+					int i = -1;
+					while (deployedFairies.get(type).size() < this.fairySlots && i < fairyInventory.getGaelSize()) {
+						i++;
+						
+						ItemStack gael = this.fairyInventory.getGaelByType(type, i);
+						if (gael == null) {
+							continue;
+						}
+						
+						if (FairyGael.isCracked(gael)) {
+							continue;
+						}
+						
+						boolean deployed = false;
+						for (FairyRecord record : deployedFairies.get(type)) {
+							if (record.index == i) {
+								deployed = true;
+								break;
+							}
+						}
+						if (deployed) {
+							continue;
+						}
+						
+						deployFairy(i, type, gael, owner.worldObj, owner.posX, owner.posY, owner.posZ);
+					}
 				}
-				if (deployed) {
-					continue;
+			}
+			
+			// Check up on all deployed fairies
+			List<EntityPersonalFairy> tiredFairies = new LinkedList<>();
+			for (FairyGaelType type : FairyGaelType.values()) {
+				for (FairyRecord record : deployedFairies.get(type)) {
+					if (record.fairy.getEnergy() <= 0f || (type != FairyGaelType.ATTACK && record.fairy.getIdleTicks() > (20 * 5))) {
+						tiredFairies.add(record.fairy);
+					}
 				}
-				
-				deployFairy(i, gael, owner.worldObj, owner.posX, owner.posY, owner.posZ);
+			}
+			for (EntityPersonalFairy fairy : tiredFairies) {
+				removeFairy(fairy);
 			}
 		}
 	}
@@ -186,10 +367,12 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	}
 	
 	protected void clearFairies() {
-		for (FairyRecord record : this.deployedFairies) {
-			record.fairy.worldObj.removeEntity(record.fairy);
+		for (FairyGaelType type : FairyGaelType.values()) { 
+			for (FairyRecord record : this.deployedFairies.get(type)) {
+				record.fairy.worldObj.removeEntity(record.fairy);
+			}
+			this.deployedFairies.get(type).clear();
 		}
-		this.deployedFairies.clear();
 	}
 	
 	@Override
@@ -198,7 +381,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		clearFairies();
 	}
 	
-	public void deployFairy(int index, ItemStack gaelStack, World world, double x, double y, double z) {
+	public void deployFairy(int index, FairyGaelType type, ItemStack gaelStack, World world, double x, double y, double z) {
 		if (gaelStack != null && gaelStack.getItem() instanceof FairyGael) {
 			EntityPersonalFairy fairy = FairyGael.spawnStoredEntity(gaelStack, world, x, y, z);
 			if (fairy != null) {
@@ -209,42 +392,68 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				fairy.registerListener(new FairyListener());
 				fairy.setOwner(owner);
 				
+				if (type == FairyGaelType.LOGISTICS) {
+					fairy.setNetwork(tickNetworkChoice);
+				}
+				
 				FairyRecord record = new FairyRecord(fairy, index);
-				this.deployedFairies.add(record);
+				this.deployedFairies.get(type).add(record);
 			}
 		}
 	}
 	
 	protected void writeFairies() {
-		for (FairyRecord record : this.deployedFairies) {
-			ItemStack gael = this.fairyInventory.getStackInSlot(record.index);
-			if (gael == null) {
-				NostrumFairies.logger.warn("Tries to save fairy, but housing slot was gael-less!");
-				continue; // Fairy lost
+		for (FairyGaelType type : FairyGaelType.values()) {
+			for (FairyRecord record : this.deployedFairies.get(type)) {
+				ItemStack gael = this.fairyInventory.getGaelByType(type, record.index);
+				if (gael == null) {
+					NostrumFairies.logger.warn("Tried to save fairy, but housing slot was gael-less!");
+					continue; // Fairy lost
+				}
+				FairyGael.setStoredEntity(gael, record.fairy);
+				fairyInventory.setGaelByType(type, record.index, gael);
 			}
-			FairyGael.setStoredEntity(gael, record.fairy);
-			fairyInventory.setInventorySlotContents(record.index, gael);
+		}
+	}
+	
+	protected static FairyGaelType getGaelType(FairyJob job) {
+		switch (job) {
+		case BUILDER:
+			return FairyGaelType.BUILD;
+		case LOGISTICS:
+			return FairyGaelType.LOGISTICS;
+		case WARRIOR:
+		default:
+			return FairyGaelType.ATTACK;
 		}
 	}
 	
 	private boolean removeFairy(EntityPersonalFairy fairy) {
-		Iterator<FairyRecord> it = deployedFairies.iterator();
+		FairyGaelType type = getGaelType(fairy.getJob());
+		Iterator<FairyRecord> it = deployedFairies.get(type).iterator();
 		while (it.hasNext()) {
 			FairyRecord record = it.next();
 			if (record.fairy == fairy) {
 				it.remove();
-				ItemStack gael = fairyInventory.getStackInSlot(record.index);
+				ItemStack gael = fairyInventory.getGaelByType(type, record.index);
 				if (gael != null) {
-					// Grab a snapshot of the fairy just before it died
-					float health = fairy.getHealth();
-					boolean dead = fairy.isDead;
-					fairy.setHealth(1f);
-					fairy.isDead = false;
-					FairyGael.setStoredEntity(gael, fairy);
-					FairyGael.crack(gael);
-					fairyInventory.markDirty();
-					fairy.setHealth(health);
-					fairy.isDead = dead;
+					if (fairy.getHealth() <= 0 || fairy.isDead) {
+						// Grab a snapshot of the fairy just before it died
+						float health = fairy.getHealth();
+						boolean dead = fairy.isDead;
+						fairy.setHealth(1f);
+						fairy.isDead = false;
+						FairyGael.setStoredEntity(gael, fairy);
+						FairyGael.crack(gael);
+						fairyInventory.markDirty();
+						fairy.setHealth(health);
+						fairy.isDead = dead;
+					} else {
+						FairyGael.setStoredEntity(gael, fairy);
+						fairyInventory.markDirty();
+						fairy.setDead();
+						fairy.worldObj.removeEntity(fairy);
+					}
 				}
 				return true;
 			}
@@ -298,5 +507,190 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	@Override
 	public boolean fairiesEnabled() {
 		return this.disabledTicks == 0 && isUnlocked;
+	}
+
+	@Override
+	public boolean attackFairyUnlocked() {
+		INostrumMagic attr = NostrumMagica.getMagicWrapper(owner);
+		return attr != null && attr.getCompletedResearches().contains("fairy_gael_aggressive");
+	}
+
+	@Override
+	public boolean builderFairyUnlocked() {
+		INostrumMagic attr = NostrumMagica.getMagicWrapper(owner);
+		return attr != null && attr.getCompletedResearches().contains("fairy_gael_construction");
+	}
+
+	@Override
+	public boolean logisticsFairyUnlocked() {
+		INostrumMagic attr = NostrumMagica.getMagicWrapper(owner);
+		return attr != null && attr.getCompletedResearches().contains("fairy_gael_logistics");
+	}
+	
+	public void addBuildTask(LogisticsTaskPlaceBlock task) {
+		this.buildTasks.add(task);
+	}
+	
+	/**
+	 * Look through a collection of networks to try and find the first that has any of the items we're looking for, if any.
+	 * @param networks
+	 * @return
+	 */
+	protected static @Nullable LogisticsNetwork findUsefulNetwork(Collection<LogisticsNetwork> networks,
+			Collection<ItemStack> pulls, Collection<ItemStack> pushes,
+			World world, BlockPos pos) {
+		if (networks == null || networks.isEmpty()
+				|| ((pulls == null || pulls.isEmpty())
+				&& (pushes == null || pushes.isEmpty()))) {
+			return null;
+		}
+		
+		// Check pull requests first
+		if (pulls != null && !pulls.isEmpty()) {
+			for (LogisticsNetwork network : networks) {
+				List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
+				for (ItemDeepStack avail : items) {
+					for (ItemStack pull : pulls) {
+						if (avail.canMerge(pull)) {
+							return network;
+						}
+					}
+				}
+			}
+		} else {
+			for (LogisticsNetwork network : networks) {
+				for (ItemStack push : pushes) {
+					ILogisticsComponent comp = network.getStorageForItem(world, pos, push);
+					if (comp != null) {
+						return network;
+					}
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Looks through logistics templates and returns a list (or null) of all items that we have room for and would like.
+	 * @return
+	 */
+	protected @Nullable List<ItemStack> generatePullRequests() {
+		if (!this.logisticsFairyUnlocked() || !(owner instanceof EntityPlayer)) { // player required for inventory
+			return null;
+		}
+		
+		InventoryPlayer playerInv = ((EntityPlayer) owner).inventory;
+		
+		List<ItemStack> templateList = new ArrayList<>(fairyInventory.getPullTemplateSize());
+		for (int i = 0; i < fairyInventory.getPullTemplateSize(); i++) {
+			ItemStack template = fairyInventory.getPullTemplate(i);
+			if (template != null) {
+				templateList.add(template.copy());
+			}
+		}
+		
+		// Create copy collection of items we already have
+		List<ItemDeepStack> owned = ItemDeepStack.toDeepList(playerInv);
+		List<ItemDeepStack> wishList = ItemDeepStack.toDeepList(templateList);
+		
+		// Remove items that we already have
+		Iterator<ItemDeepStack> it = wishList.iterator();
+		while (it.hasNext()) {
+			ItemDeepStack request = it.next();
+			Iterator<ItemDeepStack> ownedIt = owned.iterator();
+			while (ownedIt.hasNext()) {
+				ItemDeepStack existing = ownedIt.next();
+				if (existing.canMerge(request)) {
+					if (request.getCount() <= existing.getCount()) {
+						// Found it, and nothing is required
+						request.setCount(0);
+					} else {
+						request.add(-existing.getCount());
+					}
+					break;
+				}
+			}
+			
+			if (request.getCount() <= 0) {
+				it.remove();
+			} // else remaining items desired
+		}
+		
+		// Dissolve back into itemstacks
+		templateList.clear();
+		for (ItemDeepStack req : wishList) {
+			while (req.getCount() > 0) {
+				templateList.add(req.splitStack(Math.min(64, req.getTemplate().getMaxStackSize())));
+			}
+		}
+		
+		// Check for what we have room for
+		Iterator<ItemStack> stackIt = templateList.iterator();
+		boolean canFit =  false;
+		while (stackIt.hasNext()) {
+			ItemStack request = stackIt.next();
+			if (Inventories.canFit(playerInv, request)) {
+				canFit = true;
+				break;
+			}
+		}
+		
+		if (templateList.isEmpty() || !canFit) {
+			templateList = null;
+		}
+		
+		return templateList;
+	}
+	
+	/**
+	 * Looks through logistics templates and returns a list (or null) of all items that we have but don't want
+	 * @return
+	 */
+	protected @Nullable List<ItemStack> generatePushRequests() {
+		if (!this.logisticsFairyUnlocked() || !(owner instanceof EntityPlayer)) { // player required for inventory
+			return null;
+		}
+		
+		InventoryPlayer playerInv = ((EntityPlayer) owner).inventory;
+		
+		List<ItemStack> templateList = new ArrayList<>(fairyInventory.getPushTemplateSize());
+		for (int i = 0; i < fairyInventory.getPushTemplateSize(); i++) {
+			ItemStack template = fairyInventory.getPushTemplate(i);
+			if (template != null) {
+				templateList.add(template.copy());
+			}
+		}
+		
+		List<ItemDeepStack> allowed = ItemDeepStack.toDeepList(templateList);
+		List<ItemDeepStack> owned = ItemDeepStack.toDeepList(playerInv);
+		List<ItemStack> pushList = new ArrayList<>(allowed.size());
+		
+		// Remove items that we have over the limit
+		Iterator<ItemDeepStack> it = allowed.iterator();
+		while (it.hasNext()) {
+			ItemDeepStack cap = it.next();
+			Iterator<ItemDeepStack> ownedIt = owned.iterator();
+			while (ownedIt.hasNext()) {
+				ItemDeepStack existing = ownedIt.next();
+				if (existing.canMerge(cap)) {
+					if (cap.getCount() > existing.getCount()) {
+						; // nothing to do
+					} else {
+						existing.add(-cap.getCount());
+						while (existing.getCount() > 0) {
+							pushList.add(existing.splitStack(Math.min(64, existing.getTemplate().getMaxStackSize())));
+						}
+					}
+					break;
+				}
+			}
+		}
+		
+		if (pushList.isEmpty()) {
+			pushList = null;
+		}
+		
+		return pushList;
 	}
 }

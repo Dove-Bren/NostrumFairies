@@ -29,17 +29,23 @@ import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 import com.smanzana.nostrumfairies.items.FairyGael;
+import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrumfairies.items.FairyInstrument;
+import com.smanzana.nostrumfairies.items.FairyInstrument.InstrumentType;
 import com.smanzana.nostrumfairies.items.FeyResource;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
+import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.CapabilitySyncMessage;
+import com.smanzana.nostrumfairies.rituals.outcomes.OutcomeConstructGael;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.items.NostrumResourceItem;
 import com.smanzana.nostrummagica.items.NostrumResourceItem.ResourceType;
+import com.smanzana.nostrummagica.items.ReagentItem;
+import com.smanzana.nostrummagica.items.ThanoPendant;
 import com.smanzana.nostrummagica.items.ReagentItem.ReagentType;
 import com.smanzana.nostrummagica.loretag.LoreRegistry;
 import com.smanzana.nostrummagica.research.NostrumResearch;
@@ -279,6 +285,7 @@ public class CommonProxy {
     private void registerLore() {
     	LoreRegistry.instance().register(FeyResource.instance());
     	LoreRegistry.instance().register(FeyStone.instance());
+    	LoreRegistry.instance().register(FairyGael.instance());
     	//LoreRegistry.instance().register(new EntityShadowFey());
     	LoreRegistry.instance().register(EntityShadowFey.ShadowFeyConversionLore.instance());
     	LoreRegistry.instance().register(FeyResource.FeyFriendLore.instance());
@@ -311,7 +318,7 @@ public class CommonProxy {
     	RitualRegistry.instance().addRitual(
 			RitualRecipe.createTier3("fey_flower",
 				FeyResource.create(FeyResourceType.FLOWER, 1),
-				EMagicElement.WIND,
+				EMagicElement.EARTH,
 				new ReagentType[] {ReagentType.MANI_DUST, ReagentType.MANDRAKE_ROOT, ReagentType.SKY_ASH, ReagentType.SKY_ASH},
 				new ItemStack(Blocks.TALLGRASS, 1, OreDictionary.WILDCARD_VALUE),
 				new ItemStack[] {FeyResource.create(FeyResourceType.TEARS, 1), new ItemStack(Items.MELON), FeyResource.create(FeyResourceType.ESSENCE, 1), FeyResource.create(FeyResourceType.TEARS, 1)},
@@ -319,25 +326,222 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.FLOWER, 4)))
 			);
     	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("soul_stone",
+				FeySoulStone.create(SoulStoneType.GEM),
+				EMagicElement.ICE,
+				new ReagentType[] {ReagentType.MANDRAKE_ROOT, ReagentType.BLACK_PEARL, ReagentType.BLACK_PEARL, ReagentType.SKY_ASH},
+				NostrumResourceItem.getItem(ResourceType.CRYSTAL_MEDIUM, 1),
+				new ItemStack[] {new ItemStack(Items.GOLD_INGOT), FeyResource.create(FeyResourceType.TEARS, 1), new ItemStack(FeyBush.instance()), FeyResource.create(FeyResourceType.ESSENCE_CORRUPTED, 1)},
+				new RRequirementResearch("fey_souls"),
+				new OutcomeSpawnItem(FeySoulStone.create(SoulStoneType.GEM)))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("soul_gael",
+				FeySoulStone.create(SoulStoneType.GAEL),
+				EMagicElement.ICE,
+				new ReagentType[] {ReagentType.MANDRAKE_ROOT, ReagentType.BLACK_PEARL, ReagentType.BLACK_PEARL, ReagentType.SKY_ASH},
+				NostrumResourceItem.getItem(ResourceType.CRYSTAL_MEDIUM, 1),
+				new ItemStack[] {new ItemStack(Items.GLOWSTONE_DUST), FeyResource.create(FeyResourceType.TEARS, 1), new ItemStack(FeyBush.instance()), FeyResource.create(FeyResourceType.ESSENCE_CORRUPTED, 1)},
+				new RRequirementResearch("fey_souls"),
+				new OutcomeSpawnItem(FeySoulStone.create(SoulStoneType.GAEL)))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("fairy_instrument_flute",
+				FairyInstrument.create(InstrumentType.FLUTE),
+				EMagicElement.WIND,
+				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SKY_ASH},
+				new ItemStack(Blocks.LOG, 1, OreDictionary.WILDCARD_VALUE),
+				new ItemStack[] {NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1), FeyResource.create(FeyResourceType.ESSENCE, 1), new ItemStack(Items.REEDS), NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1)},
+				new RRequirementResearch("fairy_instruments"),
+				new OutcomeSpawnItem(FairyInstrument.create(InstrumentType.FLUTE)))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("fairy_instrument_lyre",
+				FairyInstrument.create(InstrumentType.HARP),
+				EMagicElement.WIND,
+				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SKY_ASH},
+				new ItemStack(Items.IRON_INGOT),
+				new ItemStack[] {NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1), FeyResource.create(FeyResourceType.ESSENCE, 1), new ItemStack(Items.GOLD_INGOT), NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1)},
+				new RRequirementResearch("fairy_instruments"),
+				new OutcomeSpawnItem(FairyInstrument.create(InstrumentType.HARP)))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("fairy_instrument_ocarina",
+				FairyInstrument.create(InstrumentType.OCARINA),
+				EMagicElement.WIND,
+				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SKY_ASH},
+				new ItemStack(Blocks.STONE),
+				new ItemStack[] {NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1), FeyResource.create(FeyResourceType.ESSENCE, 1), new ItemStack(Items.REEDS), NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1)},
+				new RRequirementResearch("fairy_instruments"),
+				new OutcomeSpawnItem(FairyInstrument.create(InstrumentType.OCARINA)))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("fairy_gael_aggressive",
+				FairyGael.create(FairyGaelType.ATTACK, null),
+				EMagicElement.LIGHTNING,
+				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.GINSENG, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT},
+				FeySoulStone.createFake(SoulStoneType.GAEL, true),
+				new ItemStack[] {NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1), new ItemStack(ThanoPendant.instance()), new ItemStack(Blocks.GLASS), ReagentItem.instance().getReagent(ReagentType.SKY_ASH, 1)},
+				new RRequirementResearch("fairy_gael_aggressive"),
+				new OutcomeConstructGael(FairyGaelType.ATTACK))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("fairy_gael_logistics",
+				FairyGael.create(FairyGaelType.LOGISTICS, null),
+				EMagicElement.LIGHTNING,
+				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.GINSENG, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT},
+				FeySoulStone.createFake(SoulStoneType.GAEL, true),
+				new ItemStack[] {NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), new ItemStack(Blocks.GLASS), ReagentItem.instance().getReagent(ReagentType.SKY_ASH, 1)},
+				new RRequirementResearch("fairy_gael_logistics"),
+				new OutcomeConstructGael(FairyGaelType.LOGISTICS))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("fairy_gael_construction",
+				FairyGael.create(FairyGaelType.BUILD, null),
+				EMagicElement.LIGHTNING,
+				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.GINSENG, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT},
+				FeySoulStone.createFake(SoulStoneType.GAEL, true),
+				new ItemStack[] {NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1), new ItemStack(Blocks.ANVIL), new ItemStack(Blocks.GLASS), ReagentItem.instance().getReagent(ReagentType.SKY_ASH, 1)},
+				new RRequirementResearch("fairy_gael_construction"),
+				new OutcomeConstructGael(FairyGaelType.BUILD))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("logistics_tokens",
+				FeyResource.create(FeyResourceType.LOGIC_TOKEN, 4),
+				EMagicElement.FIRE,
+				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.MANDRAKE_ROOT},
+				FeyResource.create(FeyResourceType.GOLEM_TOKEN, 1),
+				new ItemStack[] {NostrumResourceItem.getItem(ResourceType.TOKEN, 1), new ItemStack(Items.REDSTONE), NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1), NostrumResourceItem.getItem(ResourceType.TOKEN, 1)},
+				new RRequirementResearch("logistics"),
+				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.LOGIC_TOKEN, 4)))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("gnome_home",
+				new ItemStack(FeyHomeBlock.instance(ResidentType.GNOME)),
+				null,
+				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.GINSENG},
+				new ItemStack(Blocks.CRAFTING_TABLE, 1, OreDictionary.WILDCARD_VALUE),
+				new ItemStack[] {FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_MEDIUM, 1), new ItemStack(Items.CLAY_BALL), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
+				new RRequirementResearch("gnomes"),
+				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.GNOME))))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("elf_home",
+				new ItemStack(FeyHomeBlock.instance(ResidentType.ELF)),
+				null,
+				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.GINSENG},
+				new ItemStack(Blocks.CRAFTING_TABLE, 1, OreDictionary.WILDCARD_VALUE),
+				new ItemStack[] {FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_MEDIUM, 1), new ItemStack(Blocks.SAPLING, 1, OreDictionary.WILDCARD_VALUE), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
+				new RRequirementResearch("elves"),
+				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.ELF))))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("dwarf_home",
+				new ItemStack(FeyHomeBlock.instance(ResidentType.DWARF)),
+				null,
+				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.GINSENG},
+				new ItemStack(Blocks.CRAFTING_TABLE, 1, OreDictionary.WILDCARD_VALUE),
+				new ItemStack[] {FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_MEDIUM, 1), new ItemStack(Blocks.STONE), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
+				new RRequirementResearch("dwarves"),
+				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.DWARF))))
+			);
+    	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("fairy_home",
+				new ItemStack(FeyHomeBlock.instance(ResidentType.FAIRY)),
+				null,
+				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.GINSENG},
+				new ItemStack(Blocks.CRAFTING_TABLE, 1, OreDictionary.WILDCARD_VALUE),
+				new ItemStack[] {FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_MEDIUM, 1), new ItemStack(Items.GLASS_BOTTLE), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
+				new RRequirementResearch("fairies"),
+				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.FAIRY))))
+			);
+    	
+    	// woodcutting block, mining block, gathering block, farming block
+    	// buffer chest, storage chest, storage manager, input chest, output chest
+    	// logistics pylon
+    	
     }
     
     private void registerResearch() {
 		
 		NostrumResearch.startBuilding()
 			.lore(FeyResource.instance())
+			.hiddenParent("rituals")
 			.reference("ritual::purify_essence", "ritual.purify_essence.name")
 		.build("purify_essence", NostrumFairies.researchTab, Size.NORMAL, 0, -1, true, FeyResource.create(FeyResourceType.ESSENCE, 1));
 		
 		NostrumResearch.startBuilding()
 			.parent("purify_essence")
+			.hiddenParent("kani")
 			.reference("ritual::fey_bell", "ritual.fey_bell.name")
-		.build("fey_bell", NostrumFairies.researchTab, Size.NORMAL, 1, 0, true, FeyResource.create(FeyResourceType.BELL, 1));
+		.build("fey_bell", NostrumFairies.researchTab, Size.NORMAL, -1, 0, true, FeyResource.create(FeyResourceType.BELL, 1));
 		
 		NostrumResearch.startBuilding()
-			.parent("fey_bell")
+			.parent("purify_essence")
+			.hiddenParent("fey_bell")
 			.lore(EntityShadowFey.ShadowFeyConversionLore.instance())
 			.reference("ritual::fey_flower", "ritual.fey_flower.name")
-		.build("fey_flower", NostrumFairies.researchTab, Size.LARGE, 1, 1, true, FeyResource.create(FeyResourceType.FLOWER, 1));
+		.build("fey_flower", NostrumFairies.researchTab, Size.NORMAL, 1, 0, true, FeyResource.create(FeyResourceType.FLOWER, 1));
+		
+		NostrumResearch.startBuilding()
+			.parent("purify_essence")
+			.parent("fey_flower")
+			.parent("fey_bell")
+			.lore(FeyResource.FeyFriendLore.instance())
+			.reference("ritual::soul_stone", "ritual.soul_stone.name")
+			.reference("ritual::soul_gael", "ritual.soul_gael.name")
+		.build("fey_souls", NostrumFairies.researchTab, Size.LARGE, 0, 1, true, FeySoulStone.create(SoulStoneType.GEM));
+		
+		NostrumResearch.startBuilding()
+			.parent("fey_souls")
+			.link("fairy_gael_aggressive")
+			.reference("ritual::fairy_instrument_lyre", "ritual.fairy_instrument_lyre.name")
+			.reference("ritual::fairy_instrument_flute", "ritual.fairy_instrument_flute.name")
+			.reference("ritual::fairy_instrument_ocarina", "ritual.fairy_instrument_ocarina.name")
+		.build("fairy_instruments", NostrumFairies.researchTab, Size.GIANT, 2, 1, true, FairyInstrument.create(InstrumentType.FLUTE));
+		
+		NostrumResearch.startBuilding()
+			.parent("fairy_instruments")
+			.reference("ritual::fairy_gael_aggressive", "ritual.fairy_gael_aggressive.name")
+		.build("fairy_gael_aggressive", NostrumFairies.researchTab, Size.NORMAL, 4, 1, true, FairyGael.create(FairyGaelType.ATTACK, null));
+		
+		NostrumResearch.startBuilding()
+			.parent("fairy_instruments")
+			.hiddenParent("logistics_items")
+			.reference("ritual::fairy_gael_logistics", "ritual.fairy_gael_logistics.name")
+		.build("fairy_gael_logistics", NostrumFairies.researchTab, Size.NORMAL, 3, 2, true, FairyGael.create(FairyGaelType.LOGISTICS, null));
+		
+		NostrumResearch.startBuilding()
+			.parent("fairy_instruments")
+			.hiddenParent("logistics_construction")
+			.reference("ritual::fairy_gael_construction", "ritual.fairy_gael_construction.name")
+		.build("fairy_gael_construction", NostrumFairies.researchTab, Size.NORMAL, 3, 0, true, FairyGael.create(FairyGaelType.BUILD, null));
+		
+		NostrumResearch.startBuilding()
+			.parent("fey_souls")
+			.hiddenParent("aether_furnace")
+			.hiddenParent("magic_token")
+			.reference("ritual::logistics_tokens", "ritual.logistics_tokens.name")
+		.build("logistics", NostrumFairies.researchTab, Size.GIANT, -2, 1, true, FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1));
+		
+		NostrumResearch.startBuilding()
+			.parent("logistics")
+			.reference("ritual::logistics_tokens", "ritual.logistics_tokens.name")
+		.build("gnomes", NostrumFairies.researchTab, Size.GIANT, -2, 1, true, FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1));
+		
 		
     }
 

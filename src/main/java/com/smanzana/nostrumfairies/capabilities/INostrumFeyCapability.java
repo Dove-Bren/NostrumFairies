@@ -19,6 +19,13 @@ public interface INostrumFeyCapability {
 	public FairyHolderInventory getFairyInventory();
 	public void setFairyInventory(FairyHolderInventory inventory);
 	
+	public boolean attackFairyUnlocked();
+	public boolean builderFairyUnlocked();
+	public boolean logisticsFairyUnlocked();
+//	public void unlockAttackFairy();
+//	public void unlockBuilderFairy();
+//	public void unlockLogisticsFairy();
+	
 	public void retractFairies();
 	public void disableFairies(int ticks);
 	public void enableFairies();

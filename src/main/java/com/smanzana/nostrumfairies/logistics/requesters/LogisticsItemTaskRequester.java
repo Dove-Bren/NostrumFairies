@@ -66,14 +66,16 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 	}
 	
 	public void clearRequests() {
+		if (network == null) {
+			return;
+		}
+		
 		List<T> list = this.currentTasks;
 		currentTasks = new LinkedList<>();
-		if (entity == null) {
-			for (ILogisticsItemTask task : list) {
-				network.getTaskRegistry().revoke(task);
-			} // else not registered
-		}
-	}
+		for (ILogisticsItemTask task : list) {
+			network.getTaskRegistry().revoke(task);
+		} // else not registered
+}
 	
 	/**
 	 * Hook to filter requests if you want the requester to consider some tasks as basically
@@ -115,6 +117,10 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 	
 	protected abstract T makeTask(EntityLivingBase entity, ItemDeepStack item);
 	
+	protected void registerTask(T task) {
+		network.getTaskRegistry().register(task, this);
+	}
+	
 	private void addRequests(ItemDeepStack item) {
 		for (long i = 0; i < item.getCount(); i++) {
 			T task;
@@ -123,31 +129,38 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 			} else {
 				task = makeTask(entity, new ItemDeepStack(item.getTemplate(), 1));
 			}
-			network.getTaskRegistry().register(task, this);
+			registerTask(task);
 			this.currentTasks.add(task);
 		}
 	}
 	
 	public void updateRequestedItems(Collection<ItemStack> items) {
+		if (network == null) {
+			return;
+		}
+		
 		// loop through all tasks and see if we still need them.
 		// Then, request items that we don't have tasks for
 		List<ItemDeepStack> deeps = new LinkedList<>();
-		for (ItemStack item : items) {
-			if (item == null) {
-				continue;
-			}
-			
-			boolean found = false;
-			for (ItemDeepStack deep : deeps) {
-				if (deep.canMerge(item)) {
-					deep.add(item);
-					found = true;
-					break;
+		
+		if (items != null) {
+			for (ItemStack item : items) {
+				if (item == null) {
+					continue;
 				}
-			}
-			
-			if (!found) {
-				deeps.add(new ItemDeepStack(item));
+				
+				boolean found = false;
+				for (ItemDeepStack deep : deeps) {
+					if (deep.canMerge(item)) {
+						deep.add(item);
+						found = true;
+						break;
+					}
+				}
+				
+				if (!found) {
+					deeps.add(new ItemDeepStack(item));
+				}
 			}
 		}
 		

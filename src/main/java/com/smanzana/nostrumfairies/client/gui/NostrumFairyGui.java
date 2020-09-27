@@ -90,7 +90,7 @@ public class NostrumFairyGui implements IGuiHandler {
 		if (ID == fairyGuiID) {
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
 			if (attr != null && attr.isUnlocked()) {
-				return new FairyScreenGui.FairyScreenContainer(player.inventory, attr.getFairyInventory());
+				return new FairyScreenGui.FairyScreenContainer(player.inventory, attr.getFairyInventory(), attr);
 			}
 		}
 		
@@ -159,7 +159,7 @@ public class NostrumFairyGui implements IGuiHandler {
 		if (ID == fairyGuiID) {
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
 			if (attr != null && attr.isUnlocked()) {
-				return new FairyScreenGui.FairyScreenGuiContainer(new FairyScreenGui.FairyScreenContainer(player.inventory, attr.getFairyInventory()));
+				return new FairyScreenGui.FairyScreenGuiContainer(new FairyScreenGui.FairyScreenContainer(player.inventory, attr.getFairyInventory(), attr));
 			}
 		}
 		

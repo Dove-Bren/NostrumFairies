@@ -18,6 +18,7 @@ import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.RequestedItemRecord;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrummagica.utils.ItemStacks;
@@ -25,8 +26,12 @@ import com.smanzana.nostrummagica.utils.ItemStacks;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldServer;
 
 public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	
@@ -494,7 +499,8 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 			} else {
 				if (entity instanceof EntityPlayer) {
 					EntityPlayer player = (EntityPlayer) entity;
-					player.inventory.addItemStackToInventory(stack);
+					player.inventory.addItemStackToInventory(stack.copy());
+					player.worldObj.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, .75f, 2f);
 				} else {
 					EntityItem item = new EntityItem(entity.worldObj, entity.posX, entity.posY + .5, entity.posZ, stack);
 					entity.worldObj.spawnEntityInWorld(item);

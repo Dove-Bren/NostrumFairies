@@ -198,6 +198,24 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return create(type, fey);
 	}
 	
+	public static ItemStack createFake(SoulStoneType type, boolean filled) {
+		if (!filled) {
+			return create(type);
+		}
+		
+		ItemStack stone = create(type);
+		stone.setItemDamage(metaFromTypes(true, type));
+		return stone;
+	}
+	
+	public static NBTTagCompound getStoredEntityTag(ItemStack stack) {
+		return stack.hasTagCompound() ? stack.getTagCompound().getCompoundTag("data") : null; 
+	}
+	
+	public static String getStoredEntityName(ItemStack stack) {
+		return stack.hasTagCompound() ? stack.getTagCompound().getString("name") : null;
+	}
+	
 	@Override
 	public String getLoreKey() {
 		return "fey_soul_stone";

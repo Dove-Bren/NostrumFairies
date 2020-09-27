@@ -2,10 +2,12 @@ package com.smanzana.nostrumfairies.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 /**
@@ -74,11 +76,14 @@ public class ItemDeepStack {
 		return new ItemDeepStack(item.copy(), count);
 	}
 	
-	public static List<ItemDeepStack> toDeepList(Collection<ItemStack> items) {
+	protected static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, Iterable<ItemStack> items) {
 		// Could make sure both lists are sorted by itemstack, and have iterators on both to make this merge fast.
 		// Optimization oppertunity!
-		List<ItemDeepStack> out = new ArrayList<>(items.size());
 		for (ItemStack stack : items) {
+			if (stack == null || stack.stackSize <= 0) {
+				continue;
+			}
+			
 			boolean merged = false;
 			for (ItemDeepStack condensed : out) {
 				if (condensed.canMerge(stack)) {
@@ -93,6 +98,31 @@ public class ItemDeepStack {
 			}
 		}
 		return out;
+	}
+	
+	public static List<ItemDeepStack> toDeepList(Collection<ItemStack> items) {
+		List<ItemDeepStack> out = new ArrayList<>(items.size());
+		return toDeepList(out, items);
+	}
+	
+	public static List<ItemDeepStack> toDeepList(IInventory inventory) {
+		List<ItemDeepStack> out = new ArrayList<>(inventory.getSizeInventory());
+		return toDeepList(out, () -> {
+			return new Iterator<ItemStack>() {
+				
+				private int i = 0;
+				
+				@Override
+				public boolean hasNext() {
+					return i < inventory.getSizeInventory();
+				}
+
+				@Override
+				public ItemStack next() {
+					return inventory.getStackInSlot(i++);
+				}
+			};
+		});
 	}
 	
 	public static List<ItemDeepStack> toCondensedDeepList(Collection<ItemDeepStack> deeps) {

@@ -41,6 +41,8 @@ item.fey_resource.essence_corrupted.name=Corrupted Fey Essence
 item.fey_resource.bell.name=Fey Bell
 item.fey_resource.flower.name=Fey Flower
 item.fey_resource.tablet.name=Fey Tablet
+item.fey_resource.golem_token.name=Golem Token
+item.fey_resource.logic_token.name=Logic Token
 
 info.mood.fey.great=Great
 info.mood.fey.good=Good
@@ -53,6 +55,19 @@ info.fairy_gael.cracked=Cracked
 info.instrument.locked=You feel as though what you did is right, but nothing happens...
 
 entity.nostrumfairies.shadow_fey.name=Shadow Fey
+
+ritual.purify_essence.name=Fey Essence Purification
+ritual.fey_bell.name=Create Fey Bell
+ritual.fey_flower.name=Create Fey Flowers
+ritual.soul_stone.name=Conjure Soul Stone
+ritual.soul_gael.name=Conjure Soul Gael
+ritual.fairy_instrument_flute.name=Create Fairy Flute
+ritual.fairy_instrument_lyre.name=Create Fairy Lyre
+ritual.fairy_instrument_ocarina.name=Create Fairy Ocarina
+ritual.fairy_gael_aggressive.name=Forge Aggressive Gael
+ritual.fairy_gael_logistics.name=Forge Logistics Gael
+ritual.fairy_gael_construction.name=Forge Construction Gael
+ritual.logistics_tokens.name=Create Logic Tokens
 
 research.tab.fey.name=Fey
 

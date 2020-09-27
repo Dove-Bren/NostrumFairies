@@ -18,6 +18,8 @@ import com.smanzana.nostrummagica.loretag.Lore;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.monster.EntityIronGolem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -31,6 +33,9 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -42,7 +47,9 @@ public class FeyResource extends Item implements ILoreTagged {
 		ESSENCE_CORRUPTED("essence_corrupted", "fey_essence_corrupted"),
 		BELL("bell", "fey_bell"),
 		FLOWER("flower", "fey_flower"),
-		TABLET("tablet", "fey_tablet");
+		TABLET("tablet", "fey_tablet"),
+		GOLEM_TOKEN("golem_token", "golem_token"),
+		LOGIC_TOKEN("logic_token", "logic_token");
 		
 		private final String suffix;
 		private final String model;
@@ -82,6 +89,8 @@ public class FeyResource extends Item implements ILoreTagged {
 		this.setMaxStackSize(64);
 		this.setCreativeTab(NostrumFairies.creativeTab);
 		this.setHasSubtypes(true);
+		
+		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	@Override
@@ -256,6 +265,21 @@ public class FeyResource extends Item implements ILoreTagged {
 		}
 		
 		return new ActionResult<ItemStack>(EnumActionResult.PASS, stack);
+	}
+	
+	@SubscribeEvent
+	public void onMobDrop(LivingDropsEvent event) {
+		if (event.getEntityLiving() instanceof EntityIronGolem) {
+			for (int i = 0; i <= event.getLootingLevel(); i++) {
+				EntityItem entity = new EntityItem(event.getEntity().worldObj,
+						event.getEntity().posX,
+						event.getEntity().posY,
+						event.getEntity().posZ,
+						create(FeyResourceType.GOLEM_TOKEN, 1));
+				event.getDrops().add(entity);
+			}
+				
+		}
 	}
 	
 	public static final class FeyFriendLore implements ILoreTagged {

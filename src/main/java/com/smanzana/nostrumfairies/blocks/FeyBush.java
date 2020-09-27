@@ -141,10 +141,6 @@ public class FeyBush extends BlockBush implements IShearable {
 	protected boolean canSustainBush(IBlockState state) {
 		boolean ret = super.canSustainBush(state);
 		
-//		if (!ret && state.getBlock() instanceof MagicDirt) {
-//			ret = true;
-//		}
-		
 		return ret;
 	}
 

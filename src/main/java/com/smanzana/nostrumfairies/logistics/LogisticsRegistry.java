@@ -12,6 +12,8 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldSavedData;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.relauncher.Side;
@@ -95,8 +97,39 @@ public class LogisticsRegistry extends WorldSavedData {
 		return null;
 	}
 	
+	public @Nullable LogisticsNetwork findNetwork(World world, BlockPos pos) {
+		for (LogisticsNetwork network : this.networks) {
+			for (ILogisticsComponent comp : network.components) {
+				if (comp.getWorld().equals(world) && pos.equals(comp.getPosition())) {
+					return network;
+				}
+			}
+		}
+		
+		return null;
+	}
+	
 	public Collection<LogisticsNetwork> getNetworks() {
 		return networks;
+	}
+	
+	public @Nullable LogisticsNetwork getLogisticsNetworkFor(World world, BlockPos pos) {
+		for (LogisticsNetwork network : this.networks) {
+			if (network.getLogisticsFor(world, pos) != null) {
+				return network;
+			}
+		}
+		
+		return null;
+	}
+	
+	public void getLogisticsNetworksFor(World world, BlockPos pos, Collection<LogisticsNetwork> networks) {
+		networks.clear();
+		for (LogisticsNetwork network : this.networks) {
+			if (network.getLogisticsFor(world, pos) != null) {
+				networks.add(network);
+			}
+		}
 	}
 	
 	/**
