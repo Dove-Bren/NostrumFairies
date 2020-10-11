@@ -194,6 +194,35 @@ public class TemplateWand extends Item implements ILoreTagged {
 		stack.setTagCompound(nbt);
 	}
 	
+	/**
+	 * Attempts to add the scroll to the wand's inventory. Returns null on success, or the
+	 * input scroll on failure.
+	 * @param wand
+	 * @param scroll
+	 * @return
+	 */
+	public static ItemStack AddTemplateToInventory(ItemStack wand, ItemStack scroll) {
+		// Try and just add an NBT tag instead of parsing the inventory
+		NBTTagCompound tag = wand.getTagCompound();
+		if (tag == null) {
+			tag = new NBTTagCompound();
+		}
+		
+		NBTTagList list = tag.getTagList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND);
+		if (list == null) {
+			list = new NBTTagList();
+		}
+		
+		if (list.tagCount() < (MAX_TEMPLATES - 1)) {
+			list.appendTag(scroll.serializeNBT());
+			scroll = null;
+			tag.setTag(NBT_TEMPLATE_INV, list);
+			wand.setTagCompound(tag);
+		}
+		
+		return scroll;
+	}
+	
 	public static @Nullable ItemStack GetSelectedTemplate(ItemStack wand) {
 		if (wand == null || !(wand.getItem() instanceof TemplateWand) || !wand.hasTagCompound()) {
 			return null;
@@ -341,9 +370,19 @@ public class TemplateWand extends Item implements ILoreTagged {
 		}
 		BlockPos offset = (clickedPos == null ? null : clickedPos.subtract(min));
 		ItemStack scroll = TemplateScroll.Capture(worldIn, min, max, offset, face);
-		scroll = Inventories.addItem(playerIn.inventory, scroll); 
-		if (scroll != null) {
-			playerIn.dropItem(scroll, false);
+		
+		// Try to add to wand if not sneaking
+		if (!playerIn.isSneaking()) {
+			scroll = AddTemplateToInventory(stack, scroll);
+		}
+		
+		if (scroll == null) {
+			playerIn.addChatComponentMessage(new TextComponentTranslation("info.templates.capture.towand"));
+		} else {
+			scroll = Inventories.addItem(playerIn.inventory, scroll); 
+			if (scroll != null) {
+				playerIn.dropItem(scroll, false);
+			}
 		}
 		
 		// Conveniently switch to selection mode to prevent wasting maps

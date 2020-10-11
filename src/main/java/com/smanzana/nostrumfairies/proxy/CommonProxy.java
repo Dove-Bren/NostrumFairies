@@ -175,7 +175,7 @@ public class CommonProxy {
 	}
 	
 	public void postinit() {
-		;
+		TemplateBlock.RegisterBaseOverrides();
 	}
     
     private void registerItems() {

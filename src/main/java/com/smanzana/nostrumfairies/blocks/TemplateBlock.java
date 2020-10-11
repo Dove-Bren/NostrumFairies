@@ -1,11 +1,13 @@
 package com.smanzana.nostrumfairies.blocks;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
@@ -41,6 +43,7 @@ import net.minecraftforge.common.property.IUnlistedProperty;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
@@ -55,12 +58,38 @@ public class TemplateBlock extends BlockContainer {
 	 * @return
 	 */
 	public static final @Nullable ItemStack GetRequiredItem(IBlockState templatedState) {
-		ItemStack required = StateItemOverrides.get(templatedState);
+		if (templatedState == null) {
+			return null;
+		}
+		
+		if (StateItemOverrides.containsKey(templatedState)) {
+			// Note: Always returning if key is there so that things can register 'null' to say that
+			// a block can't be build from template
+			return StateItemOverrides.get(templatedState);
+		}
+		
+		ItemStack required = StateItemCache.get(templatedState);
+		Block block = templatedState.getBlock();
+		
+		// Try reflection
 		if (required == null) {
-			Block block = templatedState.getBlock();
+			try {
+				Method Block_CreateStackedBlock = ReflectionHelper.findMethod(Block.class, block, new String[]{"createStackedBlock", "field_178999_b", "field_178999_b"},
+						IBlockState.class);
+				if (Block_CreateStackedBlock != null) {
+					required = (ItemStack) Block_CreateStackedBlock.invoke(block, templatedState);
+				}
+			} catch (Exception e) {
+				required = null;
+			}
+		}
+		
+		if (required == null) {
 			Item item = Item.getItemFromBlock(block);
 			if (item != null) {
-				if (item instanceof ItemBlock) {
+				if (!item.getHasSubtypes()) {
+					return new ItemStack(item);
+				} else if (item instanceof ItemBlock) {
 					// Will not work all the time, but oh well. Better than nothing!
 					return new ItemStack(block, 1, block.getMetaFromState(templatedState));
 				} else {
@@ -68,13 +97,33 @@ public class TemplateBlock extends BlockContainer {
 				}
 			}
 		}
+		
+		if (required != null) {
+			// Cache it!
+			StateItemCache.put(templatedState, required);
+		}
+		
 		return required;
 	}
 	
 	private static Map<IBlockState, ItemStack> StateItemOverrides = new HashMap<>();
+	private static Map<IBlockState, ItemStack> StateItemCache = new HashMap<>();
 	
 	public static final void RegisterItemForBlock(IBlockState state, ItemStack stack) {
 		StateItemOverrides.put(state, stack.copy());
+	}
+	
+	public static void RegisterBaseOverrides() {
+		// Vanilla
+//		ItemStack stack = new ItemStack(Blocks.LEAVES);
+//		for (IBlockState leafState : Blocks.LEAVES.getBlockState().getValidStates()) {
+//			if (leafState.getBlock() instanceof BlockOldLeaf) {
+//				BlockOldLeaf leaf = (BlockOldLeaf) leafState.getBlock();
+//				BlockPlanks.EnumType type = leafState.getValue(BlockOldLeaf.VARIANT);
+//				RegisterItemForBlock()
+//			}
+//			
+//		}
 	}
 	
 	public static IUnlistedProperty<IBlockState> NESTED_STATE = new IUnlistedProperty<IBlockState>() {
@@ -242,6 +291,23 @@ public class TemplateBlock extends BlockContainer {
 	}
 	
 	public static void SetTemplate(World world, BlockPos pos, IBlockState templatedState) {
+		SetTemplate(world, pos, templatedState, false);
+	}
+	
+	public static void SetTemplate(World world, BlockPos pos, IBlockState templatedState, boolean force) {
+		if (templatedState == null) {
+			NostrumFairies.logger.warn("Attempted to set null template at " + pos);
+			return;
+		}
+		
+		if (!force) {
+			// Make sure there's an item that matches this as a pseudo way of making sure it's allowed
+			ItemStack material = GetRequiredItem(templatedState);
+			if (material == null) {
+				return;
+			}
+		}
+		
 		world.setBlockState(pos, instance().getDefaultState(), 3);
 		if (world.captureBlockSnapshots) {
 			world.notifyBlockUpdate(pos, world.getBlockState(pos), instance().getDefaultState(), 3);

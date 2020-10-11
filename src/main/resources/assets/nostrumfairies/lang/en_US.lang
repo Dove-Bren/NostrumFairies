@@ -56,6 +56,7 @@ info.instrument.locked=You feel as though what you did is right, but nothing hap
 info.templates.capture.nopos=Two points much be selected while in selection mode
 info.templates.capture.toobig=The selected area is too large
 info.templates.capture.nomap=A blank map is required to create capture the template
+info.templates.capture.towand=The template has been added to your wand
 
 entity.nostrumfairies.shadow_fey.name=Shadow Fey
 

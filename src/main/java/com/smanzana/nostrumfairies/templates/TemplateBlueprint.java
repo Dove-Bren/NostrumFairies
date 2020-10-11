@@ -29,6 +29,8 @@ import net.minecraftforge.common.util.Constants.NBT;
  *
  */
 public class TemplateBlueprint implements IBlueprintSpawner {
+	
+	// TODO set of acceptable blockstates that may have tile entities that we're okay to just put down anyways
 
 	private static final String NBT_ID = "id";
 	private static final String NBT_BLUEPRINT = "blueprint";
@@ -61,11 +63,11 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 		}
 		
 		IBlockState placeState = block.getSpawnState(direction);
-		if (placeState != null) {
+		if (placeState != null && !(placeState.getBlock() instanceof TemplateBlock)) {
 			TemplateBlock.SetTemplate(world, pos, placeState);
 			spawnedBlocks.add(pos.toImmutable());
 		} else {
-			; // Templating doesn't mess with air
+			; // Templating doesn't mess with air or template blocks
 		}
 	}
 	
