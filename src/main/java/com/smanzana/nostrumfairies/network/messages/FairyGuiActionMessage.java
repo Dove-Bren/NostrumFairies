@@ -1,7 +1,7 @@
 package com.smanzana.nostrumfairies.network.messages;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.capabilities.INostrumFeyCapability;
+import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 

@@ -3,8 +3,11 @@ package com.smanzana.nostrumfairies.proxy;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.lwjgl.input.Keyboard;
+
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.BuildingBlock;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
@@ -16,8 +19,12 @@ import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
+import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrumfairies.blocks.WoodcuttingBlock;
 import com.smanzana.nostrumfairies.client.gui.OverlayRenderer;
+import com.smanzana.nostrumfairies.client.model.TemplateBlockBakedModel;
+import com.smanzana.nostrumfairies.client.render.TemplateBlockRenderer;
+import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
@@ -41,6 +48,9 @@ import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
+import com.smanzana.nostrumfairies.items.TemplateScroll;
+import com.smanzana.nostrumfairies.items.TemplateWand;
+import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.CapabilityRequest;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
@@ -50,19 +60,28 @@ import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent;
 
 public class ClientProxy extends CommonProxy {
 	
 	protected OverlayRenderer overlayRenderer;
+	
+	private KeyBinding bindingScroll;
+	private KeyBinding bindingWandModeForward;
+	private KeyBinding bindingWandModeBackward;
 
 	public ClientProxy() {
 		MinecraftForge.EVENT_BUS.register(this);
@@ -71,6 +90,13 @@ public class ClientProxy extends CommonProxy {
 	@Override
 	public void preinit() {
 		super.preinit();
+		
+		bindingScroll = new KeyBinding("key.wandscroll.desc", Keyboard.KEY_LSHIFT, "key.nostrumfairies.desc");
+		ClientRegistry.registerKeyBinding(bindingScroll);
+		bindingWandModeForward = new KeyBinding("key.wandmode.forward.desc", Keyboard.KEY_RBRACKET, "key.nostrumfairies.desc");
+		ClientRegistry.registerKeyBinding(bindingWandModeForward);
+		bindingWandModeBackward = new KeyBinding("key.wandmode.backward.desc", Keyboard.KEY_LBRACKET, "key.nostrumfairies.desc");
+		ClientRegistry.registerKeyBinding(bindingWandModeBackward);
 		
 		StorageMonitor.StorageMonitorRenderer.init();
 		StorageLogisticsChest.StorageChestRenderer.init();
@@ -81,6 +107,7 @@ public class ClientProxy extends CommonProxy {
 		LogisticsPylon.PylonRenderer.init();
 		WoodcuttingBlock.WoodcuttingBlockRenderer.init();
 		MiningBlock.MiningBlockRenderer.init();
+		TemplateBlockRenderer.init();
 		
 		RenderingRegistry.registerEntityRenderingHandler(EntityTestFairy.class, new IRenderFactory<EntityTestFairy>() {
 			@Override
@@ -172,6 +199,14 @@ public class ClientProxy extends CommonProxy {
 					FairyInstrument.instance().getModelName(type));
 		}
 		ModelBakery.registerItemVariants(FairyInstrument.instance(), variants);
+		
+		variants = new ResourceLocation[WandMode.values().length];
+		i = 0;
+		for (WandMode type : WandMode.values()) {
+			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
+					TemplateWand.instance().getModelName(type));
+		}
+		ModelBakery.registerItemVariants(TemplateWand.instance(), variants);
 	}
 	
 	@Override
@@ -209,6 +244,9 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(FarmingBlock.instance()),
 				0,
 				FarmingBlock.ID);
+		registerModel(Item.getItemFromBlock(BuildingBlock.instance()),
+				0,
+				BuildingBlock.ID);
 		for (ResidentType type : ResidentType.values()) {
 			registerModel(Item.getItemFromBlock(FeyHomeBlock.instance(type)),
 					0,
@@ -243,6 +281,12 @@ public class ClientProxy extends CommonProxy {
 			registerModel(FairyGael.instance(), type.ordinal() << 1, FairyGael.instance().getModelName(type, false));
 			registerModel(FairyGael.instance(), type.ordinal() << 1 | 1, FairyGael.instance().getModelName(type, true));
 		}
+		
+		for (WandMode mode : WandMode.values()) {
+			registerModel(TemplateWand.instance(), TemplateWand.metaFromMode(mode), TemplateWand.instance().getModelName(mode));
+		}
+		
+		registerModel(TemplateScroll.instance(), 0, TemplateScroll.ID);
 	}
 	
 	@Override
@@ -301,26 +345,12 @@ public class ClientProxy extends CommonProxy {
 //				NostrumMagica.MODID, "models/crystal_blank"));
 //	}
 	
-//	@SubscribeEvent
-//	public void onModelBake(ModelBakeEvent event) {
-//    	for (ClientEffectIcon icon: ClientEffectIcon.values()) {
-//    		IModel model;
-//			try {
-//				model = ModelLoaderRegistry.getModel(new ResourceLocation(
-//						NostrumMagica.MODID, "effect/" + icon.getModelKey()
-//						));
-//				IBakedModel bakedModel = model.bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, 
-//	    				(location) -> {return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString());});
-//	    		event.getModelRegistry().putObject(
-//	    				new ModelResourceLocation(NostrumMagica.MODID + ":effects/" + icon.getKey(), "normal"),
-//	    				bakedModel);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//				NostrumMagica.logger.warn("Failed to load effect " + icon.getKey());
-//			}
-//    		
-//    	}
-//	}
+	@SubscribeEvent
+	public void onModelBake(ModelBakeEvent event) {
+		TemplateBlockBakedModel model = new TemplateBlockBakedModel();
+		event.getModelRegistry().putObject(new ModelResourceLocation(new ResourceLocation(NostrumFairies.MODID, TemplateBlock.ID), "normal"),
+				model);
+	}
 	
 	@SubscribeEvent
 	public void onClientConnect(EntityJoinWorldEvent event) {
@@ -330,6 +360,7 @@ public class ClientProxy extends CommonProxy {
 			NostrumFairies.logger.info("Requested automatic logistics network refresh");
 			NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest());
 			NostrumFairies.proxy.requestCapabilityRefresh();
+			StaticTESRRenderer.instance.clear();
 		}
 	}
 	
@@ -340,7 +371,57 @@ public class ClientProxy extends CommonProxy {
 	
 	@Override
 	public void pushCapabilityRefresh(EntityPlayer player) {
+		if (!player.worldObj.isRemote) {
+			super.pushCapabilityRefresh(player);
+		}
 		; // Nothing on client
+	}
+	
+	@SubscribeEvent
+	public void onMouse(MouseEvent event) {
+		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+		int wheel = event.getDwheel();
+		if (wheel != 0) {
+			if (!NostrumFairies.getFeyWrapper(player)
+					.builderFairyUnlocked()) {
+				return;
+			}
+			
+			if (bindingScroll.isKeyDown()) {
+				ItemStack wand = player.getHeldItemMainhand();
+				if (wand == null || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
+					wand = player.getHeldItemOffhand();
+				}
+				
+				if (wand != null && wand.getItem() instanceof TemplateWand && TemplateWand.getModeOf(wand) == WandMode.SPAWN) {
+					TemplateWand.HandleScroll(player, wand, wheel > 0);
+					event.setCanceled(true);
+					return;
+				}
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public void onKey(KeyInputEvent event) {
+		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+		final boolean forwardPressed = bindingWandModeForward.isPressed(); 
+		if (forwardPressed || bindingWandModeBackward.isPressed()) {
+			if (!NostrumFairies.getFeyWrapper(player)
+					.builderFairyUnlocked()) {
+				return;
+			}
+			
+			ItemStack wand = player.getHeldItemMainhand();
+			if (wand == null || !(wand.getItem() instanceof TemplateWand)) {
+				wand = player.getHeldItemOffhand();
+			}
+			
+			if (wand != null && wand.getItem() instanceof TemplateWand) {
+				TemplateWand.HandleModeChange(player, wand, forwardPressed);
+				return;
+			}
+		}
 	}
 	
 }

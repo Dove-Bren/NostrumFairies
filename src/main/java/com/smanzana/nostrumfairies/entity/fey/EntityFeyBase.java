@@ -1060,11 +1060,14 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 					center.getX() + (Math.cos(angle) * dist),
 					center.getY() + (Math.cos(tilt) * dist),
 					center.getZ() + (Math.sin(angle) * dist)));
-			while (targ.getY() > 0 && fey.worldObj.isAirBlock(targ)) {
-				targ = targ.down();
-			}
-			if (targ.getY() < 256) {
-				targ = targ.up();
+			
+			if (!fey.hasNoGravity()) {
+				while (targ.getY() > 0 && fey.worldObj.isAirBlock(targ)) {
+					targ = targ.down();
+				}
+				if (targ.getY() < 256) {
+					targ = targ.up();
+				}
 			}
 			
 			// We've hit a non-air block. Make sure there's space above it

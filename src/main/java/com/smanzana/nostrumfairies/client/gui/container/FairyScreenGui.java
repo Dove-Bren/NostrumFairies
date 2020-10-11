@@ -5,7 +5,7 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.capabilities.INostrumFeyCapability;
+import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui.FairyScreenContainer.HideableSlot;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyCastTarget;
@@ -100,12 +100,26 @@ public class FairyScreenGui {
 	private static final int ICON_TARGET_TEXT_HEIGHT = 32;
 	private static final int ICON_TARGET_WIDTH = ICON_SLOTHELPER_TEXT_WIDTH - 2;
 	private static final int ICON_TARGET_HEIGHT = ICON_SLOTHELPER_TEXT_HEIGHT - 2;
-	private static final int ICON_PLACEMENT_TEXT_HOFFSET = 96;
-	private static final int ICON_PLACEMENT_TEXT_VOFFSET = 184;
+	private static final int ICON_PLACEMENT_TEXT_HOFFSET = 32;
+	private static final int ICON_PLACEMENT_TEXT_VOFFSET = 216;
 	private static final int ICON_PLACEMENT_TEXT_WIDTH = 32;
 	private static final int ICON_PLACEMENT_TEXT_HEIGHT = 32;
 	private static final int ICON_PLACEMENT_WIDTH = ICON_SLOTHELPER_WIDTH - 2;
 	private static final int ICON_PLACEMENT_HEIGHT = ICON_SLOTHELPER_HEIGHT - 2;
+	
+	private static final int ICON_CURSOR_MAJOR_TEXT_HOFFSET = 118;
+	private static final int ICON_CURSOR_MAJOR_TEXT_VOFFSET = 168;
+	private static final int ICON_CURSOR_MAJOR_TEXT_WIDTH = 62;
+	private static final int ICON_CURSOR_MAJOR_TEXT_HEIGHT = 62;
+	private static final int ICON_CURSOR_MAJOR_WIDTH = (3 * 18) + 8;
+	private static final int ICON_CURSOR_MAJOR_HEIGHT = (3 * 18) + 8;
+	
+	private static final int ICON_CURSOR_MINOR_TEXT_HOFFSET = 118;
+	private static final int ICON_CURSOR_MINOR_TEXT_VOFFSET = 230;
+	private static final int ICON_CURSOR_MINOR_TEXT_WIDTH = 20;
+	private static final int ICON_CURSOR_MINOR_TEXT_HEIGHT = 20;
+	private static final int ICON_CURSOR_MINOR_WIDTH = 18 + 2;
+	private static final int ICON_CURSOR_MINOR_HEIGHT = 18 + 2;
 	
 	public static class FairyScreenContainer extends AutoContainer {
 		
@@ -322,7 +336,7 @@ public class FairyScreenGui {
 					return null;
 				}
 			}
-			return super.slotClick(slotId, dragType, clickTypeIn, player); // TODO hook up templates
+			return super.slotClick(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
@@ -386,6 +400,7 @@ public class FairyScreenGui {
 		protected PlacementButton[] placementButtons;
 		
 		private int selectedSlot;
+		private int selectedGroup; // 0-2 for gael types
 		private boolean selectedEmpty;
 		private String selectedName;
 		private float selectedHealth;
@@ -441,6 +456,7 @@ public class FairyScreenGui {
 				slot.hide(!showLogistics);
 			}
 			container.gemSlot.hide(!showLogistics);
+			selectedGroup = -1;
 		}
 		
 		@Override
@@ -469,6 +485,7 @@ public class FairyScreenGui {
 			
 			if (slotClicked < 0 || slotClicked > container.inv.getGaelSize() * 3) {
 				showAttack = showLogistics = false;
+				selectedGroup = -1;
 			} else {
 				if (FairyHolderInventory.slotIsType(FairyGaelType.ATTACK, slotClicked)) {
 					showAttack = true;
@@ -477,17 +494,22 @@ public class FairyScreenGui {
 					ItemStack gael = container.inv.getStackInSlot(slotClicked);
 					this.selectedSlot = slotClicked - 0;
 					this.selectedEmpty = (gael == null);
+					this.selectedGroup = 0;
 					if (gael != null) {
 						this.selectedName = FairyGael.getStoredName(gael);
-						this.selectedHealth = FairyGael.getStoredHealth(gael);
-						this.selectedEnergy = FairyGael.getStoredEnergy(gael);
+						this.selectedHealth = (float) FairyGael.getStoredHealth(gael);
+						this.selectedEnergy = (float) FairyGael.getStoredEnergy(gael);
 					}
 				} else if (FairyHolderInventory.slotIsType(FairyGaelType.LOGISTICS, slotClicked)) {
 					showAttack = false;
 					showLogistics = true;
+					selectedGroup = 2;
+					this.selectedSlot = slotClicked - 18;
 				} else {
 					showAttack = false;
 					showLogistics = false;
+					selectedGroup = 1;
+					this.selectedSlot = slotClicked - 9;
 				}
 			}
 			
@@ -541,7 +563,7 @@ public class FairyScreenGui {
 						sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET,
 						sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET + x,
 						sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET + SIDEBAR_ATTACK_ENERGY_HEIGHT,
-						0xFF444444);
+						0xFF00A040);
 			}
 			
 			// draw background
@@ -610,7 +632,55 @@ public class FairyScreenGui {
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-			; // TODO draw some selection thing over which category was last selected?
+			if (selectedGroup != -1) {
+				float bright = 1f;
+				GlStateManager.color(bright, bright, bright, 1.0F);
+				mc.getTextureManager().bindTexture(TEXT);
+				
+				int x = -5;
+				int y = -5;
+				if (selectedGroup == 0) {
+					x += GUI_ATTACK_SLOT_HOFFSET;
+					y += GUI_ATTACK_SLOT_VOFFSET;
+				} else if (selectedGroup == 1) {
+					x += GUI_BUILD_SLOT_HOFFSET;
+					y += GUI_BUILD_SLOT_VOFFSET;
+				} else {
+					x += GUI_LOGISTICS_SLOT_HOFFSET;
+					y += GUI_LOGISTICS_SLOT_VOFFSET;
+				}
+				
+				drawScaledCustomSizeModalRect(x, y,
+						ICON_CURSOR_MAJOR_TEXT_HOFFSET, ICON_CURSOR_MAJOR_TEXT_VOFFSET,
+						ICON_CURSOR_MAJOR_TEXT_WIDTH, ICON_CURSOR_MAJOR_TEXT_HEIGHT,
+						ICON_CURSOR_MAJOR_WIDTH, ICON_CURSOR_MAJOR_HEIGHT, 256, 256);
+				
+				if (selectedSlot != -1) {
+					GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+					
+					x += 3;
+					y += 3;
+//					if (selectedGroup == 0) {
+//						x += GUI_ATTACK_SLOT_HOFFSET;
+//						y += GUI_ATTACK_SLOT_VOFFSET;
+//					} else if (selectedGroup == 1) {
+//						x += GUI_BUILD_SLOT_HOFFSET;
+//						y += GUI_BUILD_SLOT_VOFFSET;
+//					} else {
+//						x += GUI_LOGISTICS_SLOT_HOFFSET;
+//						y += GUI_LOGISTICS_SLOT_VOFFSET;
+//					}
+					
+					int localSlot = (selectedSlot % 9);
+					x += (18 * (localSlot % 3));
+					y += (18 * (localSlot / 3));
+					
+					drawScaledCustomSizeModalRect(x, y,
+							ICON_CURSOR_MINOR_TEXT_HOFFSET, ICON_CURSOR_MINOR_TEXT_VOFFSET,
+							ICON_CURSOR_MINOR_TEXT_WIDTH, ICON_CURSOR_MINOR_TEXT_HEIGHT,
+							ICON_CURSOR_MINOR_WIDTH, ICON_CURSOR_MINOR_HEIGHT, 256, 256);
+				}
+			}
 		}
 		
 		@Override
@@ -627,8 +697,15 @@ public class FairyScreenGui {
 							this.setButtonsTo(i);
 							return;
 						} else {
-							// they're picking it up
-							this.selectedEmpty = true;
+							// they're picking it up or plopping it down
+							if (slot.getSlotIndex() == this.selectedSlot) {
+								if (NostrumFairies.proxy.getPlayer().inventory.getItemStack() == null) {
+									this.selectedEmpty = true;
+								} else if (slot.isItemValid(NostrumFairies.proxy.getPlayer().inventory.getItemStack())) {
+									this.selectedEmpty = false;
+								}
+								// else unaffected
+							}
 						}
 					}
 				}

@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.network.messages;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.capabilities.INostrumFeyCapability;
+import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;

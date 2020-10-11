@@ -6,6 +6,7 @@ import com.smanzana.nostrumfairies.network.messages.FairyGuiActionMessage;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateResponse;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateSingleResponse;
+import com.smanzana.nostrumfairies.network.messages.TemplateWandUpdate;
 
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
@@ -44,6 +45,7 @@ public class NetworkHandler {
 		syncChannel.registerMessage(CapabilitySyncMessage.Handler.class, CapabilitySyncMessage.class, discriminator++, Side.CLIENT);
 		syncChannel.registerMessage(CapabilityRequest.Handler.class, CapabilityRequest.class, discriminator++, Side.SERVER);
 		syncChannel.registerMessage(FairyGuiActionMessage.Handler.class, FairyGuiActionMessage.class, discriminator++, Side.SERVER);
+		syncChannel.registerMessage(TemplateWandUpdate.Handler.class, TemplateWandUpdate.class, discriminator++, Side.SERVER);
 	}
 	
 }

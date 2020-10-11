@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.capabilities;
+package com.smanzana.nostrumfairies.capabilities.fey;
 
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;

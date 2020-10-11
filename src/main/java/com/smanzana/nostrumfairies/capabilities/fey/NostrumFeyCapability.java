@@ -1,21 +1,30 @@
-package com.smanzana.nostrumfairies.capabilities;
+package com.smanzana.nostrumfairies.capabilities.fey;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.entity.IEntityListener;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy.FairyJob;
+import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy.IBuildPump;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
+import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyCastTarget;
+import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyPlacementTarget;
 import com.smanzana.nostrumfairies.items.FairyGael;
 import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -24,13 +33,15 @@ import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositRequ
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.items.PositionCrystal;
+import com.smanzana.nostrummagica.items.SpellScroll;
+import com.smanzana.nostrummagica.spells.Spell;
 import com.smanzana.nostrummagica.utils.Inventories;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -38,6 +49,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -53,11 +65,15 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	private static final String NBT_UNLOCKED = "unlocked";
 	private static final String NBT_FAIRY_SLOTS = "fairy_slots";
 	private static final String NBT_FAIRY_INVENTORY = "fairy_inventory";
+	private static final String NBT_TEMPLATE_SELECTION = "template_selection";
+	
+	private static final int BUILD_SCAN_RADIUS = 16;
 	
 	// Capability data
 	private boolean isUnlocked;
 	private int fairySlots;
 	private FairyHolderInventory fairyInventory;
+	private MutablePair<BlockPos, BlockPos> templateSelection;
 	
 	// Operational transient data
 	private EntityLivingBase owner;
@@ -72,18 +88,19 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	private List<ItemStack> pushItems; // null if pull items were found
 	
 	// Task data (transient, too)
-	private List<LogisticsTaskPlaceBlock> buildTasks;
+	private BuildTaskPlanner buildPlanner;
 	private LogisticsItemDepositRequester depositRequester;
 	private LogisticsItemWithdrawRequester withdrawRequester;
 	
 	public NostrumFeyCapability() {
 		this.fairyInventory = new FairyHolderInventory();
+		this.templateSelection = new MutablePair<>();
 		this.deployedFairies = new EnumMap<>(FairyGaelType.class);
 		for (FairyGaelType type : FairyGaelType.values()) {
 			deployedFairies.put(type, new LinkedList<>());
 		}
 		this.tickNetworks = new ArrayList<>(4);
-		buildTasks = new LinkedList<>();
+		buildPlanner = new BuildTaskPlanner();
 		
 		// defaults...
 		this.fairySlots = 1;
@@ -136,6 +153,12 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		nbt.setInteger(NBT_FAIRY_SLOTS, fairySlots);
 		writeFairies();
 		nbt.setTag(NBT_FAIRY_INVENTORY, fairyInventory.toNBT());
+		if (templateSelection.left != null) {
+			nbt.setLong(NBT_TEMPLATE_SELECTION + "_1", templateSelection.left.toLong());
+			if (templateSelection.right != null) {
+				nbt.setLong(NBT_TEMPLATE_SELECTION + "_2", templateSelection.right.toLong());
+			}
+		}
 		
 		return nbt;
 	}
@@ -146,6 +169,17 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		this.isUnlocked = nbt.getBoolean(NBT_UNLOCKED);
 		this.fairySlots = nbt.getInteger(NBT_FAIRY_SLOTS);
 		this.fairyInventory.readNBT(nbt.getCompoundTag(NBT_FAIRY_INVENTORY));
+		
+		if (nbt.hasKey(NBT_TEMPLATE_SELECTION + "_1")) {
+			templateSelection.left = BlockPos.fromLong(nbt.getLong(NBT_TEMPLATE_SELECTION + "_1"));
+			if (nbt.hasKey(NBT_TEMPLATE_SELECTION + "_2")) {
+				templateSelection.right = BlockPos.fromLong(nbt.getLong(NBT_TEMPLATE_SELECTION + "_2"));
+			} else {
+				templateSelection.right = null;
+			}
+		} else {
+			templateSelection.left = templateSelection.right = null;
+		}
 	}
 
 	@Override
@@ -163,6 +197,35 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			} else {
 				this.depositRequester = new LogisticsItemDepositRequester(null, owner);
 				this.withdrawRequester = new LogisticsItemWithdrawRequester(null, true, owner);
+				
+				if (owner instanceof EntityPlayer) {
+					this.buildPlanner.setInventory(((EntityPlayer) owner).inventory);
+					this.buildPlanner.setWorld(owner.worldObj);
+				}
+			}
+		}
+	}
+	
+	protected void scanForBuilds() {
+		Set<BlockPos> builds = new HashSet<>();
+		
+		if (owner != null && !owner.isDead) {
+			MutableBlockPos cursor = new MutableBlockPos();
+			for (int x = -BUILD_SCAN_RADIUS; x <= BUILD_SCAN_RADIUS; x++)
+			for (int z = -BUILD_SCAN_RADIUS; z <= BUILD_SCAN_RADIUS; z++)
+			for (int y = -BUILD_SCAN_RADIUS; y <= BUILD_SCAN_RADIUS; y++) {
+				cursor.setPos(owner.posX + x, owner.posY + y, owner.posZ + z);
+				IBlockState state = owner.worldObj.getBlockState(cursor);
+				if (state != null && state.getBlock() instanceof TemplateBlock) {
+					builds.add(cursor.toImmutable());
+				}
+			}
+		}
+		
+		List<EntityPersonalFairy> jobless = buildPlanner.resetTaskList(builds);
+		if (jobless != null && !jobless.isEmpty()) {
+			for (EntityPersonalFairy fairy : jobless) {
+				fairy.cancelBuildTask();
 			}
 		}
 	}
@@ -195,10 +258,16 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		}
 		
 		if (fairiesEnabled()) {
+			if (ticksExisted % 40 == 0) {
+				scanForBuilds();
+			}
+			
 			if (ticksExisted % 5 == 0) {
 				
 				//tickNetworkChoice = null;
 				//tickNetworks.clear();
+				
+				buildPlanner.cleanList();
 				
 				// Check and see if fairies should come out?
 				for (FairyGaelType type : FairyGaelType.values()) {
@@ -216,7 +285,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						}
 						
 						// If player has build tasks
-						if (buildTasks.isEmpty()) {
+						if (!buildPlanner.hasUnclaimedTasks()) {
 							continue;
 						}
 						break;
@@ -233,7 +302,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 								BlockPos pos = PositionCrystal.getBlockPosition(fairyInventory.getLogisticsGem());
 								int dim = PositionCrystal.getDimension(fairyInventory.getLogisticsGem());
 								
-								if (dim == owner.dimension) {
+								if (dim == owner.dimension && owner.getDistanceSq(pos) < 1024) {
 									World world = NostrumFairies.getWorld(dim);
 									LogisticsNetwork network = NostrumFairies.instance.getLogisticsRegistry().findNetwork(world, pos);
 									if (network != null) {
@@ -328,6 +397,14 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 							continue;
 						}
 						
+						float reqEnergy = .3f;
+						if (type == FairyGaelType.ATTACK) {
+							reqEnergy = .95f;
+						}
+						if (FairyGael.getStoredEnergy(gael) < reqEnergy) {
+							continue;
+						}
+						
 						boolean deployed = false;
 						for (FairyRecord record : deployedFairies.get(type)) {
 							if (record.index == i) {
@@ -344,17 +421,36 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				}
 			}
 			
+			Map<FairyGaelType, boolean[]> deployedMap = new EnumMap<>(FairyGaelType.class);
+			
 			// Check up on all deployed fairies
 			List<EntityPersonalFairy> tiredFairies = new LinkedList<>();
 			for (FairyGaelType type : FairyGaelType.values()) {
+				deployedMap.put(type, new boolean[fairyInventory.getGaelSize()]);
 				for (FairyRecord record : deployedFairies.get(type)) {
-					if (record.fairy.getEnergy() <= 0f || (type != FairyGaelType.ATTACK && record.fairy.getIdleTicks() > (20 * 5))) {
+					if (record.fairy.getEnergy() <= 5f || (type != FairyGaelType.ATTACK && record.fairy.getIdleTicks() > (20 * 5))) {
 						tiredFairies.add(record.fairy);
+					} else {
+						deployedMap.get(type)[record.index] = true;
 					}
 				}
 			}
 			for (EntityPersonalFairy fairy : tiredFairies) {
 				removeFairy(fairy);
+			}
+			
+			// Recoup lost energies for stored fairies
+			// TODO figure out deployed once per tick
+			for (FairyGaelType type : FairyGaelType.values()) {
+				boolean[] deployed = deployedMap.get(type);
+				for (int i = 0; i < fairyInventory.getGaelSize(); i++) {
+					ItemStack gael = fairyInventory.getGaelByType(type, i);
+					if (gael == null || FairyGael.isCracked(gael) || deployed[i]) {
+						continue;
+					}
+					
+					FairyGael.regenFairy(gael, 1f);
+				}
 			}
 		}
 	}
@@ -394,6 +490,34 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				
 				if (type == FairyGaelType.LOGISTICS) {
 					fairy.setNetwork(tickNetworkChoice);
+				} else if (type == FairyGaelType.ATTACK) {
+					ItemStack scrollStack = this.fairyInventory.getScroll(index);
+					Spell spell = null;
+					if (scrollStack != null) {
+						spell = SpellScroll.getSpell(scrollStack);
+					}
+					
+					FairyCastTarget castTarget = fairyInventory.getFairyCastTarget(index);
+					FairyPlacementTarget placementTarget = fairyInventory.getFairyPlacementTarget(index);
+					
+					fairy.setFairyTargets(spell, castTarget, placementTarget);
+				} else if (type == FairyGaelType.BUILD) {
+					fairy.setBuildPump(new IBuildPump() {
+						@Override
+						public @Nullable BlockPos claimTask(EntityPersonalFairy fairy) {
+							return buildPlanner.claimTask(fairy);
+						}
+						
+						@Override
+						public void finishTask(EntityPersonalFairy fairy, BlockPos pos) {
+							buildPlanner.finishTask(fairy, pos);
+						}
+
+						@Override
+						public void abandonTask(EntityPersonalFairy entityPersonalFairy, BlockPos pos) {
+							buildPlanner.removeTask(pos);
+						}
+					});
 				}
 				
 				FairyRecord record = new FairyRecord(fairy, index);
@@ -527,8 +651,9 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		return attr != null && attr.getCompletedResearches().contains("fairy_gael_logistics");
 	}
 	
-	public void addBuildTask(LogisticsTaskPlaceBlock task) {
-		this.buildTasks.add(task);
+	@Override
+	public void addBuildSpot(BlockPos buildSpot) {
+		this.buildPlanner.add(buildSpot);
 	}
 	
 	/**
@@ -692,5 +817,25 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		}
 		
 		return pushList;
+	}
+
+	@Override
+	public Pair<BlockPos, BlockPos> getTemplateSelection() {
+		return this.templateSelection;
+	}
+
+	@Override
+	public void clearTemplateSelection() {
+		templateSelection.left = null;
+		templateSelection.right = null;
+	}
+
+	@Override
+	public void addTemplateSelection(BlockPos pos) {
+		if (templateSelection.left == null) {
+			templateSelection.left = pos;
+		} else {
+			templateSelection.right = pos;
+		}
 	}
 }

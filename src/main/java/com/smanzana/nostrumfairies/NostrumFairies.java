@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.capabilities.AttributeProvider;
-import com.smanzana.nostrumfairies.capabilities.INostrumFeyCapability;
+import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
@@ -21,6 +21,7 @@ import com.smanzana.nostrummagica.research.NostrumResearch.NostrumResearchTab;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.IEntityOwnable;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.item.Item;
@@ -180,7 +181,14 @@ public class NostrumFairies {
     	
     	if (e.getEntityLiving() instanceof EntityMob) {
     		EntityMob mob = (EntityMob) e.getEntityLiving();
-    		mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, true));
+    		if (e.getEntityLiving() instanceof IEntityOwnable) {
+    			IEntityOwnable owned = (IEntityOwnable) mob;
+    			mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, 10, true, false, (target) -> {
+    				return target != null && owned.getOwnerId() != null && !target.getUniqueID().equals(owned.getOwnerId());
+    			}));
+    		} else {
+	    		mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, true));
+    		}
     	}
     }
     

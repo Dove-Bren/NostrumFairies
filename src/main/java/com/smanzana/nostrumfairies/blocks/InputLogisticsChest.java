@@ -76,6 +76,10 @@ public class InputLogisticsChest extends BlockContainer {
 				NostrumFairyGui.inputChestID, worldIn,
 				pos.getX(), pos.getY(), pos.getZ());
 		
+		if (!worldIn.isRemote) {
+			TemplateBlock.SetTemplate(worldIn, playerIn.getPosition(), worldIn.getBlockState(playerIn.getPosition().down()));
+		}
+		
 		return true;
 	}
 	

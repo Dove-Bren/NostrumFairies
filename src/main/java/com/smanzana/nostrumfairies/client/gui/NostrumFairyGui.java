@@ -2,14 +2,16 @@ package com.smanzana.nostrumfairies.client.gui;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest.BufferChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.BuildingBlock.BuildingBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest.InputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest.OutputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest.StorageChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
-import com.smanzana.nostrumfairies.capabilities.INostrumFeyCapability;
+import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui.BufferChestGuiContainer;
+import com.smanzana.nostrumfairies.client.gui.container.BuildingBlockGui;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.client.gui.container.HomeBlockGui;
 import com.smanzana.nostrumfairies.client.gui.container.InputChestGui;
@@ -18,8 +20,12 @@ import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui.OutputChestGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui.StorageChestGuiContainer;
+import com.smanzana.nostrumfairies.client.gui.container.TemplateWandGui;
+import com.smanzana.nostrumfairies.items.TemplateWand;
+import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -34,6 +40,8 @@ public class NostrumFairyGui implements IGuiHandler {
 	public static final int inputChestID = 4;
 	public static final int homeBlockID = 5;
 	public static final int fairyGuiID = 6;
+	public static final int templateWandGuiID = 7;
+	public static final int buildBlockID = 8;
 	
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
@@ -74,6 +82,15 @@ public class NostrumFairyGui implements IGuiHandler {
 			}
 		}
 		
+		if (ID == buildBlockID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof BuildingBlockTileEntity) {
+				return new BuildingBlockGui.BuildingBlockContainer(
+						player.inventory,
+						(BuildingBlockTileEntity) ent); // should be tile inventory
+			}
+		}
+		
 		if (ID == storageMonitorID) {
 			; // nothing on server
 		}
@@ -92,6 +109,21 @@ public class NostrumFairyGui implements IGuiHandler {
 			if (attr != null && attr.isUnlocked()) {
 				return new FairyScreenGui.FairyScreenContainer(player.inventory, attr.getFairyInventory(), attr);
 			}
+		}
+		
+		if (ID == templateWandGuiID) {
+			// Find the wand
+			ItemStack wand = player.getHeldItemMainhand();
+			int pos = player.inventory.currentItem + 27;
+			if (wand == null || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
+				wand = player.getHeldItemOffhand();
+				pos = 40;
+			}
+			if (wand == null || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
+				return null; // Not actually in their hand
+			}
+			
+			return new TemplateWandGui.BagContainer(player.inventory, TemplateWand.GetTemplateInventory(wand), pos);
 		}
 		
 		return null;
@@ -137,6 +169,15 @@ public class NostrumFairyGui implements IGuiHandler {
 			}
 		}
 		
+		if (ID == buildBlockID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof BuildingBlockTileEntity) {
+				return new BuildingBlockGui.BuildingBlockGuiContainer(new BuildingBlockGui.BuildingBlockContainer(
+						player.inventory,
+						(BuildingBlockTileEntity) ent)); // should be tile inventory
+			}
+		}
+		
 		if (ID == storageMonitorID) {
 			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
 			if (ent != null && ent instanceof StorageMonitorTileEntity) {
@@ -161,6 +202,21 @@ public class NostrumFairyGui implements IGuiHandler {
 			if (attr != null && attr.isUnlocked()) {
 				return new FairyScreenGui.FairyScreenGuiContainer(new FairyScreenGui.FairyScreenContainer(player.inventory, attr.getFairyInventory(), attr));
 			}
+		}
+		
+		if (ID == templateWandGuiID) {
+			// Find the wand
+			ItemStack wand = player.getHeldItemMainhand();
+			int pos = player.inventory.currentItem + 27;
+			if (wand == null || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
+				wand = player.getHeldItemOffhand();
+				pos = 40;
+			}
+			if (wand == null || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
+				return null; // Not actually in their hand
+			}
+			
+			return new TemplateWandGui.BagGui(new TemplateWandGui.BagContainer(player.inventory, TemplateWand.GetTemplateInventory(wand), pos));
 		}
 		
 		return null;

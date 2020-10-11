@@ -17,6 +17,7 @@ import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
@@ -318,7 +319,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			// Check each candidate to see if we can stand there
 			for (BlockPos pos : offsets) {
 				if ((worldObj.isAirBlock(pos) || worldObj.getBlockState(pos).getMaterial() == Material.LAVA || !worldObj.getBlockState(pos).getMaterial().blocksMovement())
-						&& worldObj.isSideSolid(pos.down(), EnumFacing.UP)) {
+						&& worldObj.getBlockState(pos.down()).getMaterial().blocksMovement()) {
 					targetPos = pos;
 					break;
 				}
@@ -412,7 +413,51 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		if (task instanceof LogisticsTaskMineBlock) {
+		if (task instanceof LogisticsTaskBuildBlock) {
+			// TODO require a specialization\
+			LogisticsTaskBuildBlock build = (LogisticsTaskBuildBlock) task;
+			
+			if (build.getWorld() != this.worldObj) {
+				return false;
+			}
+			
+			// Check where the spot is
+			BlockPos target = build.getTargetPlaceLoc();
+			if (target == null || !this.canReach(target, true)) {
+				return false;
+			}
+			
+			// Find a better block to stand, if we weren't told explicitely to stand there
+			if (target == build.getTargetBlock()) {
+				target = findEmptySpot(target, true, true);
+				if (target == null) {
+					return false;
+				}
+			}
+			
+			// Check for pathing
+			if (this.getDistanceSq(target) < .2) {
+				return true;
+			}
+			Path currentPath = navigator.getPath();
+			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			if (success) {
+				success = Paths.IsComplete(navigator.getPath(), target, 2);
+			}
+			if (currentPath == null) {
+				if (!success) {
+					navigator.setPath(currentPath, 1.0);
+				}
+			} else {
+				navigator.setPath(currentPath, 1.0);
+			}
+			if (success) {
+				return true;
+			} else if (this.getDistanceSq(target) < 1) {
+				// extra case for if the navigator refuses cause we're too close
+				return true;
+			}
+		} else if (task instanceof LogisticsTaskMineBlock) {
 			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
 			
 			if (mine.getWorld() != this.worldObj) {
@@ -1098,6 +1143,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	protected float getGrowthForTask(ILogisticsTask task) {
 		if (task instanceof LogisticsTaskMineBlock) {
 			return 0.8f;
+		}
+		if (task instanceof LogisticsTaskBuildBlock) {
+			return .5f;
 		}
 		if (task instanceof LogisticsTaskPlaceBlock) {
 			return 0.65f;

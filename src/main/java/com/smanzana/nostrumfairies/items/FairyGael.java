@@ -27,6 +27,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -151,6 +152,11 @@ public class FairyGael extends Item implements ILoreTagged {
 				fairy.setJob(FairyJob.LOGISTICS);
 				break;
 			}
+			
+			if (world == null) {
+				world = DimensionManager.getWorld(0);
+			}
+			
 			fairy.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(0, 10, 0)), (IEntityLivingData)null);
 			setStoredEntity(stack, fairy);
 		}
@@ -165,6 +171,12 @@ public class FairyGael extends Item implements ILoreTagged {
 		Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompoundTag("data"), world, x, y, z, true);
 		if (entity instanceof EntityPersonalFairy) {
 			fey = (EntityPersonalFairy) entity;
+			
+			// update energy and health
+			float healthPerc = (float) getStoredHealth(stack);
+			fey.setHealth(fey.getMaxHealth() * healthPerc);
+			float energyPerc = (float) getStoredEnergy(stack);
+			fey.setEnergy(fey.getMaxEnergy() * energyPerc);
 		} else {
 			entity.isDead = true;
 			world.removeEntity(entity);
@@ -176,8 +188,8 @@ public class FairyGael extends Item implements ILoreTagged {
 		if (fey != null) {
 			NBTTagCompound tag = new NBTTagCompound();
 			tag.setString("name", fey.getName());
-			tag.setFloat("health", fey.getHealth() / Math.max(1f, fey.getMaxHealth()));
-			tag.setFloat("enegy", fey.getEnergy() / Math.max(1f, fey.getMaxEnergy()));
+			tag.setDouble("healthD", (double) fey.getHealth() / Math.max(1, (double) fey.getMaxHealth()));
+			tag.setDouble("energyD", (double) fey.getEnergy() / Math.max(1, (double) fey.getMaxEnergy()));
 			tag.setTag("data", fey.serializeNBT());
 			stack.setTagCompound(tag);
 		} else {
@@ -193,20 +205,41 @@ public class FairyGael extends Item implements ILoreTagged {
 		return null;
 	}
 	
-	public static float getStoredHealth(ItemStack stack) {
+	public static double getStoredHealth(ItemStack stack) {
 		if (stack.hasTagCompound()) {
-			return stack.getTagCompound().getFloat("health");
+			return stack.getTagCompound().getDouble("healthD");
 		}
 		
 		return 0f;
 	}
 	
-	public static float getStoredEnergy(ItemStack stack) {
+	public static double getStoredEnergy(ItemStack stack) {
 		if (stack.hasTagCompound()) {
-			return stack.getTagCompound().getFloat("energy");
+			return stack.getTagCompound().getDouble("energyD");
 		}
 		
 		return 0f;
+	}
+	
+	/**
+	 * Regenerate some health and energy for the stored gael.
+	 * @param gael
+	 * @param potency Relative efficiency. 1f is standard.
+	 */
+	public static void regenFairy(ItemStack gael, float potency) {
+		if (gael == null || isCracked(gael)) {
+			return;
+		}
+		
+		double energy = getStoredEnergy(gael) + (NostrumFairies.random.nextDouble() * .00085 * potency);
+		double health = getStoredHealth(gael) + (NostrumFairies.random.nextDouble() * .0002 * potency);
+		NBTTagCompound tag = gael.getTagCompound();
+		if (tag == null) {
+			initGael(gael, null);
+			tag = gael.getTagCompound();
+		}
+		tag.setDouble("energyD", Math.min(1, energy));
+		tag.setDouble("healthD", Math.min(1, health));
 	}
 	
 	public static void crack(ItemStack stack) {

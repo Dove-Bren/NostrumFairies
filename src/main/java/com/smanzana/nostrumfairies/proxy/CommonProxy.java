@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.proxy;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.BuildingBlock;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
@@ -14,11 +15,15 @@ import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
+import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrumfairies.blocks.WoodcuttingBlock;
 import com.smanzana.nostrumfairies.capabilities.CapabilityHandler;
-import com.smanzana.nostrumfairies.capabilities.INostrumFeyCapability;
-import com.smanzana.nostrumfairies.capabilities.NostrumFeyCapability;
-import com.smanzana.nostrumfairies.capabilities.NostrumFeyCapabilityStorage;
+import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
+import com.smanzana.nostrumfairies.capabilities.fey.NostrumFeyCapability;
+import com.smanzana.nostrumfairies.capabilities.fey.NostrumFeyCapabilityStorage;
+import com.smanzana.nostrumfairies.capabilities.templates.ITemplateViewerCapability;
+import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapability;
+import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapabilityStorage;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
@@ -37,6 +42,8 @@ import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
+import com.smanzana.nostrumfairies.items.TemplateScroll;
+import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.CapabilitySyncMessage;
 import com.smanzana.nostrumfairies.rituals.outcomes.OutcomeConstructGael;
@@ -45,8 +52,8 @@ import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.items.NostrumResourceItem;
 import com.smanzana.nostrummagica.items.NostrumResourceItem.ResourceType;
 import com.smanzana.nostrummagica.items.ReagentItem;
-import com.smanzana.nostrummagica.items.ThanoPendant;
 import com.smanzana.nostrummagica.items.ReagentItem.ReagentType;
+import com.smanzana.nostrummagica.items.ThanoPendant;
 import com.smanzana.nostrummagica.loretag.LoreRegistry;
 import com.smanzana.nostrummagica.research.NostrumResearch;
 import com.smanzana.nostrummagica.research.NostrumResearch.Size;
@@ -79,6 +86,7 @@ public class CommonProxy {
 	
 	public void preinit() {
 		CapabilityManager.INSTANCE.register(INostrumFeyCapability.class, new NostrumFeyCapabilityStorage(), NostrumFeyCapability.class);
+		CapabilityManager.INSTANCE.register(ITemplateViewerCapability.class, new TemplateViewerCapabilityStorage(), TemplateViewerCapability.class);
 		capabilityHandler = new CapabilityHandler();
 		NetworkHandler.getInstance();
 		NostrumFairiesSounds.registerSounds();
@@ -190,6 +198,14 @@ public class CommonProxy {
     	GameRegistry.register(
     			FairyInstrument.instance().setRegistryName(FairyInstrument.ID));
     	FairyInstrument.init();
+    	
+    	GameRegistry.register(
+    			TemplateWand.instance().setRegistryName(TemplateWand.ID));
+    	TemplateWand.init();
+    	
+    	GameRegistry.register(
+    			TemplateScroll.instance().setRegistryName(TemplateScroll.ID));
+    	TemplateScroll.init();
     }
     
     private void registerBlocks() {
@@ -280,6 +296,16 @@ public class CommonProxy {
     				}
     			}).setRegistryName(FeyBush.ID));
     	FeyBush.init();
+    	
+    	GameRegistry.register(TemplateBlock.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, TemplateBlock.ID));
+    	TemplateBlock.init();
+    	
+    	GameRegistry.register(BuildingBlock.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, BuildingBlock.ID));
+    	GameRegistry.register(
+    			(new ItemBlock(BuildingBlock.instance())).setRegistryName(BuildingBlock.ID));
+    	BuildingBlock.init();
     }
     
     private void registerLore() {

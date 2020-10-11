@@ -1,5 +1,7 @@
 package com.smanzana.nostrumfairies.capabilities;
 
+import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTBase;

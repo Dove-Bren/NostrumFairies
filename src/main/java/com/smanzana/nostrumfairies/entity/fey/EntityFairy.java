@@ -590,60 +590,59 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		return this.getHeldItem() == null;
 	}
 	
-	static class FairyFlyMoveHelper extends EntityMoveHelper
-    {
-        private final EntityLiving parentEntity;
-        private double lastDist;
-        private int courseChangeCooldown;
+	static class FairyFlyMoveHelper extends EntityMoveHelper {
+		private final EntityLiving parentEntity;
+		private double lastDist;
+		private int courseChangeCooldown;
 
-        public FairyFlyMoveHelper(EntityLiving entity)
-        {
-            super(entity);
-            this.parentEntity = entity;
-        }
+		public FairyFlyMoveHelper(EntityLiving entity) {
+			super(entity);
+			this.parentEntity = entity;
+		}
 
-        public void onUpdateMoveHelper()
-        {
-        	if (this.action == EntityMoveHelper.Action.MOVE_TO)
-            {
-                double d0 = this.posX - this.parentEntity.posX;
-                double d1 = this.posY - this.parentEntity.posY;
-                double d2 = this.posZ - this.parentEntity.posZ;
-                double d3 = d0 * d0 + d1 * d1 + d2 * d2;
+		public void onUpdateMoveHelper() {
+			if (this.action == EntityMoveHelper.Action.MOVE_TO) {
+				double d0 = this.posX - this.parentEntity.posX;
+				double d1 = this.posY - this.parentEntity.posY;
+				double d2 = this.posZ - this.parentEntity.posZ;
+				double d3 = d0 * d0 + d1 * d1 + d2 * d2;
 
-                d3 = (double)MathHelper.sqrt_double(d3);
-                
-                if (Math.abs(d3) < .25) {
-                	lastDist = 0.0D;
-                	this.parentEntity.motionX = 0;
-	                this.parentEntity.motionY = 0;
-	                this.parentEntity.motionZ = 0;
-                	this.action = EntityMoveHelper.Action.WAIT;
-                	return;
-                } else if (lastDist != 0.0D && Math.abs(lastDist - d3) < 0.05) {
-                	courseChangeCooldown--;
-                } else {
-                	courseChangeCooldown = this.parentEntity.getRNG().nextInt(5) + 10;
-                }
-                
-                if (courseChangeCooldown <= 0) {
-                	lastDist = 0.0D;
-                	this.action = EntityMoveHelper.Action.WAIT;
-                } else {
-                	float speed = (float) this.parentEntity.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getAttributeValue();
-                	//speed *= 3f;
-	                this.parentEntity.motionX = (d0 / d3) * speed;
-	                this.parentEntity.motionY = (d1 / d3) * speed;
-	                this.parentEntity.motionZ = (d2 / d3) * speed;
-	                
-	                lastDist = d3;
-	                
-	                float f9 = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
-	                this.entity.rotationYaw = this.limitAngle(this.entity.rotationYaw, f9, 90.0F);
-                }
-            }
-        }
-    }
+				d3 = (double)MathHelper.sqrt_double(d3);
+				
+				if (Math.abs(d3) < .25) {
+					lastDist = 0.0D;
+					this.parentEntity.motionX = 0;
+					this.parentEntity.motionY = 0;
+					this.parentEntity.motionZ = 0;
+					this.action = EntityMoveHelper.Action.WAIT;
+					return;
+				} else if (lastDist != 0.0D && Math.abs(lastDist - d3) < 0.05) {
+					courseChangeCooldown--;
+				} else {
+					courseChangeCooldown = this.parentEntity.getRNG().nextInt(5) + 10;
+				}
+
+				if (courseChangeCooldown <= 0) {
+					lastDist = 0.0D;
+					this.action = EntityMoveHelper.Action.WAIT;
+				} else {
+					float speed = (float) this.parentEntity.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getAttributeValue();
+					//speed *= 3f;
+					this.parentEntity.motionX = (d0 / d3) * speed;
+					this.parentEntity.motionY = (d1 / d3) * speed;
+					this.parentEntity.motionZ = (d2 / d3) * speed;
+					
+					lastDist = d3;
+					
+					float f9 = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
+					this.entity.rotationYaw = this.limitAngle(this.entity.rotationYaw, f9, 90.0F);
+				}
+			} else if (this.action == EntityMoveHelper.Action.STRAFE) {
+				this.entity.setMoveStrafing(moveStrafe);
+				this.entity.setMoveForward(moveForward);
+			}
+		}
+	}
 
 	@Override
 	protected String getRandomName() {

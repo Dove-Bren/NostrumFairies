@@ -1,9 +1,12 @@
-package com.smanzana.nostrumfairies.capabilities;
+package com.smanzana.nostrumfairies.capabilities.fey;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 
 public interface INostrumFeyCapability {
 
@@ -31,11 +34,17 @@ public interface INostrumFeyCapability {
 	public void enableFairies();
 	public boolean fairiesEnabled();
 	
+	// Templating
+	public Pair<BlockPos, BlockPos> getTemplateSelection();
+	public void clearTemplateSelection();
+	public void addTemplateSelection(BlockPos pos);
+	
+	// Building
+	public void addBuildSpot(BlockPos pos);
 	
 	// Operation
 	public void tick();
 	public void provideEntity(EntityLivingBase owner);
-	
 	
 	
 	// Serialization

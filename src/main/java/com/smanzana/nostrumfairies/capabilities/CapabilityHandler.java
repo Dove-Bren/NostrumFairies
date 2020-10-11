@@ -1,6 +1,7 @@
 package com.smanzana.nostrumfairies.capabilities;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,20 +13,20 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class CapabilityHandler {
 
-	public static final ResourceLocation CAPABILITY_LOC = new ResourceLocation(NostrumFairies.MODID, "fey_capability");
+	public static final ResourceLocation FEY_CAP_LOC = new ResourceLocation(NostrumFairies.MODID, "fey_capability");
 	
 	public CapabilityHandler() {
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	@SubscribeEvent
-	public void attachCapability(AttachCapabilitiesEvent<Entity> event) {
+	public void attachEntity(AttachCapabilitiesEvent<Entity> event) {
 		
 		//if player. Or not. Should get config going. For now, if it's a player make it?
 		//also need to catch death, etc
 		if (event.getObject() instanceof EntityPlayer) {
 			//attach that shizz
-			event.addCapability(CAPABILITY_LOC, new AttributeProvider(event.getObject()));
+			event.addCapability(FEY_CAP_LOC, new AttributeProvider(event.getObject()));
 			
 			if (event.getObject().worldObj != null && event.getObject().worldObj.isRemote) {
 				NostrumFairies.proxy.requestCapabilityRefresh();
@@ -43,4 +44,9 @@ public class CapabilityHandler {
 		//if (!event.getEntityPlayer().worldObj.isRemote)
 		//	NostrumMagica.proxy.syncPlayer((EntityPlayerMP) event.getEntityPlayer());
 	}
+	
+//	@SubscribeEvent
+//	public void attachItemstack(AttachCapabilitiesEvent<ItemStack> event) {
+//		// If there were things to attach to, I'd do this and figure out if the stack was for that item and attach
+//	}
 }

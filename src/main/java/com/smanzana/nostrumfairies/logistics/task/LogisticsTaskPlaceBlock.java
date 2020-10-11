@@ -24,7 +24,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -34,7 +33,7 @@ import net.minecraft.world.World;
  */
 public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	
-	private static enum Phase {
+	protected static enum Phase {
 		IDLE,
 		PICKUP,
 		WAITING,
@@ -53,7 +52,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	private @Nullable EntityLivingBase entity;
 	
 	private IItemCarrierFey fairy;
-	private Phase phase;
+	protected Phase phase;
 	private LogisticsSubTask pickupTask;
 	private LogisticsSubTask moveTask;
 	private LogisticsSubTask workTask;
@@ -67,7 +66,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	private boolean networkCacheResult;
 	private @Nullable EntityLivingBase pickupEntity;
 	
-	private int animCount = 0;
+	protected int animCount = 0;
 	
 	protected LogisticsTaskPlaceBlock(@Nullable ILogisticsComponent owningComponent, @Nullable EntityLivingBase entity,
 			String displayName, ItemStack item, IBlockState state, World world, BlockPos pos, BlockPos placeAt) {
@@ -349,7 +348,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 			} else {
 				// Spent some time waiting. Go ahead and try and retrieve again
 				phase = Phase.PICKUP;
-				animCount = 0;
+				animCount = -1;
 			}
 			break;
 		case PICKUP:
@@ -357,6 +356,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 			if (canTakeItems()) {
 				takeItems();
 				phase = Phase.MOVING;
+				animCount = -1;
 			} else {
 				// Items aren't there yet
 				idleTask = LogisticsSubTask.Idle(pickupComponent.getPosition());
@@ -382,7 +382,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 		return phase == Phase.DONE;
 	}
 	
-	private void placeBlock() {
+	protected void placeBlock() {
 		world.setBlockState(block, state);
 		SoundType soundtype = world.getBlockState(block).getBlock().getSoundType(world.getBlockState(block), world, block, null);
 		world.playSound(null, block, soundtype.getPlaceSound(), SoundCategory.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
@@ -390,13 +390,13 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 		fairy.removeItem(item);
 	}
 	
-	private boolean canTakeItems() {
+	protected boolean canTakeItems() {
 		Collection<ItemStack> available = pickupComponent.getItems();
 		
 		return ItemDeepStacks.isSubset(ItemDeepStack.toDeepList(available), Lists.newArrayList(new ItemDeepStack(this.item)));
 	}
 	
-	private void takeItems() {
+	protected void takeItems() {
 		pickupComponent.takeItem(item.copy());
 		fairy.addItem(item.copy());
 		
@@ -410,7 +410,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	}
 	
 	protected boolean isSpotValid(World world, BlockPos pos) {
-		return world.isAirBlock(block) || !world.isSideSolid(pos, EnumFacing.UP);
+		return world.isAirBlock(pos) || world.getBlockState(pos).getBlock().isReplaceable(world, pos);
 	}
 
 	@Override
