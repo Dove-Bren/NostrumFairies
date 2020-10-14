@@ -251,7 +251,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		
 		if (disabledTicks == 0 && owner instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) owner;
-			if (player.openContainer instanceof FairyScreenGui.FairyScreenContainer) {
+			if (player.openContainer instanceof FairyScreenGui.FairyScreenContainer
+					|| player.isSpectator()) {
 				this.retractFairies();
 				disabledTicks = Math.max(2, disabledTicks);
 			}

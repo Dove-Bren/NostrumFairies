@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.proxy;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.BuildingBlock;
+import com.smanzana.nostrumfairies.blocks.CraftingBlockDwarf;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
@@ -306,6 +307,12 @@ public class CommonProxy {
     	GameRegistry.register(
     			(new ItemBlock(BuildingBlock.instance())).setRegistryName(BuildingBlock.ID));
     	BuildingBlock.init();
+    	
+    	GameRegistry.register(CraftingBlockDwarf.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, CraftingBlockDwarf.ID));
+    	GameRegistry.register(
+    			(new ItemBlock(CraftingBlockDwarf.instance())).setRegistryName(CraftingBlockDwarf.ID));
+    	CraftingBlockDwarf.init();
     }
     
     private void registerLore() {

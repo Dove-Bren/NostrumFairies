@@ -8,6 +8,7 @@ import org.lwjgl.input.Keyboard;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.BuildingBlock;
+import com.smanzana.nostrumfairies.blocks.CraftingBlockDwarf;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
@@ -108,6 +109,7 @@ public class ClientProxy extends CommonProxy {
 		WoodcuttingBlock.WoodcuttingBlockRenderer.init();
 		MiningBlock.MiningBlockRenderer.init();
 		TemplateBlockRenderer.init();
+		CraftingBlockDwarf.CraftingBlockDwarfRenderer.init();
 		
 		RenderingRegistry.registerEntityRenderingHandler(EntityTestFairy.class, new IRenderFactory<EntityTestFairy>() {
 			@Override
@@ -287,6 +289,10 @@ public class ClientProxy extends CommonProxy {
 		}
 		
 		registerModel(TemplateScroll.instance(), 0, TemplateScroll.ID);
+		
+		registerModel(Item.getItemFromBlock(CraftingBlockDwarf.instance()),
+				0,
+				CraftingBlockDwarf.ID);
 	}
 	
 	@Override

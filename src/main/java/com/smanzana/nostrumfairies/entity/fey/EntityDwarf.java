@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.CraftingBlockDwarf;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
@@ -22,6 +23,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
@@ -413,7 +415,56 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		if (task instanceof LogisticsTaskBuildBlock) {
+		if (task instanceof LogisticsTaskWorkBlock) {
+			// TODO require a specialization
+			LogisticsTaskWorkBlock work = (LogisticsTaskWorkBlock) task;
+			
+			if (work.getWorld() != this.worldObj) {
+				return false;
+			}
+			
+			// Check where the spot is
+			BlockPos target = work.getBlockPos();
+			if (target == null || !this.canReach(target, true)) {
+				return false;
+			}
+			
+			// Dwarves only want to work at ones from dwarf blocks
+			IBlockState block = worldObj.getBlockState(target);
+			if (block == null || !(block.getBlock() instanceof CraftingBlockDwarf)) {
+				return false;
+			}
+			
+			// Find a better block to stand, if we weren't told explicitely to stand there
+			target = findEmptySpot(target, true, true);
+			if (target == null) {
+				return false;
+			}
+			
+			// Check for pathing
+			if (this.getDistanceSq(target) < .2) {
+				return true;
+			}
+			Path currentPath = navigator.getPath();
+			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			if (success) {
+				success = Paths.IsComplete(navigator.getPath(), target, 2);
+			}
+			if (currentPath == null) {
+				if (!success) {
+					navigator.setPath(currentPath, 1.0);
+				}
+			} else {
+				navigator.setPath(currentPath, 1.0);
+			}
+			if (success) {
+				return true;
+			} else if (this.getDistanceSq(target) < 1) {
+				// extra case for if the navigator refuses cause we're too close
+				return true;
+			}
+			
+		} else if (task instanceof LogisticsTaskBuildBlock) {
 			// TODO require a specialization\
 			LogisticsTaskBuildBlock build = (LogisticsTaskBuildBlock) task;
 			
@@ -612,8 +663,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		} else {
 		if (newTask instanceof LogisticsTaskMineBlock) {
 				setActivitySummary("status.dwarf.work.mine");
+			} else if (newTask instanceof LogisticsTaskBuildBlock) {
+				setActivitySummary("status.dwarf.work.build");
 			} else if (newTask instanceof LogisticsTaskPlaceBlock) {
 				setActivitySummary("status.dwarf.work.repair");
+			} else if (newTask instanceof LogisticsTaskWorkBlock) {
+				setActivitySummary("status.dwarf.work.craft");
 			}  else if (newTask instanceof LogisticsTaskDepositItem) {
 				setActivitySummary("status.generic.return");
 			} else {
@@ -1146,6 +1201,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		}
 		if (task instanceof LogisticsTaskBuildBlock) {
 			return .5f;
+		}
+		if (task instanceof LogisticsTaskWorkBlock) { // Crafting
+			return 1.2f;
 		}
 		if (task instanceof LogisticsTaskPlaceBlock) {
 			return 0.65f;

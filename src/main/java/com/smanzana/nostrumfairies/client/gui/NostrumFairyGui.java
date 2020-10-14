@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.client.gui;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest.BufferChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.BuildingBlock.BuildingBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.CraftingBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest.InputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest.OutputChestTileEntity;
@@ -12,6 +13,7 @@ import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui.BufferChestGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.BuildingBlockGui;
+import com.smanzana.nostrumfairies.client.gui.container.CraftingStationGui;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.client.gui.container.HomeBlockGui;
 import com.smanzana.nostrumfairies.client.gui.container.InputChestGui;
@@ -42,6 +44,7 @@ public class NostrumFairyGui implements IGuiHandler {
 	public static final int fairyGuiID = 6;
 	public static final int templateWandGuiID = 7;
 	public static final int buildBlockID = 8;
+	public static final int craftDwarfID = 9;
 	
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
@@ -124,6 +127,15 @@ public class NostrumFairyGui implements IGuiHandler {
 			}
 			
 			return new TemplateWandGui.BagContainer(player.inventory, TemplateWand.GetTemplateInventory(wand), pos);
+		}
+		
+		if (ID == craftDwarfID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof CraftingBlockTileEntity) {
+				return new CraftingStationGui.CraftingStationContainer(
+						player.inventory,
+						(CraftingBlockTileEntity) ent); // should be tile inventory
+			}
 		}
 		
 		return null;
@@ -217,6 +229,15 @@ public class NostrumFairyGui implements IGuiHandler {
 			}
 			
 			return new TemplateWandGui.BagGui(new TemplateWandGui.BagContainer(player.inventory, TemplateWand.GetTemplateInventory(wand), pos));
+		}
+		
+		if (ID == craftDwarfID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof CraftingBlockTileEntity) {
+				return new CraftingStationGui.CraftingStationGuiContainer(new CraftingStationGui.CraftingStationContainer(
+						player.inventory,
+						(CraftingBlockTileEntity) ent));
+			}
 		}
 		
 		return null;

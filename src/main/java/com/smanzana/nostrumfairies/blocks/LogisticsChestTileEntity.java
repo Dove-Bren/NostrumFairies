@@ -207,5 +207,4 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 			worldObj.spawnEntityInWorld(item);
 		}
 	}
-	
 }

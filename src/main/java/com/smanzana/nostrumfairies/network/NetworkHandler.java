@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.network;
 
 import com.smanzana.nostrumfairies.network.messages.CapabilityRequest;
 import com.smanzana.nostrumfairies.network.messages.CapabilitySyncMessage;
+import com.smanzana.nostrumfairies.network.messages.CraftingStationActionMessage;
 import com.smanzana.nostrumfairies.network.messages.FairyGuiActionMessage;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateResponse;
@@ -46,6 +47,7 @@ public class NetworkHandler {
 		syncChannel.registerMessage(CapabilityRequest.Handler.class, CapabilityRequest.class, discriminator++, Side.SERVER);
 		syncChannel.registerMessage(FairyGuiActionMessage.Handler.class, FairyGuiActionMessage.class, discriminator++, Side.SERVER);
 		syncChannel.registerMessage(TemplateWandUpdate.Handler.class, TemplateWandUpdate.class, discriminator++, Side.SERVER);
+		syncChannel.registerMessage(CraftingStationActionMessage.Handler.class, CraftingStationActionMessage.class, discriminator++, Side.SERVER);
 	}
 	
 }
