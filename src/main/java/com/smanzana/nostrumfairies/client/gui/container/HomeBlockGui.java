@@ -19,6 +19,7 @@ import com.smanzana.nostrumfairies.client.gui.FeySoulIcon;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
+import com.smanzana.nostrumfairies.items.FeySoulStone;
 
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -31,6 +32,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -620,6 +622,28 @@ public class HomeBlockGui {
 			}
 			
 			return super.getStack();
+		}
+		
+		@Override
+		public void putStack(@Nullable ItemStack stack) {
+			EntityFeyBase spawned = null;
+			
+			if (stack != null && te.getWorld() != null && !te.getWorld().isRemote) {
+				if (FeySoulStone.hasStoredFey(stack)) {
+					// They put in a soul stone and it has a fey in it. Automatically spawn them and add them
+					// to the entity list
+					BlockPos pos = te.getPos();
+					spawned = FeySoulStone.spawnStoredEntity(stack, te.getWorld(), pos.getX() + .5, pos.getY() + 2, pos.getZ() + .5);
+					stack = FeySoulStone.clearEntity(stack);
+				}
+			}
+			
+			super.putStack(stack);
+			
+			if (spawned != null) {
+				//te.addResident(spawned);
+				spawned.setHome(te.getPos());
+			}
 		}
 	}
 	

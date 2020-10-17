@@ -135,14 +135,15 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	public static ItemStack create(SoulStoneType type) {
-		return create(type, null, null);
+		return create(type, null, null, null);
 	}
 	
 	public static @Nullable ItemStack create(SoulStoneType type, EntityFeyBase fey) {
 		NBTTagCompound nbt = null;
 		String name = null;
+		ResidentType feyType = null;
 		if (fey != null) {
-			ResidentType feyType = fey.getHomeType();
+			feyType = fey.getHomeType();
 			if (!type.canHold(feyType)) {
 				return null;
 			}
@@ -150,15 +151,16 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			name = fey.getName();
 		}
 		
-		return create(type, name, nbt);
+		return create(type, name, feyType, nbt);
 	}
 	
-	protected static ItemStack create(SoulStoneType type, String name, NBTTagCompound nbt) {
+	protected static ItemStack create(SoulStoneType type, String name, ResidentType residentType, NBTTagCompound nbt) {
 		ItemStack stack = new ItemStack(instance(), 1, metaFromTypes(nbt != null, type));
 		if (nbt != null) {
 			NBTTagCompound tag = new NBTTagCompound();
 			tag.setString("name", name);
 			tag.setTag("data", nbt);
+			tag.setString("type", residentType.getName());
 			stack.setTagCompound(tag);
 		}
 		return stack;
@@ -214,6 +216,21 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	
 	public static String getStoredEntityName(ItemStack stack) {
 		return stack.hasTagCompound() ? stack.getTagCompound().getString("name") : null;
+	}
+	
+	public static ResidentType getStoredEntityType(ItemStack stack) {
+		if (!stack.hasTagCompound()) {
+			return null;
+		}
+		
+		ResidentType type = null;
+		try {
+			type = ResidentType.valueOf(stack.getTagCompound().getString("type").toUpperCase());
+		} catch (Exception e) {
+			;
+		}
+		
+		return type;
 	}
 	
 	@Override
@@ -292,6 +309,11 @@ public class FeySoulStone extends Item implements ILoreTagged {
 				name = "An unknown entity";
 			}
 			tooltip.add(ChatFormatting.AQUA + name + ChatFormatting.RESET);
+			
+			ResidentType type = getStoredEntityType(stack);
+			if (type != null) {
+				tooltip.add(ChatFormatting.DARK_AQUA + type.getName() + ChatFormatting.RESET);
+			}
 		}
 	}
 	

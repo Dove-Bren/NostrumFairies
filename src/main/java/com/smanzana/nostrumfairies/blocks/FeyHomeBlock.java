@@ -412,8 +412,16 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			
 			protected boolean isValidSoulStone(@Nullable ItemStack stack) {
 				if (stack != null && stack.getItem() instanceof FeySoulStone) {
-					return FeySoulStone.getTypeOf(stack).canHold(owner.type);
-					// also could add that the material is correct for the type of home here.
+					if (!FeySoulStone.getTypeOf(stack).canHold(owner.type)) {
+						return false;
+					}
+					
+					// Make sure any entity inside matches, too
+					if (FeySoulStone.hasStoredFey(stack)) {
+						return FeySoulStone.getStoredEntityType(stack) == owner.type;
+					}
+					
+					return true;
 				}
 				
 				return false;

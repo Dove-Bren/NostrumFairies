@@ -212,7 +212,11 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			ent = getHomeEnt();
 			if (ent != null) {
 				ent.addResident(this);
+				if (this.getStatus() == FairyGeneralStatus.WANDERING) {
+					this.changeStatus(FairyGeneralStatus.IDLE);
+				}
 			}
+			
 		}
 	}
 	
