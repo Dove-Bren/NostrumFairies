@@ -39,6 +39,7 @@ public final class FeySlotIcon {
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(offsetX, offsetY, 0);
 		GlStateManager.scale(scale, scale, scale);
+		GlStateManager.color(1f, 1f, 1f, 1f);
         Gui.drawModalRectWithCustomSizedTexture(0, 0, 0, 0, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
         GlStateManager.popMatrix();
         

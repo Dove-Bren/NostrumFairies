@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
+import com.smanzana.nostrumfairies.blocks.CraftingBlockGnome;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -15,6 +16,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskHarvest;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
@@ -200,7 +202,56 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		if (task instanceof LogisticsTaskPlantItem) {
+		if (task instanceof LogisticsTaskWorkBlock) {
+			// TODO require a specialization
+			LogisticsTaskWorkBlock work = (LogisticsTaskWorkBlock) task;
+			
+			if (work.getWorld() != this.worldObj) {
+				return false;
+			}
+			
+			// Check where the spot is
+			BlockPos target = work.getBlockPos();
+			if (target == null || !this.canReach(target, true)) {
+				return false;
+			}
+			
+			// Dwarves only want to work at ones from dwarf blocks
+			IBlockState block = worldObj.getBlockState(target);
+			if (block == null || !(block.getBlock() instanceof CraftingBlockGnome)) {
+				return false;
+			}
+			
+			// Find a better block to stand, if we weren't told explicitely to stand there
+			target = findEmptySpot(target, true);
+			if (target == null) {
+				return false;
+			}
+			
+			// Check for pathing
+			if (this.getDistanceSq(target) < .2) {
+				return true;
+			}
+			Path currentPath = navigator.getPath();
+			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			if (success) {
+				success = Paths.IsComplete(navigator.getPath(), target, 2);
+			}
+			if (currentPath == null) {
+				if (!success) {
+					navigator.setPath(currentPath, 1.0);
+				}
+			} else {
+				navigator.setPath(currentPath, 1.0);
+			}
+			if (success) {
+				return true;
+			} else if (this.getDistanceSq(target) < 1) {
+				// extra case for if the navigator refuses cause we're too close
+				return true;
+			}
+			
+		} else if (task instanceof LogisticsTaskPlantItem) {
 			LogisticsTaskPlantItem plant = (LogisticsTaskPlantItem) task;
 			
 			if (plant.getWorld() != this.worldObj) {
@@ -719,6 +770,9 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		}
 		if (task instanceof LogisticsTaskHarvest) {
 			return 0.6f;
+		}
+		if (task instanceof LogisticsTaskWorkBlock) {
+			return 0.65f;
 		}
 		
 		return 0f;

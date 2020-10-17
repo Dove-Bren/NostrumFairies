@@ -666,6 +666,22 @@ public class LogisticsNetwork {
 		return cachedCondensedItems;
 	}
 	
+	public long getItemCount(ItemStack stack) {
+		return getItemCount(new ItemDeepStack(stack));
+	}
+	
+	public long getItemCount(ItemDeepStack stack) {
+		List<ItemDeepStack> networkItems = getAllCondensedNetworkItems();
+		long available = 0;
+		for (ItemDeepStack networkItem : networkItems) {
+			if (networkItem.canMerge(stack)) {
+				available = networkItem.getCount();
+				break;
+			}
+		}
+		return available;
+	}
+	
 	/**
 	 * Get a map from a logistics network component and the items it has.
 	 * This version of this call does not do any filtering based on distance.

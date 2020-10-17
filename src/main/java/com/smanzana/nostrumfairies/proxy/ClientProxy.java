@@ -9,6 +9,8 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.BuildingBlock;
 import com.smanzana.nostrumfairies.blocks.CraftingBlockDwarf;
+import com.smanzana.nostrumfairies.blocks.CraftingBlockElf;
+import com.smanzana.nostrumfairies.blocks.CraftingBlockGnome;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
@@ -16,6 +18,7 @@ import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
+import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
@@ -110,6 +113,9 @@ public class ClientProxy extends CommonProxy {
 		MiningBlock.MiningBlockRenderer.init();
 		TemplateBlockRenderer.init();
 		CraftingBlockDwarf.CraftingBlockDwarfRenderer.init();
+		CraftingBlockElf.CraftingBlockElfRenderer.init();
+		CraftingBlockGnome.CraftingBlockGnomeRenderer.init();
+		LogisticsSensorBlock.LogisticsSensorRenderer.init();
 		
 		RenderingRegistry.registerEntityRenderingHandler(EntityTestFairy.class, new IRenderFactory<EntityTestFairy>() {
 			@Override
@@ -293,6 +299,15 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(CraftingBlockDwarf.instance()),
 				0,
 				CraftingBlockDwarf.ID);
+		registerModel(Item.getItemFromBlock(CraftingBlockElf.instance()),
+				0,
+				CraftingBlockElf.ID);
+		registerModel(Item.getItemFromBlock(CraftingBlockGnome.instance()),
+				0,
+				CraftingBlockGnome.ID);
+		registerModel(Item.getItemFromBlock(LogisticsSensorBlock.instance()),
+				0,
+				LogisticsSensorBlock.ID);
 	}
 	
 	@Override

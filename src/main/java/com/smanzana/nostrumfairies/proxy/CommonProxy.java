@@ -4,6 +4,8 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.BuildingBlock;
 import com.smanzana.nostrumfairies.blocks.CraftingBlockDwarf;
+import com.smanzana.nostrumfairies.blocks.CraftingBlockElf;
+import com.smanzana.nostrumfairies.blocks.CraftingBlockGnome;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
@@ -11,6 +13,7 @@ import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
+import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
@@ -151,12 +154,14 @@ public class CommonProxy {
     			false
     			);
     	
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 30, 2, 6, EnumCreatureType.MONSTER, 
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 60, 2, 6, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.MAGICAL));
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 40, 1, 3, EnumCreatureType.MONSTER, 
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 50, 1, 3, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.FOREST));
     	EntityRegistry.addSpawn(EntityShadowFey.class, 30, 2, 6, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.SPOOKY));
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 40, 1, 3, EnumCreatureType.MONSTER, 
+    			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.DENSE));
 
     	registerItems();
     	registerBlocks();
@@ -313,6 +318,24 @@ public class CommonProxy {
     	GameRegistry.register(
     			(new ItemBlock(CraftingBlockDwarf.instance())).setRegistryName(CraftingBlockDwarf.ID));
     	CraftingBlockDwarf.init();
+    	
+    	GameRegistry.register(CraftingBlockElf.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, CraftingBlockElf.ID));
+    	GameRegistry.register(
+    			(new ItemBlock(CraftingBlockElf.instance())).setRegistryName(CraftingBlockElf.ID));
+    	CraftingBlockElf.init();
+    	
+    	GameRegistry.register(CraftingBlockGnome.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, CraftingBlockGnome.ID));
+    	GameRegistry.register(
+    			(new ItemBlock(CraftingBlockGnome.instance())).setRegistryName(CraftingBlockGnome.ID));
+    	CraftingBlockGnome.init();
+    	
+    	GameRegistry.register(LogisticsSensorBlock.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, LogisticsSensorBlock.ID));
+    	GameRegistry.register(
+    			(new ItemBlock(LogisticsSensorBlock.instance())).setRegistryName(LogisticsSensorBlock.ID));
+    	LogisticsSensorBlock.init();
     }
     
     private void registerLore() {

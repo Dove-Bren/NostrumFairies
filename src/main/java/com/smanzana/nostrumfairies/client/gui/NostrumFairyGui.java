@@ -6,6 +6,7 @@ import com.smanzana.nostrumfairies.blocks.BuildingBlock.BuildingBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.CraftingBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest.InputChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock.LogisticsSensorTileEntity;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest.OutputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest.StorageChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
@@ -14,10 +15,12 @@ import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui.BufferChestGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.BuildingBlockGui;
 import com.smanzana.nostrumfairies.client.gui.container.CraftingStationGui;
+import com.smanzana.nostrumfairies.client.gui.container.CraftingStationSmallGui;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.client.gui.container.HomeBlockGui;
 import com.smanzana.nostrumfairies.client.gui.container.InputChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.InputChestGui.InputChestGuiContainer;
+import com.smanzana.nostrumfairies.client.gui.container.LogisticsSensorGui;
 import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui.OutputChestGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui;
@@ -45,6 +48,10 @@ public class NostrumFairyGui implements IGuiHandler {
 	public static final int templateWandGuiID = 7;
 	public static final int buildBlockID = 8;
 	public static final int craftDwarfID = 9;
+	public static final int craftElfID = 10;
+	public static final int craftGnomeID = 11;
+	
+	public static final int logisticsSensorID = 12;
 	
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
@@ -129,12 +136,30 @@ public class NostrumFairyGui implements IGuiHandler {
 			return new TemplateWandGui.BagContainer(player.inventory, TemplateWand.GetTemplateInventory(wand), pos);
 		}
 		
-		if (ID == craftDwarfID) {
+		if (ID == craftDwarfID || ID == craftElfID) {
 			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
 			if (ent != null && ent instanceof CraftingBlockTileEntity) {
 				return new CraftingStationGui.CraftingStationContainer(
 						player.inventory,
 						(CraftingBlockTileEntity) ent); // should be tile inventory
+			}
+		}
+		
+		if (ID == craftGnomeID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof CraftingBlockTileEntity) {
+				return new CraftingStationSmallGui.CraftingStationSmallContainer(
+						player.inventory,
+						(CraftingBlockTileEntity) ent); // should be tile inventory
+			}
+		}
+		
+		if (ID == logisticsSensorID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof LogisticsSensorTileEntity) {
+				return new LogisticsSensorGui.LogisticsSensorContainer(
+						player.inventory,
+						(LogisticsSensorTileEntity) ent); // should be tile inventory
 			}
 		}
 		
@@ -231,12 +256,30 @@ public class NostrumFairyGui implements IGuiHandler {
 			return new TemplateWandGui.BagGui(new TemplateWandGui.BagContainer(player.inventory, TemplateWand.GetTemplateInventory(wand), pos));
 		}
 		
-		if (ID == craftDwarfID) {
+		if (ID == craftDwarfID || ID == craftElfID) {
 			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
 			if (ent != null && ent instanceof CraftingBlockTileEntity) {
 				return new CraftingStationGui.CraftingStationGuiContainer(new CraftingStationGui.CraftingStationContainer(
 						player.inventory,
 						(CraftingBlockTileEntity) ent));
+			}
+		}
+		
+		if (ID == craftGnomeID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof CraftingBlockTileEntity) {
+				return new CraftingStationSmallGui.CraftingStationSmallGuiContainer(new CraftingStationSmallGui.CraftingStationSmallContainer(
+						player.inventory,
+						(CraftingBlockTileEntity) ent));
+			}
+		}
+		
+		if (ID == logisticsSensorID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof LogisticsSensorTileEntity) {
+				return new LogisticsSensorGui.LogisticsSensorGuiContainer(new LogisticsSensorGui.LogisticsSensorContainer(
+						player.inventory,
+						(LogisticsSensorTileEntity) ent)); // should be tile inventory
 			}
 		}
 		

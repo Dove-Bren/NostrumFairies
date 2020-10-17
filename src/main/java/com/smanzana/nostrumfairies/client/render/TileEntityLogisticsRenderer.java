@@ -12,6 +12,7 @@ import com.smanzana.nostrummagica.utils.Curves;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.Tessellator;
@@ -72,7 +73,9 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				GlStateManager.disableRescaleNormal();
 				GL11.glDisable(GL11.GL_LINE_STIPPLE);
 				GL11.glLineStipple(1, (short) 1);
+				GlStateManager.color(1f, 1f, 1f, .9f);
 				GlStateManager.color(1f, 1f, 1f, 1f);
+				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 				
 				for (ILogisticsComponent component : neighbors) {
 					final Vec3d offset = new Vec3d(component.getPosition().toImmutable().subtract(te.getPos()));

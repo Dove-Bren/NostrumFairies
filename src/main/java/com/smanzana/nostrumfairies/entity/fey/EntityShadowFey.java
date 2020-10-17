@@ -57,6 +57,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
@@ -477,6 +478,16 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 				
 			}
 		}
+	}
+	
+	@Override
+	protected boolean isValidLightLevel() {
+		BlockPos pos = new BlockPos(this.posX, this.getEntityBoundingBox().minY, this.posZ);
+		if (this.worldObj.getLightFor(EnumSkyBlock.SKY, pos) < 6) {
+			return false;
+		};
+		
+		return true;
 	}
 	
 	public static final class ShadowFeyConversionLore implements ILoreTagged {

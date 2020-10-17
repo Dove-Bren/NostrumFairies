@@ -8,6 +8,8 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.CraftingBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.CraftingBlockTileEntity.CraftingCriteriaMode;
 import com.smanzana.nostrumfairies.blocks.CraftingBlockTileEntity.CraftingLogicOp;
+import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
+import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.CraftingStationActionMessage;
 import com.smanzana.nostrummagica.client.gui.container.AutoContainer;
@@ -48,6 +50,8 @@ public class CraftingStationGui {
 	private static final int GUI_TOP_INV_VOFFSET = 18;
 	private static final int GUI_OUTPUT_INV_HOFFSET = 126;
 	private static final int GUI_OUTPUT_INV_VOFFSET = 36;
+	private static final int GUI_UPGRADE_INV_HOFFSET = GUI_TEXT_MAIN_WIDTH - (GUI_INV_CELL_LENGTH + 3);
+	private static final int GUI_UPGRADE_INV_VOFFSET = 5;
 	
 	private static final int GUI_PLAYER_INV_HOFFSET = 8;
 	private static final int GUI_PLAYER_INV_VOFFSET = 86;
@@ -77,6 +81,11 @@ public class CraftingStationGui {
 	private static final int GUI_ERROR_ICON_VOFFSET = 220;
 	private static final int GUI_ERROR_ICON_WIDTH = 21;
 	private static final int GUI_ERROR_ICON_HEIGHT = 21;
+	
+	private static final int GUI_BOOST_ICON_HOFFSET = GUI_ERROR_ICON_HOFFSET + GUI_ERROR_ICON_WIDTH;
+	private static final int GUI_BOOST_ICON_VOFFSET = GUI_ERROR_ICON_VOFFSET;
+	private static final int GUI_BOOST_ICON_WIDTH = 21;
+	private static final int GUI_BOOST_ICON_HEIGHT = 21;
 
 	public static class CraftingStationContainer extends AutoContainer {
 		
@@ -84,6 +93,7 @@ public class CraftingStationGui {
 		private int stationInputCount;
 		protected Slot outputSlot;
 		protected HideableSlot criteriaSlot;
+		protected FeyStoneContainerSlot upgradeSlot;
 		
 		private int stationInputIDStart;
 		private int stationInputIDEnd;
@@ -109,8 +119,8 @@ public class CraftingStationGui {
 			stationInputCount = dim * dim;
 			for (int i = 0; i < dim; i++) {
 				for (int j = 0; j < dim; j++) {
-					final int index = (i * 3) + j;
-					this.addSlotToContainer(new Slot(station, index, GUI_TEXT_SIDE_WIDTH + GUI_TOP_INV_HOFFSET + j * 18, GUI_TOP_INV_VOFFSET + (i * 18)) {
+					final int index = (i * dim) + j;
+					this.addSlotToContainer(new Slot(station, index, GUI_TEXT_SIDE_WIDTH + getCraftGridStartX() + j * 18, getCraftGridStartY() + (i * 18)) {
 						@Override
 						public boolean isItemValid(@Nullable ItemStack stack) {
 					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
@@ -148,6 +158,20 @@ public class CraftingStationGui {
 			// Sometimes-hidden criteria slot
 			this.criteriaSlot = new HideableSlot(station, stationInputCount + 1, 1 + (GUI_TEXT_SIDE_WIDTH - GUI_INV_CELL_LENGTH) / 2, 31);
 			this.addSlotToContainer(criteriaSlot);
+			
+			// Upgrade slot
+			this.upgradeSlot = new FeyStoneContainerSlot(station, stationInputCount + 2,
+					GUI_TEXT_SIDE_WIDTH + GUI_UPGRADE_INV_HOFFSET,
+					GUI_UPGRADE_INV_VOFFSET, FeySlotType.EITHERGRADE);
+			this.addSlotToContainer(upgradeSlot);
+		}
+		
+		protected int getCraftGridStartX() {
+			return GUI_TOP_INV_HOFFSET;
+		}
+		
+		protected int getCraftGridStartY() {
+			return GUI_TOP_INV_VOFFSET;
 		}
 		
 		@Override
@@ -187,18 +211,25 @@ public class CraftingStationGui {
 		@Override
 		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
 			if (player.inventory.getItemStack() == null) {
-				// empty hand. Right-click?
-				if (dragType == 1 && clickTypeIn == ClickType.PICKUP) {
+				// empty hand.
+				if (clickTypeIn == ClickType.PICKUP) {
 					// Input slot?
 					if (slotId >= stationInputIDStart && slotId < stationInputIDEnd
 							&& station.getStackInSlot(slotId - stationInputIDStart) == null) {
-						station.setTemplate(slotId - stationInputIDStart, null);
-						return null;
+						
+						// Only care of it's a right-click.
+						if (dragType == 1) {
+							station.setTemplate(slotId - stationInputIDStart, null);
+							return null;
+						}
 					}
 					
 					// Criteria slot?
-					if (slotId > stationInputIDEnd) {
-						station.setInventorySlotContents(slotId - stationInputIDStart, null);
+					if (slotId == stationInputIDEnd + 1) {
+						// If right-click, remove template. Otherwise ignore.
+						if (dragType == 1) {
+							station.setInventorySlotContents(slotId - stationInputIDStart, null);
+						}
 						return null;
 					}
 				}
@@ -215,7 +246,7 @@ public class CraftingStationGui {
 					}
 					
 					// Criteria slot?
-					if (slotId > stationInputIDEnd && station.getStackInSlot(slotId - stationInputIDStart) == null) {
+					if (slotId == stationInputIDEnd + 1 && station.getStackInSlot(slotId - stationInputIDStart) == null) {
 						ItemStack template = player.inventory.getItemStack().copy();
 						template.stackSize = 1;
 						station.setInventorySlotContents(slotId - stationInputIDStart, template);
@@ -370,13 +401,35 @@ public class CraftingStationGui {
 		}
 		
 		private void drawError() {
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1f);
+			final long period = 2000L;
+			float perc = (float) ((double) (System.currentTimeMillis() % period) / (double) period);
+			perc = (float) (.5 * (1 + Math.sin(perc * Math.PI * 2)));
+			float alpha = .2f + .3f * perc;
+			GlStateManager.color(1.0F,  1.0F, 1.0F, alpha);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			GlStateManager.enableBlend();
-			this.drawTexturedModalRect(0, 0,
+			drawScaledCustomSizeModalRect(-1, -1,
 					GUI_ERROR_ICON_HOFFSET, GUI_ERROR_ICON_VOFFSET,
-					GUI_ERROR_ICON_WIDTH, GUI_ERROR_ICON_HEIGHT);
+					GUI_ERROR_ICON_WIDTH, GUI_ERROR_ICON_HEIGHT,
+					GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH,
+					256, 256);
+		}
+		
+		private void drawBoost() {
+			final long period = 2000L;
+			float perc = (float) ((double) (System.currentTimeMillis() % period) / (double) period);
+			perc = (float) (.5 * (1 + Math.sin(perc * Math.PI * 2)));
+			float alpha = .2f + .3f * perc;
+			GlStateManager.color(1.0F,  1.0F, 1.0F, alpha);
+			mc.getTextureManager().bindTexture(TEXT);
+			
+			GlStateManager.enableBlend();
+			drawScaledCustomSizeModalRect(-1 + ((GUI_INV_CELL_LENGTH * 3) / 4), -1 + ((GUI_INV_CELL_LENGTH * 3) / 4),
+					GUI_BOOST_ICON_HOFFSET, GUI_BOOST_ICON_VOFFSET,
+					GUI_BOOST_ICON_WIDTH, GUI_BOOST_ICON_HEIGHT,
+					GUI_INV_CELL_LENGTH / 4, GUI_INV_CELL_LENGTH / 4,
+					256, 256);
 		}
 		
 		private void drawTemplate(@Nullable ItemStack template) {
@@ -465,13 +518,15 @@ public class CraftingStationGui {
 			for (int i = 0; i < container.stationInputCount; i++) {
 				final ItemStack template = container.station.getTemplate(i);
 				final ItemStack stack = container.station.getStackInSlot(i);
-				final boolean error = container.station.getField(i + 3) != 0;
-				final int x = (i % 3);
-				final int y = (i / 3);
+				final boolean error = container.station.getField(i + 3) == -1;
+				final boolean bonus = container.station.getField(i + 3) == 1;
+				final int dim = container.station.getCraftGridDim();
+				final int x = (i % dim);
+				final int y = (i / dim);
 				
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(horizontalMargin + GUI_TOP_INV_HOFFSET + (x * GUI_INV_CELL_LENGTH),
-						verticalMargin + GUI_TOP_INV_VOFFSET + (y * GUI_INV_CELL_LENGTH),
+				GlStateManager.translate(horizontalMargin + container.getCraftGridStartX() + (x * GUI_INV_CELL_LENGTH),
+						verticalMargin + container.getCraftGridStartY() + (y * GUI_INV_CELL_LENGTH),
 						0);
 				
 				if (stack == null) {
@@ -484,8 +539,22 @@ public class CraftingStationGui {
 				if (error) {
 					GlStateManager.translate(0, 0, 100);
 					drawError();
+				} else if (bonus) {
+					GlStateManager.translate(0, 0, 100);
+					drawBoost();
 				}
 				
+				GlStateManager.popMatrix();
+			}
+			
+			// Draw upgrade slot
+			{
+				GlStateManager.pushMatrix();
+				GlStateManager.translate(guiLeft,
+						verticalMargin,
+						0);
+				FeySlotIcon.draw(container.upgradeSlot, 1f);
+				GlStateManager.disableLighting();
 				GlStateManager.popMatrix();
 			}
 			

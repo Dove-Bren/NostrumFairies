@@ -14,6 +14,9 @@ import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
+import com.smanzana.nostrumfairies.inventory.FeySlotType;
+import com.smanzana.nostrumfairies.items.FeyStone;
+import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositRequester;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
@@ -77,6 +80,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 	private boolean recipeValidCache;
 	private @Nullable IRecipe recipeCache;
 	private boolean[] recipeIssuesCache;
+	private boolean[] recipeBonusesCache; // like issue cache but positive.
+	private float recipeBonusCache; // Total of all bonuses
 	private boolean ingredientsDirty;
 	private boolean ingredientsValidCache;
 	
@@ -96,6 +101,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		recipeDirty = true;
 		ingredientsDirty = true;
 		recipeIssuesCache = new boolean[TEMPLATE_SLOTS];
+		recipeBonusesCache = new boolean[TEMPLATE_SLOTS];
 		this.criteriaOp = CraftingLogicOp.EQUAL;
 		this.criteriaMode = CraftingCriteriaMode.ALWAYS;
 		this.tasks = new ArrayList<>();
@@ -120,7 +126,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 	
 	@Override
 	public int getSizeInventory() {
-		return getCraftGridDim() * getCraftGridDim() + 1 + 1; // creates an actual inventory in super class
+		return getCraftGridDim() * getCraftGridDim() + 1 + 1 + 1; // creates an actual inventory in super class
 	}
 	
 	@Override
@@ -176,6 +182,10 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		return this.getStackInSlot(TEMPLATE_SLOTS);
 	}
 	
+	public @Nullable ItemStack getUpgrade() {
+		return this.getStackInSlot(TEMPLATE_SLOTS + 2);
+	}
+	
 	public int getCriteriaCount() {
 		return this.criteriaCount;
 	}
@@ -227,6 +237,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 	 */
 	protected abstract boolean canCraftWith(ItemStack item);
 	
+	protected abstract float getCraftBonus(ItemStack item);
+	
 	protected IRecipe findRecipe() {
 		// Have to janki-fy the recipe manager, since the inventories it takes as input require a container to work
 		InventoryCrafting inv = new InventoryCrafting(new Container() {
@@ -266,15 +278,21 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 			this.recipeCache = findRecipe();
 			
 			recipeValidCache = (recipeCache != null);
+			recipeBonusCache = 0f;
 			for (int i = 0; i < TEMPLATE_SLOTS; i++) {
 				ItemStack template = templates[i];
 				if (template == null) {
 					recipeIssuesCache[i] = false; // no issue
+					recipeBonusesCache[i] = false; // no bonus
 				} else if (!this.canCraftWith(template)) {
 					recipeIssuesCache[i] = true; // problem here
+					recipeBonusesCache[i] = false; // no bonus
 					recipeValidCache = false; // overall recipe's bad too
 				} else {
+					float bonus = this.getCraftBonus(template);
 					recipeIssuesCache[i] = false; // no issue
+					recipeBonusCache += bonus;
+					recipeBonusesCache[i] = (bonus > 0); // no bonus
 				}
 			}
 			
@@ -291,6 +309,14 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		
 		// above call will cache recipe
 		return this.recipeCache;
+	}
+	
+	public float getCraftBonus() {
+		if (!validateRecipe()) {
+			return 0f;
+		}
+		
+		return this.recipeBonusCache;
 	}
 	
 	/**
@@ -341,9 +367,22 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 			return false;
 		}
 		
-		if (index >= TEMPLATE_SLOTS) {
-			// output slot -- can't put anything in it
+		if (index == TEMPLATE_SLOTS) {
+			// output slot -- can't put anything in it, but any item can be put via code
 			return true;
+		} else if (index == TEMPLATE_SLOTS + 1) {
+			return true; // Anything can go in criteria filter
+		} else if (index == TEMPLATE_SLOTS + 2) {
+			if (stack == null) {
+				return true;
+			}
+			if (!(stack.getItem() instanceof FeyStone)) {
+				return false;
+			}
+			
+			FeyStone stone = (FeyStone) stack.getItem();
+			FeySlotType slot = stone.getFeySlot(stack);
+			return (slot == FeySlotType.UPGRADE || slot == FeySlotType.DOWNGRADE);
 		}
 		
 		ItemStack template = getTemplate(index);
@@ -567,6 +606,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		}
 		this.ingredientsDirty = true;
 		this.logicCacheID = null;
+		this.recipeDirty = true;
 		this.checkTasks();
 	}
 	
@@ -579,7 +619,13 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		} else if (id == 2) {
 			return this.criteriaOp.ordinal();
 		} else if (id <= TEMPLATE_SLOTS + 2) {
-			return recipeIssuesCache[id-3] ? 1 : 0;
+			// if issue, return -1. If bonus, return 1. Else, 0.
+			if (recipeIssuesCache[id-3]) {
+				return -1;
+			} else if (recipeBonusesCache[id-3]) {
+				return 1;
+			}
+			return 0;
 		}
 		
 		return 0;
@@ -594,13 +640,37 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		} else if (id == 2) {
 			this.criteriaOp = CraftingLogicOp.values()[value % CraftingLogicOp.values().length];
 		} else if (id < TEMPLATE_SLOTS) {
-			this.recipeIssuesCache[id - 3] = (value != 0);
+			if (value == -1) {
+				this.recipeIssuesCache[id - 3] = true;
+				this.recipeBonusesCache[id - 3] = false;
+			} else if (value == 1) {
+				this.recipeIssuesCache[id - 3] = false;
+				this.recipeBonusesCache[id - 3] = true;
+			} else {
+				this.recipeIssuesCache[id - 3] = false;
+				this.recipeBonusesCache[id - 3] = false;
+			}
 		}
 	}
 
 	@Override
 	public int getFieldCount() {
 		return TEMPLATE_SLOTS + 3; // 0 is progress, 1 is mode, 2 is op, and  3-N+2 are slot invalid flags (true = error)
+	}
+	
+	protected float getCraftSpeed(float bonus) {
+		float mult = 1f;
+		if (this.getUpgrade() != null) {
+			if (FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.RUBY) {
+				FeySlotType type = FeyStone.instance().getFeySlot(this.getUpgrade()); 
+				if (type == FeySlotType.DOWNGRADE) {
+					mult = .3f;
+				} else if (type == FeySlotType.UPGRADE) {
+					mult = 1.5f;
+				}
+			}
+		}
+		return (bonus + 1f) * mult;
 	}
 	
 	protected LogisticsTaskWorkBlock createTask() {
@@ -618,9 +688,9 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 				} else if (worker instanceof EntityGnome) {
 					amt = 10f;
 				} else {
-					amt = 12f;
+					amt = 14f;
 				}
-				addProgress(amt);
+				addProgress(amt * getCraftSpeed(recipeBonusCache));
 			}
 		};
 		this.tasks.add(task);
@@ -632,9 +702,13 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		getNetwork().getTaskRegistry().revoke(task);
 	}
 	
+	protected int getMaxWorkJobs() {
+		return 1;
+	}
+	
 	protected void checkTasks() {
 		if (this.validateRecipe() && this.validateIngredients() && this.getNetwork() != null && this.worldObj != null && checkConditions()) {
-			while (this.tasks.size() < 1) { // TODO make max configurable? Like with upgrades?
+			while (this.tasks.size() < getMaxWorkJobs()) {
 				createTask();
 			}
 		} else {
@@ -651,16 +725,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		}
 	}
 	
-	protected void produceCraft() {
-		// Notify tasks that they are done
-		// Note: Done before modifying inv to avoid accidentally making it seem like things should
-		// be cleared out
-		for (LogisticsTaskWorkBlock task : this.tasks) {
-			task.markComplete();
-		}
-		
-		this.tasks.clear();
-		
+	protected ItemStack generateOutput() {
 		// Have to janki-fy the recipe manager, since the inventories it takes as input require a container to work
 		InventoryCrafting inv = new InventoryCrafting(new Container() {
 
@@ -681,7 +746,20 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 			}
 		}
 		
-		ItemStack output = this.recipeCache.getCraftingResult(inv).copy();
+		return this.recipeCache.getCraftingResult(inv).copy();
+	}
+	
+	protected void produceCraft() {
+		// Notify tasks that they are done
+		// Note: Done before modifying inv to avoid accidentally making it seem like things should
+		// be cleared out
+		for (LogisticsTaskWorkBlock task : this.tasks) {
+			task.markComplete();
+		}
+		
+		this.tasks.clear();
+		
+		ItemStack output = generateOutput();
 		if (this.getOutputStack() == null) {
 			this.setInventorySlotContents(TEMPLATE_SLOTS, output);
 		} else {
@@ -740,14 +818,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		if (this.logicCacheID == null || !logicCacheID.equals(getNetwork().getCacheKey())) {
 			logicCacheID = getNetwork().getCacheKey();
 			
-			List<ItemDeepStack> networkItems = getNetwork().getAllCondensedNetworkItems();
-			long available = 0;
-			for (ItemDeepStack stack : networkItems) {
-				if (stack.canMerge(req)) {
-					available = stack.getCount();
-					break;
-				}
-			}
+			long available = getNetwork().getItemCount(req);
 			
 			switch(getCriteriaOp()) {
 				case EQUAL:

@@ -30,29 +30,29 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class CraftingBlockDwarf extends BlockContainer {
+public class CraftingBlockGnome extends BlockContainer {
 	
-	public static final String ID = "logistics_crafting_station_dwarf";
+	public static final String ID = "logistics_crafting_station_gnome";
 	
-	private static CraftingBlockDwarf instance = null;
-	public static CraftingBlockDwarf instance() {
+	private static CraftingBlockGnome instance = null;
+	public static CraftingBlockGnome instance() {
 		if (instance == null)
-			instance = new CraftingBlockDwarf();
+			instance = new CraftingBlockGnome();
 		
 		return instance;
 	}
 	
 	public static void init() {
-		GameRegistry.registerTileEntity(CraftingBlockDwarfTileEntity.class, "logistics_crafting_station_dwarf_te");
+		GameRegistry.registerTileEntity(CraftingBlockGnomeTileEntity.class, "logistics_crafting_station_gnome_te");
 	}
 	
-	public CraftingBlockDwarf() {
-		super(Material.IRON, MapColor.IRON);
+	public CraftingBlockGnome() {
+		super(Material.CLOTH, MapColor.IRON);
 		this.setUnlocalizedName(ID);
 		this.setHardness(4.0f);
 		this.setResistance(1.0f);
 		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setSoundType(SoundType.ANVIL);
+		this.setSoundType(SoundType.CLOTH);
 		this.setHarvestLevel("pickaxe", 1);
 	}
 	
@@ -69,7 +69,7 @@ public class CraftingBlockDwarf extends BlockContainer {
 		}
 		
 		playerIn.openGui(NostrumFairies.instance,
-				NostrumFairyGui.craftDwarfID, worldIn,
+				NostrumFairyGui.craftGnomeID, worldIn,
 				pos.getX(), pos.getY(), pos.getZ());
 		
 		return true;
@@ -83,117 +83,93 @@ public class CraftingBlockDwarf extends BlockContainer {
 	@Override
 	public void onNeighborChange(IBlockAccess world, BlockPos pos, BlockPos neighbor) {
 		TileEntity ent = world.getTileEntity(pos);
-		if (ent != null && ent instanceof CraftingBlockDwarfTileEntity) {
-			((CraftingBlockDwarfTileEntity) ent).notifyNeighborChanged();
+		if (ent != null && ent instanceof CraftingBlockGnomeTileEntity) {
+			((CraftingBlockGnomeTileEntity) ent).notifyNeighborChanged();
 		}
 	}
 	
-	public static class CraftingBlockDwarfTileEntity extends CraftingBlockTileEntity {
+	public static class CraftingBlockGnomeTileEntity extends CraftingBlockTileEntity {
 
-		public CraftingBlockDwarfTileEntity() {
+		public CraftingBlockGnomeTileEntity() {
 			super();
 		}
 
 		@Override
 		public int getCraftGridDim() {
-			return 3;
-		}
-		
-		protected boolean isGoodMaterialName(String unloc) {
-			return unloc.contains("ingot")
-					|| unloc.contains("metal")
-					|| unloc.contains("iron")
-					|| unloc.contains("gold")
-					|| unloc.contains("gear")
-					|| unloc.contains("bronze")
-					|| unloc.contains("copper")
-					|| unloc.contains("tin")
-					|| unloc.contains("aluminum")
-					|| unloc.contains("titanium")
-					|| unloc.contains("rod")
-					|| unloc.contains("stone")
-					|| unloc.contains("rock")
-					|| unloc.contains("machine")
-					|| unloc.contains("part")
-					|| unloc.contains("cast");
+			return 2;
 		}
 
 		@Override
 		protected boolean canCraftWith(ItemStack item) {
-			if (item == null) {
-				return true;
-			}
-			
-			boolean strict = false;
-			if (FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
-				FeySlotType slot = FeyStone.instance().getFeySlot(this.getUpgrade()); 
-				if (slot == FeySlotType.DOWNGRADE) {
-					return true;
-				} else if (slot == FeySlotType.UPGRADE) {
-					strict = true;
-				}
-			}
-		
-			Item itemBase = item.getItem();
-			String unloc = itemBase.getUnlocalizedName();
-			
-			if (strict) {
-				// HAS to be a friendly material
-				if (isGoodMaterialName(unloc)) {
-					return true;
-				}
-				return false;
-			}
-			
-			// if not strict, just can't be a bad material
-			if (unloc.contains("log")
-					|| unloc.contains("plank")
-					|| unloc.contains("wood")
-					|| unloc.contains("stick")) {
-				return false;
-			}
-			
 			return true;
 		}
-		
+
 		@Override
 		protected float getCraftBonus(ItemStack item) {
 			if (item == null) {
 				return 0f;
 			}
 			
-			float buff = .1f;
-			if (FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
-				FeySlotType slot = FeyStone.instance().getFeySlot(this.getUpgrade());
-				if (slot == FeySlotType.DOWNGRADE) {
-					buff = .025f; // but no disallowed item types
-				} else if (slot == FeySlotType.UPGRADE) {
-					buff = .35f;
-				}
+			if (FeyStone.instance().getFeySlot(this.getUpgrade()) == FeySlotType.DOWNGRADE
+					&& FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
+				return .2f;
 			}
 			
 			Item itemBase = item.getItem();
-			String unloc = itemBase.getUnlocalizedName();
-			if (isGoodMaterialName(unloc)) {
-				return buff;
+			String unloc = itemBase.getUnlocalizedName().toLowerCase();
+			if (unloc.contains("leaves")
+					|| unloc.contains("leaf")
+					|| unloc.contains("plant")
+					|| unloc.contains("crop")
+					|| unloc.contains("seed")
+					|| unloc.contains("dirt")
+					|| unloc.contains("water")
+					|| unloc.contains("flower")) {
+				return .3f;
 			}
 		
 			return 0f;
 		}
+		
+		@Override
+		protected ItemStack generateOutput() {
+			ItemStack out = super.generateOutput();
+			if (out != null
+					&& !out.getUnlocalizedName().toLowerCase().contains("block")
+					&& !out.getUnlocalizedName().toLowerCase().contains("ingot")
+					&& !out.getUnlocalizedName().toLowerCase().contains("nugget")) {
+				if (FeyStone.instance().getFeySlot(this.getUpgrade()) == FeySlotType.UPGRADE
+						&& FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
+					int bonus = 0;
+					int chances = 5;
+					
+					for (int i = 0; i < out.stackSize; i++) {
+						if (NostrumFairies.random.nextInt(chances) == 0) {
+							bonus++;
+							chances += 2;
+						}
+					}
+					
+					out.stackSize = Math.min(out.getMaxStackSize(), out.stackSize + bonus);
+				}
+			}
+			
+			return out;
+		}
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class CraftingBlockDwarfRenderer extends TileEntityLogisticsRenderer<CraftingBlockDwarfTileEntity> {
+	public static class CraftingBlockGnomeRenderer extends TileEntityLogisticsRenderer<CraftingBlockGnomeTileEntity> {
 		
 		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(CraftingBlockDwarfTileEntity.class,
-					new CraftingBlockDwarfRenderer());
+			ClientRegistry.bindTileEntitySpecialRenderer(CraftingBlockGnomeTileEntity.class,
+					new CraftingBlockGnomeRenderer());
 		}
 	}
 
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
-		return new CraftingBlockDwarfTileEntity();
+		return new CraftingBlockGnomeTileEntity();
 	}
 	
 	@Override
@@ -209,12 +185,10 @@ public class CraftingBlockDwarf extends BlockContainer {
 	
 	private void destroy(World world, BlockPos pos, IBlockState state) {
 		TileEntity ent = world.getTileEntity(pos);
-		if (ent == null || !(ent instanceof CraftingBlockDwarfTileEntity))
+		if (ent == null || !(ent instanceof CraftingBlockGnomeTileEntity))
 			return;
 		
-		// TODO! This is missing some items sometimmes!
-		
-		CraftingBlockDwarfTileEntity table = (CraftingBlockDwarfTileEntity) ent;
+		CraftingBlockGnomeTileEntity table = (CraftingBlockGnomeTileEntity) ent;
 		for (int i = 0; i < table.getSizeInventory(); i++) {
 			if (table.getStackInSlot(i) != null) {
 				EntityItem item = new EntityItem(
