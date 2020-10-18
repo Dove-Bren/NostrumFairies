@@ -539,6 +539,9 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		switch (getStatus()) {
 		case IDLE:
 			adjustHappiness();
+			if (this.ticksExisted % 60 == 0 && this.getHappiness() > 80f) {
+				this.heal(1f);
+			}
 			onIdleTick();
 			
 			// Note: idle may decide to do task stuff on its own. We'll respect that.

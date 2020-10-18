@@ -134,7 +134,8 @@ public class StaticTESRRenderer {
 	}
 	
 	private void drawTarget(RenderTarget target, Minecraft mc, EntityPlayerSP player, float partialTicks) {
-		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
+		final double eyeY = player.getEyeHeight();
+		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, eyeY, 0);
 		BlockPos pos = target.te.getPos();
 		Vec3d offset = new Vec3d(pos.getX() - playerPos.xCoord,
 				pos.getY() - playerPos.yCoord,

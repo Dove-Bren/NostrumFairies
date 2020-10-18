@@ -9,7 +9,8 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
+import com.smanzana.nostrumfairies.client.render.FeySignRenderer;
+import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ILogisticsTaskUniqueData;
@@ -17,16 +18,23 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.items.ReagentBag;
 
 import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -39,14 +47,14 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.item.ItemExpireEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class GatheringBlock extends BlockContainer {
-	
+
+	public static final PropertyDirection FACING = BlockHorizontal.FACING;
 	public static final String ID = "logistics_gathering_block";
 	protected static final ILogisticsTaskUniqueData<EntityItem> GATHERING_ITEM = new ILogisticsTaskUniqueData<EntityItem>() { };
 	
@@ -78,6 +86,78 @@ public class GatheringBlock extends BlockContainer {
 	}
 	
 	@Override
+	protected BlockStateContainer createBlockState() {
+		return new BlockStateContainer(this, FACING);
+	}
+	
+	protected static int metaFromFacing(EnumFacing facing) {
+		return facing.getHorizontalIndex();
+	}
+	
+	protected static EnumFacing facingFromMeta(int meta) {
+		return EnumFacing.getHorizontal(meta);
+	}
+	
+	@Override
+	public IBlockState getStateFromMeta(int meta) {
+		return getDefaultState()
+				.withProperty(FACING, facingFromMeta(meta));
+	}
+	
+	@Override
+	public int getMetaFromState(IBlockState state) {
+		return metaFromFacing(state.getValue(FACING));
+	}
+	
+	public EnumFacing getFacing(IBlockState state) {
+		return state.getValue(FACING);
+	}
+	
+	@Override
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+		return this.getDefaultState()
+				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+	}
+	
+	@Override
+	public BlockRenderLayer getBlockLayer() {
+		return BlockRenderLayer.CUTOUT;
+	}
+	
+	@Override
+	public boolean isFullBlock(IBlockState state) {
+		return false;
+	}
+	
+	@Override
+	public boolean isVisuallyOpaque() {
+		return false;
+	}
+	
+	@Override
+	public boolean isOpaqueCube(IBlockState state) {
+		return false;
+	}
+	
+	@Override
+	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+		if (state.getValue(FACING).getHorizontalIndex() % 2 == 0) {
+			return IFeySign.AABB_NS;
+		} else {
+			return IFeySign.AABB_EW;
+		}
+	}
+	
+	@Override
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+		if (blockState.getValue(FACING).getHorizontalIndex() % 2 == 0) {
+			return IFeySign.AABB_NS;
+		} else {
+			return IFeySign.AABB_EW;
+		}
+	}
+	
+	@Override
 	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
 	}
@@ -87,7 +167,7 @@ public class GatheringBlock extends BlockContainer {
 		return false;
 	}
 	
-	public static class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener{
+	public static class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener, IFeySign {
 
 		private int tickCount;
 		private Map<EntityItem, LogisticsTaskPickupItem> taskMap;
@@ -254,14 +334,43 @@ public class GatheringBlock extends BlockContainer {
 				this.removeTask(pickup.getEntityItem());
 			}
 		}
+		
+		private static final ItemStack SIGN_ICON = new ItemStack(ReagentBag.instance());
+
+		@Override
+		public ItemStack getSignIcon(IFeySign sign) {
+			return SIGN_ICON;
+		}
+		
+		@Override
+		public EnumFacing getSignFacing(IFeySign sign) {
+			IBlockState state = worldObj.getBlockState(pos);
+			return state.getValue(FACING);
+		}
+		
+		@Override
+		public void readFromNBT(NBTTagCompound compound) {
+			super.readFromNBT(compound);
+			
+			if (this.worldObj != null && this.worldObj.isRemote) {
+				StaticTESRRenderer.instance.update(worldObj, pos, this);
+			}
+		}
+		
+		@Override
+		public void invalidate() {
+			super.invalidate();
+			if (worldObj != null && worldObj.isRemote) {
+				StaticTESRRenderer.instance.update(worldObj, pos, null);
+			}
+		}
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class GatheringBlockRenderer extends TileEntityLogisticsRenderer<GatheringBlockTileEntity> {
+	public static class GatheringBlockRenderer extends FeySignRenderer<GatheringBlockTileEntity> {
 		
 		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(GatheringBlockTileEntity.class,
-					new GatheringBlockRenderer());
+			FeySignRenderer.init(GatheringBlockTileEntity.class, new GatheringBlockRenderer());
 		}
 	}
 

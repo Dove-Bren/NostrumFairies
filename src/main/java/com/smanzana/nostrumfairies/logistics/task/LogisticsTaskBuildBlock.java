@@ -39,7 +39,7 @@ public class LogisticsTaskBuildBlock extends LogisticsTaskPlaceBlock {
 			// Add animation for building
 			if (this.animCount < 0) {
 				// Haven't started it
-				animCount = 2;
+				animCount = 6;
 			} else if (animCount == 0) {
 				placeBlock();
 				phase = Phase.DONE;

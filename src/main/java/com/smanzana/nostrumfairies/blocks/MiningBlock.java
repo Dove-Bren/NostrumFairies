@@ -14,7 +14,8 @@ import org.lwjgl.opengl.GL11;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
+import com.smanzana.nostrumfairies.client.render.FeySignRenderer;
+import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
@@ -30,10 +31,13 @@ import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.BlockTorch;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -41,18 +45,22 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagLong;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -68,7 +76,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 
 public class MiningBlock extends BlockContainer {
-	
+
+	public static final PropertyDirection FACING = BlockHorizontal.FACING;
 	public static final String ID = "logistics_mining_block";
 	public static final int WORKER_REACH = 16;
 	public static final int MAJOR_LEVEL_DIFF = 16;
@@ -104,6 +113,78 @@ public class MiningBlock extends BlockContainer {
 	}
 	
 	@Override
+	protected BlockStateContainer createBlockState() {
+		return new BlockStateContainer(this, FACING);
+	}
+	
+	protected static int metaFromFacing(EnumFacing facing) {
+		return facing.getHorizontalIndex();
+	}
+	
+	protected static EnumFacing facingFromMeta(int meta) {
+		return EnumFacing.getHorizontal(meta);
+	}
+	
+	@Override
+	public IBlockState getStateFromMeta(int meta) {
+		return getDefaultState()
+				.withProperty(FACING, facingFromMeta(meta));
+	}
+	
+	@Override
+	public int getMetaFromState(IBlockState state) {
+		return metaFromFacing(state.getValue(FACING));
+	}
+	
+	public EnumFacing getFacing(IBlockState state) {
+		return state.getValue(FACING);
+	}
+	
+	@Override
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+		return this.getDefaultState()
+				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+	}
+	
+	@Override
+	public BlockRenderLayer getBlockLayer() {
+		return BlockRenderLayer.CUTOUT;
+	}
+	
+	@Override
+	public boolean isFullBlock(IBlockState state) {
+		return false;
+	}
+	
+	@Override
+	public boolean isVisuallyOpaque() {
+		return false;
+	}
+	
+	@Override
+	public boolean isOpaqueCube(IBlockState state) {
+		return false;
+	}
+	
+	@Override
+	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+		if (state.getValue(FACING).getHorizontalIndex() % 2 == 0) {
+			return IFeySign.AABB_NS;
+		} else {
+			return IFeySign.AABB_EW;
+		}
+	}
+	
+	@Override
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+		if (blockState.getValue(FACING).getHorizontalIndex() % 2 == 0) {
+			return IFeySign.AABB_NS;
+		} else {
+			return IFeySign.AABB_EW;
+		}
+	}
+	
+	@Override
 	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
 	}
@@ -113,7 +194,7 @@ public class MiningBlock extends BlockContainer {
 		return false;
 	}
 	
-	public static class MiningBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener {
+	public static class MiningBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener, IFeySign {
 
 		private int tickCount;
 		private Map<BlockPos, ILogisticsTask> taskMap;
@@ -1152,6 +1233,10 @@ public class MiningBlock extends BlockContainer {
 			if (nbt.hasKey(NBT_TORCHES)) {
 				this.torches = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_TORCHES));
 			}
+			
+			if (this.worldObj != null && this.worldObj.isRemote) {
+				StaticTESRRenderer.instance.update(worldObj, pos, this);
+			}
 		}
 
 		@Override
@@ -1265,14 +1350,36 @@ public class MiningBlock extends BlockContainer {
 			
 			return false;
 		}
+		
+		private static final ItemStack SIGN_ICON = new ItemStack(Items.IRON_PICKAXE);
+
+		@Override
+		public ItemStack getSignIcon(IFeySign sign) {
+			return SIGN_ICON;
+		}
+		
+		@Override
+		public EnumFacing getSignFacing(IFeySign sign) {
+			IBlockState state = worldObj.getBlockState(pos);
+			return state.getValue(FACING);
+		}
+		
+		@Override
+		public void invalidate() {
+			super.invalidate();
+			if (worldObj != null && worldObj.isRemote) {
+				StaticTESRRenderer.instance.update(worldObj, pos, null);
+			}
+		}
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class MiningBlockRenderer extends TileEntityLogisticsRenderer<MiningBlockTileEntity> {
+	public static class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> {
 		
 		public static void init() {
 			ClientRegistry.bindTileEntitySpecialRenderer(MiningBlockTileEntity.class,
 					new MiningBlockRenderer());
+			FeySignRenderer.init(MiningBlockTileEntity.class, new MiningBlockRenderer());
 		}
 		
 		protected void renderCube(BlockPos origin, BlockPos target, float red, float green, float blue, float alpha) {

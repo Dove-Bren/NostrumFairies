@@ -116,6 +116,7 @@ public class ClientProxy extends CommonProxy {
 		OutputLogisticsChest.OutputChestRenderer.init();
 		InputLogisticsChest.InputChestRenderer.init();
 		GatheringBlock.GatheringBlockRenderer.init();
+		FarmingBlock.FarmingBlockRenderer.init();
 		LogisticsPylon.PylonRenderer.init();
 		WoodcuttingBlock.WoodcuttingBlockRenderer.init();
 		MiningBlock.MiningBlockRenderer.init();
