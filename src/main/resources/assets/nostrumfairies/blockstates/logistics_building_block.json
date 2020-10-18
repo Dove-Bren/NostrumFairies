@@ -1,5 +1,9 @@
 {
     "variants": {
-        "normal": { "model": "nostrumfairies:logistics_building_block" }
+        "inventory": { "model": "nostrumfairies:fey_sign_table" },
+        "facing=north": { "model": "nostrumfairies:fey_sign_table", "y": 0 },
+        "facing=east": { "model": "nostrumfairies:fey_sign_table", "y": 90 },
+        "facing=south": { "model": "nostrumfairies:fey_sign_table", "y": 180 },
+        "facing=west": { "model": "nostrumfairies:fey_sign_table", "y": 270 }
     }
 }

@@ -9,10 +9,14 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector3f;
+
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
+import com.smanzana.nostrumfairies.client.render.FeySignRenderer;
+import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.items.TemplateScroll;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -22,24 +26,36 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
 import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.BlockCrops;
+import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -47,15 +63,19 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ExplosionEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BuildingBlock extends BlockContainer {
-	
+
+	public static final PropertyDirection FACING = BlockHorizontal.FACING;
 	public static final String ID = "logistics_building_block";
+	private static double BB_MAJOR = .345;
+	private static double BB_MINOR = .03;
+	private static final AxisAlignedBB AABB_NS = new AxisAlignedBB(.5 - BB_MAJOR, 0, .5 - BB_MINOR, .5 + BB_MAJOR, .685, .5 + BB_MINOR);
+	private static final AxisAlignedBB AABB_EW = new AxisAlignedBB(.5 - BB_MINOR, 0, .5 - BB_MAJOR, .5 + BB_MINOR, .685, .5 + BB_MAJOR);
 	
 	private static BuildingBlock instance = null;
 	public static BuildingBlock instance() {
@@ -77,6 +97,79 @@ public class BuildingBlock extends BlockContainer {
 		this.setCreativeTab(NostrumFairies.creativeTab);
 		this.setSoundType(SoundType.WOOD);
 		this.setHarvestLevel("pickaxe", 0);
+		this.setLightOpacity(2);
+	}
+	
+	@Override
+	protected BlockStateContainer createBlockState() {
+		return new BlockStateContainer(this, FACING);
+	}
+	
+	protected static int metaFromFacing(EnumFacing facing) {
+		return facing.getHorizontalIndex();
+	}
+	
+	protected static EnumFacing facingFromMeta(int meta) {
+		return EnumFacing.getHorizontal(meta);
+	}
+	
+	@Override
+	public IBlockState getStateFromMeta(int meta) {
+		return getDefaultState()
+				.withProperty(FACING, facingFromMeta(meta));
+	}
+	
+	@Override
+	public int getMetaFromState(IBlockState state) {
+		return metaFromFacing(state.getValue(FACING));
+	}
+	
+	public EnumFacing getFacing(IBlockState state) {
+		return state.getValue(FACING);
+	}
+	
+	@Override
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+		return this.getDefaultState()
+				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+	}
+	
+	@Override
+	public BlockRenderLayer getBlockLayer() {
+		return BlockRenderLayer.CUTOUT;
+	}
+	
+	@Override
+	public boolean isFullBlock(IBlockState state) {
+		return false;
+	}
+	
+	@Override
+	public boolean isVisuallyOpaque() {
+		return false;
+	}
+	
+	@Override
+	public boolean isOpaqueCube(IBlockState state) {
+		return false;
+	}
+	
+	@Override
+	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+		if (state.getValue(FACING).getHorizontalIndex() % 2 == 0) {
+			return AABB_NS;
+		} else {
+			return AABB_EW;
+		}
+	}
+	
+	@Override
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+		if (blockState.getValue(FACING).getHorizontalIndex() % 2 == 0) {
+			return AABB_NS;
+		} else {
+			return AABB_EW;
+		}
 	}
 	
 	@Override
@@ -90,7 +183,7 @@ public class BuildingBlock extends BlockContainer {
 		return true;
 	}
 	
-	public static class BuildingBlockTileEntity extends LogisticsTileEntity implements ITickable,  ILogisticsTaskListener {
+	public static class BuildingBlockTileEntity extends LogisticsTileEntity implements ITickable,  ILogisticsTaskListener, IFeySign {
 
 		private static final String NBT_SLOT = "itemslot";
 		
@@ -275,6 +368,11 @@ public class BuildingBlock extends BlockContainer {
 			List<BlockPos> positions = new ArrayList<>();
 			List<IBlockState> states = new ArrayList<>();
 			for (BlockPos loc : event.getAffectedBlocks()) {
+				if (loc.equals(pos)) {
+					// We got blown up
+					return;
+				}
+				
 				if (Math.abs(pos.getX() - loc.getX()) < radius
 						|| Math.abs(pos.getY() - loc.getY()) < radius
 						|| Math.abs(pos.getZ() - loc.getZ()) < radius) {
@@ -313,6 +411,10 @@ public class BuildingBlock extends BlockContainer {
 			super.readFromNBT(nbt);
 			
 			this.slot = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_SLOT));
+			
+			if (this.worldObj != null && this.worldObj.isRemote) {
+				StaticTESRRenderer.instance.update(worldObj, pos, this);
+			}
 		}
 		
 		public IInventory getInventory() {
@@ -328,6 +430,8 @@ public class BuildingBlock extends BlockContainer {
 					slot = this.getStackInSlot(0);
 					super.markDirty();
 					self.markDirty();
+					IBlockState state = self.worldObj.getBlockState(pos);
+					self.worldObj.notifyBlockUpdate(pos, state, state, 2);
 				}
 				
 				@Override
@@ -339,14 +443,93 @@ public class BuildingBlock extends BlockContainer {
 			inv.setInventorySlotContents(0, slot);
 			return inv;
 		}
+		
+		private static final ItemStack SIGN_ICON = new ItemStack(Blocks.BRICK_BLOCK);
+
+		@Override
+		public ItemStack getSignIcon(IFeySign sign) {
+			return SIGN_ICON;
+		}
+		
+		@Override
+		public EnumFacing getSignFacing(IFeySign sign) {
+			IBlockState state = worldObj.getBlockState(pos);
+			return state.getValue(FACING);
+		}
+		
+		@Override
+		public void invalidate() {
+			super.invalidate();
+			if (worldObj != null && worldObj.isRemote) {
+				StaticTESRRenderer.instance.update(worldObj, pos, null);
+			}
+		}
+		
+		public @Nullable ItemStack getTemplateScroll() {
+			return this.slot;
+		}
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class BuildingBlockRenderer extends TileEntityLogisticsRenderer<BuildingBlockTileEntity> {
+	public static class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEntity> {
 		
 		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(BuildingBlockTileEntity.class,
-					new BuildingBlockRenderer());
+			FeySignRenderer.init(BuildingBlockTileEntity.class, new BuildingBlockRenderer());
+		}
+		
+		private static final float ICON_INNEROFFSETX = (2f / 16f);
+		private static final float ICON_INNEROFFSETX2 = (1f / 16f);
+		private static final float ICON_SIZE = .2f;
+		private static final float THICCNESS = .035f;
+		private static final float HEIGHT = .5f - .035f;
+		private static final Vector3f ICON_OFFSETS[] = new Vector3f[] {
+				new Vector3f(.5f - ICON_INNEROFFSETX + (ICON_SIZE / 2),	HEIGHT, .5f + THICCNESS), // S
+				new Vector3f(.5f - THICCNESS,					HEIGHT, .5f - ICON_INNEROFFSETX + (ICON_SIZE / 2)), // W
+				new Vector3f(.5f + ICON_INNEROFFSETX - (ICON_SIZE / 2),	HEIGHT, .5f - THICCNESS), // N
+				new Vector3f(.5f + THICCNESS,					HEIGHT, .5f + ICON_INNEROFFSETX - (ICON_SIZE / 2)), // E
+		};
+		
+		private static final Vector3f SCROLL_OFFSETS[] = new Vector3f[] {
+				new Vector3f(.5f + ICON_INNEROFFSETX2 + (ICON_SIZE / 2),	HEIGHT - .2f, .5f- + THICCNESS), // S
+				new Vector3f(.5f - THICCNESS,					HEIGHT - .2f, .5f + ICON_INNEROFFSETX2 + (ICON_SIZE / 2)), // W
+				new Vector3f(.5f - ICON_INNEROFFSETX2 - (ICON_SIZE / 2),	HEIGHT - .2f, .5f - THICCNESS), // N
+				new Vector3f(.5f + THICCNESS,					HEIGHT - .2f, .5f - ICON_INNEROFFSETX2 - (ICON_SIZE / 2)), // E
+		};
+		
+		@Override
+		protected Vector3f getOffset(BuildingBlockTileEntity te, EnumFacing facing) {
+			return ICON_OFFSETS[facing.getHorizontalIndex()];
+		}
+		
+		@Override
+		public void renderTileEntityFast(BuildingBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, VertexBuffer buffer) {
+			// Use super to render sign icon
+			super.renderTileEntityFast(te, x, y, z, partialTicks, destroyStage, buffer);
+			
+			// Draw template on table, if present
+			ItemStack template = te.getTemplateScroll();
+			if (template != null) {
+				Minecraft mc = Minecraft.getMinecraft();
+				IBakedModel model = null;
+				if (template != null) {
+					model = mc.getRenderItem().getItemModelMesher().getItemModel(template);
+				}
+				
+				if (model == null || model == mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel()) {
+					model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());
+				}
+				
+				mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+				
+				final int color = 0xFFFFFFFF;
+				final EnumFacing facing = te.getSignFacing(te);
+				final Vector3f offset = SCROLL_OFFSETS[facing.getHorizontalIndex()];
+				final Matrix4f transform = new Matrix4f(getTransform(te, facing))
+						.scale(new Vector3f(.5f, .5f, .5f));
+						//.rotate(90f, new Vector3f(1f, 0, 0));
+				
+				RenderFuncs.RenderModelWithColor(model, color, buffer, offset, transform);
+			}
 		}
 	}
 

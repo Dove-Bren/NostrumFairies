@@ -83,6 +83,7 @@ public class GatheringBlock extends BlockContainer {
 		this.setCreativeTab(NostrumFairies.creativeTab);
 		this.setSoundType(SoundType.WOOD);
 		this.setHarvestLevel("axe", 0);
+		this.setLightOpacity(2);
 	}
 	
 	@Override

@@ -49,6 +49,14 @@ public abstract class FeySignRenderer<T extends TileEntity & IFeySign> extends T
 		
 	}
 	
+	protected Vector3f getOffset(T te, EnumFacing facing) {
+		return OFFSETS[facing.getHorizontalIndex()];
+	}
+	
+	protected Matrix4f getTransform(T te, EnumFacing facing) {
+		return TRANSFORMS[facing.getHorizontalIndex()];
+	}
+	
 	@Override
 	public void renderTileEntityFast(T te, double x, double y, double z, float partialTicks, int destroyStage, VertexBuffer buffer) {
 		Minecraft mc = Minecraft.getMinecraft();
@@ -67,8 +75,8 @@ public abstract class FeySignRenderer<T extends TileEntity & IFeySign> extends T
 		
 		final int color = 0xFFFFFFFF;
 		final EnumFacing facing = te.getSignFacing(te);
-		final Vector3f offset = OFFSETS[facing.getHorizontalIndex()];
-		final Matrix4f transform = TRANSFORMS[facing.getHorizontalIndex()];
+		final Vector3f offset = getOffset(te, facing);
+		final Matrix4f transform = getTransform(te, facing);
 		
 		RenderFuncs.RenderModelWithColor(model, color, buffer, offset, transform);
 	}

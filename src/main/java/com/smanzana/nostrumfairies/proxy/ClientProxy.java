@@ -120,6 +120,7 @@ public class ClientProxy extends CommonProxy {
 		LogisticsPylon.PylonRenderer.init();
 		WoodcuttingBlock.WoodcuttingBlockRenderer.init();
 		MiningBlock.MiningBlockRenderer.init();
+		BuildingBlock.BuildingBlockRenderer.init();
 		TemplateBlockRenderer.init();
 		CraftingBlockDwarf.CraftingBlockDwarfRenderer.init();
 		CraftingBlockElf.CraftingBlockElfRenderer.init();
