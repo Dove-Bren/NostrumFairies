@@ -3,8 +3,8 @@ package com.smanzana.nostrumfairies.entity.render.layers;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.render.ModelDwarfBeard;
-import com.smanzana.nostrumfairies.entity.render.RenderDwarf;
 
+import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.util.ResourceLocation;
 
@@ -16,10 +16,10 @@ public class LayerDwarfBeard implements LayerRenderer<EntityDwarf> {
 	private static final ResourceLocation TEXT_BEARD_4 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/dwarf_beard_4.png");
 	
 	private ModelDwarfBeard model;
-	private RenderDwarf renderer;
+	private RenderLiving<? extends EntityDwarf> renderer;
 	private ModelDwarfBeard.Type type;
 	
-	public LayerDwarfBeard(RenderDwarf renderer, ModelDwarfBeard.Type type) {
+	public LayerDwarfBeard(RenderLiving<? extends EntityDwarf> renderer, ModelDwarfBeard.Type type) {
 		this.model = new ModelDwarfBeard(type);
 		this.renderer = renderer;
 		this.type = type;

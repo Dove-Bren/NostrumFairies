@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
+import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -673,5 +674,15 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	protected void onRevoltTick() {
 		// TODO Auto-generated method stub
 		;
+	}
+
+	@Override
+	public EntityFeyBase switchToSpecialization(FeyStoneMaterial material) {
+		return this;
+	}
+
+	@Override
+	public FeyStoneMaterial getCurrentSpecialization() {
+		return null;
 	}
 }

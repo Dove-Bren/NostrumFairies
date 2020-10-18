@@ -684,9 +684,9 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 				final float amt;
 				IItemCarrierFey worker = this.getCurrentWorker();
 				if (worker instanceof EntityDwarf) {
-					amt = 18f; // Slow swings
+					amt = 8f; // Fast swings
 				} else if (worker instanceof EntityGnome) {
-					amt = 10f;
+					amt = 35f; // very slow swings
 				} else {
 					amt = 14f;
 				}

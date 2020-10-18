@@ -13,8 +13,10 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.items.FeyResource;
+import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -118,13 +120,23 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			return true;
 		}
 		
-		if (onStatusChange(getStatus(), status)) {
-			dataManager.set(STATUS, status);
+		if (statusGuard) {
 			return true;
 		}
+
+		boolean ret = false;
+		statusGuard = true;
 		
-		return false;
+		if (onStatusChange(getStatus(), status)) {
+			dataManager.set(STATUS, status);
+			ret = true;
+		}
+		
+		statusGuard = false;
+		return ret;
 	}
+	
+	private boolean statusGuard = false;
 	
 	/**
 	 * Called whenever the fairy's state is attempting to change.
@@ -1048,6 +1060,40 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			if (wasRecentlyHit && rand.nextInt(20) < (1 + lootingModifier)) {
 				this.entityDropItem(FeyResource.create(FeyResourceType.ESSENCE, rand.nextInt(2) + 1), 0);
 			}
+		}
+	}
+	
+	public static boolean canUseSpecialization(ResidentType type, FeyStoneMaterial material) {
+		switch (type) {
+		case DWARF:
+			return material == FeyStoneMaterial.GARNET || material == FeyStoneMaterial.EMERALD;
+		case ELF:
+			return material == FeyStoneMaterial.GARNET || material == FeyStoneMaterial.AQUAMARINE;
+		case FAIRY:
+			return false;
+		case GNOME:
+			return material == FeyStoneMaterial.EMERALD || material == FeyStoneMaterial.GARNET;
+		}
+		
+		return false;
+	}
+	
+	public abstract EntityFeyBase switchToSpecialization(FeyStoneMaterial material);
+	
+	public abstract FeyStoneMaterial getCurrentSpecialization();
+	
+	protected void copyFrom(EntityFeyBase other) {
+		this.setUniqueId(other.getUniqueID());
+		this.setPositionAndRotation(other.posX, other.posY, other.posZ, other.rotationYaw, other.rotationPitch);
+		this.setHappiness(other.getHappiness());
+		this.dataManager.set(NAME, other.getName());
+		HomeBlockTileEntity ent = other.getHomeEnt();
+		if (ent != null) {
+			BlockPos pos = other.getHome();
+			ent.replaceResident(other, this);
+			other.dataManager.set(HOME, Optional.absent());
+			this.dataManager.set(HOME, Optional.of(pos));
+			this.changeStatus(FairyGeneralStatus.IDLE);
 		}
 	}
 	

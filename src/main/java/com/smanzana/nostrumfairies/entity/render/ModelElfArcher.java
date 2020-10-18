@@ -12,8 +12,8 @@ import net.minecraft.util.math.MathHelper;
 
 public class ModelElfArcher extends ModelElf {
 
-	private static final int WEP_TEX_W = 32;
-	private static final int WEP_TEX_H = 32;
+	private static final int ELF_TEX_W = 64;
+	private static final int ELF_TEX_H = 32;
 	
 	protected ModelRenderer bow;
 	protected ModelRenderer dagger;
@@ -25,23 +25,23 @@ public class ModelElfArcher extends ModelElf {
 	}
 	
 	protected ModelRenderer makeBow() {
-		ModelRenderer bow = new ModelRenderer(this, 26, 24);
-		bow.setTextureSize(WEP_TEX_W, WEP_TEX_H);
+		ModelRenderer bow = new ModelRenderer(this, 42, 18);
+		bow.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 		bow.setRotationPoint(0, 0, 0);
 		bow.addBox(-3, 0, -.5f, 6, 1, 1);
 		
-		bow.setTextureOffset(26, 26);
+		bow.setTextureOffset(42, 20);
 		bow.addBox(-5, -1, -.5f, 3, 1, 1);
-		bow.setTextureOffset(26, 28);
+		bow.setTextureOffset(42, 22);
 		bow.addBox(-6, -2, -.5f, 2, 1, 1);
-		bow.setTextureOffset(26, 30);
+		bow.setTextureOffset(42, 24);
 		bow.addBox(-7, -3, -.5f, 2, 1, 1);
 		
-		bow.setTextureOffset(34, 26);
+		bow.setTextureOffset(50, 20);
 		bow.addBox(2, -1, -.5f, 4, 1, 1);
-		bow.setTextureOffset(34, 28);
+		bow.setTextureOffset(50, 22);
 		bow.addBox(5, -2, -.5f, 3, 1, 1);
-		bow.setTextureOffset(34, 30);
+		bow.setTextureOffset(50, 24);
 		bow.addBox(7, -3, -.5f, 2, 1, 1);
 		
 		bow.offsetY = (11f / 16f); // height of arm, - a bit
@@ -50,13 +50,13 @@ public class ModelElfArcher extends ModelElf {
 	}
 	
 	protected ModelRenderer makeDagger() {
-		ModelRenderer dagger = new ModelRenderer(this, 60, 0);
-		dagger.setTextureSize(WEP_TEX_W, WEP_TEX_H);
+		ModelRenderer dagger = new ModelRenderer(this, 60, 18);
+		dagger.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 		dagger.setRotationPoint(0, 0, 0);
 		dagger.addBox(-.5f, 0, -.5f, 1, 4, 1);
-		dagger.setTextureOffset(60, 5);
+		dagger.setTextureOffset(60, 23);
 		dagger.addBox(-1.5f, 3, -.5f, 1, 5, 1);
-		dagger.setTextureOffset(60, 11);
+		dagger.setTextureOffset(60, 29);
 		dagger.addBox(-.5f, 7, -.5f, 1, 2, 1);
 		
 		dagger.offsetY = (10f / 16f); // height of arm, - a bit

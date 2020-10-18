@@ -30,10 +30,15 @@ import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapabili
 import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapabilityStorage;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
+import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
+import com.smanzana.nostrumfairies.entity.fey.EntityDwarfCrafter;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
+import com.smanzana.nostrumfairies.entity.fey.EntityElfCrafter;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
+import com.smanzana.nostrumfairies.entity.fey.EntityGnomeCollector;
+import com.smanzana.nostrumfairies.entity.fey.EntityGnomeCrafter;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
@@ -147,6 +152,41 @@ public class CommonProxy {
     			false
     			);
     	EntityRegistry.registerModEntity(EntityPersonalFairy.class, "personal_fairy",
+    			entityID++,
+    			NostrumFairies.instance,
+    			128,
+    			1,
+    			false
+    			);
+    	EntityRegistry.registerModEntity(EntityElfCrafter.class, "elf_crafter",
+    			entityID++,
+    			NostrumFairies.instance,
+    			128,
+    			1,
+    			false
+    			);
+    	EntityRegistry.registerModEntity(EntityDwarfCrafter.class, "dwarf_crafter",
+    			entityID++,
+    			NostrumFairies.instance,
+    			128,
+    			1,
+    			false
+    			);
+    	EntityRegistry.registerModEntity(EntityDwarfBuilder.class, "dwarf_builder",
+    			entityID++,
+    			NostrumFairies.instance,
+    			128,
+    			1,
+    			false
+    			);
+    	EntityRegistry.registerModEntity(EntityGnomeCrafter.class, "gnome_crafter",
+    			entityID++,
+    			NostrumFairies.instance,
+    			128,
+    			1,
+    			false
+    			);
+    	EntityRegistry.registerModEntity(EntityGnomeCollector.class, "gnome_collector",
     			entityID++,
     			NostrumFairies.instance,
     			128,

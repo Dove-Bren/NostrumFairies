@@ -2,10 +2,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -293,7 +290,7 @@ public class HomeBlockGui {
 			}
 		}
 		
-		private void drawList(int x, int y, Map<UUID, FeyAwayRecord> feyMap, int mouseIndex) {
+		private void drawList(int x, int y, int mouseIndex) {
 			for (int i = 0; i < container.home.getRawSlots(); i++) {
 				@Nullable FeyAwayRecord fey = (i >= feyArray.length ? null : feyArray[i]);
 				drawListItem(x, y + (i * GUI_LIST_ITEM_HEIGHT), container.home.getSlotInventory().hasStone(i), mouseIndex == i, fey);
@@ -466,7 +463,7 @@ public class HomeBlockGui {
 			
 			refreshFeyArray();
 			drawSummary(horizontalMargin + GUI_INFO_HOFFSET, verticalMargin + GUI_INFO_VOFFSET);
-			drawList(horizontalMargin + GUI_LIST_HOFFSET, verticalMargin + GUI_LIST_VOFFSET, container.home.getFeyEntries(), mouseIndex);
+			drawList(horizontalMargin + GUI_LIST_HOFFSET, verticalMargin + GUI_LIST_VOFFSET, mouseIndex);
 			drawDetails(horizontalMargin + GUI_DETAILS_HOFFSET, verticalMargin + GUI_DETAILS_VOFFSET, getSelected());
 			drawSlots();
 
@@ -492,10 +489,15 @@ public class HomeBlockGui {
 			if (mouseButton == 0) {
 				int index = getListIndexFromMouse(mouseX, mouseY);
 				if (index != -1) {
+					SpecializationSlot slot;
 					if (selection != -1) {
-						container.specializationSlots.get(selection).isSelected = false;
+						slot = container.specializationSlots.get(selection);
+						slot.isSelected = false;
+						slot.xDisplayPosition = -1000;
 					}
-					container.specializationSlots.get(index).isSelected = true;
+					slot = container.specializationSlots.get(index);
+					slot.isSelected = true;
+					slot.xDisplayPosition = GUI_DETAILS_HOFFSET + (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH - 2)) / 2;
 					this.selection = index;
 					return;
 				}
@@ -539,8 +541,8 @@ public class HomeBlockGui {
 			long now = System.currentTimeMillis();
 			if (feyArray == null || now - feyArrayCacheTimer > 1000) {
 				
-				List<FeyAwayRecord> records = Lists.newArrayList(container.home.getFeyEntries().values());
-				Collections.sort(records, (l, r) -> { return l.name.compareTo(r.name); });
+				List<FeyAwayRecord> records = container.home.getFeySlots();
+				//Collections.sort(records, (l, r) -> { return l.name.compareTo(r.name); });
 				
 				feyArray = records.toArray(new FeyAwayRecord[records.size()]);
 				feyArrayCacheTimer = now;
@@ -658,6 +660,7 @@ public class HomeBlockGui {
 			super(te.getSlotInventory(), slot, xPosition, yPosition, FeySlotType.SPECIALIZATION);
 			this.inventory = te.getSlotInventory();
 			this.te = te;
+			isSelected = (te.getWorld().isRemote ? false : true);
 		}
 		
 		protected static boolean isSlotValid(boolean isSelected, HomeBlockTileEntity te, HomeBlockSlotInventory inventoryIn, int slot) {
@@ -696,6 +699,9 @@ public class HomeBlockGui {
 		
 		@Override
 		public ItemStack getStack() {
+			if (!isSelected) {
+				return null;
+			}
 			return super.getStack();
 		}
 	}

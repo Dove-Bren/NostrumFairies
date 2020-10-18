@@ -4,16 +4,15 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.blocks.CraftingBlockElf;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -39,7 +38,6 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.pathfinding.Path;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -194,56 +192,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		if (task instanceof LogisticsTaskWorkBlock) {
-			// TODO require a specialization
-			LogisticsTaskWorkBlock work = (LogisticsTaskWorkBlock) task;
-			
-			if (work.getWorld() != this.worldObj) {
-				return false;
-			}
-			
-			// Check where the spot is
-			BlockPos target = work.getBlockPos();
-			if (target == null || !this.canReach(target, true)) {
-				return false;
-			}
-			
-			// Dwarves only want to work at ones from dwarf blocks
-			IBlockState block = worldObj.getBlockState(target);
-			if (block == null || !(block.getBlock() instanceof CraftingBlockElf)) {
-				return false;
-			}
-			
-			// Find a better block to stand, if we weren't told explicitely to stand there
-			target = findEmptySpot(target, true);
-			if (target == null) {
-				return false;
-			}
-			
-			// Check for pathing
-			if (this.getDistanceSq(target) < .2) {
-				return true;
-			}
-			Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
-			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
-			}
-			if (currentPath == null) {
-				if (!success) {
-					navigator.setPath(currentPath, 1.0);
-				}
-			} else {
-				navigator.setPath(currentPath, 1.0);
-			}
-			if (success) {
-				return true;
-			} else if (this.getDistanceSq(target) < 1) {
-				// extra case for if the navigator refuses cause we're too close
-				return true;
-			}
-			
-		} else if (task instanceof LogisticsTaskChopTree) {
+		if (task instanceof LogisticsTaskChopTree) {
 			LogisticsTaskChopTree chop = (LogisticsTaskChopTree) task;
 			
 			if (chop.getWorld() != this.worldObj) {
@@ -683,5 +632,39 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		}
 		
 		return 0f;
+	}
+
+	@Override
+	public EntityFeyBase switchToSpecialization(FeyStoneMaterial material) {
+		if (worldObj.isRemote) {
+			return this;
+		}
+		
+		EntityFeyBase replacement = null;
+		if (material != this.getCurrentSpecialization()) {
+			if (material == FeyStoneMaterial.GARNET) {
+				// Crafting
+				replacement = new EntityElfCrafter(worldObj);
+			} else if (material == FeyStoneMaterial.AQUAMARINE) {
+				// Archery
+				replacement = new EntityElfArcher(worldObj);
+			} else {
+				replacement = new EntityElf(worldObj);
+			}
+		}
+		
+		if (replacement != null) {
+			// Kill this entity and add the other one
+			replacement.copyFrom(this);
+			worldObj.removeEntityDangerously(this);
+			worldObj.spawnEntityInWorld(replacement);
+		}
+		
+		return replacement == null ? this : replacement;
+	}
+
+	@Override
+	public FeyStoneMaterial getCurrentSpecialization() {
+		return null;
 	}
 }

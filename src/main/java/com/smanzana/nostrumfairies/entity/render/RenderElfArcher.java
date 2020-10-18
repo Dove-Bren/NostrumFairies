@@ -10,8 +10,7 @@ import net.minecraft.util.ResourceLocation;
 
 public class RenderElfArcher extends RenderLiving<EntityElfArcher> {
 	
-	//private static ResourceLocation TEXT_ELF_1 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/elf_1.png");
-	private static ResourceLocation TEXT_ELF_2 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/elf_2.png");
+	private static ResourceLocation TEXT_ELF_1 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/elf_archer_1.png");
 	
 	protected ModelElf modelLeft;
 	protected ModelElf modelRight;
@@ -24,7 +23,7 @@ public class RenderElfArcher extends RenderLiving<EntityElfArcher> {
 
 	protected ResourceLocation getEntityTexture(EntityElfArcher entity) {
 		//return (entity.getPersistentID().getLeastSignificantBits() & 1) == 0 ? TEXT_ELF_1 : TEXT_ELF_2;
-		return TEXT_ELF_2;
+		return TEXT_ELF_1;
 	}
 	
 	@Override

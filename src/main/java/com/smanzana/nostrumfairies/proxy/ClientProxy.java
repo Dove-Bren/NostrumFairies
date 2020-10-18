@@ -30,15 +30,23 @@ import com.smanzana.nostrumfairies.client.model.TemplateBlockBakedModel;
 import com.smanzana.nostrumfairies.client.render.TemplateBlockRenderer;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
+import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
+import com.smanzana.nostrumfairies.entity.fey.EntityDwarfCrafter;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
+import com.smanzana.nostrumfairies.entity.fey.EntityElfCrafter;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
+import com.smanzana.nostrumfairies.entity.fey.EntityGnomeCollector;
+import com.smanzana.nostrumfairies.entity.fey.EntityGnomeCrafter;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 import com.smanzana.nostrumfairies.entity.render.RenderDwarf;
+import com.smanzana.nostrumfairies.entity.render.RenderDwarfBuilder;
+import com.smanzana.nostrumfairies.entity.render.RenderDwarfCrafter;
 import com.smanzana.nostrumfairies.entity.render.RenderElf;
 import com.smanzana.nostrumfairies.entity.render.RenderElfArcher;
+import com.smanzana.nostrumfairies.entity.render.RenderElfCrafter;
 import com.smanzana.nostrumfairies.entity.render.RenderFairy;
 import com.smanzana.nostrumfairies.entity.render.RenderGnome;
 import com.smanzana.nostrumfairies.entity.render.RenderShadowFey;
@@ -159,6 +167,41 @@ public class ClientProxy extends CommonProxy {
 			@Override
 			public Render<? super EntityShadowFey> createRenderFor(RenderManager manager) {
 				return new RenderShadowFey(manager, 1.0f);
+			}
+		});
+
+		RenderingRegistry.registerEntityRenderingHandler(EntityElfCrafter.class, new IRenderFactory<EntityElfCrafter>() {
+			@Override
+			public Render<? super EntityElfCrafter> createRenderFor(RenderManager manager) {
+				return new RenderElfCrafter(manager, 1.0f);
+			}
+		});
+
+		RenderingRegistry.registerEntityRenderingHandler(EntityDwarfCrafter.class, new IRenderFactory<EntityDwarfCrafter>() {
+			@Override
+			public Render<? super EntityDwarfCrafter> createRenderFor(RenderManager manager) {
+				return new RenderDwarfCrafter(manager, 1.0f);
+			}
+		});
+
+		RenderingRegistry.registerEntityRenderingHandler(EntityDwarfBuilder.class, new IRenderFactory<EntityDwarfBuilder>() {
+			@Override
+			public Render<? super EntityDwarfBuilder> createRenderFor(RenderManager manager) {
+				return new RenderDwarfBuilder(manager, 1.0f);
+			}
+		});
+
+		RenderingRegistry.registerEntityRenderingHandler(EntityGnomeCrafter.class, new IRenderFactory<EntityGnomeCrafter>() {
+			@Override
+			public Render<? super EntityGnomeCrafter> createRenderFor(RenderManager manager) {
+				return new RenderGnome(manager, 1.0f);
+			}
+		});
+
+		RenderingRegistry.registerEntityRenderingHandler(EntityGnomeCollector.class, new IRenderFactory<EntityGnomeCollector>() {
+			@Override
+			public Render<? super EntityGnomeCollector> createRenderFor(RenderManager manager) {
+				return new RenderGnome(manager, 1.0f);
 			}
 		});
 		

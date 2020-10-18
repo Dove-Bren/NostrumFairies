@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.smanzana.nostrumfairies.entity.EntityTippedArrowEx;
+import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -374,5 +375,10 @@ public class EntityElfArcher extends EntityElf {
 	@Override
 	public String getSpecializationName() {
 		return "Elven Warrior";
+	}
+
+	@Override
+	public FeyStoneMaterial getCurrentSpecialization() {
+		return FeyStoneMaterial.AQUAMARINE;
 	}
 }

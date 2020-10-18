@@ -6,7 +6,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.CraftingBlockDwarf;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
@@ -14,6 +13,7 @@ import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.entity.ItemArraySerializer;
 import com.smanzana.nostrumfairies.entity.navigation.PathFinderPublic;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
+import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -289,7 +289,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		return ResidentType.DWARF;
 	}
 	
-	private @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing, boolean repair) {
+	@Nullable
+	protected BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing, boolean repair) {
 		
 		// repair tasks are going to add the block, so don't stand there! Stand above -- up to 2 blocks above
 		// We also change the order we evaluate spots based on the same thing. we prefer above for repair, and prefer at or below
@@ -415,100 +416,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		if (task instanceof LogisticsTaskWorkBlock) {
-			// TODO require a specialization
-			LogisticsTaskWorkBlock work = (LogisticsTaskWorkBlock) task;
-			
-			if (work.getWorld() != this.worldObj) {
-				return false;
-			}
-			
-			// Check where the spot is
-			BlockPos target = work.getBlockPos();
-			if (target == null || !this.canReach(target, true)) {
-				return false;
-			}
-			
-			// Dwarves only want to work at ones from dwarf blocks
-			IBlockState block = worldObj.getBlockState(target);
-			if (block == null || !(block.getBlock() instanceof CraftingBlockDwarf)) {
-				return false;
-			}
-			
-			// Find a better block to stand, if we weren't told explicitely to stand there
-			target = findEmptySpot(target, true, true);
-			if (target == null) {
-				return false;
-			}
-			
-			// Check for pathing
-			if (this.getDistanceSq(target) < .2) {
-				return true;
-			}
-			Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
-			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
-			}
-			if (currentPath == null) {
-				if (!success) {
-					navigator.setPath(currentPath, 1.0);
-				}
-			} else {
-				navigator.setPath(currentPath, 1.0);
-			}
-			if (success) {
-				return true;
-			} else if (this.getDistanceSq(target) < 1) {
-				// extra case for if the navigator refuses cause we're too close
-				return true;
-			}
-			
-		} else if (task instanceof LogisticsTaskBuildBlock) {
-			// TODO require a specialization\
-			LogisticsTaskBuildBlock build = (LogisticsTaskBuildBlock) task;
-			
-			if (build.getWorld() != this.worldObj) {
-				return false;
-			}
-			
-			// Check where the spot is
-			BlockPos target = build.getTargetPlaceLoc();
-			if (target == null || !this.canReach(target, true)) {
-				return false;
-			}
-			
-			// Find a better block to stand, if we weren't told explicitely to stand there
-			if (target == build.getTargetBlock()) {
-				target = findEmptySpot(target, true, true);
-				if (target == null) {
-					return false;
-				}
-			}
-			
-			// Check for pathing
-			if (this.getDistanceSq(target) < .2) {
-				return true;
-			}
-			Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
-			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
-			}
-			if (currentPath == null) {
-				if (!success) {
-					navigator.setPath(currentPath, 1.0);
-				}
-			} else {
-				navigator.setPath(currentPath, 1.0);
-			}
-			if (success) {
-				return true;
-			} else if (this.getDistanceSq(target) < 1) {
-				// extra case for if the navigator refuses cause we're too close
-				return true;
-			}
-		} else if (task instanceof LogisticsTaskMineBlock) {
+		if (task instanceof LogisticsTaskMineBlock) {
 			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
 			
 			if (mine.getWorld() != this.worldObj) {
@@ -1115,6 +1023,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		;
 	}
 	
+	protected void playWorkSound() {
+		NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), worldObj, posX, posY, posZ);
+	}
+	
 	@Override
 	public void onUpdate() {
 		super.onUpdate();
@@ -1123,7 +1035,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			if (this.getPose() == ArmPose.MINING) {
 				// 20% into animation is the hit
 				if (this.swingProgressInt == Math.floor(this.getArmSwingAnimationEnd() * .2)) {
-					NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), worldObj, posX, posY, posZ);
+					playWorkSound();
 				}
 			}
 		}
@@ -1221,5 +1133,40 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			super.teleportFromStuck();
 		}
 		
+	}
+
+	@Override
+	public EntityFeyBase switchToSpecialization(FeyStoneMaterial material) {
+		if (worldObj.isRemote) {
+			return this;
+		}
+		
+		EntityFeyBase replacement = null;
+		if (material != this.getCurrentSpecialization()) {
+			if (material == FeyStoneMaterial.GARNET) {
+				// Crafting
+				replacement = new EntityDwarfCrafter(worldObj);
+			} else if (material == FeyStoneMaterial.EMERALD) {
+				// Builder
+				replacement = new EntityDwarfBuilder(worldObj);
+			} else {
+				replacement = new EntityDwarf(worldObj);
+			}
+		}
+		
+		if (replacement != null) {
+			// Kill this entity and add the other one
+			replacement.copyFrom(this);
+			worldObj.removeEntityDangerously(this);
+			worldObj.spawnEntityInWorld(replacement);
+		}
+		
+		return replacement == null ? this : replacement;
+	}
+
+	@Override
+	public FeyStoneMaterial getCurrentSpecialization() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

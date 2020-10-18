@@ -16,7 +16,11 @@ public class ModelDwarf extends ModelBase {
 	private ModelRenderer legRight;
 	private ModelRenderer armLeft;
 	private ModelRenderer armRight;
-	private ModelRenderer pick;
+	
+	private ModelRenderer heldMain;
+	private ModelRenderer heldOff;
+	
+	//private ModelRenderer pick;
 	
 	public ModelDwarf(boolean leftHanded) {
 		// 16x16x16 is one block.
@@ -74,7 +78,32 @@ public class ModelDwarf extends ModelBase {
 		armRight.offsetX = (-(7 + 2.5f) / 16f);
 		body.addChild(armRight);
 		
-		pick = new ModelRenderer(this, 84, 0);
+		heldMain = createHeldItem(true);
+		heldOff = createHeldItem(false);
+		
+		if (leftHanded) {
+			if (heldMain != null) {
+				armLeft.addChild(heldMain);
+			}
+			if (heldOff != null) {
+				armRight.addChild(heldOff);
+			}
+		} else {
+			if (heldMain != null) {
+				armRight.addChild(heldMain);
+			}
+			if (heldOff != null) {
+				armLeft.addChild(heldOff);
+			}
+		}
+		
+	}
+	
+	protected ModelRenderer createPickaxe() {
+		final int textW = 128;
+		final int textH = 64;
+		
+		ModelRenderer pick = new ModelRenderer(this, 84, 0);
 		pick.setTextureSize(textW, textH);
 		pick.setRotationPoint(-0.5f, 0, -0.5f);
 		pick.addBox(0, -14, 0, 1, 14, 1);
@@ -90,12 +119,17 @@ public class ModelDwarf extends ModelBase {
 		pick.addBox(-4, -15, 0, 2, 1, 1);
 		pick.offsetY = (9f / 16f); // height of arm, - a bit
 		
-		if (leftHanded) {
-			armLeft.addChild(pick);
-		} else {
-			armRight.addChild(pick);
+		pick.rotateAngleZ = (float) (.5 * Math.PI) - .2f;
+		pick.rotateAngleX = (float) (.5 * Math.PI);
+		return pick;
+	}
+	
+	protected ModelRenderer createHeldItem(boolean mainhand) {
+		if (mainhand) {
+			return createPickaxe();
 		}
 		
+		return null;
 	}
 	
 	@Override
@@ -190,9 +224,6 @@ public class ModelDwarf extends ModelBase {
 				}
 			}
 		}
-		
-		pick.rotateAngleZ = (float) (.5 * Math.PI) - .2f;
-		pick.rotateAngleX = (float) (.5 * Math.PI);
 		
 		body.render(scale);
 	}

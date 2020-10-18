@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import com.google.common.base.Optional;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -727,5 +728,15 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected float getGrowthForTask(ILogisticsTask task) {
 		return 0.2f;
+	}
+
+	@Override
+	public EntityFeyBase switchToSpecialization(FeyStoneMaterial material) {
+		return this;
+	}
+
+	@Override
+	public FeyStoneMaterial getCurrentSpecialization() {
+		return null;
 	}
 }

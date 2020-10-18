@@ -540,7 +540,7 @@ public class CraftingStationGui {
 					GlStateManager.translate(0, 0, 100);
 					drawError();
 				} else if (bonus) {
-					GlStateManager.translate(0, 0, 100);
+					GlStateManager.translate(0, 0, 1000);
 					drawBoost();
 				}
 				
