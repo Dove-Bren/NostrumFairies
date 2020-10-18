@@ -10,18 +10,24 @@ import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 
 import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -32,7 +38,10 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class CraftingBlockGnome extends BlockContainer {
 	
+	public static final PropertyDirection FACING = BlockHorizontal.FACING;
 	public static final String ID = "logistics_crafting_station_gnome";
+	private static final AxisAlignedBB SEL_AABB = new AxisAlignedBB(0, 0, 0, 1, .55, 1);
+	private static final AxisAlignedBB COL_AABB = new AxisAlignedBB(.325, 0, .325, .675, .50, .675);
 	
 	private static CraftingBlockGnome instance = null;
 	public static CraftingBlockGnome instance() {
@@ -54,6 +63,70 @@ public class CraftingBlockGnome extends BlockContainer {
 		this.setCreativeTab(NostrumFairies.creativeTab);
 		this.setSoundType(SoundType.CLOTH);
 		this.setHarvestLevel("pickaxe", 1);
+	}
+	
+	@Override
+	protected BlockStateContainer createBlockState() {
+		return new BlockStateContainer(this, FACING);
+	}
+	
+	protected static int metaFromFacing(EnumFacing facing) {
+		return facing.getHorizontalIndex();
+	}
+	
+	protected static EnumFacing facingFromMeta(int meta) {
+		return EnumFacing.getHorizontal(meta);
+	}
+	
+	@Override
+	public IBlockState getStateFromMeta(int meta) {
+		return getDefaultState()
+				.withProperty(FACING, facingFromMeta(meta));
+	}
+	
+	@Override
+	public int getMetaFromState(IBlockState state) {
+		return metaFromFacing(state.getValue(FACING));
+	}
+	
+	public EnumFacing getFacing(IBlockState state) {
+		return state.getValue(FACING);
+	}
+	
+	@Override
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+		return this.getDefaultState()
+				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+	}
+	
+	@Override
+	public BlockRenderLayer getBlockLayer() {
+		return BlockRenderLayer.CUTOUT;
+	}
+	
+	@Override
+	public boolean isFullBlock(IBlockState state) {
+		return false;
+	}
+	
+	@Override
+	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+		return SEL_AABB;
+	}
+	
+	@Override
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+		return COL_AABB;
+	}
+	
+	@Override
+	public boolean isVisuallyOpaque() {
+		return false;
+	}
+	
+	@Override
+	public boolean isOpaqueCube(IBlockState state) {
+		return false;
 	}
 	
 	@Override

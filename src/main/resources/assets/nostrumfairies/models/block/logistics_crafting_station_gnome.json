@@ -1,6 +1,51 @@
 {
-    "parent": "block/cube_all",
-    "textures": {
-        "all": "nostrumfairies:blocks/logistics_crafting_station_gnome"
-    }
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"textures": {
+		"particle": "blocks/crafting_table_top",
+		"base": "blocks/stone",
+		"front": "blocks/crafting_table_front",
+		"side": "blocks/crafting_table_side",
+		"top": "blocks/crafting_table_top"
+	},
+	"elements": [
+		{
+			"name": "Platform",
+			"from": [0, 0, 0],
+			"to": [16, 2, 16],
+			"faces": {
+				"north": {"uv": [0, 0, 16, 2], "texture": "#base"},
+				"east": {"uv": [0, 0, 16, 2], "texture": "#base"},
+				"south": {"uv": [0, 0, 16, 2], "texture": "#base"},
+				"west": {"uv": [0, 0, 16, 2], "texture": "#base"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#base"},
+				"down": {"uv": [0, 0, 16, 16], "texture": "#base"}
+			}
+		},
+		{
+			"from": [5, 2, 5],
+			"to": [11, 8, 11],
+			"rotation": {"angle": 0, "axis": "y", "origin": [14, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#front"},
+				"east": {"uv": [0, 0, 16, 16], "texture": "#side"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#side"},
+				"west": {"uv": [0, 0, 16, 16], "texture": "#side"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#top"},
+				"down": {"uv": [0, 0, 6, 6], "texture": "#missing"}
+			}
+		}
+	],
+	"groups": [
+		{
+			"name": "Base",
+			"origin": [8, 8, 8],
+			"children": [0]
+		},
+		{
+			"name": "Bench",
+			"origin": [8, 8, 8],
+			"children": [1]
+		}
+	]
 }

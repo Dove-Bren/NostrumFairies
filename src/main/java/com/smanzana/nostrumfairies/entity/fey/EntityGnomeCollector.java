@@ -1,15 +1,10 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
-import com.smanzana.nostrumfairies.blocks.CraftingBlockGnome;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
-import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 

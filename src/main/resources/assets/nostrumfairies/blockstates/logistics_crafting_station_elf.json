@@ -1,5 +1,9 @@
 {
     "variants": {
-        "normal": { "model": "nostrumfairies:logistics_crafting_station_elf" }
+        "inventory": { "model": "nostrumfairies:logistics_crafting_station_elf" },
+        "facing=north": { "model": "nostrumfairies:logistics_crafting_station_elf" },
+        "facing=east": { "model": "nostrumfairies:logistics_crafting_station_elf", "y": 90},
+        "facing=south": { "model": "nostrumfairies:logistics_crafting_station_elf", "y": 180 },
+        "facing=west": { "model": "nostrumfairies:logistics_crafting_station_elf", "y": 270 }
     }
 }
