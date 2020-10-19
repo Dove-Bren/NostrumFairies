@@ -146,13 +146,14 @@ public class CraftingBlockDwarf extends BlockContainer {
 			return false;
 		}
 		
-		return super.canPlaceBlockAt(worldIn, pos);
+		//return super.canPlaceBlockAt(worldIn, pos);
+		return true;
 	}
 	
 	@SuppressWarnings("deprecation")
 	@Override
 	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
-		if (!canPlaceBlockAt(worldIn, pos) && !state.getBlock().equals(this)) {
+		if (!canPlaceBlockAt(worldIn, pos)) {
 			this.dropBlockAsItem(worldIn, pos, state, 0);
 			worldIn.setBlockToAir(pos);
 		}

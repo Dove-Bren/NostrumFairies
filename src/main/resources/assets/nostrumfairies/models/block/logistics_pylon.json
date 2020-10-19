@@ -1,6 +1,119 @@
 {
-    "parent": "block/cube_all",
-    "textures": {
-        "all": "nostrumfairies:blocks/logistics_pylon"
-    }
+	"credit": "Made with Blockbench",
+	"textures": {
+		"0": "blocks/stone",
+		"1": "nostrumfairies:blocks/pylon_gem",
+		"particle": "nostrumfairies:blocks/pylon_gem"
+	},
+	"elements": [
+		{
+			"name": "base1",
+			"from": [0, 0, 0],
+			"to": [16, 2, 16],
+			"faces": {
+				"north": {"uv": [0, 0, 16, 2], "texture": "#0"},
+				"east": {"uv": [0, 0, 16, 2], "texture": "#0"},
+				"south": {"uv": [0, 0, 16, 2], "texture": "#0"},
+				"west": {"uv": [0, 0, 16, 2], "texture": "#0"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#0"},
+				"down": {"uv": [0, 0, 16, 16], "texture": "#0"}
+			}
+		},
+		{
+			"name": "large_gem_1",
+			"from": [5.5, 7.5, 7],
+			"to": [10.5, 12.5, 9],
+			"rotation": {"angle": 45, "axis": "z", "origin": [8, 10, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 5, 5], "texture": "#1"},
+				"east": {"uv": [0, 0, 2, 5], "texture": "#1"},
+				"south": {"uv": [0, 0, 5, 5], "texture": "#1"},
+				"west": {"uv": [0, 0, 2, 5], "texture": "#1"},
+				"up": {"uv": [0, 0, 5, 2], "texture": "#1"},
+				"down": {"uv": [0, 0, 5, 2], "texture": "#1"}
+			}
+		},
+		{
+			"name": "large_gem_2",
+			"from": [7, 7.5, 5.5],
+			"to": [9, 12.5, 10.5],
+			"rotation": {"angle": 45, "axis": "x", "origin": [8, 10, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 2, 5], "texture": "#1"},
+				"east": {"uv": [0, 0, 5, 5], "texture": "#1"},
+				"south": {"uv": [0, 0, 2, 5], "texture": "#1"},
+				"west": {"uv": [0, 0, 5, 5], "texture": "#1"},
+				"up": {"uv": [0, 0, 5, 2], "rotation": 90, "texture": "#1"},
+				"down": {"uv": [0, 0, 5, 2], "rotation": 270, "texture": "#1"}
+			}
+		},
+		{
+			"name": "small_gem_1",
+			"from": [13, 8.5, 7],
+			"to": [16, 11.5, 9],
+			"rotation": {"angle": -45, "axis": "z", "origin": [8, 10, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 3, 3], "rotation": 270, "texture": "#1"},
+				"east": {"uv": [0, 0, 3, 2], "rotation": 90, "texture": "#1"},
+				"south": {"uv": [0, 0, 3, 3], "rotation": 90, "texture": "#1"},
+				"west": {"uv": [0, 0, 3, 2], "rotation": 90, "texture": "#1"},
+				"up": {"uv": [0, 0, 2, 3], "rotation": 90, "texture": "#1"},
+				"down": {"uv": [0, 0, 2, 3], "rotation": 90, "texture": "#1"}
+			}
+		},
+		{
+			"name": "small_gem_2",
+			"from": [0, 8.5, 7],
+			"to": [3, 11.5, 9],
+			"rotation": {"angle": 45, "axis": "z", "origin": [8, 10, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 3, 3], "rotation": 90, "texture": "#1"},
+				"east": {"uv": [0, 0, 3, 2], "rotation": 270, "texture": "#1"},
+				"south": {"uv": [0, 0, 3, 3], "rotation": 270, "texture": "#1"},
+				"west": {"uv": [0, 0, 3, 2], "rotation": 270, "texture": "#1"},
+				"up": {"uv": [0, 0, 2, 3], "rotation": 270, "texture": "#1"},
+				"down": {"uv": [0, 0, 2, 3], "rotation": 270, "texture": "#1"}
+			}
+		},
+		{
+			"name": "small_gem_3",
+			"from": [7, 8.5, 0],
+			"to": [9, 11.5, 3],
+			"rotation": {"angle": -45, "axis": "x", "origin": [8, 10, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 2, 3], "rotation": 180, "texture": "#1"},
+				"east": {"uv": [0, 0, 3, 3], "rotation": 180, "texture": "#1"},
+				"south": {"uv": [0, 0, 2, 3], "rotation": 180, "texture": "#1"},
+				"west": {"uv": [0, 0, 3, 3], "rotation": 180, "texture": "#1"},
+				"up": {"uv": [0, 0, 3, 2], "rotation": 90, "texture": "#1"},
+				"down": {"uv": [0, 0, 3, 2], "rotation": 270, "texture": "#1"}
+			}
+		},
+		{
+			"name": "small_gem_4",
+			"from": [7, 8.5, 13],
+			"to": [9, 11.5, 16],
+			"rotation": {"angle": 45, "axis": "x", "origin": [8, 10, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 3, 2], "rotation": 270, "texture": "#1"},
+				"east": {"uv": [0, 0, 3, 3], "rotation": 270, "texture": "#1"},
+				"south": {"uv": [0, 0, 3, 2], "rotation": 270, "texture": "#1"},
+				"west": {"uv": [0, 0, 3, 3], "rotation": 90, "texture": "#1"},
+				"up": {"uv": [0, 0, 2, 3], "rotation": 180, "texture": "#1"},
+				"down": {"uv": [0, 0, 2, 3], "texture": "#1"}
+			}
+		}
+	],
+	"groups": [
+		{
+			"name": "Base",
+			"origin": [8, 8, 8],
+			"children": [0]
+		},
+		{
+			"name": "Gem",
+			"origin": [8, 8, 8],
+			"children": [1, 2, 3, 4, 5, 6]
+		}
+	]
 }
