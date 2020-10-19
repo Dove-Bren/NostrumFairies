@@ -23,6 +23,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.OreDict;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.SoundType;
@@ -134,6 +135,11 @@ public class WoodcuttingBlock extends BlockContainer {
 	}
 	
 	@Override
+	public boolean isFullCube(IBlockState state) {
+		return false;
+	}
+	
+	@Override
 	public boolean isVisuallyOpaque() {
 		return false;
 	}
@@ -159,6 +165,32 @@ public class WoodcuttingBlock extends BlockContainer {
 		} else {
 			return IFeySign.AABB_EW;
 		}
+	}
+	
+	@Override
+	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
+        return true;
+    }
+	
+	@Override
+	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
+		IBlockState state = worldIn.getBlockState(pos.down());
+		if (state == null || !(state.isSideSolid(worldIn, pos.down(), EnumFacing.UP))) {
+			return false;
+		}
+		
+		return super.canPlaceBlockAt(worldIn, pos);
+	}
+	
+	@SuppressWarnings("deprecation")
+	@Override
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+		if (!canPlaceBlockAt(worldIn, pos) && !state.getBlock().equals(this)) {
+			this.dropBlockAsItem(worldIn, pos, state, 0);
+			worldIn.setBlockToAir(pos);
+		}
+		
+		super.neighborChanged(state, worldIn, pos, blockIn);
 	}
 	
 	@Override

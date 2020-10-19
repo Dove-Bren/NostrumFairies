@@ -28,6 +28,7 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockHorizontal;
@@ -42,6 +43,7 @@ import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
@@ -145,6 +147,11 @@ public class BuildingBlock extends BlockContainer {
 	}
 	
 	@Override
+	public boolean isFullCube(IBlockState state) {
+		return false;
+	}
+	
+	@Override
 	public boolean isVisuallyOpaque() {
 		return false;
 	}
@@ -170,6 +177,32 @@ public class BuildingBlock extends BlockContainer {
 		} else {
 			return AABB_EW;
 		}
+	}
+	
+	@Override
+	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
+        return true;
+    }
+	
+	@Override
+	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
+		IBlockState state = worldIn.getBlockState(pos.down());
+		if (state == null || !(state.isSideSolid(worldIn, pos.down(), EnumFacing.UP))) {
+			return false;
+		}
+		
+		return super.canPlaceBlockAt(worldIn, pos);
+	}
+	
+	@SuppressWarnings("deprecation")
+	@Override
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+		if (!canPlaceBlockAt(worldIn, pos) && !state.getBlock().equals(this)) {
+			this.dropBlockAsItem(worldIn, pos, state, 0);
+			worldIn.setBlockToAir(pos);
+		}
+		
+		super.neighborChanged(state, worldIn, pos, blockIn);
 	}
 	
 	@Override
@@ -557,6 +590,12 @@ public class BuildingBlock extends BlockContainer {
 		
 		BuildingBlockTileEntity block = (BuildingBlockTileEntity) ent;
 		block.unlinkFromNetwork();
+		if (block.getTemplateScroll() != null) {
+			EntityItem item = new EntityItem(
+					world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
+					block.getTemplateScroll());
+			world.spawnEntityInWorld(item);
+		}
 		MinecraftForge.EVENT_BUS.unregister(block);
 	}
 	

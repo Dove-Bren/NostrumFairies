@@ -9,6 +9,7 @@ import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.SoundType;
@@ -110,6 +111,11 @@ public class CraftingBlockGnome extends BlockContainer {
 	}
 	
 	@Override
+	public boolean isFullCube(IBlockState state) {
+		return false;
+	}
+	
+	@Override
 	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
 		return SEL_AABB;
 	}
@@ -127,6 +133,32 @@ public class CraftingBlockGnome extends BlockContainer {
 	@Override
 	public boolean isOpaqueCube(IBlockState state) {
 		return false;
+	}
+	
+	@Override
+	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
+        return true;
+    }
+	
+	@Override
+	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
+		IBlockState state = worldIn.getBlockState(pos.down());
+		if (state == null || !(state.isSideSolid(worldIn, pos.down(), EnumFacing.UP))) {
+			return false;
+		}
+		
+		return super.canPlaceBlockAt(worldIn, pos);
+	}
+	
+	@SuppressWarnings("deprecation")
+	@Override
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+		if (!canPlaceBlockAt(worldIn, pos) && !state.getBlock().equals(this)) {
+			this.dropBlockAsItem(worldIn, pos, state, 0);
+			worldIn.setBlockToAir(pos);
+		}
+		
+		super.neighborChanged(state, worldIn, pos, blockIn);
 	}
 	
 	@Override
