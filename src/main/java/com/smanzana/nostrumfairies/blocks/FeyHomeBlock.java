@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.blocks;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,7 +23,17 @@ import com.smanzana.nostrumaetheria.api.component.IAetherComponentListener;
 import com.smanzana.nostrumaetheria.component.AetherHandlerComponent;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
+import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
+import com.smanzana.nostrumfairies.entity.fey.EntityDwarfCrafter;
+import com.smanzana.nostrumfairies.entity.fey.EntityElf;
+import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
+import com.smanzana.nostrumfairies.entity.fey.EntityElfCrafter;
+import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
+import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
+import com.smanzana.nostrumfairies.entity.fey.EntityGnomeCollector;
+import com.smanzana.nostrumfairies.entity.fey.EntityGnomeCrafter;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.inventory.IFeySlotted;
@@ -42,7 +53,9 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -52,12 +65,16 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -265,8 +282,17 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			HomeBlockTileEntity te = (HomeBlockTileEntity) ent;
 			te.unlinkFromNetwork();
 			
-			// Drop inventories on the floor
-			// TODO
+			// Slot inventory and upgrade inventories
+			for (IInventory inv : new IInventory[] {te.slotInv, te.upgradeInv}) {
+				for (int i = 0; i < inv.getSizeInventory(); i++) {
+					if (inv.getStackInSlot(i) != null) {
+						EntityItem item = new EntityItem(
+								world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
+								inv.removeStackFromSlot(i));
+						world.spawnEntityInWorld(item);
+					}
+				}
+			}
 		}
 		world.removeTileEntity(pos);
 		
@@ -609,6 +635,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		protected AetherHandlerComponent handler;
 		
 		private boolean aetherDirtyFlag;
+		private List<BlockPos> boostBlockSpots; // TODO make sparkles every once in a while?
 		
 		public HomeBlockTileEntity(ResidentType type) {
 			this();
@@ -627,6 +654,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			feyCacheMap = new HashMap<>();
 			handler = new AetherHandlerComponent(this, 0, 500);
 			handler.configureInOut(true, false);
+			boostBlockSpots = new ArrayList<>();
 		}
 
 		@Override
@@ -1059,19 +1087,20 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				}
 			}
 			
-			// If any soul gems in our inventory have souls in them, free them!
-			for (int i = 0; i < this.slotInv.getSizeInventory(); i++) {
-				if (HomeBlockSlotInventory.isSoulSlot(i) && slotInv.hasStone(i)) {
-					ItemStack stone = slotInv.getStackInSlot(i);
-					if (FeySoulStone.hasStoredFey(stone)) {
-						EntityFeyBase fey = FeySoulStone.spawnStoredEntity(stone, worldObj, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5);
-						fey.setHome(this.getPos());
-						slotInv.setInventorySlotContents(i, FeySoulStone.clearEntity(stone));
+			if (!worldObj.isRemote) {
+				//If any soul gems in our inventory have souls in them, free them!
+				for (int i = 0; i < this.slotInv.getSizeInventory(); i++) {
+					if (HomeBlockSlotInventory.isSoulSlot(i) && slotInv.hasStone(i)) {
+						ItemStack stone = slotInv.getStackInSlot(i);
+						if (FeySoulStone.hasStoredFey(stone)) {
+							EntityFeyBase fey = FeySoulStone.spawnStoredEntity(stone, worldObj, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5);
+							fey.setHome(this.getPos());
+							slotInv.setInventorySlotContents(i, FeySoulStone.clearEntity(stone));
+						}
 					}
 				}
-			}
-			
-			if (!worldObj.isRemote) {
+				
+				// Take aether cost
 				final int debt = this.getAetherCost();
 				if (this.handler.drawAether(null, debt) != debt) {
 					// Didn't have enough. Deactivate!
@@ -1089,6 +1118,194 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				aetherDirtyFlag = false;
 			}
 			
+			if (!worldObj.isRemote && ticksExisted % 100 == 0 && worldObj.isDaytime()) {
+				if (NostrumFairies.random.nextFloat() < .2f) {
+					// Scan for nearby flowers and possible spawn extra fey
+					final float happiness = getAverageHappiness();
+					if (happiness > 50f && this.getAether() > 0) {
+						// Do we have vacancies? And are there spawn-boosting blocks nearby?
+						final float chance = Math.min(.75f, .01f + getBlockSpawnBonus() + getVacancyBonus());
+						if (NostrumFairies.random.nextFloat() < chance) {
+							// Spawn a wild'un!
+							spawnWildNearby();
+						}
+					}
+				}
+				
+				// vfx
+				Iterator<BlockPos> it = boostBlockSpots.iterator();
+				while (it.hasNext()) {
+					BlockPos pos = it.next();
+					IBlockState state = worldObj.getBlockState(pos);
+					if (getBlockSpawnBonus(pos, state) <= 0) {
+						it.remove();
+						continue;
+					}
+					
+					if (NostrumFairies.random.nextFloat() < .2f) {
+						((WorldServer) worldObj).spawnParticle(EnumParticleTypes.VILLAGER_HAPPY,
+								pos.getX() + .5,
+								pos.getY() + 1,
+								pos.getZ() + .5,
+								3,
+								.25,
+								.2,
+								.25,
+								.1,
+								new int[0]);
+						break;
+					}
+				}
+			}
+			
+		}
+		
+		protected float getAverageHappiness() {
+			float sum = 0f;
+			int count = 0;
+			for (EntityFeyBase fey : getAvailableFeyEntities()) {
+				count++;
+				sum += fey.getHappiness();
+			}
+			
+			if (count == 0) {
+				return 51f;
+			}
+			
+			return sum / (float) count;
+		}
+		
+		protected float getBlockSpawnBonus() {
+			final int scanRadius = 5;
+			
+			// Clear out saved copy of these locations
+			this.boostBlockSpots.clear();
+			
+			float bonus = 0f;
+			MutableBlockPos cursor = new MutableBlockPos();
+			final int x = pos.getX();
+			final int y = pos.getY();
+			final int z = pos.getZ();
+			for (int i = -scanRadius; i <= scanRadius; i++)
+			for (int j = -1; j <= 1; j++)
+			for (int k = -scanRadius; k <= scanRadius; k++) {
+				cursor.setPos(x + i, y + j, z + k);
+				if (cursor.getY() < 0 || cursor.getY() > 255) {
+					continue;
+				}
+				
+				IBlockState state = worldObj.getBlockState(cursor);
+				final float boost = getBlockSpawnBonus(cursor, state);
+				bonus += boost;
+				if (boost > 0f) {
+					boostBlockSpots.add(cursor.toImmutable());
+				}
+			}
+			return bonus;
+		}
+		
+		protected float getBlockSpawnBonus(BlockPos pos, IBlockState state) {
+			if (state != null && state.getBlock() instanceof FeyBush) {
+				return .005f;
+			}
+			
+			return 0;
+		}
+		
+		protected float getVacancyBonus() {
+			// count vacancies
+			int count = 0;
+			for (int i = 0; i < slots; i++) {
+				if (feySlots[i] == null) {
+					count++;
+				}
+			}
+			
+			return (float) count * .025f; 
+		}
+		
+		protected BlockPos findRandomCenteredSpot() {
+			// Find a random spot
+			BlockPos targ = null;
+			int attempts = 20;
+			final Random rand = NostrumFairies.random;
+			final double minDist = 5;
+			final double maxDist = 15;
+			
+			do {
+				double dist = minDist + (rand.nextDouble() * (maxDist - minDist));
+				float angle = (float) (rand.nextDouble() * (2 * Math.PI));
+				float tilt = (float) (rand.nextDouble() * (2 * Math.PI)) * .5f;
+				
+				targ = new BlockPos(new Vec3d(
+						pos.getX() + (Math.cos(angle) * dist),
+						pos.getY() + (Math.cos(tilt) * dist),
+						pos.getZ() + (Math.sin(angle) * dist)));
+				
+				while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+					targ = targ.down();
+				}
+				if (targ.getY() < 256) {
+					targ = targ.up();
+				}
+				
+				// We've hit a non-air block. Make sure there's space above it
+				if (worldObj.isAirBlock(targ.up())) {
+					break;
+				}
+			} while (targ == null && attempts > 0);
+			
+			if (targ == null) {
+				targ = pos.up();
+			}
+			
+			return targ;
+		}
+		
+		protected @Nullable BlockPos findBushSpot() {
+			if (!boostBlockSpots.isEmpty()) {
+				return boostBlockSpots.get(NostrumFairies.random.nextInt(boostBlockSpots.size()));
+			}
+			
+			return null;
+		}
+		
+		protected void spawnWildNearby() {
+			BlockPos at = findBushSpot();
+			if (at == null) {
+				at = findRandomCenteredSpot();
+			}
+			
+			spawnWild(at);
+		}
+		
+		protected void spawnWild(BlockPos pos) {
+			final EntityFeyBase fey;
+			final int type = NostrumFairies.random.nextInt(3);
+			switch (this.type) {
+			case DWARF:
+				if (type == 0) fey = new EntityDwarf(worldObj);
+				else if (type == 1) fey = new EntityDwarfBuilder(worldObj);
+				else fey = new EntityDwarfCrafter(worldObj);
+				break;
+			case ELF:
+				if (type == 0) fey = new EntityElf(worldObj);
+				else if (type == 1) fey = new EntityElfArcher(worldObj);
+				else fey = new EntityElfCrafter(worldObj);
+				break;
+			case FAIRY:
+			default:
+				fey = new EntityFairy(worldObj);
+				break;
+			case GNOME:
+				if (type == 0) fey = new EntityGnome(worldObj);
+				else if (type == 1) fey = new EntityGnomeCrafter(worldObj);
+				else fey = new EntityGnomeCollector(worldObj);
+				break;
+			}
+			
+			fey.setPosition(pos.getX() + .5, pos.getY() + .05, pos.getZ() + .5);
+			worldObj.spawnEntityInWorld(fey);
 		}
 		
 		protected void dirtyAndUpdate() {
