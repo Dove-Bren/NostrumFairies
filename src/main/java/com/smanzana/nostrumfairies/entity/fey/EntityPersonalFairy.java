@@ -19,6 +19,7 @@ import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyCastTarge
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyPlacementTarget;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.IEntityPet;
 import com.smanzana.nostrummagica.entity.PetInfo;
@@ -1050,6 +1051,11 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		}
 
 		return super.isOnSameTeam(entityIn);
+	}
+	
+	@Override
+	public @Nullable NostrumFairiesSounds getIdleSound() {
+		return null;
 	}
 	
 	public static interface IBuildPump {

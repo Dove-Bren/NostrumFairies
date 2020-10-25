@@ -20,6 +20,127 @@
             "nostrumfairies:ambient/pickaxe15"
         ]
     },
+    "ambient.appear":
+    {
+        "sounds":
+        [
+            "nostrumfairies:ambient/appear"
+        ]
+    },
+    "entity.dwarf.die":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/dwarf/die1",
+            "nostrumfairies:entity/dwarf/die2",
+            "nostrumfairies:entity/dwarf/die3"
+        ]
+    },
+    "entity.dwarf.hurt":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/dwarf/hurt1",
+            "nostrumfairies:entity/dwarf/hurt2",
+            "nostrumfairies:entity/dwarf/hurt3",
+            "nostrumfairies:entity/dwarf/hurt4"
+        ]
+    },
+    "entity.elf.die":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/elf/die1"
+        ]
+    },
+    "entity.elf.hurt":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/elf/hurt1",
+            "nostrumfairies:entity/elf/hurt2",
+            "nostrumfairies:entity/elf/hurt3"
+        ]
+    },
+    "entity.elf.idle":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/elf/idle1"
+        ]
+    },
+    "entity.fairy.die":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/fairy/die1"
+        ]
+    },
+    "entity.fairy.hurt":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/fairy/hurt1"
+        ]
+    },
+    "entity.fairy.idle":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/fairy/idle1",
+            "nostrumfairies:entity/fairy/idle2",
+            "nostrumfairies:entity/fairy/idle3",
+            "nostrumfairies:entity/fairy/idle4"
+        ]
+    },
+    "entity.gnome.die":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/gnome/die1",
+            "nostrumfairies:entity/gnome/die2"
+        ]
+    },
+    "entity.gnome.hurt":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/gnome/hurt1",
+            "nostrumfairies:entity/gnome/hurt2",
+            "nostrumfairies:entity/gnome/hurt3"
+        ]
+    },
+    "entity.gnome.idle":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/gnome/idle1",
+            "nostrumfairies:entity/gnome/idle2",
+            "nostrumfairies:entity/gnome/idle3"
+        ]
+    },
+    "entity.gnome.work":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/gnome/work1"
+        ]
+    },
+    "entity.shadow_fey.idle":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/shadow_fey/idle1"
+        ]
+    },
+    "entity.shadow_fey.hurt":
+    {
+        "sounds":
+        [
+            "nostrumfairies:entity/gnome/die1",
+            "nostrumfairies:entity/gnome/die2"
+        ]
+    },
     "items.instrument.lyre":
     {
         "sounds":
@@ -45,6 +166,13 @@
             "nostrumfairies:items/ocarina1",
             "nostrumfairies:items/ocarina2",
             "nostrumfairies:items/ocarina3"
+        ]
+    },
+    "items.instrument.bell":
+    {
+        "sounds":
+        [
+            "nostrumfairies:items/bell1"
         ]
     }
 }

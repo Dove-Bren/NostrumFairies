@@ -12,6 +12,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
@@ -31,6 +32,7 @@ import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -39,6 +41,8 @@ import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -333,6 +337,9 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 								posX, posY, posZ,
 								0, 0.3, 0,
 								new int[0]);
+					}
+					if (taskTickCount % 15 == 0 && getPose() == ArmPose.WORKING && rand.nextBoolean()) {
+						worldObj.playSound(null, posX, posY, posZ, SoundEvents.BLOCK_GRAVEL_STEP, SoundCategory.NEUTRAL, 1f, 1.6f);
 					}
 				} else {
 					task.markSubtaskComplete();
@@ -670,5 +677,20 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	@Override
 	public FeyStoneMaterial getCurrentSpecialization() {
 		return null;
+	}
+	
+	@Override
+	protected SoundEvent getHurtSound() {
+		return NostrumFairiesSounds.ELF_HURT.getEvent();
+	}
+	
+	@Override
+	protected SoundEvent getDeathSound() {
+		return NostrumFairiesSounds.ELF_DIE.getEvent();
+	}
+	
+	@Override
+	protected @Nullable NostrumFairiesSounds getIdleSound() {
+		return NostrumFairiesSounds.ELF_IDLE;
 	}
 }

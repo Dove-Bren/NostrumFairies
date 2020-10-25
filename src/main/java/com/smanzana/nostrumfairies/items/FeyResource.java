@@ -10,6 +10,7 @@ import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
@@ -263,6 +264,11 @@ public class FeyResource extends Item implements ILoreTagged {
 			} else {
 				return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
 			}
+		} else if (type == FeyResourceType.BELL) {
+			if (!worldIn.isRemote) {
+				NostrumFairiesSounds.BELL.play(worldIn, playerIn.posX, playerIn.posY, playerIn.posZ);
+			}
+			return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
 		}
 		
 		return new ActionResult<ItemStack>(EnumActionResult.PASS, stack);

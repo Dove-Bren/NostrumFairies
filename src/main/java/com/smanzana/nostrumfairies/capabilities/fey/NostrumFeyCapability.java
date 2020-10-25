@@ -33,6 +33,7 @@ import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositRequ
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
@@ -547,6 +548,9 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				
 				FairyRecord record = new FairyRecord(fairy, index);
 				this.deployedFairies.get(type).add(record);
+				if (owner instanceof EntityPlayer) {
+					NostrumFairiesSounds.APPEAR.play(null, world, x, y, z);
+				}
 			}
 		}
 	}

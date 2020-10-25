@@ -11,16 +11,18 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.items.FeyResource;
-import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
+import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
 import net.minecraft.block.state.IBlockState;
@@ -82,7 +84,14 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	/**
 	 * Number of ticks the current task has been being run
 	 */
-	private int taskTickCount;
+	protected int taskTickCount;
+	
+	/**
+	 * Total time we've been idle for
+	 */
+	protected int idleTicks;
+	
+	private int idleChatTicks;
 	
 	/**
 	 * Slowly updates pos used to figure out if we get stuck while on the job!
@@ -102,6 +111,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		this.workDistanceSq = workDistanceSq;
 		
 		this.navigator = new PathNavigatorLogistics(this, world);
+		
+		idleChatTicks = -1;
 	}
 	
 	@Override
@@ -510,6 +521,27 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		this.updateArmSwingProgress();
 		
 		if (worldObj.isRemote) {
+			// Do some client-side tracking
+			if (this.getStatus() == FairyGeneralStatus.IDLE) {
+				idleTicks++;
+				if (this.getIdleSound() != null) {
+					if (worldObj.isRemote) {
+						if (idleChatTicks == 0) {
+							getIdleSound().play(NostrumFairies.proxy.getPlayer(), worldObj, posX, posY, posZ);
+							idleChatTicks = -1;
+						}
+						
+						if (idleChatTicks == -1) {
+							idleChatTicks = (rand.nextInt(15) + 8) * 20; 
+						}
+						
+						idleChatTicks--;
+					}
+				}
+			} else {
+				idleTicks = 0;
+				idleChatTicks = -1;
+			}
 			onCientTick();
 		}
 		
@@ -538,6 +570,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		
 		switch (getStatus()) {
 		case IDLE:
+			idleTicks++;
 			adjustHappiness();
 			if (this.ticksExisted % 60 == 0 && this.getHappiness() > 80f) {
 				this.heal(1f);
@@ -551,6 +584,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				}
 			}
 			
+			idleTicks = 0;
 			changeStatus(FairyGeneralStatus.WORKING);
 			// else fall through to start working as soon as task is picked up
 			// TODO maybe both should search for tasks if the task is dropable?
@@ -1099,6 +1133,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			this.changeStatus(FairyGeneralStatus.IDLE);
 		}
 	}
+	
+	protected abstract @Nullable NostrumFairiesSounds getIdleSound();
 	
 	protected static boolean FeyWander(EntityFeyBase fey, BlockPos center, double minDist, double maxDist) {
 		BlockPos targ = null;

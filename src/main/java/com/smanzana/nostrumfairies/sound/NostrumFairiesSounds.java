@@ -14,9 +14,25 @@ import net.minecraft.world.World;
 public enum NostrumFairiesSounds {
 	
 	PICKAXE_HIT("ambient.pickaxe.strike", SoundCategory.AMBIENT),
+	APPEAR("ambient.appear", SoundCategory.AMBIENT, .6f),
+	DWARF_DIE("entity.dwarf.die", SoundCategory.NEUTRAL),
+	DWARF_HURT("entity.dwarf.hurt", SoundCategory.NEUTRAL),
+	ELF_HURT("entity.elf.hurt", SoundCategory.NEUTRAL),
+	ELF_DIE("entity.elf.die", SoundCategory.NEUTRAL),
+	ELF_IDLE("entity.elf.idle", SoundCategory.NEUTRAL),
+	FAIRY_HURT("entity.fairy.hurt", SoundCategory.NEUTRAL),
+	FAIRY_DIE("entity.fairy.die", SoundCategory.NEUTRAL),
+	FAIRY_IDLE("entity.fairy.idle", SoundCategory.NEUTRAL),
+	GNOME_DIE("entity.gnome.die", SoundCategory.NEUTRAL),
+	GNOME_HURT("entity.gnome.hurt", SoundCategory.NEUTRAL),
+	GNOME_IDLE("entity.gnome.idle", SoundCategory.NEUTRAL),
+	GNOME_WORK("entity.gnome.work", SoundCategory.NEUTRAL),
+	SHADOW_FEY_IDLE("entity.shadow_fey.idle", SoundCategory.HOSTILE, .5f),
+	SHADOW_FEY_HURT("entity.shadow_fey.hurt", SoundCategory.HOSTILE),
 	LYRE("items.instrument.lyre", SoundCategory.PLAYERS),
 	FLUTE("items.instrument.flute", SoundCategory.PLAYERS),
-	OCARINA("items.instrument.ocarina", SoundCategory.PLAYERS);
+	OCARINA("items.instrument.ocarina", SoundCategory.PLAYERS),
+	BELL("items.instrument.bell", SoundCategory.PLAYERS);
 	
 	private ResourceLocation resource;
 	private SoundCategory category;

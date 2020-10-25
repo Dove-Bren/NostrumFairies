@@ -6,9 +6,11 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.EntityTippedArrowEx;
 import com.smanzana.nostrumfairies.items.FeyResource;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.attributes.AttributeMagicResist;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
@@ -54,6 +56,7 @@ import net.minecraft.network.play.server.SPacketAnimation;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
@@ -119,12 +122,15 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	}
 
 	protected int idleTicks;
+	protected int idleChatTicks;
 	protected int morphTicks;
 	
 	public EntityShadowFey(World world) {
 		super(world);
 		this.experienceValue = 9;
 		this.height = 0.75f;
+		
+		idleChatTicks = -1;
 		
 		initSpells();
 	}
@@ -252,6 +258,25 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 					setBattleStance(BattleStance.MELEE);
 				}
 			}
+		}
+		
+		if (this.getStance() == BattleStance.IDLE) {
+			this.idleTicks++;
+			if (worldObj.isRemote) {
+				if (idleChatTicks == 0) {
+					NostrumFairiesSounds.SHADOW_FEY_IDLE.play(NostrumFairies.proxy.getPlayer(), worldObj, posX, posY, posZ);
+					idleChatTicks = -1;
+				}
+				
+				if (idleChatTicks == -1) {
+					idleChatTicks = (rand.nextInt(10) + 5) * 20; 
+				}
+				
+				idleChatTicks--;
+			}
+		} else {
+			this.idleTicks = 0;
+			idleChatTicks = -1;
 		}
 	}
 	
@@ -488,6 +513,16 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		};
 		
 		return true;
+	}
+	
+	@Override
+	protected SoundEvent getHurtSound() {
+		return NostrumFairiesSounds.SHADOW_FEY_HURT.getEvent();
+	}
+	
+	@Override
+	protected SoundEvent getDeathSound() {
+		return NostrumFairiesSounds.SHADOW_FEY_HURT.getEvent();
 	}
 	
 	public static final class ShadowFeyConversionLore implements ILoreTagged {

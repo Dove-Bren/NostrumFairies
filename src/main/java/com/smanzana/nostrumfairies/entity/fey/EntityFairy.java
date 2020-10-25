@@ -12,6 +12,7 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -28,6 +29,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -738,5 +740,20 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	public FeyStoneMaterial getCurrentSpecialization() {
 		return null;
+	}
+	
+	@Override
+	protected SoundEvent getHurtSound() {
+		return NostrumFairiesSounds.FAIRY_HURT.getEvent();
+	}
+	
+	@Override
+	protected SoundEvent getDeathSound() {
+		return NostrumFairiesSounds.FAIRY_DIE.getEvent();
+	}
+	
+	@Override
+	protected @Nullable NostrumFairiesSounds getIdleSound() {
+		return NostrumFairiesSounds.FAIRY_IDLE;
 	}
 }

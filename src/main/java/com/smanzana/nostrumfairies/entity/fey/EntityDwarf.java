@@ -61,6 +61,7 @@ import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.WalkNodeProcessor;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -1098,6 +1099,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				EntityFeyBase.FeyWander(this, this.getPosition(), Math.min(10, Math.sqrt(this.wanderDistanceSq)));
 			}
 		}
+
+		if (this.getAttackTarget() == null) {
+			this.setPose(ArmPose.IDLE);
+		}
 	}
 
 	@Override
@@ -1167,6 +1172,21 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	public FeyStoneMaterial getCurrentSpecialization() {
 		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	protected SoundEvent getHurtSound() {
+		return NostrumFairiesSounds.DWARF_HURT.getEvent();
+	}
+	
+	@Override
+	protected SoundEvent getDeathSound() {
+		return NostrumFairiesSounds.DWARF_DIE.getEvent();
+	}
+	
+	@Override
+	protected @Nullable NostrumFairiesSounds getIdleSound() {
 		return null;
 	}
 }

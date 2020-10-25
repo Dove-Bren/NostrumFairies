@@ -17,6 +17,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskHarvest;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
+import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
@@ -35,6 +36,7 @@ import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -436,6 +438,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 						break;
 					}
 					this.swingArm(this.getActiveHand());
+					NostrumFairiesSounds.GNOME_WORK.play(worldObj, posX, posY, posZ);
 				}
 				break;
 			}
@@ -746,5 +749,20 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	public FeyStoneMaterial getCurrentSpecialization() {
 		return null;
+	}
+	
+	@Override
+	protected SoundEvent getHurtSound() {
+		return NostrumFairiesSounds.GNOME_HURT.getEvent();
+	}
+	
+	@Override
+	protected SoundEvent getDeathSound() {
+		return NostrumFairiesSounds.GNOME_DIE.getEvent();
+	}
+	
+	@Override
+	protected @Nullable NostrumFairiesSounds getIdleSound() {
+		return NostrumFairiesSounds.GNOME_IDLE;
 	}
 }
