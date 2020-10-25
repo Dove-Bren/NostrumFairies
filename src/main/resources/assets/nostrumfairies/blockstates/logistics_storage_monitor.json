@@ -1,5 +1,8 @@
 {
     "variants": {
-        "normal": { "model": "nostrumfairies:logistics_storage_monitor" }
+        "facing=north": { "model": "nostrumfairies:logistics_storage_monitor", "y": 0 },
+        "facing=east": { "model": "nostrumfairies:logistics_storage_monitor", "y": 90 },
+        "facing=south": { "model": "nostrumfairies:logistics_storage_monitor", "y": 180 },
+        "facing=west": { "model": "nostrumfairies:logistics_storage_monitor", "y": 270 }
     }
 }

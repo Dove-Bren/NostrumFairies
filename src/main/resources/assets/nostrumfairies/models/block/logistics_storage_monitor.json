@@ -1,6 +1,169 @@
 {
-    "parent": "block/cube_all",
-    "textures": {
-        "all": "nostrumfairies:blocks/logistics_storage_monitor"
-    }
+	"credit": "Made with Blockbench",
+	"textures": {
+		"particle": "blocks/log_big_oak",
+		"gem": "nostrumfairies:blocks/pylon_gem",
+		"panel": "nostrumfairies:blocks/monitor_panel",
+		"log": "blocks/log_big_oak",
+		"leaves": "nostrumfairies:blocks/leaves"
+	},
+	"elements": [
+		{
+			"name": "screen",
+			"from": [3, 3, 14],
+			"to": [13, 13, 16],
+			"faces": {
+				"north": {"uv": [3, 3, 13, 13], "texture": "#panel"},
+				"east": {"uv": [0, 0, 2, 10], "texture": "#log"},
+				"south": {"uv": [0, 0, 10, 10], "texture": "#log"},
+				"west": {"uv": [0, 0, 2, 10], "texture": "#log"},
+				"up": {"uv": [0, 0, 10, 2], "texture": "#log"},
+				"down": {"uv": [0, 0, 10, 2], "texture": "#log"}
+			}
+		},
+		{
+			"name": "branch1_1",
+			"from": [1, 8, 15],
+			"to": [2, 9, 16],
+			"faces": {
+				"north": {"uv": [6, 7, 7, 8], "texture": "#log"},
+				"east": {"uv": [0, 0, 1, 1], "texture": "#log"},
+				"south": {"uv": [0, 0, 1, 1], "texture": "#log"},
+				"west": {"uv": [0, 0, 1, 1], "texture": "#log"},
+				"up": {"uv": [0, 0, 1, 1], "texture": "#log"},
+				"down": {"uv": [0, 0, 1, 1], "texture": "#log"}
+			}
+		},
+		{
+			"name": "branch1_2",
+			"from": [2, 8, 15],
+			"to": [3, 12, 16],
+			"faces": {
+				"north": {"uv": [13, 6, 14, 10], "texture": "#log"},
+				"east": {"uv": [0, 0, 1, 4], "texture": "#log"},
+				"south": {"uv": [9, 8, 10, 12], "texture": "#log"},
+				"west": {"uv": [0, 0, 1, 4], "texture": "#log"},
+				"up": {"uv": [0, 0, 1, 1], "texture": "#log"},
+				"down": {"uv": [0, 0, 1, 1], "texture": "#log"}
+			}
+		},
+		{
+			"name": "branch2",
+			"from": [13, 10, 15],
+			"to": [14, 12, 16],
+			"faces": {
+				"north": {"uv": [6, 4, 7, 6], "texture": "#log"},
+				"east": {"uv": [0, 0, 1, 2], "texture": "#log"},
+				"south": {"uv": [9, 5, 10, 7], "texture": "#log"},
+				"west": {"uv": [0, 0, 1, 2], "texture": "#log"},
+				"up": {"uv": [0, 0, 1, 1], "texture": "#log"},
+				"down": {"uv": [0, 0, 1, 1], "texture": "#log"}
+			}
+		},
+		{
+			"name": "branch3",
+			"from": [9, 1, 15],
+			"to": [10, 3, 16],
+			"faces": {
+				"north": {"uv": [6, 12, 7, 14], "texture": "#log"},
+				"east": {"uv": [0, 0, 1, 2], "texture": "#log"},
+				"south": {"uv": [3, 5, 4, 7], "texture": "#log"},
+				"west": {"uv": [0, 0, 1, 2], "texture": "#log"},
+				"up": {"uv": [0, 0, 1, 1], "texture": "#log"},
+				"down": {"uv": [0, 0, 1, 1], "texture": "#log"}
+			}
+		},
+		{
+			"name": "gem",
+			"from": [7, 13, 14],
+			"to": [9, 15, 16],
+			"faces": {
+				"north": {"uv": [0, 0, 2, 2], "texture": "#gem"},
+				"east": {"uv": [0, 0, 2, 2], "texture": "#gem"},
+				"south": {"uv": [0, 0, 2, 2], "texture": "#gem"},
+				"west": {"uv": [0, 0, 2, 2], "texture": "#gem"},
+				"up": {"uv": [0, 0, 2, 2], "texture": "#gem"},
+				"down": {"uv": [0, 0, 2, 2], "texture": "#gem"}
+			}
+		},
+		{
+			"name": "leaves1",
+			"from": [13, 4, 14],
+			"to": [16, 14, 16],
+			"faces": {
+				"north": {"uv": [13, 0, 16, 10], "texture": "#leaves"},
+				"east": {"uv": [0, 0, 2, 10], "texture": "#leaves"},
+				"south": {"uv": [13, 2, 16, 12], "texture": "#leaves"},
+				"west": {"uv": [0, 0, 2, 10], "texture": "#leaves"},
+				"up": {"uv": [0, 0, 3, 2], "texture": "#leaves"},
+				"down": {"uv": [0, 0, 3, 2], "texture": "#leaves"}
+			}
+		},
+		{
+			"name": "leaves2",
+			"from": [5, 1, 14],
+			"to": [16, 3, 16],
+			"faces": {
+				"north": {"uv": [5, 3, 16, 5], "texture": "#leaves"},
+				"east": {"uv": [0, 0, 2, 2], "texture": "#leaves"},
+				"south": {"uv": [3, 14, 14, 16], "texture": "#leaves"},
+				"west": {"uv": [0, 0, 2, 2], "texture": "#leaves"},
+				"up": {"uv": [1, 7, 12, 9], "texture": "#leaves"},
+				"down": {"uv": [0, 8, 11, 10], "texture": "#leaves"}
+			}
+		},
+		{
+			"name": "leaves3",
+			"from": [0, 2, 14],
+			"to": [3, 11, 16],
+			"faces": {
+				"north": {"uv": [5, 7, 8, 16], "texture": "#leaves"},
+				"east": {"uv": [0, 0, 2, 9], "texture": "#leaves"},
+				"south": {"uv": [10, 6, 13, 15], "texture": "#leaves"},
+				"west": {"uv": [0, 0, 2, 9], "texture": "#leaves"},
+				"up": {"uv": [2, 0, 5, 2], "texture": "#leaves"},
+				"down": {"uv": [0, 0, 3, 2], "texture": "#leaves"}
+			}
+		}
+	],
+	"groups": [
+		{
+			"name": "screen",
+			"origin": [8, 8, 8],
+			"children": [0, 1, 2, 3, 4]
+		},
+		{
+			"name": "gem",
+			"origin": [8, 8, 8],
+			"children": [5]
+		},
+		{
+			"name": "leaves",
+			"origin": [8, 8, 8],
+			"children": [6, 7, 8]
+		}
+	],
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [0, 0, -7]
+		},
+		"thirdperson_lefthand": {
+			"translation": [0, 0, -7]
+		},
+		"firstperson_righthand": {
+			"translation": [0, 1, 0]
+		},
+		"firstperson_lefthand": {
+			"translation": [0, 1, 0]
+		},
+		"ground": {
+			"translation": [0, 0, -7]
+		},
+		"gui": {
+			"rotation": [0, -180, 0]
+		},
+		"fixed": {
+			"translation": [0, 0, -7.5]
+		}
+	}
 }

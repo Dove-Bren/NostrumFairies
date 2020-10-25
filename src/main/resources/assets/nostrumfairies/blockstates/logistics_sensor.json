@@ -1,5 +1,6 @@
 {
     "variants": {
-        "normal": { "model": "nostrumfairies:logistics_sensor" }
+        "active=false": { "model": "nostrumfairies:logistics_sensor" },
+        "active=true": { "model": "nostrumfairies:logistics_sensor_active" }
     }
 }

@@ -1,0 +1,6 @@
+{
+	"parent": "nostrumfairies:block/logistics_sensor",
+	"textures": {
+		"top": "nostrumfairies:blocks/sensor_slab_on"
+	}
+}

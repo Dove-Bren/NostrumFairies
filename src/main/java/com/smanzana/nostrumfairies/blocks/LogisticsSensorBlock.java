@@ -11,19 +11,25 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -34,8 +40,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class LogisticsSensorBlock extends BlockContainer
 {
-	
-public static final String ID = "logistics_sensor";
+	private static final PropertyBool ACTIVE = PropertyBool.create("active");
+	public static final String ID = "logistics_sensor";
 	
 	private static LogisticsSensorBlock instance = null;
 	public static LogisticsSensorBlock instance() {
@@ -57,6 +63,103 @@ public static final String ID = "logistics_sensor";
 		this.setCreativeTab(NostrumFairies.creativeTab);
 		this.setSoundType(SoundType.WOOD);
 		this.setHarvestLevel("axe", 0);
+		this.setLightOpacity(2);
+	}
+	
+	@Override
+	protected BlockStateContainer createBlockState() {
+		return new BlockStateContainer(this, ACTIVE);
+	}
+	
+	protected static int metaFromActive(boolean active) {
+		return active ? 1 : 0;
+	}
+	
+	protected static boolean activeFromMeta(int meta) {
+		return meta == 0 ? false : true;
+	}
+	
+	@Override
+	public IBlockState getStateFromMeta(int meta) {
+		return getDefaultState()
+				.withProperty(ACTIVE, activeFromMeta(meta));
+	}
+	
+	@Override
+	public int getMetaFromState(IBlockState state) {
+		return metaFromActive(state.getValue(ACTIVE));
+	}
+	
+	public boolean getActive(IBlockState state) {
+		return state.getValue(ACTIVE);
+	}
+	
+	@Override
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+		return this.getDefaultState()
+				.withProperty(ACTIVE, false);
+	}
+	
+	@Override
+	public BlockRenderLayer getBlockLayer() {
+		return BlockRenderLayer.CUTOUT;
+	}
+	
+	@Override
+	public boolean isFullBlock(IBlockState state) {
+		return false;
+	}
+	
+	@Override
+	public boolean isFullCube(IBlockState state) {
+		return false;
+	}
+	
+	@Override
+	public boolean isVisuallyOpaque() {
+		return false;
+	}
+	
+	@Override
+	public boolean isOpaqueCube(IBlockState state) {
+		return false;
+	}
+	
+	@Override
+	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+		return Block.FULL_BLOCK_AABB;
+	}
+	
+	@Override
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+		return Block.FULL_BLOCK_AABB;
+	}
+	
+	@Override
+	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
+        return false;
+    }
+	
+	@Override
+	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
+		IBlockState state = worldIn.getBlockState(pos.down());
+		if (state == null || !(state.isSideSolid(worldIn, pos.down(), EnumFacing.UP))) {
+			return false;
+		}
+		
+		//return super.canPlaceBlockAt(worldIn, pos);
+		return true;
+	}
+	
+	@SuppressWarnings("deprecation")
+	@Override
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+		if (!canPlaceBlockAt(worldIn, pos)) {
+			this.dropBlockAsItem(worldIn, pos, state, 0);
+			worldIn.setBlockToAir(pos);
+		}
+		
+		super.neighborChanged(state, worldIn, pos, blockIn);
 	}
 	
 	@Override
@@ -140,17 +243,21 @@ public static final String ID = "logistics_sensor";
 	
 	@Override
 	public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
-		TileEntity te = blockAccess.getTileEntity(pos);
-		if (te != null && te instanceof LogisticsSensorTileEntity) {
-			LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) te;
-			if (sensor.checkConditions()) {
-				return 15;
-			} else {
-				return 0;
-			}
+		if (blockState.getValue(ACTIVE)) {
+			return 15;
 		}
 		
 		return 0;
+		
+//		TileEntity te = blockAccess.getTileEntity(pos);
+//		if (te != null && te instanceof LogisticsSensorTileEntity) {
+//			LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) te;
+//			if (sensor.checkConditions()) {
+//				return 15;
+//			} else {
+//				return 0;
+//			}
+//		}
 	}
 
 	public static class LogisticsSensorTileEntity extends LogisticsTileEntity implements ITickable {
@@ -323,7 +430,8 @@ public static final String ID = "logistics_sensor";
 				if (!worldObj.isRemote) {
 					this.logicCacheID = null;
 					this.updateLogic();
-					worldObj.notifyNeighborsOfStateChange(pos, worldObj.getBlockState(pos).getBlock());
+					//worldObj.notifyNeighborsOfStateChange(pos, worldObj.getBlockState(pos).getBlock());
+					worldObj.setBlockState(pos, instance().getDefaultState().withProperty(ACTIVE, this.logicValidCache), 3);
 					logicLastWorld = logicValidCache;
 				}
 			}
@@ -334,7 +442,8 @@ public static final String ID = "logistics_sensor";
 
 					if (logicLastWorld != logicValidCache) {
 						// Make sure to update the world so that redstone will be updated
-						worldObj.notifyNeighborsOfStateChange(pos, worldObj.getBlockState(pos).getBlock());
+						//worldObj.notifyNeighborsOfStateChange(pos, worldObj.getBlockState(pos).getBlock());
+						worldObj.setBlockState(pos, instance().getDefaultState().withProperty(ACTIVE, this.logicValidCache), 3);
 						logicLastWorld = logicValidCache;
 					}
 				}
@@ -349,6 +458,11 @@ public static final String ID = "logistics_sensor";
 		@Override
 		protected double getDefaultLogisticsRange() {
 			return 5;
+		}
+		
+		@Override
+		public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
+			return !(oldState.getBlock().equals(newState.getBlock()));
 		}
 	}
 }

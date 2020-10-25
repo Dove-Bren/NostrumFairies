@@ -1,3 +1,6 @@
 {
-    "parent": "nostrumfairies:block/logistics_gathering_block"
+    "parent": "item/handheld",
+    "textures": {
+        "layer0": "nostrumfairies:items/logistics_sign_gathering"
+    }
 }

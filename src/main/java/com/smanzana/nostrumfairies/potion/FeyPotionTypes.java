@@ -15,8 +15,8 @@ public enum FeyPotionTypes {
 	private final PotionType type;
 	
 	private FeyPotionTypes(String name, PotionEffect ... effects) {
-		this.type = new PotionType(name, effects);
-		type.setRegistryName(new ResourceLocation(NostrumFairies.MODID, name));
+		this.type = new PotionType("type_" + name, effects);
+		type.setRegistryName(new ResourceLocation(NostrumFairies.MODID, "type_" + name));
 		GameRegistry.register(type);
 	}
 	
