@@ -18,6 +18,10 @@ public interface INostrumFeyCapability {
 	public int getFairySlots();
 	public void addFairySlot();
 	public void setFairySlots(int slots);
+	public int getFairyXP();
+	public int getFairyMaxXP();
+	public int getFairyLevel();
+	public void addFairyXP(int xp);
 	
 	public FairyHolderInventory getFairyInventory();
 	public void setFairyInventory(FairyHolderInventory inventory);

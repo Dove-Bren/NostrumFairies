@@ -48,6 +48,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.item.ItemExpireEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -405,6 +406,8 @@ public class GatheringBlock extends BlockContainer {
 		
 		public static void init() {
 			FeySignRenderer.init(GatheringBlockTileEntity.class, new GatheringBlockRenderer());
+			ClientRegistry.bindTileEntitySpecialRenderer(GatheringBlockTileEntity.class,
+					new GatheringBlockRenderer());
 		}
 	}
 

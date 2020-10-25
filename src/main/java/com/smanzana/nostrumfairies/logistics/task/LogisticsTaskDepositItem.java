@@ -9,6 +9,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.smanzana.nostrumfairies.blocks.InputLogisticsChest.InputChestTileEntity;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -275,7 +276,15 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 				if (this.mergedTasks == null) {
 					dropoffComponent = network.getStorageForItem(component == null ? entity.worldObj : component.getWorld(),
 							component == null ? entity.getPosition() : component.getPosition(),
-							item);
+							item,
+							(comp) -> {
+								if (component != null) {
+									// Can't be an input chest
+									return comp != component && !(comp instanceof InputChestTileEntity);
+								}
+								
+								return true;
+							});
 					if (dropoffComponent != null) {
 						deliverTask = LogisticsSubTask.Move(dropoffComponent.getPosition());
 					}

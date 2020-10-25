@@ -7,6 +7,7 @@ import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
+import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -170,10 +171,20 @@ public class FairyInstrument extends Item implements ILoreTagged {
 			sound.play(worldIn, playerIn.posX, playerIn.posY, playerIn.posZ);
 			
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
+			if (attr != null && !attr.isUnlocked()) {
+				// Possibly unlock
+				INostrumMagic magicAttr = NostrumMagica.getMagicWrapper(playerIn);
+				if (magicAttr.isUnlocked() && magicAttr.getCompletedResearches().contains("fairy_instruments")) {
+					attr.unlock();
+				}
+			}
+			
 			if (attr != null && attr.isUnlocked()) {
 
 				// Would be cooler if the fairies flew in towards you after you called
 				attr.disableFairies(40);
+				
+				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
 				
 				NostrumMagica.playerListener.registerTimer((t, entity, data) -> {
 					if (!playerIn.isDead && playerIn.getHeldItem(hand) == stack) {

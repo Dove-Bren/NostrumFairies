@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.lwjgl.input.Keyboard;
 
+import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.BuildingBlock;
@@ -58,7 +59,6 @@ import com.smanzana.nostrumfairies.items.FairyInstrument.InstrumentType;
 import com.smanzana.nostrumfairies.items.FeyResource;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
-import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.TemplateScroll;
 import com.smanzana.nostrumfairies.items.TemplateWand;
@@ -225,13 +225,20 @@ public class ClientProxy extends CommonProxy {
 		}
 		ModelBakery.registerItemVariants(FeyResource.instance(), variants);
 		
-		variants = new ResourceLocation[SoulStoneType.values().length * 2];
+		variants = new ResourceLocation[(1 + ResidentType.values().length) * 2];
 		i = 0;
-		for (SoulStoneType type : SoulStoneType.values()) {
+		for (ResidentType type : ResidentType.values()) {
 			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
 					FeySoulStone.instance().getModelName(type));
 			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
 					FeySoulStone.instance().getModelName(type) + "_filled");
+		}
+		// Repeat for empty
+		{
+			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
+					FeySoulStone.instance().getModelName((ResidentType) null));
+			variants[i++] = new ResourceLocation(NostrumFairies.MODID,
+					FeySoulStone.instance().getModelName((ResidentType) null) + "_filled");
 		}
 		ModelBakery.registerItemVariants(FeySoulStone.instance(), variants);
 		
@@ -325,9 +332,11 @@ public class ClientProxy extends CommonProxy {
 			registerModel(FairyInstrument.instance(), FairyInstrument.create(type).getMetadata(), FairyInstrument.instance().getModelName(type));
 		}
 		
-		for (FeySoulStone.SoulStoneType type : FeySoulStone.SoulStoneType.values()) {
-			registerModel(FeySoulStone.instance(), FeySoulStone.create(type).getMetadata(), FeySoulStone.instance().getModelName(type));
-			registerModel(FeySoulStone.instance(), FeySoulStone.create(type).getMetadata() | 1, FeySoulStone.instance().getModelName(type) + "_filled");
+		List<ResidentType> soulTypes = Lists.newArrayList(ResidentType.values());
+		soulTypes.add(null);
+		for (ResidentType type : soulTypes) {
+			registerModel(FeySoulStone.instance(), FeySoulStone.createEmpty(type).getMetadata(), FeySoulStone.instance().getModelName(type));
+			registerModel(FeySoulStone.instance(), FeySoulStone.createFake(type).getMetadata(), FeySoulStone.instance().getModelName(type) + "_filled");
 		}
 		
 		for (FairyGael.FairyGaelType type : FairyGael.FairyGaelType.values()) {

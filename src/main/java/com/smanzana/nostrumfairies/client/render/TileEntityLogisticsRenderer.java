@@ -8,18 +8,20 @@ import org.lwjgl.opengl.GL11;
 import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.potion.FeyVisibilityPotion;
 import com.smanzana.nostrummagica.utils.Curves;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
@@ -38,9 +40,9 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 		
 		Minecraft mc = Minecraft.getMinecraft();
 		EntityPlayer player = mc.thePlayer;
+		PotionEffect effect = player.getActivePotionEffect(FeyVisibilityPotion.instance());
 		
-		// TODO make a capability and see if they can see logistics stuff / its turned on
-		if (player != null && player.isSpectator() || player.isCreative()) { // REPLACE ME
+		if (player != null && (player.isSpectator() || player.isCreative() || effect != null)) { // REPLACE ME
 			LogisticsNetwork network = te.getNetwork();
 			if (network != null) {
 				Collection<ILogisticsComponent> neighbors = network.getConnectedComponents(te.getNetworkComponent());
@@ -52,6 +54,17 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				neighbors = new ArrayList<>(neighbors);
 				
 				final int intervals = 60;
+				final float alpha;
+				if (effect == null) {
+					alpha = 1f;
+				} else {
+					final int duration = effect.getDuration();
+					if (duration < 20 * 5) {
+						alpha = (float) duration / (float) (20 * 5);
+					} else {
+						alpha = 1f;
+					}
+				}
 				
 				Vec3d origin = new Vec3d(BlockPos.ORIGIN);
 				Tessellator tessellator = Tessellator.getInstance();
@@ -74,7 +87,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				GL11.glDisable(GL11.GL_LINE_STIPPLE);
 				GL11.glLineStipple(1, (short) 1);
 				GlStateManager.color(1f, 1f, 1f, .9f);
-				GlStateManager.color(1f, 1f, 1f, 1f);
+				GlStateManager.color(1f, 1f, 1f, alpha);
 				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 				
 				for (ILogisticsComponent component : neighbors) {
@@ -101,7 +114,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 //						}
 						
 						buffer.pos(point.xCoord, point.yCoord, point.zCoord)
-								.color(0f, 1f, 0f, 1f).endVertex();
+								.color(0f, 1f, 0f, alpha).endVertex();
 						
 					}
 					tessellator.draw();

@@ -61,9 +61,25 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
  *
  */
 public class NostrumFeyCapability implements INostrumFeyCapability {
+	
+	public static class FairyLevelCurves {
+		
+		private static final float xpGrowth = 2.5f;
+		private static final float xpBase = 100.0f;
+		
+		public static int maxXP(int level) {
+			if (level >= 5) {
+				return Integer.MAX_VALUE;
+			}
+			
+			return (int) (xpBase * Math.pow(xpGrowth, level - 1));
+		}
+	}
 
 	private static final String NBT_UNLOCKED = "unlocked";
 	private static final String NBT_FAIRY_SLOTS = "fairy_slots";
+	private static final String NBT_FAIRY_XP = "xp";
+	private static final String NBT_FAIRY_LEVEL = "level";
 	private static final String NBT_FAIRY_INVENTORY = "fairy_inventory";
 	private static final String NBT_TEMPLATE_SELECTION = "template_selection";
 	
@@ -72,6 +88,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	// Capability data
 	private boolean isUnlocked;
 	private int fairySlots;
+	private int fairyXP;
+	private int fairyLevel;
 	private FairyHolderInventory fairyInventory;
 	private MutablePair<BlockPos, BlockPos> templateSelection;
 	
@@ -105,6 +123,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		// defaults...
 		this.fairySlots = 1;
 		this.isUnlocked = false;
+		this.fairyXP = 0;
+		this.fairyLevel = 1;
 	}
 	
 	@Override
@@ -151,6 +171,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		
 		nbt.setBoolean(NBT_UNLOCKED, isUnlocked);
 		nbt.setInteger(NBT_FAIRY_SLOTS, fairySlots);
+		nbt.setInteger(NBT_FAIRY_XP, fairyXP);
+		nbt.setInteger(NBT_FAIRY_LEVEL, fairyLevel);
 		writeFairies();
 		nbt.setTag(NBT_FAIRY_INVENTORY, fairyInventory.toNBT());
 		if (templateSelection.left != null) {
@@ -168,6 +190,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		clearFairies();
 		this.isUnlocked = nbt.getBoolean(NBT_UNLOCKED);
 		this.fairySlots = nbt.getInteger(NBT_FAIRY_SLOTS);
+		this.fairyXP = nbt.getInteger(NBT_FAIRY_XP);
+		this.fairyLevel = Math.max(1, nbt.getInteger(NBT_FAIRY_LEVEL));
 		this.fairyInventory.readNBT(nbt.getCompoundTag(NBT_FAIRY_INVENTORY));
 		
 		if (nbt.hasKey(NBT_TEMPLATE_SELECTION + "_1")) {
@@ -837,6 +861,40 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			templateSelection.left = pos;
 		} else {
 			templateSelection.right = pos;
+		}
+	}
+	
+	protected void fairyLevelUp() {
+		this.fairyLevel += 1;
+		this.addFairySlot();
+	}
+
+	@Override
+	public int getFairyXP() {
+		return fairyXP;
+	}
+
+	@Override
+	public int getFairyMaxXP() {
+		return FairyLevelCurves.maxXP(getFairyLevel());
+	}
+
+	@Override
+	public int getFairyLevel() {
+		return fairyLevel;
+	}
+
+	@Override
+	public void addFairyXP(int xp) {
+		this.fairyXP += xp;
+		while (true) {
+			final int max = getFairyMaxXP();
+			if (fairyXP < max) {
+				break;
+			}
+			
+			fairyXP -= max;
+			fairyLevelUp();
 		}
 	}
 }

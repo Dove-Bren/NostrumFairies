@@ -614,6 +614,10 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 				EntityFeyBase.FeyWander(this, this.getPosition(), Math.min(10, Math.sqrt(this.wanderDistanceSq)));
 			}
 		}
+		
+		if (this.getAttackTarget() == null) {
+			this.setPose(ArmPose.IDLE);
+		}
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
 import com.smanzana.nostrumfairies.blocks.IFeySign;
+import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESR;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
@@ -13,19 +14,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-public abstract class FeySignRenderer<T extends TileEntity & IFeySign> extends TileEntitySpecialRenderer<T> implements StaticTESR<T> {
+public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> extends TileEntityLogisticsRenderer<T> implements StaticTESR<T> {
 
-	public static <T extends TileEntity & IFeySign> void init(Class<T> clazz, FeySignRenderer<T> renderer) {
+	public static <T extends LogisticsTileEntity & IFeySign> void init(Class<T> clazz, FeySignRenderer<T> renderer) {
 		StaticTESRRenderer.instance.registerRender(clazz, renderer);
 	}
 	

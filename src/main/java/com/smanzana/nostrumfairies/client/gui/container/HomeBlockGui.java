@@ -96,7 +96,7 @@ public class HomeBlockGui {
 				FeyStoneContainerSlot slot = new FeyStoneContainerSlot(home.getUpgradeInventory(), i,
 						GUI_UPGRADE_HOFFSET,
 						GUI_UPGRADE_VOFFSET + (i * (GUI_INV_CELL_LENGTH + 3)),
-						FeySlotType.UPGRADE);
+						FeySlotType.EITHERGRADE);
 				this.addSlotToContainer(slot);
 				upgradeSlots.add(slot);
 			}
@@ -291,7 +291,7 @@ public class HomeBlockGui {
 		}
 		
 		private void drawList(int x, int y, int mouseIndex) {
-			for (int i = 0; i < container.home.getRawSlots(); i++) {
+			for (int i = 0; i < container.home.getTotalSlots(); i++) {
 				@Nullable FeyAwayRecord fey = (i >= feyArray.length ? null : feyArray[i]);
 				drawListItem(x, y + (i * GUI_LIST_ITEM_HEIGHT), container.home.getSlotInventory().hasStone(i), mouseIndex == i, fey);
 			}
@@ -574,7 +574,7 @@ public class HomeBlockGui {
 			// If soul slot, check number of slots and our position (and all previous positions, if applicable).
 			// Otherwise, check if a soul stone is socketted && this index selected.
 			final int index = HomeBlockSlotInventory.getIndexFromSlot(slot);
-			if (index >= te.getRawSlots() || inventoryIn.hasStone(index)) {
+			if (index >= te.getTotalSlots() || inventoryIn.hasStone(index)) {
 				return false;
 			}
 			

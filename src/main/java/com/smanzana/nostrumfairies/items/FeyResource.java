@@ -13,6 +13,7 @@ import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
+import com.smanzana.nostrummagica.entity.golem.EntityGolem;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
@@ -269,8 +270,21 @@ public class FeyResource extends Item implements ILoreTagged {
 	
 	@SubscribeEvent
 	public void onMobDrop(LivingDropsEvent event) {
+		final float chance;
 		if (event.getEntityLiving() instanceof EntityIronGolem) {
-			for (int i = 0; i <= event.getLootingLevel(); i++) {
+			chance = .2f;
+		} else if (event.getEntityLiving() instanceof EntityGolem) {
+			chance = .01f;
+		} else {
+			chance = 0f;
+		}
+		
+		if (chance == 0f) {
+			return;
+		}
+		
+		for (int i = 0; i <= event.getLootingLevel(); i++) {
+			if (NostrumFairies.random.nextFloat() < chance) {
 				EntityItem entity = new EntityItem(event.getEntity().worldObj,
 						event.getEntity().posX,
 						event.getEntity().posY,
@@ -278,7 +292,6 @@ public class FeyResource extends Item implements ILoreTagged {
 						create(FeyResourceType.GOLEM_TOKEN, 1));
 				event.getDrops().add(entity);
 			}
-				
 		}
 	}
 	

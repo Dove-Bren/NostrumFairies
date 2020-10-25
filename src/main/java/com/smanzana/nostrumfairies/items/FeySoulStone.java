@@ -85,8 +85,11 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		this.setHasSubtypes(true);
 	}
 	
-	protected static final int metaFromTypes(boolean filled, SoulStoneType type) {
-		return (type.ordinal() << 1) | (filled ? 1 : 0);
+	protected static final int metaFromTypes(boolean filled, SoulStoneType type, @Nullable ResidentType feyType) {
+		if (feyType == null) {
+			feyType = ResidentType.FAIRY;
+		}
+		return (feyType.ordinal() << 3) | (type.ordinal() << 1) | (filled ? 1 : 0);
 	}
 	
 	protected static final boolean filledFromMeta(int meta) {
@@ -94,8 +97,13 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	protected static final SoulStoneType typeFromMeta(int meta) {
-		int raw = (meta >> 1);
+		int raw = (meta >> 1) & 0x3;
 		return SoulStoneType.values()[raw % SoulStoneType.values().length];
+	}
+	
+	protected static final ResidentType feyTypeFromMeta(int meta) {
+		int raw = (meta  >> 3) & 0x3;
+		return ResidentType.values()[raw % ResidentType.values().length];
 	}
 	
 	public static final SoulStoneType getTypeOf(ItemStack stack) {
@@ -104,6 +112,10 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	
 	public static final boolean hasStoredFey(ItemStack stack) {
 		return filledFromMeta(stack.getMetadata()) && stack.hasTagCompound();
+	}
+	
+	public static final ResidentType getStoredFeyType(ItemStack stack) {
+		return feyTypeFromMeta(stack.getMetadata());
 	}
 	
 	@Override
@@ -118,9 +130,47 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return type.modelName;
 	}
 	
+	protected String getModelName(SoulStoneType stoneType, ResidentType feyType) {
+		// This sucks. Improve by actually tying into material system?
+		if (stoneType == SoulStoneType.GAEL) {
+			return stoneType.modelName;
+		}
+		
+		final String material;
+		if (feyType == null) {
+			material = "amethyst";
+		} else {
+			switch (feyType) {
+			case DWARF:
+				material = "aquamarine";
+				break;
+			case ELF:
+				material = "emerald";
+				break;
+			case GNOME:
+				material = "garnet";
+				break;
+			case FAIRY:
+			default:
+				material = "amethyst";
+				break;
+			}
+		}
+		
+		return "soul_" + material;
+	}
+	
 	@SideOnly(Side.CLIENT)
-	public String getModelName(SoulStoneType type) {
-		return type.modelName;
+	public String getModelName(ResidentType type) {
+		SoulStoneType soulType = SoulStoneType.GEM;
+		for (SoulStoneType t : SoulStoneType.values()) {
+			if (t.canHold(type)) {
+				soulType = t;
+				break;
+			}
+		}
+		
+		return getModelName(soulType, type);
 	}
 	
 	/**
@@ -136,6 +186,18 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	
 	public static ItemStack create(SoulStoneType type) {
 		return create(type, null, null, null);
+	}
+	
+	public static ItemStack createEmpty(ResidentType type) {
+		SoulStoneType soulType = SoulStoneType.GEM;
+		for (SoulStoneType t : SoulStoneType.values()) {
+			if (t.canHold(type)) {
+				soulType = t;
+				break;
+			}
+		}
+		
+		return create(soulType);
 	}
 	
 	public static @Nullable ItemStack create(SoulStoneType type, EntityFeyBase fey) {
@@ -155,12 +217,11 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	protected static ItemStack create(SoulStoneType type, String name, ResidentType residentType, NBTTagCompound nbt) {
-		ItemStack stack = new ItemStack(instance(), 1, metaFromTypes(nbt != null, type));
+		ItemStack stack = new ItemStack(instance(), 1, metaFromTypes(nbt != null, type, residentType));
 		if (nbt != null) {
 			NBTTagCompound tag = new NBTTagCompound();
 			tag.setString("name", name);
 			tag.setTag("data", nbt);
-			tag.setString("type", residentType.getName());
 			stack.setTagCompound(tag);
 		}
 		return stack;
@@ -200,14 +261,18 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return create(type, fey);
 	}
 	
-	public static ItemStack createFake(SoulStoneType type, boolean filled) {
-		if (!filled) {
-			return create(type);
+	public static ItemStack createFake(ResidentType type) {
+		SoulStoneType soulType = SoulStoneType.GEM;
+		for (SoulStoneType t : SoulStoneType.values()) {
+			if (t.canHold(type)) {
+				soulType = t;
+				break;
+			}
 		}
 		
-		ItemStack stone = create(type);
-		stone.setItemDamage(metaFromTypes(true, type));
-		return stone;
+		ItemStack stack = create(soulType);
+		stack.setItemDamage(metaFromTypes(true, soulType, type));
+		return stack;
 	}
 	
 	public static NBTTagCompound getStoredEntityTag(ItemStack stack) {
@@ -216,21 +281,6 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	
 	public static String getStoredEntityName(ItemStack stack) {
 		return stack.hasTagCompound() ? stack.getTagCompound().getString("name") : null;
-	}
-	
-	public static ResidentType getStoredEntityType(ItemStack stack) {
-		if (!stack.hasTagCompound()) {
-			return null;
-		}
-		
-		ResidentType type = null;
-		try {
-			type = ResidentType.valueOf(stack.getTagCompound().getString("type").toUpperCase());
-		} catch (Exception e) {
-			;
-		}
-		
-		return type;
 	}
 	
 	@Override
@@ -310,7 +360,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			}
 			tooltip.add(ChatFormatting.AQUA + name + ChatFormatting.RESET);
 			
-			ResidentType type = getStoredEntityType(stack);
+			ResidentType type = getStoredFeyType(stack);
 			if (type != null) {
 				tooltip.add(ChatFormatting.DARK_AQUA + type.getName() + ChatFormatting.RESET);
 			}

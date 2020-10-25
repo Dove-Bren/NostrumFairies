@@ -65,6 +65,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -509,6 +510,8 @@ public class BuildingBlock extends BlockContainer {
 		
 		public static void init() {
 			FeySignRenderer.init(BuildingBlockTileEntity.class, new BuildingBlockRenderer());
+			ClientRegistry.bindTileEntitySpecialRenderer(BuildingBlockTileEntity.class,
+					new BuildingBlockRenderer());
 		}
 		
 		private static final float ICON_INNEROFFSETX = (2f / 16f);

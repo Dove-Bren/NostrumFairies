@@ -442,7 +442,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 					
 					// Make sure any entity inside matches, too
 					if (FeySoulStone.hasStoredFey(stack)) {
-						return FeySoulStone.getStoredEntityType(stack) == owner.type;
+						return FeySoulStone.getStoredFeyType(stack) == owner.type;
 					}
 					
 					return true;
@@ -558,7 +558,8 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			protected boolean isValidUpgrade(@Nullable ItemStack stack) {
 				if (stack != null && stack.getItem() instanceof IFeySlotted) {
 					IFeySlotted stone = (IFeySlotted) stack.getItem();
-					return stone.getFeySlot(stack) == FeySlotType.UPGRADE;
+					return stone.getFeySlot(stack) == FeySlotType.UPGRADE
+							|| stone.getFeySlot(stack) == FeySlotType.DOWNGRADE;
 				}
 				
 				return false;
@@ -676,12 +677,12 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		}
 		
 		/**
-		 * Returns the number of slots that ahve 
+		 * Returns the number of slots that are ready to house a fey 
 		 * @return
 		 */
 		public int getEffectiveSlots() {
 			int count = 0;
-			for (int i = 0; i < slots; i++) {
+			for (int i = 0; i < getTotalSlots(); i++) {
 				if (slotInv.hasStone(i)) {
 					count++;
 				}
@@ -689,8 +690,12 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			return count;
 		}
 		
+		public int getTotalSlots() {
+			return getRawSlots() + getBonusSlots();
+		}
+		
 		public int getBonusSlots() {
-			return 0; // TODO
+			return getUpgradeCount(FeySlotType.UPGRADE, FeyStoneMaterial.SAPPHIRE);
 		}
 
 		public void setSlots(int slots) {
@@ -767,8 +772,8 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		}
 		
 		public List<FeyAwayRecord> getFeySlots() {
-			List<FeyAwayRecord> records = new ArrayList<>(this.slots);
-			for (int i = 0; i < slots; i++) {
+			List<FeyAwayRecord> records = new ArrayList<>(this.getTotalSlots());
+			for (int i = 0; i < getTotalSlots(); i++) {
 				final FeyAwayRecord record;
 				final UUID id = feySlots[i];
 				if (id != null) { 
@@ -790,7 +795,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		}
 		
 		private int findFreeIdx() {
-			for (int i = 0; i < this.slots; i++) {
+			for (int i = 0; i < this.getEffectiveSlots(); i++) {
 				if (feySlots[i] == null) {
 					return i;
 				}
@@ -804,7 +809,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		}
 		
 		protected int findFeySlot(UUID id) {
-			for (int i = 0; i < slots; i++) {
+			for (int i = 0; i < getTotalSlots(); i++) {
 				if (feySlots[i] != null && feySlots[i].equals(id)) {
 					return i;
 				}
@@ -849,7 +854,9 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			
 			this.feyCacheMap.remove(id);
 			int idx = findFeySlot(id);
-			this.feySlots[idx] = null;
+			if (idx != -1) {
+				this.feySlots[idx] = null;
+			}
 			dirtyAndUpdate();
 		}
 		
@@ -886,7 +893,24 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			return this.upgradeInv;
 		}
 		
+		public int getUpgradeCount(FeySlotType slot, FeyStoneMaterial material) {
+			int count = 0;
+			for (int i = 0; i < upgradeInv.getSizeInventory(); i++) {
+				ItemStack stack = upgradeInv.getStackInSlot(i);
+				if (stack != null && FeyStone.instance().getFeySlot(stack) == slot && FeyStone.instance().getStoneMaterial(stack) == material) {
+					count++;
+				}
+			}
+			return count;
+		}
+		
 		protected int getAetherCost() {
+			// Ruby downgrades decrease aether cost
+			final float skipChance = .3f * getUpgradeCount(FeySlotType.DOWNGRADE, FeyStoneMaterial.RUBY);
+			if (skipChance > 0 && NostrumFairies.random.nextFloat() < skipChance) {
+				return 0;
+			}
+			
 			int AETHER_PER_TICK = 1;
 			return AETHER_PER_TICK * this.getAvailableFeyEntities().size();
 		}
@@ -952,6 +976,11 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			return growth;
 		}
 		
+		/**
+		 * Downscales xp to match level
+		 * @param input
+		 * @return
+		 */
 		protected float adjustGrowth(float input) {
 			return (float) (input / (100 * Math.pow(2, slots - 1)));
 		}
@@ -981,8 +1010,10 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			if (slots >= MAX_NATURAL_SLOTS) {
 				return;
 			}
+			
+			final float upgradeMod = 1f + (.1f * getUpgradeCount(FeySlotType.UPGRADE, FeyStoneMaterial.RUBY));
 
-			this.growth += adjustGrowth(growth);
+			this.growth += adjustGrowth(growth) * upgradeMod;
 			checkLevel();
 			dirtyAndUpdate();
 		}
@@ -1015,7 +1046,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			nbt.setFloat(NBT_SLOT_GROWTH, growth);
 			
 			NBTTagList list = new NBTTagList();
-			for (int i = 0; i < slots; i++) {
+			for (int i = 0; i < getEffectiveSlots(); i++) {
 				UUID id = feySlots[i];
 				NBTTagCompound tag = new NBTTagCompound();
 				if (id != null) {
@@ -1048,9 +1079,12 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			}
 			this.growth = nbt.getFloat(NBT_SLOT_GROWTH);
 			
+			this.slotInv = HomeBlockSlotInventory.fromNBT(this, nbt.getCompoundTag(NBT_SLOT_INV));
+			this.upgradeInv = HomeBlockUpgradeInventory.fromNBT(this, nbt.getCompoundTag(NBT_UPGRADES));
+			
 			feyCacheMap.clear();
 			NBTTagList list = nbt.getTagList(NBT_FEY, NBT.TAG_COMPOUND);
-			for (int i = 0; i < slots; i++) {
+			for (int i = 0; i < getEffectiveSlots(); i++) {
 				NBTTagCompound tag = list.getCompoundTagAt(i);
 				UUID id = null;
 				if (tag != null && tag.hasKey(NBT_FEY_UUID)) {
@@ -1066,8 +1100,6 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 				this.refreshFeyList();
 			}
 			
-			this.slotInv = HomeBlockSlotInventory.fromNBT(this, nbt.getCompoundTag(NBT_SLOT_INV));
-			this.upgradeInv = HomeBlockUpgradeInventory.fromNBT(this, nbt.getCompoundTag(NBT_UPGRADES));
 			handler.readFromNBT(nbt.getCompoundTag(NBT_HANDLER));
 		}
 
@@ -1215,7 +1247,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		protected float getVacancyBonus() {
 			// count vacancies
 			int count = 0;
-			for (int i = 0; i < slots; i++) {
+			for (int i = 0; i < getEffectiveSlots(); i++) {
 				if (feySlots[i] == null) {
 					count++;
 				}

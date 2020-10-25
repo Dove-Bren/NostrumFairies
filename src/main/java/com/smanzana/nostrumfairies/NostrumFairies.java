@@ -25,6 +25,8 @@ import net.minecraft.entity.IEntityOwnable;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.item.Item;
+import net.minecraft.potion.Potion;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
@@ -197,5 +199,14 @@ public class NostrumFairies {
     		return null;
     	
     	return e.getCapability(AttributeProvider.CAPABILITY, null);
+    }
+    
+    private static int potionID = 85;
+	
+    public static int registerPotion(Potion potion, ResourceLocation loc) {
+    	while (Potion.getPotionById(potionID) != null)
+    		potionID++;
+    	Potion.REGISTRY.register(potionID, loc, potion);
+    	return potionID;
     }
 }

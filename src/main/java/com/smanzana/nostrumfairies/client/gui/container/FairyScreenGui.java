@@ -106,6 +106,13 @@ public class FairyScreenGui {
 	private static final int ICON_PLACEMENT_TEXT_HEIGHT = 32;
 	private static final int ICON_PLACEMENT_WIDTH = ICON_SLOTHELPER_WIDTH - 2;
 	private static final int ICON_PLACEMENT_HEIGHT = ICON_SLOTHELPER_HEIGHT - 2;
+
+	private static final int ICON_STAR_TEXT_HOFFSET = 0;
+	private static final int ICON_STAR_TEXT_VOFFSET = 216;
+	private static final int ICON_STAR_TEXT_WIDTH = 32;
+	private static final int ICON_STAR_TEXT_HEIGHT = 32;
+	private static final int ICON_STAR_WIDTH = 10;
+	private static final int ICON_STAR_HEIGHT = 10;
 	
 	private static final int ICON_CURSOR_MAJOR_TEXT_HOFFSET = 118;
 	private static final int ICON_CURSOR_MAJOR_TEXT_VOFFSET = 168;
@@ -153,47 +160,57 @@ public class FairyScreenGui {
 			}
 			
 			// attack
-			if (capability.attackFairyUnlocked()) {
+			//if (capability.attackFairyUnlocked())
+			{
 				for (int i = 0; i < 3; i++) {
 					for (int j = 0; j < 3; j++) {
-						this.addSlotToContainer(new Slot(chest, i * 3 + j, GUI_ATTACK_SLOT_HOFFSET + j * 18, GUI_ATTACK_SLOT_VOFFSET + i * 18) {
+						HideableSlot slot = new HideableSlot(chest, i * 3 + j, GUI_ATTACK_SLOT_HOFFSET + j * 18, GUI_ATTACK_SLOT_VOFFSET + i * 18) {
 							public boolean isItemValid(@Nullable ItemStack stack) {
 						        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 						    }
-						});
+						};
+						this.addSlotToContainer(slot);
+						slot.hide(!capability.attackFairyUnlocked());
 					}
 				}
 			}
 			
 			// build
-			if (capability.builderFairyUnlocked()) {
+			//if (capability.builderFairyUnlocked())
+			{
 				for (int i = 0; i < 3; i++) {
 					for (int j = 0; j < 3; j++) {
-						this.addSlotToContainer(new Slot(chest, (9) + i * 3 + j, GUI_BUILD_SLOT_HOFFSET + j * 18, GUI_BUILD_SLOT_VOFFSET + i * 18) {
+						HideableSlot slot = new HideableSlot(chest, (9) + i * 3 + j, GUI_BUILD_SLOT_HOFFSET + j * 18, GUI_BUILD_SLOT_VOFFSET + i * 18) {
 							public boolean isItemValid(@Nullable ItemStack stack) {
 						        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 						    }
-						});
+						};
+						this.addSlotToContainer(slot);
+						slot.hide(!capability.builderFairyUnlocked());
 					}
 				}
 			}
 			
 			// logistics
-			if (capability.logisticsFairyUnlocked()) {
+			//if (capability.logisticsFairyUnlocked())
+			{
 				for (int i = 0; i < 3; i++) {
 					for (int j = 0; j < 3; j++) {
 						// TODO fancy slots that show the 'FETCH' slot contents in the corner?
-						this.addSlotToContainer(new Slot(chest, (18) + i * 3 + j, GUI_LOGISTICS_SLOT_HOFFSET + j * 18, GUI_LOGISTICS_SLOT_VOFFSET + i * 18) {
+						HideableSlot slot = new HideableSlot(chest, (18) + i * 3 + j, GUI_LOGISTICS_SLOT_HOFFSET + j * 18, GUI_LOGISTICS_SLOT_VOFFSET + i * 18) {
 							public boolean isItemValid(@Nullable ItemStack stack) {
 						        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 						    }
-						});
+						};
+						this.addSlotToContainer(slot);
+						slot.hide(!capability.logisticsFairyUnlocked());
 					}
 				}
 			}
 			
 			// attack fairy slots and buttons
-			if (capability.attackFairyUnlocked()) {
+			//if (capability.attackFairyUnlocked())
+			{
 				for (int i = 0; i < chest.getAttackConfigSize(); i++) {
 					this.scrollSlots[i] = new HideableSlot(chest, (27) + i,
 							SIDEBAR_ATTACK_HOFFSET + SIDEBAR_ATTACK_SCROLL_SLOT_HOFFSET,
@@ -207,7 +224,8 @@ public class FairyScreenGui {
 			}
 			
 			// logistics templates
-			if (capability.logisticsFairyUnlocked()) {
+			//if (capability.logisticsFairyUnlocked())
+			{
 				for (int i = 0; i < chest.getPullTemplateSize(); i++) {
 					this.pullSlots[i] = new HideableSlot(chest, (45) + i,
 							SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_PULL_SLOT_HOFFSET,
@@ -425,19 +443,17 @@ public class FairyScreenGui {
 			final int horizontalMargin = (width - xSize) / 2;
 			final int verticalMargin = (height - ySize) / 2;
 			
-			if (container.capability.attackFairyUnlocked()) {
-				for (int i = 0; i < container.inv.getAttackConfigSize(); i++) {
-					targetButtons[i] = new TargetButton(i * 2,
-							horizontalMargin + SIDEBAR_ATTACK_HOFFSET + SIDEBAR_ATTACK_TARGET_BUTTON_HOFFSET,
-							verticalMargin + SIDEBAR_ATTACK_VOFFSET + SIDEBAR_ATTACK_TARGET_BUTTON_VOFFSET,
-							i);
-					this.addButton(targetButtons[i]);
-					placementButtons[i] = new PlacementButton((i * 2) + 1,
-							horizontalMargin + SIDEBAR_ATTACK_HOFFSET + SIDEBAR_ATTACK_PLACEMENT_BUTTON_HOFFSET,
-							verticalMargin + SIDEBAR_ATTACK_VOFFSET + SIDEBAR_ATTACK_PLACEMENT_BUTTON_VOFFSET,
-							i);
-					this.addButton(placementButtons[i]);
-				}
+			for (int i = 0; i < container.inv.getAttackConfigSize(); i++) {
+				targetButtons[i] = new TargetButton(i * 2,
+						horizontalMargin + SIDEBAR_ATTACK_HOFFSET + SIDEBAR_ATTACK_TARGET_BUTTON_HOFFSET,
+						verticalMargin + SIDEBAR_ATTACK_VOFFSET + SIDEBAR_ATTACK_TARGET_BUTTON_VOFFSET,
+						i);
+				this.addButton(targetButtons[i]);
+				placementButtons[i] = new PlacementButton((i * 2) + 1,
+						horizontalMargin + SIDEBAR_ATTACK_HOFFSET + SIDEBAR_ATTACK_PLACEMENT_BUTTON_HOFFSET,
+						verticalMargin + SIDEBAR_ATTACK_VOFFSET + SIDEBAR_ATTACK_PLACEMENT_BUTTON_VOFFSET,
+						i);
+				this.addButton(placementButtons[i]);
 			}
 			
 			for (TargetButton butt : targetButtons) {
@@ -449,6 +465,7 @@ public class FairyScreenGui {
 			for (HideableSlot slot : container.scrollSlots) {
 				slot.hide(!showAttack || selectedSlot != slot.getSlotIndex() - 27);
 			}
+			
 			for (HideableSlot slot : container.pullSlots) {
 				slot.hide(!showLogistics);
 			}
@@ -513,6 +530,7 @@ public class FairyScreenGui {
 				}
 			}
 			
+			
 			for (TargetButton butt : targetButtons) {
 				butt.visible = showAttack && selectedSlot == butt.slot;
 			}
@@ -522,6 +540,7 @@ public class FairyScreenGui {
 			for (HideableSlot slot : container.scrollSlots) {
 				slot.hide(!showAttack || selectedSlot != slot.getSlotIndex() - 27);
 			}
+			
 			for (HideableSlot slot : container.pullSlots) {
 				slot.hide(!showLogistics);
 			}
@@ -613,6 +632,51 @@ public class FairyScreenGui {
 					SIDEBAR_LOGISTICS_WIDTH, SIDEBAR_LOGISTICS_HEIGHT, 256, 256);
 		}
 		
+		protected void drawStar(float partialTicks) {
+			drawScaledCustomSizeModalRect(0, 0,
+					ICON_STAR_TEXT_HOFFSET, ICON_STAR_TEXT_VOFFSET,
+					ICON_STAR_TEXT_WIDTH, ICON_STAR_TEXT_HEIGHT,
+					ICON_STAR_WIDTH, ICON_STAR_HEIGHT, 256, 256);
+		}
+		
+		protected void drawLevelDisplay(float partialTicks) {
+			final int horizontalMargin = (width - xSize) / 2;
+			final int verticalMargin = (height - ySize) / 2;
+			
+			final int GUI_FAIRY_XP_BAR_HOFFSET = 8;
+			final int GUI_FAIRY_XP_BAR_VOFFSET = 78;
+			final int GUI_FAIRY_XP_BAR_WIDTH = 164;
+			final int GUI_FAIRY_XP_BAR_HEIGHT = 3;
+			
+			
+			final float perc = (float) container.capability.getFairyXP() / (float) container.capability.getFairyMaxXP();
+			final int bar_width = (int) ((float) GUI_FAIRY_XP_BAR_WIDTH * perc);
+			
+			// Draw bar
+			Gui.drawRect(horizontalMargin + GUI_FAIRY_XP_BAR_HOFFSET, verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET,
+					horizontalMargin + GUI_FAIRY_XP_BAR_HOFFSET + bar_width,
+					verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET + GUI_FAIRY_XP_BAR_HEIGHT, 0xFFFFFFA0);
+			
+			// Draw stars
+			final int level = container.capability.getFairyLevel();
+			final int starWidth = ICON_STAR_WIDTH;
+			final int totalWidth = (starWidth) * level + (4 * (level - 1));
+			int x = horizontalMargin + ((GUI_TEXT_WIDTH - totalWidth) / 2);
+			GlStateManager.enableBlend();
+			GlStateManager.color(1f, 1f, 1f, 1f);
+			
+			for (int i = 0; i < level; i++) {
+				GlStateManager.pushMatrix();
+				GlStateManager.translate(x + (starWidth * i),
+						verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET + (GUI_FAIRY_XP_BAR_HEIGHT / 2) + (-ICON_STAR_HEIGHT / 2),
+						0);
+				drawStar(partialTicks);
+				GlStateManager.popMatrix();
+			}
+			
+			// Draw level
+		}
+		
 		@Override
 		protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
 			final int horizontalMargin = (width - xSize) / 2;
@@ -623,6 +687,8 @@ public class FairyScreenGui {
 			
 			drawScaledCustomSizeModalRect(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, GUI_WIDTH, GUI_HEIGHT, 256, 256);
 			
+			drawLevelDisplay(partialTicks);
+			
 			if (showAttack) {
 				drawAttackSlide(partialTicks, mouseX, mouseY);
 			} else if (showLogistics) {
@@ -632,9 +698,37 @@ public class FairyScreenGui {
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+			
+			GlStateManager.pushMatrix();
+			GlStateManager.translate(0, 0, 500);
+			if (!container.capability.attackFairyUnlocked()) {
+				Gui.drawRect(GUI_ATTACK_SLOT_HOFFSET,
+						GUI_ATTACK_SLOT_VOFFSET,
+						GUI_ATTACK_SLOT_HOFFSET + (3 * 18) - (2),
+						GUI_ATTACK_SLOT_VOFFSET + (3 * 18) - (2),
+						0xAA000000);
+			}
+			if (!container.capability.builderFairyUnlocked()) {
+				Gui.drawRect(GUI_BUILD_SLOT_HOFFSET,
+						GUI_BUILD_SLOT_VOFFSET,
+						GUI_BUILD_SLOT_HOFFSET + (3 * 18) - (2),
+						GUI_BUILD_SLOT_VOFFSET + (3 * 18) - (2),
+						0xAA000000);
+			}
+			if (!container.capability.logisticsFairyUnlocked()) {
+				Gui.drawRect(GUI_LOGISTICS_SLOT_HOFFSET,
+						GUI_LOGISTICS_SLOT_VOFFSET,
+						GUI_LOGISTICS_SLOT_HOFFSET + (3 * 18) - (2),
+						GUI_LOGISTICS_SLOT_VOFFSET + (3 * 18) - (2),
+						0xAA000000);
+			}
+			GlStateManager.popMatrix();
+			
 			if (selectedGroup != -1) {
 				float bright = 1f;
 				GlStateManager.color(bright, bright, bright, 1.0F);
+				GlStateManager.enableTexture2D();
+				GlStateManager.enableBlend();
 				mc.getTextureManager().bindTexture(TEXT);
 				
 				int x = -5;
@@ -686,25 +780,32 @@ public class FairyScreenGui {
 		@Override
 		protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
 			if (mouseButton == 1 || mouseButton == 0) {
-				int size = 0;
-				if (container.capability.attackFairyUnlocked()) { size += container.inv.getGaelSize(); }
-				if (container.capability.builderFairyUnlocked()) { size += container.inv.getGaelSize(); }
-				if (container.capability.logisticsFairyUnlocked()) { size += container.inv.getGaelSize(); }
-				for (int i = 0; i < size; i++) {
-					Slot slot = container.inventorySlots.get(i + (27 + 9));
-					if (this.isPointInRegion(slot.xDisplayPosition, slot.yDisplayPosition, 16, 16, mouseX, mouseY)) {
-						if (mouseButton == 1) {
-							this.setButtonsTo(i);
-							return;
-						} else {
-							// they're picking it up or plopping it down
-							if (slot.getSlotIndex() == this.selectedSlot) {
-								if (NostrumFairies.proxy.getPlayer().inventory.getItemStack() == null) {
-									this.selectedEmpty = true;
-								} else if (slot.isItemValid(NostrumFairies.proxy.getPlayer().inventory.getItemStack())) {
-									this.selectedEmpty = false;
+				final int size = container.inv.getGaelSize();
+				Integer[] offsets = new Integer[3];
+				if (container.capability.attackFairyUnlocked()) { offsets[0] = 0; }
+				if (container.capability.builderFairyUnlocked()) { offsets[1] = size; }
+				if (container.capability.logisticsFairyUnlocked()) { offsets[2] = size + size; }
+				for (Integer offset : offsets) {
+					if (offset == null) {
+						continue;
+					}
+					
+					for (int i = 0; i < size; i++) {
+						Slot slot = container.inventorySlots.get(i + (27 + 9 + offset));
+						if (this.isPointInRegion(slot.xDisplayPosition, slot.yDisplayPosition, 16, 16, mouseX, mouseY)) {
+							if (mouseButton == 1) {
+								this.setButtonsTo(i + offset);
+								return;
+							} else {
+								// they're picking it up or plopping it down
+								if (slot.getSlotIndex() == this.selectedSlot) {
+									if (NostrumFairies.proxy.getPlayer().inventory.getItemStack() == null) {
+										this.selectedEmpty = true;
+									} else if (slot.isItemValid(NostrumFairies.proxy.getPlayer().inventory.getItemStack())) {
+										this.selectedEmpty = false;
+									}
+									// else unaffected
 								}
-								// else unaffected
 							}
 						}
 					}

@@ -51,6 +51,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.SaplingGrowTreeEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -538,6 +539,8 @@ public class WoodcuttingBlock extends BlockContainer {
 		
 		public static void init() {
 			FeySignRenderer.init(WoodcuttingBlockTileEntity.class, new WoodcuttingBlockRenderer());
+			ClientRegistry.bindTileEntitySpecialRenderer(WoodcuttingBlockTileEntity.class,
+					new WoodcuttingBlockRenderer());
 		}
 	}
 

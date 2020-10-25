@@ -362,9 +362,30 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 //		return false;
 	}
 	
+	@Override
+	protected void finishTask() {
+		if (this.getCurrentTask() != null) {
+			this.setEnergy(this.getEnergy() - 5f);
+		}
+		super.finishTask();
+		
+		EntityLivingBase owner = getOwner();
+		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(owner);
+		if (attr != null) {
+			attr.addFairyXP(3);
+		}
+	}
+	
 	protected void finishBuild() {
 		buildPump.finishTask(this, this.getBuildSpot());
+		this.setEnergy(this.getEnergy() - 3.5f);
 		setBuildSpot(null);
+		
+		EntityLivingBase owner = getOwner();
+		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(owner);
+		if (attr != null) {
+			attr.addFairyXP(2);
+		}
 	}
 	
 	protected void onBuildTick() {
@@ -583,6 +604,17 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				}
 				
 				return super.shouldExecute();
+			}
+			
+			@Override
+			public void attackTarget(EntityPersonalFairy entity, EntityLivingBase target) {
+				super.attackTarget(entity, target);
+				
+				EntityLivingBase owner = getOwner();
+				INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(owner);
+				if (attr != null) {
+					attr.addFairyXP(2);
+				}
 			}
 		});
 		
@@ -981,6 +1013,12 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	public void attackEntityWithRangedAttack(EntityLivingBase target, float distanceFactor) {
 		if (castSpell != null) {
 			castSpell.cast(this, 1f);
+			
+			EntityLivingBase owner = getOwner();
+			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(owner);
+			if (attr != null) {
+				attr.addFairyXP(1);
+			}
 		}
 	}
 
