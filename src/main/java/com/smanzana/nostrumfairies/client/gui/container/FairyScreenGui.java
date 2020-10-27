@@ -59,11 +59,19 @@ public class FairyScreenGui {
 	private static final int SIDEBAR_LOGISTICS_HOFFSET = -SIDEBAR_LOGISTICS_WIDTH;
 	private static final int SIDEBAR_LOGISTICS_VOFFSET = 0;
 	private static final int SIDEBAR_LOGISTICS_PULL_SLOT_HOFFSET = 12;
-	private static final int SIDEBAR_LOGISTICS_PULL_SLOT_VOFFSET = 36;
-	private static final int SIDEBAR_LOGISTICS_PUSH_SLOT_HOFFSET = 48;
-	private static final int SIDEBAR_LOGISTICS_PUSH_SLOT_VOFFSET = 36;
+	private static final int SIDEBAR_LOGISTICS_PULL_SLOT_VOFFSET = 106;
+	private static final int SIDEBAR_LOGISTICS_PUSH_SLOT_HOFFSET = 12;
+	private static final int SIDEBAR_LOGISTICS_PUSH_SLOT_VOFFSET = 43;
 	private static final int SIDEBAR_LOGISTICS_GEM_SLOT_HOFFSET = 30;
 	private static final int SIDEBAR_LOGISTICS_GEM_SLOT_VOFFSET = 147;
+	private static final int SIDEBAR_LOGISTICS_HEALTH_HOFFSET = 6;
+	private static final int SIDEBAR_LOGISTICS_HEALTH_VOFFSET = 19;
+	private static final int SIDEBAR_LOGISTICS_HEALTH_WIDTH = 64;
+	private static final int SIDEBAR_LOGISTICS_HEALTH_HEIGHT = 4;
+	private static final int SIDEBAR_LOGISTICS_ENERGY_HOFFSET = 6;
+	private static final int SIDEBAR_LOGISTICS_ENERGY_VOFFSET = 26;
+	private static final int SIDEBAR_LOGISTICS_ENERGY_WIDTH = 64;
+	private static final int SIDEBAR_LOGISTICS_ENERGY_HEIGHT = 2;
 	
 	private static final int SIDEBAR_ATTACK_TEXT_HOFFSET = 180;
 	private static final int SIDEBAR_ATTACK_TEXT_VOFFSET = 168;
@@ -87,6 +95,21 @@ public class FairyScreenGui {
 	private static final int SIDEBAR_ATTACK_ENERGY_VOFFSET = 63;
 	private static final int SIDEBAR_ATTACK_ENERGY_WIDTH = 64;
 	private static final int SIDEBAR_ATTACK_ENERGY_HEIGHT = 2;
+	
+	private static final int SIDEBAR_CONSTRUCTION_TEXT_HOFFSET = 180;
+	private static final int SIDEBAR_CONSTRUCTION_TEXT_VOFFSET = 0;
+	private static final int SIDEBAR_CONSTRUCTION_TEXT_WIDTH = 76;
+	private static final int SIDEBAR_CONSTRUCTION_TEXT_HEIGHT = 34;
+	private static final int SIDEBAR_CONSTRUCTION_WIDTH = 76;
+	private static final int SIDEBAR_CONSTRUCTION_HEIGHT = 34;
+	private static final int SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET = 6;
+	private static final int SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET = 19;
+	private static final int SIDEBAR_CONSTRUCTION_HEALTH_WIDTH = 64;
+	private static final int SIDEBAR_CONSTRUCTION_HEALTH_HEIGHT = 4;
+	private static final int SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET = 6;
+	private static final int SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET = 26;
+	private static final int SIDEBAR_CONSTRUCTION_ENERGY_WIDTH = 64;
+	private static final int SIDEBAR_CONSTRUCTION_ENERGY_HEIGHT = 2;
 	
 	private static final int ICON_SLOTHELPER_TEXT_HOFFSET = 0;
 	private static final int ICON_SLOTHELPER_TEXT_VOFFSET = 168;
@@ -227,9 +250,11 @@ public class FairyScreenGui {
 			//if (capability.logisticsFairyUnlocked())
 			{
 				for (int i = 0; i < chest.getPullTemplateSize(); i++) {
+					final int x = i % 3;
+					final int y = i / 3;
 					this.pullSlots[i] = new HideableSlot(chest, (45) + i,
-							SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_PULL_SLOT_HOFFSET,
-							SIDEBAR_LOGISTICS_VOFFSET + SIDEBAR_LOGISTICS_PULL_SLOT_VOFFSET + (i * 18)) {
+							SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_PULL_SLOT_HOFFSET + (x * 18),
+							SIDEBAR_LOGISTICS_VOFFSET + SIDEBAR_LOGISTICS_PULL_SLOT_VOFFSET + (y * 18)) {
 						public boolean isItemValid(@Nullable ItemStack stack) {
 					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 					    }
@@ -237,8 +262,8 @@ public class FairyScreenGui {
 					this.addSlotToContainer(pullSlots[i]);
 					
 					this.pushSlots[i] = new HideableSlot(chest, (51) + i,
-							SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_PUSH_SLOT_HOFFSET,
-							SIDEBAR_LOGISTICS_VOFFSET + SIDEBAR_LOGISTICS_PUSH_SLOT_VOFFSET + (i * 18)) {
+							SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_PUSH_SLOT_HOFFSET + (x * 18),
+							SIDEBAR_LOGISTICS_VOFFSET + SIDEBAR_LOGISTICS_PUSH_SLOT_VOFFSET + (y * 18)) {
 						public boolean isItemValid(@Nullable ItemStack stack) {
 					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 					    }
@@ -425,6 +450,7 @@ public class FairyScreenGui {
 		private float selectedEnergy;
 		private boolean showAttack;
 		private boolean showLogistics;
+		private boolean showConstruction;
 		
 		public FairyScreenGuiContainer(FairyScreenContainer container) {
 			super(container);
@@ -501,44 +527,48 @@ public class FairyScreenGui {
 		protected void setButtonsTo(int slotClicked) {
 			
 			if (slotClicked < 0 || slotClicked > container.inv.getGaelSize() * 3) {
-				showAttack = showLogistics = false;
+				showAttack = showLogistics = showConstruction = false;
 				selectedGroup = -1;
 			} else {
+				ItemStack gael = container.inv.getStackInSlot(slotClicked);
+				this.selectedEmpty = (gael == null);
 				if (FairyHolderInventory.slotIsType(FairyGaelType.ATTACK, slotClicked)) {
 					showAttack = true;
 					showLogistics = false;
+					showConstruction = false;
 					
-					ItemStack gael = container.inv.getStackInSlot(slotClicked);
 					this.selectedSlot = slotClicked - 0;
-					this.selectedEmpty = (gael == null);
 					this.selectedGroup = 0;
-					if (gael != null) {
-						this.selectedName = FairyGael.getStoredName(gael);
-						this.selectedHealth = (float) FairyGael.getStoredHealth(gael);
-						this.selectedEnergy = (float) FairyGael.getStoredEnergy(gael);
-					}
 				} else if (FairyHolderInventory.slotIsType(FairyGaelType.LOGISTICS, slotClicked)) {
 					showAttack = false;
 					showLogistics = true;
+					showConstruction = false;
 					selectedGroup = 2;
 					this.selectedSlot = slotClicked - 18;
 				} else {
 					showAttack = false;
 					showLogistics = false;
+					showConstruction = true;
 					selectedGroup = 1;
 					this.selectedSlot = slotClicked - 9;
+				}
+				
+				if (gael != null) {
+					this.selectedName = FairyGael.getStoredName(gael);
+					this.selectedHealth = (float) FairyGael.getStoredHealth(gael);
+					this.selectedEnergy = (float) FairyGael.getStoredEnergy(gael);
 				}
 			}
 			
 			
 			for (TargetButton butt : targetButtons) {
-				butt.visible = showAttack && selectedSlot == butt.slot;
+				butt.visible = showAttack && !selectedEmpty && selectedSlot == butt.slot;
 			}
 			for (PlacementButton butt : placementButtons) {
-				butt.visible = showAttack && selectedSlot == butt.slot;
+				butt.visible = showAttack && !selectedEmpty && selectedSlot == butt.slot;
 			}
 			for (HideableSlot slot : container.scrollSlots) {
-				slot.hide(!showAttack || selectedSlot != slot.getSlotIndex() - 27);
+				slot.hide(!showAttack || selectedEmpty || selectedSlot != slot.getSlotIndex() - 27);
 			}
 			
 			for (HideableSlot slot : container.pullSlots) {
@@ -551,6 +581,11 @@ public class FairyScreenGui {
 		}
 		
 		protected void drawAttackSlide(float partialTicks, int mouseX, int mouseY) {
+			// whole thing can be skipped if no selection
+			if (selectedEmpty) {
+				return;
+			}
+			
 			final int horizontalMargin = (width - xSize) / 2;
 			final int verticalMargin = (height - ySize) / 2;
 			final int sidebarX = horizontalMargin + SIDEBAR_ATTACK_HOFFSET;
@@ -569,21 +604,19 @@ public class FairyScreenGui {
 					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET + SIDEBAR_ATTACK_ENERGY_HEIGHT,
 					0xFF444444);
 			
-			if (!selectedEmpty) {
-				int x = (int) Math.round((float) SIDEBAR_ATTACK_HEALTH_WIDTH * (selectedHealth));
-				Gui.drawRect(sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET,
-						sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET,
-						sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET + x,
-						sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET + SIDEBAR_ATTACK_HEALTH_HEIGHT,
-						0xFFAA0000);
-				
-				x = (int) Math.round((float) SIDEBAR_ATTACK_ENERGY_WIDTH * (selectedEnergy));
-				Gui.drawRect(sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET,
-						sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET,
-						sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET + x,
-						sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET + SIDEBAR_ATTACK_ENERGY_HEIGHT,
-						0xFF00A040);
-			}
+			int x = (int) Math.round((float) SIDEBAR_ATTACK_HEALTH_WIDTH * (selectedHealth));
+			Gui.drawRect(sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET,
+					sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET,
+					sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET + x,
+					sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET + SIDEBAR_ATTACK_HEALTH_HEIGHT,
+					0xFFAA0000);
+			
+			x = (int) Math.round((float) SIDEBAR_ATTACK_ENERGY_WIDTH * (selectedEnergy));
+			Gui.drawRect(sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET,
+					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET,
+					sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET + x,
+					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET + SIDEBAR_ATTACK_ENERGY_HEIGHT,
+					0xFF00A040);
 			
 			// draw background
 			GlStateManager.color(1f, 1f, 1f, 1f);
@@ -596,7 +629,7 @@ public class FairyScreenGui {
 					SIDEBAR_ATTACK_TEXT_WIDTH, SIDEBAR_ATTACK_TEXT_HEIGHT,
 					SIDEBAR_ATTACK_WIDTH, SIDEBAR_ATTACK_HEIGHT, 256, 256);
 			
-			if (!selectedEmpty && selectedName != null) {
+			if (selectedName != null) {
 				final float scale = .8f;
 				final String name;
 				if (selectedName.length() > 15) {
@@ -605,7 +638,7 @@ public class FairyScreenGui {
 					name = selectedName;
 				}
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(sidebarX + (SIDEBAR_ATTACK_WIDTH / 2), sidebarY + 4, 0); 
+				GlStateManager.translate(sidebarX + (SIDEBAR_ATTACK_WIDTH / 2), sidebarY + 7, 0); 
 				GlStateManager.scale(scale, scale, scale);
 				this.drawCenteredString(this.fontRendererObj,
 						name,
@@ -623,13 +656,138 @@ public class FairyScreenGui {
 		protected void drawLogisticsSlide(float partialTicks, int mouseX, int mouseY) {
 			final int horizontalMargin = (width - xSize) / 2;
 			final int verticalMargin = (height - ySize) / 2;
-			//final int sidebarX = horizontalMargin + SIDEBAR_LOGISTICS_HOFFSET;
-			//final int sidebarY = verticalMargin + SIDEBAR_LOGISTICS_VOFFSET;
+			final int sidebarX = horizontalMargin + SIDEBAR_LOGISTICS_HOFFSET;
+			final int sidebarY = verticalMargin + SIDEBAR_LOGISTICS_VOFFSET;
+			
+			// DRAW BARS
+			Gui.drawRect(sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET,
+					sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET,
+					sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET + SIDEBAR_LOGISTICS_HEALTH_WIDTH,
+					sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET + SIDEBAR_LOGISTICS_HEALTH_HEIGHT,
+					0xFF444444);
+			
+			Gui.drawRect(sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET,
+					sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET,
+					sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET + SIDEBAR_LOGISTICS_ENERGY_WIDTH,
+					sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET + SIDEBAR_LOGISTICS_ENERGY_HEIGHT,
+					0xFF444444);
+			
+			if (!selectedEmpty) {
+				int x = (int) Math.round((float) SIDEBAR_LOGISTICS_HEALTH_WIDTH * (selectedHealth));
+				Gui.drawRect(sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET,
+						sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET,
+						sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET + x,
+						sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET + SIDEBAR_LOGISTICS_HEALTH_HEIGHT,
+						0xFFAA0000);
+				
+				x = (int) Math.round((float) SIDEBAR_LOGISTICS_ENERGY_WIDTH * (selectedEnergy));
+				Gui.drawRect(sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET,
+						sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET,
+						sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET + x,
+						sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET + SIDEBAR_LOGISTICS_ENERGY_HEIGHT,
+						0xFF00A040);
+			}
+			GlStateManager.color(1f, 1f, 1f, 1f);
 			
 			drawScaledCustomSizeModalRect(horizontalMargin + SIDEBAR_LOGISTICS_HOFFSET, verticalMargin + SIDEBAR_LOGISTICS_VOFFSET,
 					SIDEBAR_LOGISTICS_TEXT_HOFFSET, SIDEBAR_LOGISTICS_TEXT_VOFFSET,
 					SIDEBAR_LOGISTICS_TEXT_WIDTH, SIDEBAR_LOGISTICS_TEXT_HEIGHT,
 					SIDEBAR_LOGISTICS_WIDTH, SIDEBAR_LOGISTICS_HEIGHT, 256, 256);
+			
+			if (!selectedEmpty && selectedName != null) {
+				final float scale = .8f;
+				final String name;
+				if (selectedName.length() > 15) {
+					name = selectedName.substring(0, 14) + "...";
+				} else {
+					name = selectedName;
+				}
+				GlStateManager.pushMatrix();
+				GlStateManager.translate(sidebarX + (SIDEBAR_LOGISTICS_WIDTH / 2), sidebarY + 7, 0); 
+				GlStateManager.scale(scale, scale, scale);
+				this.drawCenteredString(this.fontRendererObj,
+						name,
+						0,
+						0,
+						0xFFFFFFFF);
+				GlStateManager.popMatrix();
+				GlStateManager.disableAlpha();
+				GlStateManager.disableBlend();
+				GlStateManager.enableAlpha();
+				GlStateManager.enableBlend();
+			}
+		}
+		
+		protected void drawConstructionSlide(float partialTicks, int mouseX, int mouseY) {
+			if (selectedEmpty) {
+				return;
+			}
+			
+			final int horizontalMargin = (width - xSize) / 2;
+			final int verticalMargin = (height - ySize) / 2;
+			final int sidebarX = horizontalMargin + SIDEBAR_ATTACK_HOFFSET;
+			final int sidebarY = verticalMargin + SIDEBAR_ATTACK_VOFFSET;
+			
+			// DRAW BARS
+			Gui.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET,
+					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET,
+					sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET + SIDEBAR_CONSTRUCTION_HEALTH_WIDTH,
+					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET + SIDEBAR_CONSTRUCTION_HEALTH_HEIGHT,
+					0xFF444444);
+			
+			Gui.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET,
+					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET,
+					sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET + SIDEBAR_CONSTRUCTION_ENERGY_WIDTH,
+					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET + SIDEBAR_CONSTRUCTION_ENERGY_HEIGHT,
+					0xFF444444);
+			
+			int x = (int) Math.round((float) SIDEBAR_CONSTRUCTION_HEALTH_WIDTH * (selectedHealth));
+			Gui.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET,
+					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET,
+					sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET + x,
+					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET + SIDEBAR_CONSTRUCTION_HEALTH_HEIGHT,
+					0xFFAA0000);
+			
+			x = (int) Math.round((float) SIDEBAR_CONSTRUCTION_ENERGY_WIDTH * (selectedEnergy));
+			Gui.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET,
+					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET,
+					sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET + x,
+					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET + SIDEBAR_CONSTRUCTION_ENERGY_HEIGHT,
+					0xFF00A040);
+			
+			// draw background
+			GlStateManager.color(1f, 1f, 1f, 1f);
+			GlStateManager.disableAlpha();
+			GlStateManager.disableBlend();
+			GlStateManager.enableAlpha();
+			GlStateManager.enableBlend();
+			drawScaledCustomSizeModalRect(sidebarX, sidebarY,
+					SIDEBAR_CONSTRUCTION_TEXT_HOFFSET, SIDEBAR_CONSTRUCTION_TEXT_VOFFSET,
+					SIDEBAR_CONSTRUCTION_TEXT_WIDTH, SIDEBAR_CONSTRUCTION_TEXT_HEIGHT,
+					SIDEBAR_CONSTRUCTION_WIDTH, SIDEBAR_CONSTRUCTION_HEIGHT, 256, 256);
+			
+			if (selectedName != null) {
+				final float scale = .8f;
+				final String name;
+				if (selectedName.length() > 15) {
+					name = selectedName.substring(0, 14) + "...";
+				} else {
+					name = selectedName;
+				}
+				GlStateManager.pushMatrix();
+				GlStateManager.translate(sidebarX + (SIDEBAR_CONSTRUCTION_WIDTH / 2), sidebarY + 7, 0); 
+				GlStateManager.scale(scale, scale, scale);
+				this.drawCenteredString(this.fontRendererObj,
+						name,
+						0,
+						0,
+						0xFFFFFFFF);
+				GlStateManager.popMatrix();
+				GlStateManager.disableAlpha();
+				GlStateManager.disableBlend();
+				GlStateManager.enableAlpha();
+				GlStateManager.enableBlend();
+			}
 		}
 		
 		protected void drawStar(float partialTicks) {
@@ -693,6 +851,8 @@ public class FairyScreenGui {
 				drawAttackSlide(partialTicks, mouseX, mouseY);
 			} else if (showLogistics) {
 				drawLogisticsSlide(partialTicks, mouseX, mouseY);
+			} else if (showConstruction) {
+				drawConstructionSlide(partialTicks, mouseX, mouseY);
 			}
 		}
 		
