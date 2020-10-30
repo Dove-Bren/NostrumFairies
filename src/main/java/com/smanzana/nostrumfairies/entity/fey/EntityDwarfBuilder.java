@@ -9,7 +9,6 @@ import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
-import com.smanzana.nostrumfairies.utils.Paths;
 
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.util.math.BlockPos;
@@ -138,23 +137,26 @@ public class EntityDwarfBuilder extends EntityDwarf {
 				}
 			}
 			
-			// Check for pathing
-			if (this.getDistanceSq(target) < 1) {
-				// extra case for if the navigator refuses cause we're too close
-				return true;
-			}
+			return true;
 			
-			//Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
-			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
-			}
+//			// Check for pathing
+//			if (this.getDistanceSq(target) < 1) {
+//				// extra case for if the navigator refuses cause we're too close
+//				return true;
+//			}
+//			
+//			//Path currentPath = navigator.getPath();
+//			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+//			if (success) {
+//				success = Paths.IsComplete(navigator.getPath(), target, 2);
+//				navigator.clearPathEntity();
+//			}
 			
-			if (!success) {
+			//if (!success) {
 				// Builders just teleport
 //				this.setPosition(target.getX() + .5, target.getY(), target.getZ() + .5);
-				return true;
-			}
+				
+			//}
 			
 //			if (currentPath == null) {
 //				if (!success) {

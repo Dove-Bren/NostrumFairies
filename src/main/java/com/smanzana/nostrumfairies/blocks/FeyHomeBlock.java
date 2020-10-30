@@ -1221,14 +1221,17 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			
 			if (!worldObj.isRemote && ticksExisted % 100 == 0 && worldObj.isDaytime()) {
 				if (NostrumFairies.random.nextFloat() < .2f) {
-					// Scan for nearby flowers and possible spawn extra fey
-					final float happiness = getAverageHappiness();
-					if (happiness > 50f && this.getAether() > 0) {
-						// Do we have vacancies? And are there spawn-boosting blocks nearby?
-						final float chance = Math.min(.75f, .01f + getBlockSpawnBonus() + getVacancyBonus());
-						if (NostrumFairies.random.nextFloat() < chance) {
-							// Spawn a wild'un!
-							spawnWildNearby();
+					// Don't scan if too many are nearby
+					if (worldObj.getEntitiesWithinAABB(EntityFeyBase.class, FULL_BLOCK_AABB.expandXyz(16)).size() < 8) {
+						// Scan for nearby flowers and possible spawn extra fey
+						final float happiness = getAverageHappiness();
+						if (happiness > 50f && this.getAether() > 0) {
+							// Do we have vacancies? And are there spawn-boosting blocks nearby?
+							final float chance = Math.min(.75f, .01f + getBlockSpawnBonus() + getVacancyBonus());
+							if (NostrumFairies.random.nextFloat() < chance) {
+								// Spawn a wild'un!
+								spawnWildNearby();
+							}
 						}
 					}
 				}

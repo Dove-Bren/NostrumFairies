@@ -226,6 +226,7 @@ public class BuildingBlock extends BlockContainer {
 		private Map<BlockPos, ILogisticsTask> taskMap;
 		private double radius;
 		private ItemStack slot;
+		private int scanCounter;
 		
 		public BuildingBlockTileEntity() {
 			this(16);
@@ -310,8 +311,14 @@ public class BuildingBlock extends BlockContainer {
 			}
 		}
 		
-		private void scan() {
+		private void scan(int y) {
 			if (this.getNetwork() == null) {
+				return;
+			}
+			
+			final BlockPos center = this.getPos();
+			
+			if (center.getY() + y < 0 || center.getY() + y > 255) {
 				return;
 			}
 			
@@ -320,14 +327,9 @@ public class BuildingBlock extends BlockContainer {
 			Set<BlockPos> known = Sets.newHashSet(taskMap.keySet());
 			List<BlockPos> templateSpots = new LinkedList<>();
 			
-			MutableBlockPos cursor = new MutableBlockPos();
-			BlockPos center = this.getPos();
-			final int startY = (int) Math.max(-cursor.getY(), Math.floor(-radius));
-			final int endY = (int) Math.min(256 - cursor.getY(), Math.ceil(radius));
+			final MutableBlockPos cursor = new MutableBlockPos();
 			for (int x = (int) Math.floor(-radius); x <= Math.ceil(radius); x++)
-			for (int z = (int) Math.floor(-radius); z <= Math.ceil(radius); z++)
-			for (int y = startY; y < endY; y++) {
-				
+			for (int z = (int) Math.floor(-radius); z <= Math.ceil(radius); z++) {
 				cursor.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);
 				if (!worldObj.isBlockLoaded(cursor)) {
 					break; // skip this whole column
@@ -351,7 +353,9 @@ public class BuildingBlock extends BlockContainer {
 			
 			// For any left in known, the template spot is not there anymore! Remove!
 			for (BlockPos base : known) {
-				removeTask(base);
+				if (base.getY() - center.getY() == y) {
+					removeTask(base);
+				}
 			}
 			
 			final long end = System.currentTimeMillis();
@@ -367,8 +371,9 @@ public class BuildingBlock extends BlockContainer {
 			}
 			
 			this.tickCount++;
-			if (this.tickCount % (20 * 10) == 0) {
-				scan();
+			if (this.tickCount % (20 * 2) == 0) {
+				final int y = (int) ((scanCounter++ % (radius * 2)) - radius);
+				scan(y);
 			}
 			if (this.slot != null && this.tickCount % 10 == 0) {
 				scanBlueprint();
