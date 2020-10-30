@@ -77,7 +77,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 				end = new BlockPos(point.xCoord, point.yCoord, point.zCoord);
 			}
 			
-			if (subpath != null) {
+			if (subpath != null && start != null && end != null) {
 				LogisticsNetwork network = fey.getLogisticsNetwork();
 				Location startL = new Location(theEntity.worldObj, start);
 				Location endL = new Location(theEntity.worldObj, end);

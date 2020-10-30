@@ -44,9 +44,15 @@ import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockHorizontal;
+import net.minecraft.block.BlockLeaves;
+import net.minecraft.block.BlockNewLeaf;
+import net.minecraft.block.BlockNewLog;
+import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
@@ -55,6 +61,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.Item;
@@ -122,7 +129,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	
 	//public static final PropertyEnum<ResidentType> TYPE = PropertyEnum.<ResidentType>create("type", ResidentType.class);
 	public static final PropertyEnum<BlockFunction> BLOCKFUNC = PropertyEnum.<BlockFunction>create("func", BlockFunction.class);
-	//public static final PropertyInteger Age = PropertyInteger.create("age", 0, 4);
+	public static final PropertyDirection FACING = BlockHorizontal.FACING;
 	
 	protected static final String ID = "home_block";
 	
@@ -163,26 +170,37 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	
 	@Override
 	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, BLOCKFUNC);
+		return new BlockStateContainer(this, BLOCKFUNC, FACING);
 	}
 	
 	private BlockFunction functionFromMeta(int meta) {
-		return BlockFunction.values()[meta % BlockFunction.values().length];
+		int raw = (meta & 1);
+		return BlockFunction.values()[raw];
 	}
 	
 	private int metaFromFunc(BlockFunction func) {
-		return (func.ordinal());
+		return (func.ordinal() & 1);
+	}
+	
+	private EnumFacing facingFromMeta(int meta) {
+		int raw = (meta >> 1) & 0x3;
+		return EnumFacing.HORIZONTALS[raw];
+	}
+	
+	private int metaFromFacing(EnumFacing facing) {
+		return facing.getHorizontalIndex();
 	}
 	
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
 		return getDefaultState()
-				.withProperty(BLOCKFUNC, functionFromMeta(meta));
+				.withProperty(BLOCKFUNC, functionFromMeta(meta))
+				.withProperty(FACING, facingFromMeta(meta));
 	}
 	
 	@Override
 	public int getMetaFromState(IBlockState state) {
-		return metaFromFunc(state.getValue(BLOCKFUNC));
+		return metaFromFunc(state.getValue(BLOCKFUNC)) | metaFromFacing(state.getValue(FACING));
 	}
 	
 	@Override
@@ -222,22 +240,22 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	
 	@Override
 	public boolean isVisuallyOpaque() {
-		return false;
+		return true;
 	}
 	
 	@Override
 	public boolean isFullyOpaque(IBlockState state) {
-		return false;
+		return true;
 	}
 	
 	@Override
 	public boolean isFullBlock(IBlockState state) {
-		return false;
+		return true;
 	}
 	
 	@Override
 	public boolean isOpaqueCube(IBlockState state) {
-		return false;
+		return true;
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -260,6 +278,11 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	@SideOnly(Side.CLIENT)
 	public void randomDisplayTick(IBlockState stateIn, World worldIn, BlockPos pos, Random rand) {
 		super.randomDisplayTick(stateIn, worldIn, pos, rand);
+	}
+	
+	@Override
+	public boolean canSustainLeaves(IBlockState state, IBlockAccess world, BlockPos pos) {
+		return true;
 	}
 	
 	public boolean isCenter(IBlockState state) {
@@ -312,14 +335,22 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	
 	@Override
 	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
-		if (!worldIn.isAirBlock(pos.up()))
-			return false;
 		
-		if (worldIn.getTileEntity(pos) != null)
-			return false;
-		
-		if (worldIn.getTileEntity(pos.up()) != null)
-			return false;
+		for (BlockPos cursor : new BlockPos[] {pos, pos.up(), pos.up().up()}) {
+			if (cursor.getY() > 255 || cursor.getY() <= 0) {
+				return false;
+			}
+			
+			Block block = worldIn.getBlockState(cursor).getBlock();
+			if (!block.isReplaceable(worldIn, cursor)
+					&& !(block instanceof BlockLeaves)) {
+				return false;
+			}
+			
+			if (worldIn.getTileEntity(cursor) != null) {
+				return false;
+			}
+		}
 		
 		return super.canPlaceBlockAt(worldIn, pos);
 	}
@@ -327,7 +358,8 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	@Override
 	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
 		return this.getDefaultState()
-				.withProperty(BLOCKFUNC, BlockFunction.CENTER);
+				.withProperty(BLOCKFUNC, BlockFunction.CENTER)
+				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
 				
 	}
 	
@@ -347,6 +379,8 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
 		// This method hopefully is ONLY called when placed manually in the world.
 		// Auto-create slave state
+		EnumFacing facing = state.getValue(FACING);
+		this.spawn(worldIn, pos, type, facing);
 		
 		worldIn.setBlockState(pos.up(), this.getDefaultState()
 				.withProperty(BLOCKFUNC, BlockFunction.TOP));
@@ -371,6 +405,41 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			return pos;
 		}
 		return pos.down();
+	}
+	
+	/**
+	 * Spawns a home block tree at the provided space. Skips the base block.
+	 * @param world
+	 * @param base
+	 * @param type
+	 */
+	public void spawn(World world, BlockPos base, ResidentType type, EnumFacing direction) {
+		//world.setBlockState(base, getDefaultState().withProperty(BLOCKFUNC, BlockFunction.CENTER).withProperty(FACING, direction));
+		world.setBlockState(base.up(), getDefaultState().withProperty(BLOCKFUNC, BlockFunction.TOP).withProperty(FACING, direction)); // could be random
+		world.setBlockState(base.up().up(), Blocks.LOG2.getDefaultState().withProperty(BlockNewLog.VARIANT, BlockPlanks.EnumType.DARK_OAK));
+		
+		IBlockState leaves = Blocks.LEAVES2.getDefaultState().withProperty(BlockNewLeaf.VARIANT, BlockPlanks.EnumType.DARK_OAK);
+		BlockPos origin = base.up().up();
+		for (BlockPos cursor : new BlockPos[] {
+				// Layer 1
+				origin.north().north(),
+				origin.north().east(), origin.north(), origin.north().west(),
+				origin.east().east(), origin.east(), origin.west(), origin.west().west(),
+				origin.south().east(), origin.south(), origin.south().west(),
+				origin.south().south(),
+				
+				// Layer 2
+				origin.up().north().east(), origin.up().north(), origin.up().north().west(),
+				origin.up().east().east(), origin.up().east(), origin.up(), origin.up().west(), origin.up().west().west(),
+				origin.up().south().east(), origin.up().south(), origin.up().south().west(),
+				
+				// Layer 3
+				origin.up().up().north(),
+				origin.up().up().east(), origin.up().up(), origin.up().up().west(),
+				origin.up().up().south(),
+		}) {
+			world.setBlockState(cursor, leaves);
+		}
 	}
 	
 	public static boolean SpecializationMaterialAllowed(ResidentType type, FeyStoneMaterial material) {

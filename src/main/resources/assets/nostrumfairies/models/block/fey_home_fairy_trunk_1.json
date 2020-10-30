@@ -1,0 +1,12 @@
+{
+    "parent": "block/cube",
+	"textures": {
+        "north": "nostrumfairies:blocks/fey_home_fairy_side1",
+        "south": "nostrumfairies:blocks/fey_home_fairy_side4",
+        "east": "blocks/log_big_oak",
+        "west": "blocks/log_big_oak",
+        "up": "blocks/log_big_oak",
+        "down": "blocks/log_big_oak",
+		"particle": "blocks/log_big_oak"
+	}
+}

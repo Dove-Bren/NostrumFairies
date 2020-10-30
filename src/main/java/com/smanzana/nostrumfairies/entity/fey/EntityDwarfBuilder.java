@@ -86,6 +86,9 @@ public class EntityDwarfBuilder extends EntityDwarf {
 				if (cursor.getY() <= 0) {
 					break;
 				}
+				if (x == 0 && z == 0 && i == 0) {
+					continue;
+				}
 				if (!lastSolid) {
 					// Last block was breathable. Are we suddenly in solid ground?
 					lastSolid = worldObj.getBlockState(cursor).getMaterial().blocksMovement();
