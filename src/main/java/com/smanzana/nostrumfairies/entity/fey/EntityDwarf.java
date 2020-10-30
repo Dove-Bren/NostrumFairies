@@ -110,8 +110,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	private static final String NBT_ITEMS = "helditems";
 	private static final int INV_SIZE = 5;
 	
-	private @Nullable BlockPos movePos;
-	private @Nullable Entity moveEntity;
+	protected @Nullable BlockPos movePos;
+	protected @Nullable Entity moveEntity;
 	
 	public EntityDwarf(World world) {
 		super(world);
@@ -493,7 +493,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 					return true;
 				}
 			}
-		} else if (task instanceof LogisticsTaskPlaceBlock && !(task instanceof LogisticsTaskPlantItem)) {
+		} else if (task instanceof LogisticsTaskPlaceBlock
+				&& !(task instanceof LogisticsTaskPlantItem)
+				&& !(task instanceof LogisticsTaskBuildBlock)) {
 			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
 			
 			if (place.getWorld() != this.worldObj) {

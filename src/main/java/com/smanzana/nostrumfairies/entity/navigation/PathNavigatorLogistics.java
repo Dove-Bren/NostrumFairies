@@ -156,7 +156,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	 * Finds the best node on the network that we can path to and should start from
 	 * @return
 	 */
-	private @Nullable LogisticsNode findStart(BlockPos target) {
+	private @Nullable LogisticsNode findStart(BlockPos target, float range) {
 		LogisticsNetwork network = fey.getLogisticsNetwork();
 		List<Location> beacons = Lists.newArrayList(network.getAllBeacons());
 		
@@ -173,7 +173,8 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			});
 			
 			for (Location beacon : beacons) {
-				Path subpath = super.getPathToPos(beacon.getPos());
+				//Path subpath = super.getPathToPos(beacon.getPos());
+				Path subpath = getMinorPathTo(beacon.getPos(), target, range);
 				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), theEntity.worldObj.isAirBlock(beacon.getPos()) ? 0 : 1)) {
 					LogisticsNode node = new LogisticsNode(beacon.getPos(), null, subpath, 0, getH(target, beacon.getPos()));
 					return node;
@@ -228,7 +229,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 		}
 		
 		// Find start node!
-		LogisticsNode start = findStart(target);
+		LogisticsNode start = findStart(target, range);
 		if (start == null) {
 			return null;
 		}

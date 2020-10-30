@@ -3,8 +3,11 @@ package com.smanzana.nostrumfairies.entity.fey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import javax.annotation.Nullable;
@@ -100,6 +103,11 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	private ILogisticsTask lastTask;
 	private LogisticsSubTask lastSubTask;
 	
+	/**
+	 * Tracks task we can't start and when we should try them again
+	 */
+	private Map<ILogisticsTask, Integer> taskRetryMap;
+	
 	
 	public EntityFeyBase(World world) {
 		this(world, 100, MAX_FAIRY_DISTANCE_SQ);
@@ -113,6 +121,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		this.navigator = new PathNavigatorLogistics(this, world);
 		
 		idleChatTicks = -1;
+		taskRetryMap = new HashMap<>();
 	}
 	
 	@Override
@@ -578,7 +587,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			onIdleTick();
 			
 			// Note: idle may decide to do task stuff on its own. We'll respect that.
-			if (currentTask == null && canWork()) {
+			if (currentTask == null && canWork() && rand.nextFloat() < .1f) {
 				if (!searchForJobs()) {
 					break;
 				}
@@ -589,6 +598,16 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			// else fall through to start working as soon as task is picked up
 			// TODO maybe both should search for tasks if the task is dropable?
 		case WORKING:
+			// Clean up rejected list
+			if (ticksExisted % 5 == 0) {
+				Iterator<Entry<ILogisticsTask, Integer>> it = taskRetryMap.entrySet().iterator();
+				while (it.hasNext()) {
+					Entry<ILogisticsTask, Integer> row = it.next();
+					if (row.getValue() <= ticksExisted) {
+						it.remove();
+					}
+				}
+			}
 			if (currentTask != null) {
 				this.taskTickCount++;
 				
@@ -694,6 +713,10 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		LogisticsNetwork network = this.getLogisticsNetwork();
 		if (network != null) {
 			return network.getTaskRegistry().findTasks(network, this, (task) -> {
+				if (taskIsRejected(task)) {
+					return false;
+				}
+				
 				World world = ILogisticsTask.GetSourceWorld(task);
 				BlockPos pos = ILogisticsTask.GetSourcePosition(task);
 				if (world.provider.getDimension() != this.dimension) {
@@ -714,6 +737,20 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	protected void claimTask(ILogisticsTask task) {
 		LogisticsNetwork network = this.getLogisticsNetwork();
 		network.getTaskRegistry().claimTask(task, this);
+	}
+	
+	protected void rejectTask(ILogisticsTask task, int bonusPenalty) {
+		final int penalty = bonusPenalty + (20 * 5) + rand.nextInt(60);
+		this.taskRetryMap.put(task, ticksExisted + penalty);
+	}
+	
+	protected boolean taskIsRejected(ILogisticsTask task) {
+		Integer time = taskRetryMap.get(task);
+		if (time == null || time <= ticksExisted) {
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private boolean searchForJobs() {
@@ -787,6 +824,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 									}
 								}
 							}
+						} else {
+							rejectTask(task, 0); // Remember that we rejected it and put it in cooldown
 						}
 					}
 					

@@ -1,22 +1,114 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
 import com.smanzana.nostrumfairies.utils.Paths;
 
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 
 public class EntityDwarfBuilder extends EntityDwarf {
+	
+	protected static Map<World, Map<BlockPos, BlockPos>> BuildSpots = new HashMap<>();
+	
+	protected static void AddBuildSpot(World world, BlockPos pos, BlockPos spot) {
+		Map<BlockPos, BlockPos> map = BuildSpots.get(world);
+		if (map == null) {
+			map = new HashMap<>();
+			BuildSpots.put(world, map);
+		}
+		
+		map.put(pos, spot);
+	}
+	
+	protected static @Nullable BlockPos GetBuildSpot(World world, BlockPos pos) {
+		Map<BlockPos, BlockPos> map = BuildSpots.get(world);
+		if (map == null) {
+			return null;
+		}
+		
+		return map.get(pos);
+	}
+	
+	protected static void ClearBuildSpot(World world, BlockPos pos) {
+		Map<BlockPos, BlockPos> map = BuildSpots.get(world);
+		if (map == null) {
+			return;
+		}
+		
+		map.remove(pos);
+	}
 
 	public EntityDwarfBuilder(World world) {
 		super(world);
 		
 		this.height = 0.85f;
 		this.workDistanceSq = 24 * 24;
+	}
+	
+	protected @Nullable BlockPos findBuildSpot(BlockPos buildCell) {
+		BlockPos buildPos = GetBuildSpot(worldObj, buildCell);
+		if (buildPos != null) {
+			return buildPos;
+		}
+		
+		buildPos = findEmptySpot(buildCell, false, true);
+		
+		// Is the block we shifted to where we are?
+		if (this.getPosition().equals(buildPos) || this.getDistanceSqToCenter(buildPos) <= 1) {
+			AddBuildSpot(worldObj, buildCell, buildPos);
+			return buildPos; // do nothing. Next loop will call it 'success'
+		}
+		if (this.getNavigator().tryMoveToXYZ(buildPos.getX(), buildPos.getY(), buildPos.getZ(), 1.0f)) {
+			AddBuildSpot(worldObj, buildCell, buildPos);
+			return buildPos; // Sweet.
+		}
+		
+		// Otherwise try and find a place underneat the build spot to walk to instead
+		MutableBlockPos cursor = new MutableBlockPos();
+		final int yIncr = 1 * (buildPos.getY() > posY ? -1 : 1);
+		
+		boolean lastSolid = true;
+		for (int x = -1; x <= 1; x++)
+		for (int z = -1; z <= 1; z++) {
+			cursor.setPos(buildCell.getX() + x, buildCell.getY() + yIncr, buildCell.getZ() + z);
+			
+			for (int i = 0; i < 15; i++) {
+				if (cursor.getY() <= 0) {
+					break;
+				}
+				if (!lastSolid) {
+					// Last block was breathable. Are we suddenly in solid ground?
+					lastSolid = worldObj.getBlockState(cursor).getMaterial().blocksMovement();
+					if (lastSolid) {
+						// Can we path there?
+						//System.out.println("Solid: " + cursor);
+						BlockPos candidate = cursor.toImmutable().up();
+						if (this.getPosition().equals(candidate)
+								|| this.getDistanceSqToCenter(candidate) <= 1
+								|| this.getNavigator().tryMoveToXYZ(candidate.getX(), candidate.getY(), candidate.getZ(), 1.0f)) {
+							AddBuildSpot(worldObj, buildCell, candidate);
+							return candidate; // Yay
+						}
+					}
+				} else {
+					// Last block was solid so we can't stand there. Keep travelling down looking for air
+					lastSolid = worldObj.getBlockState(cursor).getMaterial().blocksMovement();
+				}
+				cursor.setY(cursor.getY() + yIncr);
+			}
+		}
+		
+		return null;
 	}
 	
 	@Override
@@ -37,37 +129,91 @@ public class EntityDwarfBuilder extends EntityDwarf {
 			
 			// Find a better block to stand, if we weren't told explicitely to stand there
 			if (target == build.getTargetBlock()) {
-				target = findEmptySpot(target, true, true);
+				target = findBuildSpot(target);
 				if (target == null) {
 					return false;
 				}
 			}
 			
 			// Check for pathing
-			if (this.getDistanceSq(target) < .2) {
+			if (this.getDistanceSq(target) < 1) {
+				// extra case for if the navigator refuses cause we're too close
 				return true;
 			}
-			Path currentPath = navigator.getPath();
+			
+			//Path currentPath = navigator.getPath();
 			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
 			if (success) {
 				success = Paths.IsComplete(navigator.getPath(), target, 2);
 			}
-			if (currentPath == null) {
-				if (!success) {
-					navigator.setPath(currentPath, 1.0);
-				}
-			} else {
-				navigator.setPath(currentPath, 1.0);
-			}
-			if (success) {
-				return true;
-			} else if (this.getDistanceSq(target) < 1) {
-				// extra case for if the navigator refuses cause we're too close
+			
+			if (!success) {
+				// Builders just teleport
+//				this.setPosition(target.getX() + .5, target.getY(), target.getZ() + .5);
 				return true;
 			}
+			
+//			if (currentPath == null) {
+//				if (!success) {
+//					navigator.setPath(currentPath, 1.0);
+//				}
+//			} else {
+//				navigator.setPath(currentPath, 1.0);
+//			}
+//			if (success) {
+//				return true;
+//			} else 
 		}
 		
 		return false;
+	}
+	
+	@Override
+	protected void onTaskTick(ILogisticsTask task) {
+		
+		// Builder dwarves have special movement options...
+		LogisticsSubTask sub = task.getActiveSubtask();
+		if (sub != null && sub.getType() == LogisticsSubTask.Type.MOVE && task instanceof LogisticsTaskBuildBlock) {
+			this.setPose(ArmPose.IDLE);
+			if (this.navigator.noPath()) {
+				// First time through?
+				if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
+					|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < 1)) {
+					task.markSubtaskComplete();
+					if (movePos != null) {
+						ClearBuildSpot(worldObj, movePos);
+					}
+					movePos = null;
+					moveEntity = null;
+					return;
+				}
+				movePos = null;
+				moveEntity = null;
+				
+				movePos = sub.getPos();
+				if (movePos == null) {
+					moveEntity = sub.getEntity();
+					if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+						this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+					}
+				} else {
+					BlockPos betterSpot = findBuildSpot(movePos);
+					// If a blockpos is returned, may have already set path
+					if (betterSpot != null) {
+						movePos = betterSpot;
+					}
+					
+					if (this.getNavigator().noPath()) {
+						if (!navigator.tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0)) {
+							//this.moveHelper.setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
+							this.setPosition(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5);
+						}
+					}
+				}
+			}
+		} else {
+			super.onTaskTick(task);
+		}
 	}
 
 	@Override

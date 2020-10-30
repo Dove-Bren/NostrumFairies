@@ -410,7 +410,12 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	}
 	
 	protected boolean isSpotValid(World world, BlockPos pos) {
-		return world.isAirBlock(pos) || world.getBlockState(pos).getBlock().isReplaceable(world, pos);
+		if (world.isAirBlock(pos)
+				|| world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
+			return (state.getBlock().canPlaceBlockAt(world, pos));
+		}
+		
+		return false;
 	}
 
 	@Override
