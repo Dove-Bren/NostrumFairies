@@ -11,7 +11,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.FeySignRenderer;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -50,12 +49,7 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.terraingen.SaplingGrowTreeEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class WoodcuttingBlock extends BlockContainer {
 
@@ -170,7 +164,7 @@ public class WoodcuttingBlock extends BlockContainer {
 	
 	@Override
 	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return true;
+        return false;
     }
 	
 	@Override
@@ -443,28 +437,28 @@ public class WoodcuttingBlock extends BlockContainer {
 			}
 		}
 		
-		private boolean inRange(BlockPos pos) {
-			// Max distance with a square radius of X is X times sqrt(3).
-			// sqrt(3) is ~1.7321
-			
-			// Idk if this is actually faster than 6 conditionals.
-			return this.getDistanceSq(pos.getX(), pos.getY(), pos.getZ()) <=
-						Math.pow(radius * 1.7321, 2);
-		}
-		
-		@SubscribeEvent
-		public void onGrow(SaplingGrowTreeEvent e) {
-			 if (e.getWorld() == this.worldObj && inRange(e.getPos())) {
-				 this.scan();
-			 }
-		}
+//		private boolean inRange(BlockPos pos) {
+//			// Max distance with a square radius of X is X times sqrt(3).
+//			// sqrt(3) is ~1.7321
+//			
+//			// Idk if this is actually faster than 6 conditionals.
+//			return this.getDistanceSq(pos.getX(), pos.getY(), pos.getZ()) <=
+//						Math.pow(radius * 1.7321, 2);
+//		}
+//		
+//		@SubscribeEvent
+//		public void onGrow(SaplingGrowTreeEvent e) {
+//			 if (e.getWorld() == this.worldObj && inRange(e.getPos())) {
+//				 this.scan();
+//			 }
+//		}
 		
 		@Override
 		public void setWorldObj(World worldIn) {
 			super.setWorldObj(worldIn);
-			if (!worldIn.isRemote) {
-				MinecraftForge.TERRAIN_GEN_BUS.register(this);
-			}
+//			if (!worldIn.isRemote) {
+//				MinecraftForge.TERRAIN_GEN_BUS.register(this);
+//			}
 		}
 		
 		// TODO make configurable!
@@ -534,16 +528,6 @@ public class WoodcuttingBlock extends BlockContainer {
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
-	public static class WoodcuttingBlockRenderer extends FeySignRenderer<WoodcuttingBlockTileEntity> {
-		
-		public static void init() {
-			FeySignRenderer.init(WoodcuttingBlockTileEntity.class, new WoodcuttingBlockRenderer());
-			ClientRegistry.bindTileEntitySpecialRenderer(WoodcuttingBlockTileEntity.class,
-					new WoodcuttingBlockRenderer());
-		}
-	}
-
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		TileEntity ent = new WoodcuttingBlockTileEntity();

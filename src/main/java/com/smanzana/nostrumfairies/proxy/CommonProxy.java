@@ -30,6 +30,7 @@ import com.smanzana.nostrumfairies.capabilities.templates.ITemplateViewerCapabil
 import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapability;
 import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapabilityStorage;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.entity.ItemArraySerializer;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfCrafter;
@@ -43,6 +44,7 @@ import com.smanzana.nostrumfairies.entity.fey.EntityGnomeCrafter;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FairyGael;
 import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
@@ -112,6 +114,16 @@ public class CommonProxy {
 		capabilityHandler = new CapabilityHandler();
 		NetworkHandler.getInstance();
 		NostrumFairiesSounds.registerSounds();
+		
+		IFeyWorker.FairyGeneralStatus.Init();
+		EntityDwarf.ArmPose.Init();
+		EntityElf.ArmPose.Init();
+		EntityElfArcher.BattleStance.Init();
+		EntityShadowFey.BattleStance.Init();
+		EntityGnome.ArmPose.Init();
+		ItemArraySerializer.Init();
+		EntityPersonalFairy.FairyJob.Init();
+		
     	
     	int entityID = 0;
     	EntityRegistry.registerModEntity(EntityTestFairy.class, "test_fairy",

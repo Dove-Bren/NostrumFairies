@@ -4,7 +4,6 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
@@ -32,10 +31,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class CraftingBlockElf extends BlockContainer {
 	
@@ -126,7 +122,7 @@ public class CraftingBlockElf extends BlockContainer {
 	
 	@Override
 	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return true;
+        return false;
     }
 	
 	@Override
@@ -264,15 +260,6 @@ public class CraftingBlockElf extends BlockContainer {
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
-	public static class CraftingBlockElfRenderer extends TileEntityLogisticsRenderer<CraftingBlockElfTileEntity> {
-		
-		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(CraftingBlockElfTileEntity.class,
-					new CraftingBlockElfRenderer());
-		}
-	}
-
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		return new CraftingBlockElfTileEntity();

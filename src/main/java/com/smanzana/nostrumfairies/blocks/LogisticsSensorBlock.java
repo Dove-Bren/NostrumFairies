@@ -6,7 +6,6 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
@@ -33,10 +32,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class LogisticsSensorBlock extends BlockContainer
 {
@@ -191,15 +187,6 @@ public class LogisticsSensorBlock extends BlockContainer
 		return true;
 	}
 	
-	@SideOnly(Side.CLIENT)
-	public static class LogisticsSensorRenderer extends TileEntityLogisticsRenderer<LogisticsSensorTileEntity> {
-		
-		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(LogisticsSensorTileEntity.class,
-					new LogisticsSensorRenderer());
-		}
-	}
-
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		return new LogisticsSensorTileEntity();

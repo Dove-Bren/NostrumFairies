@@ -270,6 +270,7 @@ public class TemplateBlock extends BlockContainer {
 	}
 	
 	@SubscribeEvent
+	@SideOnly(Side.CLIENT)
 	public void onBlockHighlight(DrawBlockHighlightEvent event) {
 		if (event.getTarget().typeOfHit == RayTraceResult.Type.BLOCK) {
 			BlockPos pos = event.getTarget().getBlockPos();

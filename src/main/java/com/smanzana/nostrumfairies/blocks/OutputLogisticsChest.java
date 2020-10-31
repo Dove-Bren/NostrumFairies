@@ -8,7 +8,6 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
@@ -32,10 +31,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class OutputLogisticsChest extends BlockContainer {
 	
@@ -332,15 +328,6 @@ public class OutputLogisticsChest extends BlockContainer {
 			if (worldObj != null && !worldObj.isRemote && requester != null) {
 				requester.updateRequestedItems(getItemRequests());
 			}
-		}
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public static class OutputChestRenderer extends TileEntityLogisticsRenderer<OutputChestTileEntity> {
-		
-		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(OutputChestTileEntity.class,
-					new OutputChestRenderer());
 		}
 	}
 

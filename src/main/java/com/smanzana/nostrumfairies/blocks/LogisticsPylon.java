@@ -6,7 +6,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.block.Block;
@@ -28,10 +27,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class LogisticsPylon extends BlockContainer {
 	
@@ -198,15 +194,6 @@ public class LogisticsPylon extends BlockContainer {
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
-	public static class PylonRenderer extends TileEntityLogisticsRenderer<PylonTileEntity> {
-		
-		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(PylonTileEntity.class,
-					new PylonRenderer());
-		}
-	}
-
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		return new PylonTileEntity();

@@ -9,7 +9,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.FeySignRenderer;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -48,11 +47,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.item.ItemExpireEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class GatheringBlock extends BlockContainer {
 
@@ -167,7 +163,7 @@ public class GatheringBlock extends BlockContainer {
 	
 	@Override
 	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return true;
+        return false;
     }
 	
 	@Override
@@ -398,16 +394,6 @@ public class GatheringBlock extends BlockContainer {
 			if (worldObj != null && worldObj.isRemote) {
 				StaticTESRRenderer.instance.update(worldObj, pos, null);
 			}
-		}
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public static class GatheringBlockRenderer extends FeySignRenderer<GatheringBlockTileEntity> {
-		
-		public static void init() {
-			FeySignRenderer.init(GatheringBlockTileEntity.class, new GatheringBlockRenderer());
-			ClientRegistry.bindTileEntitySpecialRenderer(GatheringBlockTileEntity.class,
-					new GatheringBlockRenderer());
 		}
 	}
 

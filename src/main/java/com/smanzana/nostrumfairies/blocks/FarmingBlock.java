@@ -10,7 +10,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.FeySignRenderer;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -49,10 +48,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class FarmingBlock extends BlockContainer {
 
@@ -166,7 +162,7 @@ public class FarmingBlock extends BlockContainer {
 	
 	@Override
 	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return true;
+        return false;
     }
 	
 	@Override
@@ -409,16 +405,6 @@ public class FarmingBlock extends BlockContainer {
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
-	public static class FarmingBlockRenderer extends FeySignRenderer<FarmingBlockTileEntity> {
-		
-		public static void init() {
-			FeySignRenderer.init(FarmingBlockTileEntity.class, new FarmingBlockRenderer());
-			ClientRegistry.bindTileEntitySpecialRenderer(FarmingBlockTileEntity.class,
-					new FarmingBlockRenderer());
-		}
-	}
-
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		TileEntity ent = new FarmingBlockTileEntity();

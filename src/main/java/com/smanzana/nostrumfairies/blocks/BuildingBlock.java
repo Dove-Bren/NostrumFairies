@@ -9,13 +9,9 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector3f;
-
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.client.render.FeySignRenderer;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.items.TemplateScroll;
@@ -26,7 +22,6 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
 import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
-import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -38,10 +33,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.VertexBuffer;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -65,11 +56,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ExplosionEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BuildingBlock extends BlockContainer {
 
@@ -182,7 +170,7 @@ public class BuildingBlock extends BlockContainer {
 	
 	@Override
 	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return true;
+        return false;
     }
 	
 	@Override
@@ -510,72 +498,7 @@ public class BuildingBlock extends BlockContainer {
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
-	public static class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEntity> {
-		
-		public static void init() {
-			FeySignRenderer.init(BuildingBlockTileEntity.class, new BuildingBlockRenderer());
-			ClientRegistry.bindTileEntitySpecialRenderer(BuildingBlockTileEntity.class,
-					new BuildingBlockRenderer());
-		}
-		
-		private static final float ICON_INNEROFFSETX = (2f / 16f);
-		private static final float ICON_INNEROFFSETX2 = (1f / 16f);
-		private static final float ICON_SIZE = .2f;
-		private static final float THICCNESS = .035f;
-		private static final float HEIGHT = .5f - .035f;
-		private static final Vector3f ICON_OFFSETS[] = new Vector3f[] {
-				new Vector3f(.5f - ICON_INNEROFFSETX + (ICON_SIZE / 2),	HEIGHT, .5f + THICCNESS), // S
-				new Vector3f(.5f - THICCNESS,					HEIGHT, .5f - ICON_INNEROFFSETX + (ICON_SIZE / 2)), // W
-				new Vector3f(.5f + ICON_INNEROFFSETX - (ICON_SIZE / 2),	HEIGHT, .5f - THICCNESS), // N
-				new Vector3f(.5f + THICCNESS,					HEIGHT, .5f + ICON_INNEROFFSETX - (ICON_SIZE / 2)), // E
-		};
-		
-		private static final Vector3f SCROLL_OFFSETS[] = new Vector3f[] {
-				new Vector3f(.5f + ICON_INNEROFFSETX2 + (ICON_SIZE / 2),	HEIGHT - .2f, .5f- + THICCNESS), // S
-				new Vector3f(.5f - THICCNESS,					HEIGHT - .2f, .5f + ICON_INNEROFFSETX2 + (ICON_SIZE / 2)), // W
-				new Vector3f(.5f - ICON_INNEROFFSETX2 - (ICON_SIZE / 2),	HEIGHT - .2f, .5f - THICCNESS), // N
-				new Vector3f(.5f + THICCNESS,					HEIGHT - .2f, .5f - ICON_INNEROFFSETX2 - (ICON_SIZE / 2)), // E
-		};
-		
 		@Override
-		protected Vector3f getOffset(BuildingBlockTileEntity te, EnumFacing facing) {
-			return ICON_OFFSETS[facing.getHorizontalIndex()];
-		}
-		
-		@Override
-		public void renderTileEntityFast(BuildingBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, VertexBuffer buffer) {
-			// Use super to render sign icon
-			super.renderTileEntityFast(te, x, y, z, partialTicks, destroyStage, buffer);
-			
-			// Draw template on table, if present
-			ItemStack template = te.getTemplateScroll();
-			if (template != null) {
-				Minecraft mc = Minecraft.getMinecraft();
-				IBakedModel model = null;
-				if (template != null) {
-					model = mc.getRenderItem().getItemModelMesher().getItemModel(template);
-				}
-				
-				if (model == null || model == mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel()) {
-					model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());
-				}
-				
-				mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-				
-				final int color = 0xFFFFFFFF;
-				final EnumFacing facing = te.getSignFacing(te);
-				final Vector3f offset = SCROLL_OFFSETS[facing.getHorizontalIndex()];
-				final Matrix4f transform = new Matrix4f(getTransform(te, facing))
-						.scale(new Vector3f(.5f, .5f, .5f));
-						//.rotate(90f, new Vector3f(1f, 0, 0));
-				
-				RenderFuncs.RenderModelWithColor(model, color, buffer, offset, transform);
-			}
-		}
-	}
-
-	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		TileEntity ent = new BuildingBlockTileEntity();
 		return ent;

@@ -9,12 +9,9 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.lwjgl.opengl.GL11;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.FeySignRenderer;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -39,12 +36,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -68,11 +59,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 
 public class MiningBlock extends BlockContainer {
@@ -192,7 +180,7 @@ public class MiningBlock extends BlockContainer {
 	
 	@Override
 	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return true;
+        return false;
     }
 	
 	@Override
@@ -1404,169 +1392,16 @@ public class MiningBlock extends BlockContainer {
 				StaticTESRRenderer.instance.update(worldObj, pos, null);
 			}
 		}
+		
+		public void collectOreLocations(Set<BlockPos> locationSet) {
+			locationSet.addAll(oreLocations);
+		}
+		
+		public void collectRepairLocations(Set<BlockPos> locationSet) {
+			locationSet.addAll(repairLocations);
+		}
 	}
 	
-	@SideOnly(Side.CLIENT)
-	public static class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> {
-		
-		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(MiningBlockTileEntity.class,
-					new MiningBlockRenderer());
-			FeySignRenderer.init(MiningBlockTileEntity.class, new MiningBlockRenderer());
-		}
-		
-		protected void renderCube(BlockPos origin, BlockPos target, float red, float green, float blue, float alpha) {
-			Tessellator tessellator = Tessellator.getInstance();
-			VertexBuffer buffer = tessellator.getBuffer();
-			GlStateManager.pushMatrix();
-			GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
-			buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-			
-			buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-			buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
-			buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
-			buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
-			buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-			
-			tessellator.draw();
-			
-			buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-			
-			buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-			buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
-			buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
-			buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
-			buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-			
-			tessellator.draw();
-			
-			buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-			
-			buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-				buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-			buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
-				buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
-			buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
-				buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
-			buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
-				buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
-			
-			tessellator.draw();
-			GlStateManager.popMatrix();
-		}
-		
-		@Override
-		public void renderTileEntityAt(MiningBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
-			super.renderTileEntityAt(te, x, y, z, partialTicks, destroyStage);
-			
-			Minecraft mc = Minecraft.getMinecraft();
-			EntityPlayer player = mc.thePlayer;
-			
-			// TODO make a capability and see if they can see logistics stuff / its turned on
-			if (player != null && player.isSpectator() || player.isCreative()) { // REPLACE ME
-				LogisticsNetwork network = te.getNetwork();
-				if (network != null) {
-					
-					BlockPos origin = te.getPos();
-					
-					GlStateManager.pushMatrix();
-					GlStateManager.translate(x, y, z);
-					
-					GlStateManager.glLineWidth(3f);
-					GlStateManager.disableLighting();
-					GlStateManager.enableTexture2D();
-					GlStateManager.disableTexture2D();
-					GlStateManager.enableAlpha();
-					GlStateManager.enableBlend();
-					GlStateManager.disableAlpha();
-					GlStateManager.disableBlend();
-					GlStateManager.disableDepth();
-					
-					OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
-					
-					for (BlockPos target : te.oreLocations) {
-						renderCube(origin, target, 1, 0, 0, 1);
-					}
-					
-					for (BlockPos target : te.repairLocations) {
-						renderCube(origin, target, 0, 1, 0, 1);
-					}
-					
-//					red = 0f;
-//					blue = 0f;
-//					green = 1f;
-//					alpha = .7f;
-//					
-//					for (BlockPos target : te.taskMap.keySet()) {
-//						
-//						GlStateManager.pushMatrix();
-//						GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
-//						buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-//						
-//						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-//						
-//						tessellator.draw();
-//						
-//						buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-//						
-//						buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-//						
-//						tessellator.draw();
-//						
-//						buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-//						
-//						buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-//							buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
-//							buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
-//							buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
-//							buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
-//						
-//						tessellator.draw();
-//						GlStateManager.popMatrix();
-//					}
-					
-					GlStateManager.enableDepth();
-					GlStateManager.enableTexture2D();
-					
-//					GlStateManager.disableLighting();
-//					GlStateManager.disableTexture2D();
-//					GlStateManager.disableAlpha();
-//					GlStateManager.disableBlend();
-//					GlStateManager.disableDepth();
-					
-					GlStateManager.popMatrix();
-					
-//					for (ILogisticsComponent component : neighbors) {
-//						BlockPos pos = component.getPosition();
-//						GlStateManager.glLineWidth(2f);
-//						GlStateManager.disableLighting();
-//						GlStateManager.disableAlpha();
-//						GlStateManager.disableBlend();
-//						buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-//						
-//						buffer.pos(.5, 1.25, .5).color(1f, .2f, .4f, .8f).endVertex();
-//						buffer.pos((pos.getX() - origin.getX()) + .5,
-//								(pos.getY() - origin.getY()) + 1.25,
-//								(pos.getZ() - origin.getZ()) + .5).color(1f, .2f, .4f, .8f).endVertex();
-//						
-//						tessellator.draw();
-//					}
-				}
-			}
-		}
-	}
-
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		TileEntity ent = new MiningBlockTileEntity();

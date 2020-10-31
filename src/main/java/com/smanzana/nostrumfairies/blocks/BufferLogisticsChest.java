@@ -7,7 +7,6 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
@@ -31,10 +30,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BufferLogisticsChest extends BlockContainer {
 	
@@ -330,15 +326,6 @@ public class BufferLogisticsChest extends BlockContainer {
 		@Override
 		public boolean isItemBuffer() {
 			return true;
-		}
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public static class BufferChestRenderer extends TileEntityLogisticsRenderer<BufferChestTileEntity> {
-		
-		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(BufferChestTileEntity.class,
-					new BufferChestRenderer());
 		}
 	}
 
