@@ -8,7 +8,10 @@ import javax.annotation.Nullable;
 import org.lwjgl.input.Mouse;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.network.NetworkHandler;
+import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.client.Minecraft;
@@ -39,21 +42,21 @@ public class StorageMonitorScreen extends GuiScreen {
 	private static final int GUI_CELL_ROWS = GUI_TOP_INV_HEIGHT / GUI_INV_CELL_LENGTH;
 	private static final int GUI_CELL_COLS = GUI_TOP_INV_WIDTH / GUI_INV_CELL_LENGTH;
 
-	private LogisticsNetwork network;
+	private StorageMonitorTileEntity monitor;
 	private double scroll;
 	private double scrollLag;
 	private int mouseClickOffsetY;
 	private boolean scrollClicked;
 	
-	public StorageMonitorScreen(LogisticsNetwork network) {
-		this.network = network;
+	public StorageMonitorScreen(StorageMonitorTileEntity monitor) {
+		this.monitor = monitor;
 	}
 	
 	@Override	
 	public void updateScreen() {
-		if (network != null) {
+		if (monitor.getNetwork() != null) {
 			// TODO toggle excluding 'buffer' chest items
-			final List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
+			final List<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems();
 			final int len = items.size();
 			final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
 			final int spilloverRows = rows - GUI_CELL_ROWS; // scroll bar represents this many rows of pixels
@@ -69,6 +72,15 @@ public class StorageMonitorScreen extends GuiScreen {
 						scrollLag += Math.signum(diff) * speedAdj;
 					}
 				}
+			}
+		}
+		
+		if (monitor.getWorld().getTotalWorldTime() % 20 == 0) {
+			LogisticsNetwork network = monitor.getNetwork();
+			if (network != null) {
+				NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest(network.getUUID()));
+			} else {
+				NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest());
 			}
 		}
 	}
@@ -126,8 +138,8 @@ public class StorageMonitorScreen extends GuiScreen {
 		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
 		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXT);
 		
-		if (network != null) {
-			final List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
+		if (monitor.getNetwork() != null) {
+			final List<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems();
 			final int len = items.size();
 			final int rows = (int) Math.ceil((double)len / (double)GUI_CELL_COLS);
 			final int spilloverRows = rows - GUI_CELL_ROWS;
@@ -206,8 +218,8 @@ public class StorageMonitorScreen extends GuiScreen {
 		
 		if (finalize) {
 			// Round scroll to an even increment for the inventory
-			if (network != null) {
-				final List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
+			if (monitor.getNetwork() != null) {
+				final List<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems();
 				final int len = items.size();
 				final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
 				final int spilloverRows = rows - GUI_CELL_ROWS;
@@ -245,8 +257,8 @@ public class StorageMonitorScreen extends GuiScreen {
 		int wheel = Mouse.getEventDWheel();
 		if (wheel != 0) {
 			// 120 seems to be scroll bar rotation magnitude?
-			if (network != null) {
-				final List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
+			if (monitor.getNetwork() != null) {
+				final List<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems();
 				final int len = items.size();
 				final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
 				final int spilloverRows = rows - GUI_CELL_ROWS; // scroll bar represents this many rows of pixels

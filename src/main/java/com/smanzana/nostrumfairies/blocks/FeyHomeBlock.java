@@ -188,7 +188,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	}
 	
 	private int metaFromFacing(EnumFacing facing) {
-		return facing.getHorizontalIndex();
+		return facing.getHorizontalIndex() << 1;
 	}
 	
 	@Override
@@ -382,8 +382,8 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		EnumFacing facing = state.getValue(FACING);
 		this.spawn(worldIn, pos, type, facing);
 		
-		worldIn.setBlockState(pos.up(), this.getDefaultState()
-				.withProperty(BLOCKFUNC, BlockFunction.TOP));
+//		worldIn.setBlockState(pos.up(), this.getDefaultState()
+//				.withProperty(BLOCKFUNC, BlockFunction.TOP));
 	}
 	
 	@Override

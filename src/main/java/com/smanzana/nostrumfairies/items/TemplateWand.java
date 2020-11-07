@@ -14,6 +14,8 @@ import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.TemplateWandUpdate;
 import com.smanzana.nostrumfairies.network.messages.TemplateWandUpdate.WandUpdateType;
 import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
+import com.smanzana.nostrummagica.NostrumMagica;
+import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -250,13 +252,13 @@ public class TemplateWand extends Item implements ILoreTagged {
 	
 	@Override
 	public Lore getBasicLore() {
-		return new Lore().add("");
+		return new Lore().add("A magic wand with a geogem inside of it.", "This wand allows you to select regions in the world and save them as templates.", "From there, you can place the template in the world!");
 				
 	}
 	
 	@Override
 	public Lore getDeepLore() {
-		return new Lore().add("");
+		return new Lore().add("A magic wand with a geogem inside of it.", "Template wands have three modes.", "The first mode allows you to select a region in space. The first block you click is the anchor, and the second defines the bounds.", "The second mode is for capturing selections. You'll need a blank map in order to capture the template.", "The third mode allows you to place templates. Using the wand in this mode opens up an inventory where all templates in teh wand can be arranged. Shifting while in teh mode allows you to place the template.", "Template blocks don't get built automatically. You'll need workers to do that for you.");
 	}
 
 	@Override
@@ -434,7 +436,12 @@ public class TemplateWand extends Item implements ILoreTagged {
 		}
 		
 		final INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
-		if (attr == null || !(attr.builderFairyUnlocked())) {
+		if (attr == null) {
+			return EnumActionResult.FAIL;
+		}
+		
+		final INostrumMagic magic = NostrumMagica.getMagicWrapper(playerIn);
+		if (magic == null || !magic.getCompletedResearches().contains("logistics_construction") ) {
 			return EnumActionResult.FAIL;
 		}
 		

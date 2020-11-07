@@ -127,13 +127,13 @@ public class FairyInstrument extends Item implements ILoreTagged {
 	
 	@Override
 	public Lore getBasicLore() {
-		return new Lore().add("");
+		return new Lore().add("These instruments are filled with a wild, chaotic, but friendly energy. Simply holding them makes you feel more at peace.", "If what the fairies told you is correct, this instrument should help you balance yourself and allow you to commune with fairies in gaels.");
 				
 	}
 	
 	@Override
 	public Lore getDeepLore() {
-		return new Lore().add("");
+		return new Lore().add("These instruments are filled with a wild, chaotic, but friendly energy. Simply holding them makes you feel more at peace.", "Like the fairies told you, playing this instrument allows you to commune more easily with fairies in gaels. Gaels that have been sealed and attuned can be arranged. Furthermore, individual fairies can be instructed.");
 	}
 
 	@Override

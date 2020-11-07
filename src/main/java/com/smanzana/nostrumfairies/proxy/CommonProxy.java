@@ -56,6 +56,7 @@ import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
+import com.smanzana.nostrumfairies.items.SoulJar;
 import com.smanzana.nostrumfairies.items.TemplateScroll;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
@@ -219,13 +220,13 @@ public class CommonProxy {
     			false
     			);
     	
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 60, 2, 6, EnumCreatureType.MONSTER, 
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 25, 1, 2, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.MAGICAL));
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 50, 1, 3, EnumCreatureType.MONSTER, 
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 18, 1, 3, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.FOREST));
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 30, 2, 6, EnumCreatureType.MONSTER, 
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 12, 2, 2, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.SPOOKY));
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 40, 1, 3, EnumCreatureType.MONSTER, 
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 15, 1, 2, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.DENSE));
 
     	registerItems();
@@ -278,6 +279,10 @@ public class CommonProxy {
     	GameRegistry.register(
     			TemplateScroll.instance().setRegistryName(TemplateScroll.ID));
     	TemplateScroll.init();
+    	
+    	GameRegistry.register(
+    			SoulJar.instance().setRegistryName(SoulJar.ID));
+    	SoulJar.init();
     }
     
     private void registerBlocks() {
@@ -408,9 +413,14 @@ public class CommonProxy {
     	LoreRegistry.instance().register(FeyResource.instance());
     	LoreRegistry.instance().register(FeyStone.instance());
     	LoreRegistry.instance().register(FairyGael.instance());
+    	LoreRegistry.instance().register(FairyInstrument.instance());
+    	LoreRegistry.instance().register(FeySoulStone.instance());
+    	LoreRegistry.instance().register(TemplateWand.instance());
+    	LoreRegistry.instance().register(TemplateScroll.instance());
     	//LoreRegistry.instance().register(new EntityShadowFey());
     	LoreRegistry.instance().register(EntityShadowFey.ShadowFeyConversionLore.instance());
     	LoreRegistry.instance().register(FeyResource.FeyFriendLore.instance());
+    	LoreRegistry.instance().register(SoulJar.instance());
     }
     
     private void registerRituals() {
@@ -844,6 +854,17 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(CraftingBlockDwarf.instance())))
 			);
     	
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("soul_jar",
+				SoulJar.createFake(false),
+				null,
+				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.GINSENG, ReagentType.SKY_ASH},
+				FeySoulStone.create(SoulStoneType.GEM),
+				new ItemStack[] {new ItemStack(Items.GHAST_TEAR), null, null, new ItemStack(Items.ENDER_PEARL)},
+				new RRequirementResearch("soul_jars"),
+				new OutcomeSpawnItem(SoulJar.createFake(false)))
+			);
+    	
     }
     
     private void registerResearch() {
@@ -1021,6 +1042,11 @@ public class CommonProxy {
 			.reference("ritual::storage_monitor", "ritual.storage_monitor.name")
 			.reference("ritual::storage_sensor", "ritual.storage_sensor.name")
 		.build("logistics_sensors", NostrumFairies.researchTab, Size.NORMAL, 1, 2, true, new ItemStack(StorageMonitor.instance()));
+		
+		NostrumResearch.startBuilding()
+			.hiddenParent("fey_souls")
+			.reference("ritual::soul_jar", "ritual.soul_jar.name")
+		.build("soul_jars", NostrumFairies.researchTab, Size.NORMAL, 0, 2, true, new ItemStack(SoulJar.instance()));
     }
     
     private void registerPotions() {

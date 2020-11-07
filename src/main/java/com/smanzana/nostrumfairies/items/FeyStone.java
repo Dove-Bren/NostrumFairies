@@ -117,13 +117,13 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 	
 	@Override
 	public Lore getBasicLore() {
-		return new Lore().add("");
+		return new Lore().add("Fey stones are pure gemstones imbued with fey essence.", "The fey appear to like them!");
 				
 	}
 	
 	@Override
 	public Lore getDeepLore() {
-		return new Lore().add("");
+		return new Lore().add("Fey stones are pure gemstones imbued with fey essence.", "They can be slotted in different machines to improve performance, remove requirements, or add temporary slots!");
 	}
 
 	@Override

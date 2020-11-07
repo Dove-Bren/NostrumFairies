@@ -12,7 +12,6 @@ import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.CraftingStationActionMessage;
-import com.smanzana.nostrummagica.client.gui.container.AutoContainer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -87,7 +86,7 @@ public class CraftingStationGui {
 	private static final int GUI_BOOST_ICON_WIDTH = 21;
 	private static final int GUI_BOOST_ICON_HEIGHT = 21;
 
-	public static class CraftingStationContainer extends AutoContainer {
+	public static class CraftingStationContainer extends com.smanzana.nostrummagica.client.gui.container.AutoContainer {
 		
 		protected CraftingBlockTileEntity station;
 		private int stationInputCount;

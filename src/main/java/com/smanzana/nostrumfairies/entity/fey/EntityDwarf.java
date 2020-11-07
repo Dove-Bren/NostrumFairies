@@ -101,7 +101,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			}
 		}
 		
-		public static final PoseSerializer Serializer = new PoseSerializer();
+		public static PoseSerializer Serializer = null;
+		public static void Init() {
+			 Serializer = new PoseSerializer();
+		}
 	}
 	
 	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityDwarf.class, ArmPose.Serializer);

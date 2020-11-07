@@ -22,13 +22,13 @@ public class PathNavigatorGroundFixed extends PathNavigateGround {
 	@Override
 	protected void checkForStuck(Vec3d positionVec3) {
 		//Field totalTicksField = ReflectionHelper.findField(PathNavigate.class, "totalTicks");
-		final int totalTicks = ReflectionHelper.getPrivateValue(PathNavigate.class, this, "totalTicks");
-		Field ticksAtLastPosField = ReflectionHelper.findField(PathNavigate.class, "ticksAtLastPos");
-		Field lastPosCheckField = ReflectionHelper.findField(PathNavigate.class, "lastPosCheck");
-		Field timeoutCachedNodeField = ReflectionHelper.findField(PathNavigate.class, "timeoutCachedNode");
-		Field timeoutLimitField = ReflectionHelper.findField(PathNavigate.class, "timeoutLimit");
-		Field timeoutTimerField = ReflectionHelper.findField(PathNavigate.class, "timeoutTimer");
-		Field lastTimeoutCheckField = ReflectionHelper.findField(PathNavigate.class, "lastTimeoutCheck");
+		final int totalTicks = ReflectionHelper.getPrivateValue(PathNavigate.class, this, "totalTicks", "field_75510_g");
+		Field ticksAtLastPosField = ReflectionHelper.findField(PathNavigate.class, "ticksAtLastPos", "field_75520_h");
+		Field lastPosCheckField = ReflectionHelper.findField(PathNavigate.class, "lastPosCheck", "field_75521_i");
+		Field timeoutCachedNodeField = ReflectionHelper.findField(PathNavigate.class, "timeoutCachedNode", "field_188557_k");
+		Field timeoutLimitField = ReflectionHelper.findField(PathNavigate.class, "timeoutLimit", "field_188560_n");
+		Field timeoutTimerField = ReflectionHelper.findField(PathNavigate.class, "timeoutTimer", "field_188558_l");
+		Field lastTimeoutCheckField = ReflectionHelper.findField(PathNavigate.class, "lastTimeoutCheck", "field_188559_m");
 		
 		try {
 			if (totalTicks - ticksAtLastPosField.getInt(this) > 100) {

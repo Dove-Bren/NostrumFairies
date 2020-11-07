@@ -1,5 +1,9 @@
 itemGroup.nostrumfairies=Nostrum Fairies
 
+key.wandmode.backward.desc=Template Wand Mode (BACKWARD)
+key.wandmode.backward.desc=Template Wand Mode (FORWARD)
+key.wandscroll.desc=Scroll Template Wand
+
 tile.logistics_storage_chest.name=Logistics Chest
 tile.logistics_buffer_chest.name=Logistics Buffer
 tile.logistics_output_chest.name=Output Chest
@@ -41,7 +45,7 @@ item.fairy_instrument.harp.name=Fairy Lyre
 item.fairy_instrument.ocarina.name=Fairy Ocarina
 item.template_wand.name=Builder's Wand
 item.template_scroll.name=Builder's Template
-
+item.soul_jar.name=Soul Jar
 
 item.fey_resource.tears.name=Fey Tear
 item.fey_resource.essence.name=Fey Essence
@@ -65,6 +69,29 @@ info.mood.fey.good=Good
 info.mood.fey.average=Average
 info.mood.fey.bad=Bad
 info.mood.fey.awful=Awful
+
+status.generic.working=Working
+status.generic.return=Returning Items
+status.dwarf.relax=Taking A Load Off
+status.dwarf.revolt=Revolting
+status.dwarf.wander=Wandering
+status.dwarf.work.mine=Working The Mines
+status.dwarf.work.build=Building
+status.dwarf.work.repair=Repairing The Mine
+status.dwarf.work.craft=Smithing
+status.dwarf.work.generic=Working
+status.elf.relax=Seeking Leisure
+status.elf.revolt=Revolting
+status.elf.wander=Wandering
+status.elf.work.chop=Pruning The Woods
+status.fairy.relax=Fluttering Around
+status.fairy.revolt=Revolting
+status.fairy.wander=Wandering
+status.fairy.work.withdraw=Fetching Items
+status.fairy.work.deposit=Depositing Items
+status.gnome.relax=Relaxing
+status.gnome.revolt=Revolting
+status.gnome.wander=Wandering
 
 info.tablet.fail=You already know the secrets of the fey...
 info.fairy_gael.cracked=Cracked
@@ -115,6 +142,7 @@ ritual.building_block.name=Construct Construction Factory
 ritual.crafting_block.gnome.name=Create Gnomish Crafting Station
 ritual.crafting_block.elf.name=Create Elven Crafting Station
 ritual.crafting_block.dwarf.name=Create Dwarvern Crafting Station
+ritual.soul_jar.name=Craft Soul Jar
 
 research.tab.fey.name=Fey
 
@@ -190,3 +218,6 @@ research.logistics_sensors.info=  As you add more and more storage to your logis
 research.logistics_relays.name=Logistics Pylons
 research.logistics_relays.desc=Carrying the signal
 research.logistics_relays.info=  All of the logistics blocks you've worked with so far have to be placed around eachother to work with one another. Pylons allow you to expand your network further without using more expensive blocks and dwellings.|  Note, however, that many fey won't perform tasks that are too far away from their home blocks. Item tasks usually don't carry this restriction.
+research.soul_jars.name=Soul Jars
+research.soul_jars.desc=Gotta Catch'em All
+research.soul_jars.info=  Soul gems are great for transporting fey around. What if you applied that to other entities?|  Unfortunately, it doesn't appear to be that simple. You've created another type of soul canister -- the soul jar -- that can store and transport more types of entities, but it seems to still require the entity has a bond with you. As such, you can only carry tamed mobs.

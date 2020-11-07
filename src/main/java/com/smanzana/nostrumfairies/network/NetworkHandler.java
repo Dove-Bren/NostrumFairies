@@ -20,7 +20,7 @@ public class NetworkHandler {
 	
 	private static int discriminator = 10;
 	
-	private static final String CHANNEL_SYNC_NAME = "nostrumfairy_channel";
+	private static final String CHANNEL_SYNC_NAME = "nostrumfairy_net"; // must be <20 chars
 	
 	
 	public static SimpleNetworkWrapper getSyncChannel() {

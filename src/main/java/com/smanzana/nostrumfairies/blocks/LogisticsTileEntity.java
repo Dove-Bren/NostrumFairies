@@ -89,7 +89,11 @@ public abstract class LogisticsTileEntity extends TileEntity {
 //			}
 			
 			UUID compID = nbt.getUniqueId(NBT_NETWORK_COMP_UUID);
-			setNetworkComponent(LogisticsTileEntityComponent.find(compID));
+			LogisticsTileEntityComponent comp = LogisticsTileEntityComponent.find(compID);
+			
+			if (comp != null) {
+				setNetworkComponent(comp);
+			}
 		}
 	}
 	
@@ -108,9 +112,34 @@ public abstract class LogisticsTileEntity extends TileEntity {
     @Override
     public void updateContainingBlockInfo() {
     	super.updateContainingBlockInfo();
-    	if (!worldObj.isRemote && this.networkComponent == null) {
+    	if (/*!worldObj.isRemote && */ this.networkComponent == null) {
     		setNetworkComponent(makeNetworkComponent());
-    		NostrumFairies.instance.getLogisticsRegistry().addNewComponent(networkComponent);
+    		if (!worldObj.isRemote) {
+    			NostrumFairies.instance.getLogisticsRegistry().addNewComponent(networkComponent);
+    		}
+		}
+	}
+
+    @Override
+    public void setWorldObj(World worldIn) {
+    	super.setWorldObj(worldIn);
+    	// Sometimes the position isn't set yet >:(
+//    	if (/*!worldObj.isRemote && */ this.networkComponent == null) {
+//    		setNetworkComponent(makeNetworkComponent());
+//    		if (!worldObj.isRemote) {
+//    			NostrumFairies.instance.getLogisticsRegistry().addNewComponent(networkComponent);
+//    		}
+//		}
+    }
+
+    @Override
+    public void validate() {
+    	super.validate();
+    	if (worldObj != null && this.networkComponent == null) {
+    		setNetworkComponent(makeNetworkComponent());
+    		if (!worldObj.isRemote) {
+    			NostrumFairies.instance.getLogisticsRegistry().addNewComponent(networkComponent);
+    		}
 		}
     }
     

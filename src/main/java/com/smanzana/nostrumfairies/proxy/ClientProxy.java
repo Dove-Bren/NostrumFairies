@@ -75,12 +75,15 @@ import com.smanzana.nostrumfairies.items.FeyResource;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeyStone;
+import com.smanzana.nostrumfairies.items.SoulJar;
 import com.smanzana.nostrumfairies.items.TemplateScroll;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.CapabilityRequest;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
+import com.smanzana.nostrummagica.NostrumMagica;
+import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelBakery;
@@ -282,6 +285,13 @@ public class ClientProxy extends CommonProxy {
 					TemplateWand.instance().getModelName(type));
 		}
 		ModelBakery.registerItemVariants(TemplateWand.instance(), variants);
+		
+		variants = new ResourceLocation[2];
+		variants[0] = new ResourceLocation(NostrumFairies.MODID,
+				SoulJar.instance().getModelName(SoulJar.createFake(false)));
+		variants[1] = new ResourceLocation(NostrumFairies.MODID,
+				SoulJar.instance().getModelName(SoulJar.createFake(true)));
+		ModelBakery.registerItemVariants(SoulJar.instance(), variants);
 	}
 	
 	@Override
@@ -377,6 +387,15 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(LogisticsSensorBlock.instance()),
 				0,
 				LogisticsSensorBlock.ID);
+		
+		ItemStack stack = SoulJar.createFake(false);
+		registerModel(SoulJar.instance(),
+				stack.getMetadata(),
+				SoulJar.instance().getModelName(stack));
+		stack = SoulJar.createFake(true);
+		registerModel(SoulJar.instance(),
+				stack.getMetadata(),
+				SoulJar.instance().getModelName(stack));
 	}
 	
 	@Override
@@ -497,8 +516,8 @@ public class ClientProxy extends CommonProxy {
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 		final boolean forwardPressed = bindingWandModeForward.isPressed(); 
 		if (forwardPressed || bindingWandModeBackward.isPressed()) {
-			if (!NostrumFairies.getFeyWrapper(player)
-					.builderFairyUnlocked()) {
+			final INostrumMagic magic = NostrumMagica.getMagicWrapper(player);
+			if (magic == null || !magic.getCompletedResearches().contains("logistics_construction") ) {
 				return;
 			}
 			

@@ -43,7 +43,10 @@ public interface IFeyWorker {
 			}
 		}
 		
-		public static final FairyStatusSerializer Serializer = new FairyStatusSerializer();
+		public static FairyStatusSerializer Serializer = null;
+		public static void Init() {
+			 Serializer = new FairyStatusSerializer();
+		}
 	}
 	
 	// Suggested maximum fairy work distance.

@@ -218,7 +218,7 @@ public class NostrumFairyGui implements IGuiHandler {
 		if (ID == storageMonitorID) {
 			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
 			if (ent != null && ent instanceof StorageMonitorTileEntity) {
-				return new StorageMonitorScreen(((StorageMonitorTileEntity) ent).getNetwork());
+				return new StorageMonitorScreen((StorageMonitorTileEntity) ent);
 				// oh, here's the problem. The client network is unlinked, because we don't actually send
 				// fake networks when we're integrated. But that means that the client copy of things
 				// like tile entities are wrong.

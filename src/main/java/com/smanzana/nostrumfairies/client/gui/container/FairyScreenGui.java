@@ -15,7 +15,6 @@ import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.FairyGuiActionMessage;
 import com.smanzana.nostrumfairies.network.messages.FairyGuiActionMessage.GuiAction;
-import com.smanzana.nostrummagica.client.gui.container.AutoContainer;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.client.Minecraft;
@@ -151,7 +150,7 @@ public class FairyScreenGui {
 	private static final int ICON_CURSOR_MINOR_WIDTH = 18 + 2;
 	private static final int ICON_CURSOR_MINOR_HEIGHT = 18 + 2;
 	
-	public static class FairyScreenContainer extends AutoContainer {
+	public static class FairyScreenContainer extends com.smanzana.nostrummagica.client.gui.container.AutoContainer {
 		
 		protected FairyHolderInventory inv;
 		protected INostrumFeyCapability capability;

@@ -18,18 +18,22 @@ import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -123,6 +127,11 @@ public class HomeBlockGui {
 				this.addSlotToContainer(slot);
 				specializationSlots.add(slot);
 			}
+		}
+		
+		@Override
+		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
+			return super.slotClick(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
@@ -634,8 +643,21 @@ public class HomeBlockGui {
 				if (FeySoulStone.hasStoredFey(stack)) {
 					// They put in a soul stone and it has a fey in it. Automatically spawn them and add them
 					// to the entity list
-					BlockPos pos = te.getPos();
-					spawned = FeySoulStone.spawnStoredEntity(stack, te.getWorld(), pos.getX() + .5, pos.getY() + 2, pos.getZ() + .5);
+					World world = te.getWorld();
+					BlockPos spot = null;
+					BlockPos center = te.getPos();
+					for (BlockPos pos : new BlockPos[] {center.north(), center.south(), center.west(), center.east()}) {
+						IBlockState state = world.getBlockState(pos);
+						if (!state.getMaterial().blocksMovement()) {
+							spot = pos;
+							break;
+						}
+					}
+					
+					if (spot == null) {
+						spot = center.offset(EnumFacing.UP, 6);
+					}
+					spawned = FeySoulStone.spawnStoredEntity(stack, te.getWorld(), spot.getX() + .5, spot.getY(), spot.getZ() + .5);
 					stack = FeySoulStone.clearEntity(stack);
 				}
 			}

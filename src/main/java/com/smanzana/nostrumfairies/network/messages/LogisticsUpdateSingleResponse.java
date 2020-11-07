@@ -30,9 +30,6 @@ public class LogisticsUpdateSingleResponse implements IMessage {
 		public IMessage onMessage(LogisticsUpdateSingleResponse message, MessageContext ctx) {
 
 			Minecraft.getMinecraft().addScheduledTask(() -> {
-				
-				NostrumFairies.logger.info("Received logistics network refreshed data (single)");
-				
 				UUID id = message.tag.getUniqueId(NBT_UUID);
 				
 				// If data is present, inject and update.
@@ -70,7 +67,7 @@ public class LogisticsUpdateSingleResponse implements IMessage {
 		tag.setUniqueId(NBT_UUID, id);
 		
 		if (network != null) {
-			tag.setTag(NBT_DATA, network.toNBT());
+			tag.setTag(NBT_DATA, new FakeLogisticsNetwork(network).toNBT());
 		}
 	}
 	

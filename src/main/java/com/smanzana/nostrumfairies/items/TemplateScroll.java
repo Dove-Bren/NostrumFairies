@@ -118,13 +118,13 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	
 	@Override
 	public Lore getBasicLore() {
-		return new Lore().add("");
+		return new Lore().add("Template slips are created using the template wand." , "They store templates of a structure.");
 				
 	}
 	
 	@Override
 	public Lore getDeepLore() {
-		return new Lore().add("");
+		return new Lore().add("Template slips are created using the template wand." , "They store templates of a structure.", "These slips can be inserted into the template wand to be placed.", "They can also be put into building blocks to have workers attempt to build and maintain a structure.");
 	}
 
 	@Override

@@ -17,6 +17,8 @@ import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
 import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
+import com.smanzana.nostrummagica.items.NostrumSkillItem;
+import com.smanzana.nostrummagica.items.NostrumSkillItem.SkillItemType;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.spells.EAlteration;
@@ -60,7 +62,6 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
@@ -93,7 +94,10 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 			}
 		}
 		
-		public static final BattleStanceSerializer Serializer = new BattleStanceSerializer();
+		public static BattleStanceSerializer Serializer = null;
+		public static void Init() {
+			 Serializer = new BattleStanceSerializer();
+		}
 	}
 	
 	protected static final DataParameter<BattleStance> STANCE  = EntityDataManager.<BattleStance>createKey(EntityShadowFey.class, BattleStance.Serializer);
@@ -105,7 +109,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		if (SPELL_SLOW == null) {
 			SPELL_SLOW = new Spell("Shadow Binds");
 			SPELL_SLOW.addPart(new SpellPart(AITargetTrigger.instance()));
-			SPELL_SLOW.addPart(new SpellPart(SingleShape.instance(), EMagicElement.LIGHTNING, 2, EAlteration.INFLICT));
+			SPELL_SLOW.addPart(new SpellPart(SingleShape.instance(), EMagicElement.LIGHTNING, 1, EAlteration.INFLICT));
 		}
 	}
 	
@@ -216,7 +220,9 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		priority = 1;
 		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]));
 		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityFeyBase>(this, EntityFeyBase.class, 5, true, false, (Predicate <EntityFeyBase >)null));
-		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityPlayer>(this, EntityPlayer.class, 5, true, false, (Predicate <EntityPlayer >)null));
+		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityPlayer>(this, EntityPlayer.class, 10, true, false, (player) -> {
+			return !player.isSneaking();
+		}));
 		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityLiving>(this, EntityLiving.class, 5, true, false, (living) -> {
 			return living != null && !living.isDead && !(living instanceof IMob);
 		}));
@@ -226,11 +232,11 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	protected void applyEntityAttributes() {
 		super.applyEntityAttributes();
 		this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.24D);
-		this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(16.0D);
+		this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(14.0D);
 		this.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(4.0D);
-		this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(4.0D);
+		this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
 		this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(20.0);
-		this.getEntityAttribute(AttributeMagicResist.instance()).setBaseValue(40.0D);
+		this.getEntityAttribute(AttributeMagicResist.instance()).setBaseValue(0.0D);
 	}
 	
 	@Override
@@ -282,7 +288,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	
 	protected int getDefaultSwingAnimationDuration() {
 		if (this.shouldUseBow()) {
-			return 40;
+			return 60;
 		} else {
 			return 10;
 		}
@@ -343,7 +349,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	
 	protected void slashAt(EntityLivingBase target, float distanceFactor) {
 		if (this.attackEntityAsMob(target)) {
-			this.heal(2f);
+			this.heal(1f);
 		}
 	}
 
@@ -497,22 +503,29 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
 		if (wasRecentlyHit && !worldObj.isRemote) {
 			int chance = 1 + lootingModifier;
-			if (rand.nextInt(100) < chance) {
+			if (rand.nextInt(10) < chance) {
 				
 				this.entityDropItem(FeyResource.create(FeyResourceType.ESSENCE_CORRUPTED, rand.nextInt(1 + lootingModifier/2)), 0);
 				
+			}
+			
+			// Research scroll
+			int chances = 1 + lootingModifier;
+			if (rand.nextInt(150) < chances) {
+				this.entityDropItem(NostrumSkillItem.getItem(SkillItemType.RESEARCH_SCROLL_SMALL, 1), 0);
 			}
 		}
 	}
 	
 	@Override
 	protected boolean isValidLightLevel() {
-		BlockPos pos = new BlockPos(this.posX, this.getEntityBoundingBox().minY, this.posZ);
-		if (this.worldObj.getLightFor(EnumSkyBlock.SKY, pos) < 6) {
-			return false;
-		};
-		
-		return true;
+		return super.isValidLightLevel();
+//		BlockPos pos = new BlockPos(this.posX, this.getEntityBoundingBox().minY, this.posZ);
+//		if (this.worldObj.getLightFor(EnumSkyBlock.SKY, pos) < 6) {
+//			return false;
+//		};
+//		
+//		return true;
 	}
 	
 	@Override

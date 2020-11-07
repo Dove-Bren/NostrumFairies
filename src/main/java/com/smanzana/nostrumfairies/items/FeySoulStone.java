@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import com.mojang.realmsclient.gui.ChatFormatting;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
+import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -295,13 +296,13 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	
 	@Override
 	public Lore getBasicLore() {
-		return new Lore().add("");
+		return new Lore().add("Mystical stones that can store the very essence of a fey creature.", "The fey have assured you they are safe to carry this way.");
 				
 	}
 	
 	@Override
 	public Lore getDeepLore() {
-		return new Lore().add("");
+		return new Lore().add("Mystical stones that can store the very essence of a fey creature.", "The fey have assured you they are safe to carry this way.", "Soul gems (empty or filled) can be added to empty slots in fey home blocks.");
 	}
 
 	@Override
@@ -338,6 +339,10 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		if (!filledFromMeta(stack.getMetadata())) {
 			// Pick up fey, if it is one
 			if (!(target instanceof EntityFeyBase)) {
+				return false;
+			}
+			
+			if (target instanceof EntityPersonalFairy) {
 				return false;
 			}
 			

@@ -144,13 +144,13 @@ public class FeyResource extends Item implements ILoreTagged {
 	
 	@Override
 	public Lore getBasicLore() {
-		return new Lore().add("");
+		return new Lore().add("The darkened, corrupted essence you've found on the shadow fey reeks of evil. Yet you can sense something more pure underneath...");
 				
 	}
 	
 	@Override
 	public Lore getDeepLore() {
-		return new Lore().add("");
+		return new Lore().add("Fey essence (corrupted, or purified) is a wild new substance. You can feel the magical energy radiating off of it.");
 	}
 
 	@Override

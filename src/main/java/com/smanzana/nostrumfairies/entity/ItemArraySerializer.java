@@ -10,7 +10,10 @@ import net.minecraft.network.datasync.DataSerializers;
 
 public class ItemArraySerializer implements DataSerializer<ItemStack[]> {
 
-	public static final ItemArraySerializer Serializer = new ItemArraySerializer();
+	public static ItemArraySerializer Serializer = null;
+	public static void Init() {
+		Serializer = new ItemArraySerializer();
+	}
 	
 	private ItemArraySerializer() {
 		DataSerializers.registerSerializer(this);

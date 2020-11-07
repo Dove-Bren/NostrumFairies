@@ -24,6 +24,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.IEntityOwnable;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.ResourceLocation;
@@ -166,6 +167,14 @@ public class NostrumFairies {
     }
     
     public static @Nullable World getWorld(int dimension) {
+    	EntityPlayer p = proxy.getPlayer();
+    	if (p != null && p.worldObj.isRemote) {
+    		if (p.worldObj.provider.getDimension() == dimension) {
+				return p.worldObj;
+			}
+    		return null;
+    	}
+    	
 		for (World world : DimensionManager.getWorlds()) {
 			if (world.provider.getDimension() == dimension) {
 				return world;

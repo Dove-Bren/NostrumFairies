@@ -9,11 +9,13 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -49,9 +51,9 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		super.dissolveNetwork();
 		
 		// Clean up components, as new ones will be created by a replacement network if there is one.
-		for (ILogisticsComponent component : this.components) {
-			component.onLeaveNetwork();
-		}
+//		for (ILogisticsComponent component : this.components) {
+//			//component.onLeaveNetwork();
+//		}
 		
 		components.clear();
 		this.dirty();
@@ -81,7 +83,9 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		
 		NBTTagList list = tag.getTagList(NBT_COMPONENTS, NBT.TAG_COMPOUND);
 		for (int i = list.tagCount() - 1; i >= 0; i--) {
-			network.components.add(FakeLogisticsComponent.fromNBT(list.getCompoundTagAt(i)));
+			ILogisticsComponent comp = FakeLogisticsComponent.fromNBT(list.getCompoundTagAt(i));
+			network.components.add(comp);
+			comp.onJoinNetwork(network);
 		}
 		
 		network.dirty();
@@ -138,11 +142,27 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			// Straight cast here. If it's not, a fake network component
 			// is being added to a real network!
 			this.network = (FakeLogisticsNetwork) network;
+			
+			TileEntity te = this.world.getTileEntity(this.pos);
+			if (te != null && te instanceof LogisticsTileEntity) {
+				LogisticsTileEntity ent = (LogisticsTileEntity) te;
+				if (ent.getNetworkComponent() != null) {
+					ent.getNetworkComponent().onJoinNetwork(network);
+				}
+			}
 		}
 
 		@Override
 		public void onLeaveNetwork() {
 			this.network = null;
+			
+			TileEntity te = this.world.getTileEntity(this.pos);
+			if (te != null && te instanceof LogisticsTileEntity) {
+				LogisticsTileEntity ent = (LogisticsTileEntity) te;
+				if (ent.getNetworkComponent() != null) {
+					ent.getNetworkComponent().onLeaveNetwork();
+				}
+			}
 		}
 
 		@Override
@@ -229,6 +249,28 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			world = NostrumFairies.getWorld(dim);
 			
 			return new FakeLogisticsComponent(logisticsRange, linkRange, world, BlockPos.fromLong(pos), items);
+		}
+		
+		public void overrideFromNBT(NBTTagCompound tag) {
+			double logisticsRange = tag.getDouble(NBT_COMP_LOG_RANGE);
+			double linkRange = tag.getDouble(NBT_COMP_LINK_RANGE);
+			int dim = tag.getInteger(NBT_COMP_DIM);
+			long pos = tag.getLong(NBT_COMP_POS);
+			World world = null;
+			
+			NBTTagList list = tag.getTagList(NBT_COMP_ITEMS, NBT.TAG_COMPOUND);
+			List<ItemStack> items = new ArrayList<>(list.tagCount());
+			for (int i = list.tagCount() - 1; i >= 0; i--) {
+				items.add(ItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i)));
+			}
+			
+			world = NostrumFairies.getWorld(dim);
+			
+			this.linkRange = linkRange;
+			this.logisticsRange = logisticsRange;
+			this.world = world;
+			this.pos = BlockPos.fromLong(pos);
+			this.items = items;
 		}
 		
 		public @Nullable LogisticsNetwork getNetwork() {

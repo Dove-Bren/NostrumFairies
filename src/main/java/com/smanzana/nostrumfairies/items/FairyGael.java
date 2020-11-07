@@ -169,17 +169,19 @@ public class FairyGael extends Item implements ILoreTagged {
 		
 		NBTTagCompound nbt = stack.getTagCompound();
 		Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompoundTag("data"), world, x, y, z, true);
-		if (entity instanceof EntityPersonalFairy) {
-			fey = (EntityPersonalFairy) entity;
-			
-			// update energy and health
-			float healthPerc = (float) getStoredHealth(stack);
-			fey.setHealth(fey.getMaxHealth() * healthPerc);
-			float energyPerc = (float) getStoredEnergy(stack);
-			fey.setEnergy(fey.getMaxEnergy() * energyPerc);
-		} else {
-			entity.isDead = true;
-			world.removeEntity(entity);
+		if (entity != null) {
+			if (entity instanceof EntityPersonalFairy) {
+				fey = (EntityPersonalFairy) entity;
+				
+				// update energy and health
+				float healthPerc = (float) getStoredHealth(stack);
+				fey.setHealth(fey.getMaxHealth() * healthPerc);
+				float energyPerc = (float) getStoredEnergy(stack);
+				fey.setEnergy(fey.getMaxEnergy() * energyPerc);
+			} else {
+				entity.isDead = true;
+				world.removeEntity(entity);
+			}
 		}
 		return fey;
 	}
@@ -276,13 +278,13 @@ public class FairyGael extends Item implements ILoreTagged {
 	
 	@Override
 	public Lore getBasicLore() {
-		return new Lore().add("");
+		return new Lore().add("A Fairy allowed you to seal it inside.", "The gael has been infused and tinted.");
 				
 	}
 	
 	@Override
 	public Lore getDeepLore() {
-		return new Lore().add("");
+		return new Lore().add("A Fairy allowed you to seal it inside.", "The gael has been infused and tinted.", "Sealed gaels can be organized by using a fairy instrument.");
 	}
 
 	@Override

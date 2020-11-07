@@ -78,7 +78,10 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			}
 		}
 		
-		public static final PoseSerializer Serializer = new PoseSerializer();
+		public static PoseSerializer Serializer = null;
+		public static void Init() {
+			 Serializer = new PoseSerializer();
+		}
 	}
 	
 	private static Spell SPELL_VINES = null;

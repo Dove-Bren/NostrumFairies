@@ -6,7 +6,6 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.client.render.TileEntityLogisticsRenderer;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
@@ -33,10 +32,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class StorageMonitor extends BlockContainer {
 	
@@ -236,6 +232,8 @@ public class StorageMonitor extends BlockContainer {
 				LogisticsNetwork network = storage.getNetwork();
 				if (network != null) {
 					NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest(network.getUUID()));
+				} else {
+					NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest());
 				}
 			}
 		}
@@ -268,15 +266,6 @@ public class StorageMonitor extends BlockContainer {
 		@Override
 		public boolean canAccept(List<ItemDeepStack> stacks) {
 			return false;
-		}
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public static class StorageMonitorRenderer extends TileEntityLogisticsRenderer<StorageMonitorTileEntity> {
-		
-		public static void init() {
-			ClientRegistry.bindTileEntitySpecialRenderer(StorageMonitorTileEntity.class,
-					new StorageMonitorRenderer());
 		}
 	}
 

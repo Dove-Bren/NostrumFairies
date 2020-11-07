@@ -75,7 +75,10 @@ public class EntityElfArcher extends EntityElf {
 			}
 		}
 		
-		public static final BattleStanceSerializer Serializer = new BattleStanceSerializer();
+		public static BattleStanceSerializer Serializer = null;
+		public static void Init() {
+			 Serializer = new BattleStanceSerializer();
+		}
 	}
 	
 	protected static final DataParameter<BattleStance> STANCE  = EntityDataManager.<BattleStance>createKey(EntityElfArcher.class, BattleStance.Serializer);

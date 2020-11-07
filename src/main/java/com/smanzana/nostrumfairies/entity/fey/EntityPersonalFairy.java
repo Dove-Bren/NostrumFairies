@@ -9,9 +9,9 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.entity.IEntityListener;
 import com.smanzana.nostrumfairies.entity.ITrackableEntity;
@@ -92,7 +92,10 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			}
 		}
 		
-		public static final JobSerializer Serializer = new JobSerializer();
+		public static JobSerializer Serializer = null;
+		public static void Init() {
+			Serializer = new JobSerializer();
+		}
 	}
 
 	private static final String NBT_OWNER_ID = "owner_uuid";
