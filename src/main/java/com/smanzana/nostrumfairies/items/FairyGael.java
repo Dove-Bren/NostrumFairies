@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy.FairyJob;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
@@ -170,6 +171,11 @@ public class FairyGael extends Item implements ILoreTagged {
 		NBTTagCompound nbt = stack.getTagCompound();
 		Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompoundTag("data"), world, x, y, z, true);
 		if (entity != null) {
+			if (entity instanceof EntityFairy && !(entity instanceof EntityPersonalFairy)) {
+				// Upgrade!
+				entity = ((EntityFairy) entity).promotoToPersonal();
+			}
+			
 			if (entity instanceof EntityPersonalFairy) {
 				fey = (EntityPersonalFairy) entity;
 				
@@ -179,6 +185,7 @@ public class FairyGael extends Item implements ILoreTagged {
 				float energyPerc = (float) getStoredEnergy(stack);
 				fey.setEnergy(fey.getMaxEnergy() * energyPerc);
 			} else {
+				// WAnt to error, but this will probably spam
 				entity.isDead = true;
 				world.removeEntity(entity);
 			}

@@ -503,7 +503,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
 		if (wasRecentlyHit && !worldObj.isRemote) {
 			int chance = 1 + lootingModifier;
-			if (rand.nextInt(10) < chance) {
+			if (rand.nextInt(2) < chance) {
 				
 				this.entityDropItem(FeyResource.create(FeyResourceType.ESSENCE_CORRUPTED, rand.nextInt(1 + lootingModifier/2)), 0);
 				

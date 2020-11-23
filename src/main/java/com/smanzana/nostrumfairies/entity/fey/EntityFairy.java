@@ -736,6 +736,24 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	public EntityFeyBase switchToSpecialization(FeyStoneMaterial material) {
 		return this;
 	}
+	
+	public EntityPersonalFairy promotoToPersonal() {
+		if (worldObj.isRemote) {
+			return null;
+		}
+		
+		EntityPersonalFairy replacement = new EntityPersonalFairy(worldObj);
+		
+		// Kill this entity and add the other one
+		if (this.getHome() != null) {
+			this.setHome(null);
+		}
+		replacement.copyFrom(this);
+		worldObj.removeEntityDangerously(this);
+		worldObj.spawnEntityInWorld(replacement);
+		
+		return replacement;
+	}
 
 	@Override
 	public FeyStoneMaterial getCurrentSpecialization() {

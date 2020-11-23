@@ -220,13 +220,13 @@ public class CommonProxy {
     			false
     			);
     	
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 25, 1, 2, EnumCreatureType.MONSTER, 
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 35, 1, 2, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.MAGICAL));
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 18, 1, 3, EnumCreatureType.MONSTER, 
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 25, 1, 3, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.FOREST));
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 12, 2, 2, EnumCreatureType.MONSTER, 
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 18, 2, 2, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.SPOOKY));
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 15, 1, 2, EnumCreatureType.MONSTER, 
+    	EntityRegistry.addSpawn(EntityShadowFey.class, 20, 1, 2, EnumCreatureType.MONSTER, 
     			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.DENSE));
 
     	registerItems();
@@ -433,7 +433,7 @@ public class CommonProxy {
 				NostrumResourceItem.getItem(ResourceType.CRYSTAL_SMALL, 1),
 				new ItemStack[] {FeyResource.create(FeyResourceType.ESSENCE_CORRUPTED, 1), new ItemStack(Items.WATER_BUCKET), FeyResource.create(FeyResourceType.ESSENCE_CORRUPTED, 1), FeyResource.create(FeyResourceType.ESSENCE_CORRUPTED, 1)},
 				new RRequirementResearch("purify_essence"),
-				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.ESSENCE, 1)))
+				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.ESSENCE, 3)))
 			);
     	
     	RitualRegistry.instance().addRitual(

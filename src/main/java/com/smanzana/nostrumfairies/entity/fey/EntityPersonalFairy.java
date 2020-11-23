@@ -890,6 +890,11 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			this.changeStatus(FairyGeneralStatus.IDLE);
 		} else if (this.ticksExisted > 20) {
 			worldObj.removeEntity(this);
+			//TODO cleanup
+			System.out.println("REMOVING CAUSE OWNERLESS (" + this.getOwnerId() + ")");
+			if (this.ownerCache != null) {
+				System.out.println("\t Had cached, but is dead? " + ownerCache);
+			}
 		}
 	}
 
