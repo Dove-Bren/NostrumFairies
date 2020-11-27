@@ -1130,12 +1130,9 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	@Override
 	protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
 		if (isCursed() && !worldObj.isRemote) {
-			for (int i = 0; i < lootingModifier + 1; i++) {
-				if (rand.nextInt(5) <= 0) {
-					this.entityDropItem(FeyResource.create(FeyResourceType.TEARS, 1), 0);
-				}
-			}
-			if (wasRecentlyHit && rand.nextInt(20) < (1 + lootingModifier)) {
+			this.entityDropItem(FeyResource.create(FeyResourceType.TEARS, 1 + lootingModifier), 0);
+			
+			if (wasRecentlyHit && rand.nextInt(5) < (1 + lootingModifier)) {
 				this.entityDropItem(FeyResource.create(FeyResourceType.ESSENCE, rand.nextInt(2) + 1), 0);
 			}
 		}

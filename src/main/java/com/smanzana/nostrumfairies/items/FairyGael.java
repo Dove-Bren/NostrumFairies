@@ -5,6 +5,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
+import com.smanzana.nostrumaetheria.api.proxy.APIProxy;
+import com.smanzana.nostrumaetheria.api.recipes.IAetherRepairerRecipe;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
@@ -63,6 +65,27 @@ public class FairyGael extends Item implements ILoreTagged {
 	
 	public static void init() {
 		;
+	}
+	
+	public static void registerRecipes() {
+		APIProxy.addRepairerRecipe(new IAetherRepairerRecipe() {
+			@Override
+			public boolean matches(ItemStack stack) {
+				return stack.getItem() instanceof FairyGael
+						&& isCracked(stack);
+			}
+			
+			@Override
+			public int getAetherCost(ItemStack stack) {
+				return 500;
+			}
+
+			@Override
+			public ItemStack repair(ItemStack stack) {
+				uncrack(stack);
+				return stack;
+			}
+		});
 	}
 	
 	public FairyGael() {
@@ -291,7 +314,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	
 	@Override
 	public Lore getDeepLore() {
-		return new Lore().add("A Fairy allowed you to seal it inside.", "The gael has been infused and tinted.", "Sealed gaels can be organized by using a fairy instrument.");
+		return new Lore().add("A Fairy allowed you to seal it inside.", "The gael has been infused and tinted.", "Sealed gaels can be organized by using a fairy instrument.", "Gaels shatter if the fairy inside runs out of life energy. Luckily, life can be restored by putting the gael in an Aether Repairer!");
 	}
 
 	@Override

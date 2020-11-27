@@ -245,6 +245,8 @@ public class CommonProxy {
     	registerPotions();
     	registerLore();
     	registerResearch();
+    	
+    	FairyGael.registerRecipes();
 	}
 	
 	public void postinit() {

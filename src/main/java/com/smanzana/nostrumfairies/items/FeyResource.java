@@ -10,14 +10,17 @@ import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
+import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.golem.EntityGolem;
+import com.smanzana.nostrummagica.listeners.PlayerListener.Event;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
+import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.item.EntityItem;
@@ -25,6 +28,8 @@ import net.minecraft.entity.monster.EntityIronGolem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -266,6 +271,16 @@ public class FeyResource extends Item implements ILoreTagged {
 			}
 		} else if (type == FeyResourceType.BELL) {
 			if (!worldIn.isRemote) {
+				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, Block.FULL_BLOCK_AABB.offset(playerIn.posX, playerIn.posY, playerIn.posZ).expandXyz(10))) {
+					ent.addPotionEffect(new PotionEffect(Potion.getPotionFromResourceLocation("glowing"), 20 * 5));
+					NostrumMagica.playerListener.registerTimer((/*Event*/ eType, /*EntityLivingBase*/ entity, /*Object*/ data) -> {
+						if (eType == Event.TIME) {
+							NostrumFairiesSounds.BELL.play(worldIn, ent.posX, ent.posY, ent.posZ);
+						}
+						return true;
+					}, 10, 10);
+				}
+				
 				NostrumFairiesSounds.BELL.play(worldIn, playerIn.posX, playerIn.posY, playerIn.posZ);
 			}
 			return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
