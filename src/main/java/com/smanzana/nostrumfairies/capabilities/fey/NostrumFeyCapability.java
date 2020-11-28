@@ -78,6 +78,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	}
 
 	private static final String NBT_UNLOCKED = "unlocked";
+	//private static final String NBT_ENABLED = "enabled"
 	private static final String NBT_FAIRY_SLOTS = "fairy_slots";
 	private static final String NBT_FAIRY_XP = "xp";
 	private static final String NBT_FAIRY_LEVEL = "level";
@@ -88,6 +89,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	
 	// Capability data
 	private boolean isUnlocked;
+	private boolean isDisabled; // Manual player toggle (as opposed to mechanical disable -- see deactivationTicks)
 	private int fairySlots;
 	private int fairyXP;
 	private int fairyLevel;
@@ -97,7 +99,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	// Operational transient data
 	private EntityLivingBase owner;
 	private Map<FairyGaelType, List<FairyRecord>> deployedFairies;
-	private int disabledTicks;
+	private int deactivationTicks;
 	private int ticksExisted;
 	
 	// Transient tick network data
@@ -137,6 +139,17 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	public void unlock() {
 		isUnlocked = true;
 	}
+	
+	public boolean isEnabled() {
+		return !isDisabled;
+	}
+	
+	public void setEnabled(boolean enabled) {
+		this.isDisabled = !enabled;
+		if (isDisabled) {
+			this.retractFairies();
+		}
+	}
 
 	@Override
 	public int getFairySlots() {
@@ -171,6 +184,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		NBTTagCompound nbt = new NBTTagCompound();
 		
 		nbt.setBoolean(NBT_UNLOCKED, isUnlocked);
+		nbt.setBoolean(/*NBT_ENABLED*/"enabled", !isDisabled);
 		nbt.setInteger(NBT_FAIRY_SLOTS, fairySlots);
 		nbt.setInteger(NBT_FAIRY_XP, fairyXP);
 		nbt.setInteger(NBT_FAIRY_LEVEL, fairyLevel);
@@ -190,6 +204,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	public void readNBT(NBTTagCompound nbt) {
 		clearFairies();
 		this.isUnlocked = nbt.getBoolean(NBT_UNLOCKED);
+		this.isDisabled = !nbt.getBoolean("enabled");
 		this.fairySlots = nbt.getInteger(NBT_FAIRY_SLOTS);
 		this.fairyXP = nbt.getInteger(NBT_FAIRY_XP);
 		this.fairyLevel = Math.max(1, nbt.getInteger(NBT_FAIRY_LEVEL));
@@ -270,20 +285,20 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		
 		ticksExisted++;
 		
-		if (this.disabledTicks > 0) {
-			this.disabledTicks--;
+		if (this.deactivationTicks > 0) {
+			this.deactivationTicks--;
 		}
 		
-		if (disabledTicks == 0 && owner instanceof EntityPlayer) {
+		if (deactivationTicks == 0 && owner instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) owner;
 			if (player.openContainer instanceof FairyScreenGui.FairyScreenContainer
 					|| player.isSpectator()) {
 				this.retractFairies();
-				disabledTicks = Math.max(2, disabledTicks);
+				deactivationTicks = Math.max(2, deactivationTicks);
 			}
 		}
 		
-		if (fairiesEnabled()) {
+		if (!fairiesDeactivated() && this.isEnabled()) {
 			if (ticksExisted % 40 == 0) {
 				scanForBuilds();
 			}
@@ -645,21 +660,21 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	}
 
 	@Override
-	public void disableFairies(int ticks) {
-		if (this.disabledTicks == 0) {
+	public void deactivateFairies(int ticks) {
+		if (this.deactivationTicks == 0) {
 			this.retractFairies();
-			this.disabledTicks = ticks;
+			this.deactivationTicks = ticks;
 		}
 	}
 
 	@Override
-	public void enableFairies() {
-		this.disabledTicks = 0;
+	public void reactivateFairies() {
+		this.deactivationTicks = 0;
 	}
 	
 	@Override
-	public boolean fairiesEnabled() {
-		return this.disabledTicks == 0 && isUnlocked;
+	public boolean fairiesDeactivated() {
+		return this.deactivationTicks > 0 || !isUnlocked;
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.items;
 
 import java.util.List;
 
+import com.mojang.realmsclient.gui.ChatFormatting;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
@@ -12,6 +13,7 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
+import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -154,6 +156,26 @@ public class FairyInstrument extends Item implements ILoreTagged {
 	public ActionResult<ItemStack> onItemRightClick(ItemStack stack, World worldIn, EntityPlayer playerIn, EnumHand hand) {
 		InstrumentType type = getType(stack);
 		if (!worldIn.isRemote) {
+			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
+			if (attr != null && !attr.isUnlocked()) {
+				// Possibly unlock
+				INostrumMagic magicAttr = NostrumMagica.getMagicWrapper(playerIn);
+				if (magicAttr.isUnlocked() && magicAttr.getCompletedResearches().contains("fairy_instruments")) {
+					attr.unlock();
+					NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
+				}
+			}
+			
+			// Check before playing sound whether it's a disable
+			if (attr != null && attr.isUnlocked() && playerIn.isSneaking()) {
+				// toggle enable
+				attr.setEnabled(!attr.isEnabled());
+				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
+				NostrumFairiesSounds.BELL.play(playerIn.worldObj, playerIn.posX, playerIn.posY, playerIn.posZ);
+				return ActionResult.newResult(EnumActionResult.PASS, stack);
+			}
+				
+			
 			final NostrumFairiesSounds sound;
 			switch (type) {
 			case FLUTE:
@@ -170,19 +192,10 @@ public class FairyInstrument extends Item implements ILoreTagged {
 			
 			sound.play(worldIn, playerIn.posX, playerIn.posY, playerIn.posZ);
 			
-			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
-			if (attr != null && !attr.isUnlocked()) {
-				// Possibly unlock
-				INostrumMagic magicAttr = NostrumMagica.getMagicWrapper(playerIn);
-				if (magicAttr.isUnlocked() && magicAttr.getCompletedResearches().contains("fairy_instruments")) {
-					attr.unlock();
-				}
-			}
-			
 			if (attr != null && attr.isUnlocked()) {
-
+				// Open gui
 				// Would be cooler if the fairies flew in towards you after you called
-				attr.disableFairies(40);
+				attr.deactivateFairies(40);
 				
 				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
 				
@@ -198,6 +211,17 @@ public class FairyInstrument extends Item implements ILoreTagged {
 		}
 		
 		return ActionResult.newResult(EnumActionResult.PASS, stack);
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
+		super.addInformation(stack, playerIn, tooltip, advanced);
+		
+		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
+		if (attr != null && !attr.isEnabled()) {
+			tooltip.add(ChatFormatting.DARK_RED + I18n.format("info.instrument.disabled") + ChatFormatting.RESET);
+		}
 	}
 	
 }

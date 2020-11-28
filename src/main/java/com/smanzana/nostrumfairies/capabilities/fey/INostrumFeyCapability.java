@@ -14,6 +14,10 @@ public interface INostrumFeyCapability {
 	public boolean isUnlocked();
 	public void unlock();
 	
+	// Enable/Disable
+	public boolean isEnabled();
+	public void setEnabled(boolean enabled);
+	
 	// Fairy Slots/progression
 	public int getFairySlots();
 	public void addFairySlot();
@@ -34,9 +38,9 @@ public interface INostrumFeyCapability {
 //	public void unlockLogisticsFairy();
 	
 	public void retractFairies();
-	public void disableFairies(int ticks);
-	public void enableFairies();
-	public boolean fairiesEnabled();
+	public void deactivateFairies(int ticks);
+	public void reactivateFairies();
+	public boolean fairiesDeactivated();
 	
 	// Templating
 	public Pair<BlockPos, BlockPos> getTemplateSelection();

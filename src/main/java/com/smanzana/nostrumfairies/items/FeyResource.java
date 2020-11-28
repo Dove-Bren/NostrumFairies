@@ -271,7 +271,7 @@ public class FeyResource extends Item implements ILoreTagged {
 			}
 		} else if (type == FeyResourceType.BELL) {
 			if (!worldIn.isRemote) {
-				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, Block.FULL_BLOCK_AABB.offset(playerIn.posX, playerIn.posY, playerIn.posZ).expandXyz(10))) {
+				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, Block.FULL_BLOCK_AABB.offset(playerIn.posX, playerIn.posY, playerIn.posZ).expandXyz(30))) {
 					ent.addPotionEffect(new PotionEffect(Potion.getPotionFromResourceLocation("glowing"), 20 * 5));
 					NostrumMagica.playerListener.registerTimer((/*Event*/ eType, /*EntityLivingBase*/ entity, /*Object*/ data) -> {
 						if (eType == Event.TIME) {
