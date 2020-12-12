@@ -314,6 +314,11 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	@Override
 	public void dropTask(ILogisticsTask droppedTask) {
+		if (currentTask == null) {
+			NostrumFairies.logger.warn("Fey was asked to drop task that they didn't have anymore");
+			return;
+		}
+		
 		// Our 'currentTask' may be composite, so dissolve, drop the dropped task out of the list, and then recombine.
 		Collection<ILogisticsTask> tasks = this.currentTask.unmerge();
 		Iterator<ILogisticsTask> iter = tasks.iterator();

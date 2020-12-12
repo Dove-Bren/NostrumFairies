@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.blocks;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +33,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -49,6 +51,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class FarmingBlock extends BlockContainer {
 
@@ -199,8 +202,11 @@ public class FarmingBlock extends BlockContainer {
 	
 	public static class FarmingBlockTileEntity extends LogisticsTileEntity implements ITickable,  ILogisticsTaskListener, IFeySign {
 
+		private static final Map<Integer, ItemStack> SeedMap = new HashMap<>(); // int id of blockstate to itemstack seed
+		
 		private int tickCount;
-		private Map<BlockPos, ILogisticsTask> taskMap;
+		private final Map<BlockPos, ILogisticsTask> taskMap;
+		private final Map<BlockPos, IBlockState> seenStates;
 		private double radius;
 		
 		public FarmingBlockTileEntity() {
@@ -210,6 +216,7 @@ public class FarmingBlock extends BlockContainer {
 		public FarmingBlockTileEntity(double blockRadius) {
 			super();
 			taskMap = new HashMap<>();
+			seenStates = new HashMap<>();
 			this.radius = blockRadius;
 		}
 		
@@ -226,6 +233,14 @@ public class FarmingBlock extends BlockContainer {
 		@Override
 		public boolean canAccept(List<ItemDeepStack> stacks) {
 			return false;
+		}
+		
+		private void rememberState(BlockPos pos, @Nullable IBlockState state) {
+			if (state == null) {
+				seenStates.remove(pos);
+			} else {
+				seenStates.put(pos, state);
+			}
 		}
 		
 		private void makeHarvestTask(BlockPos base) {
@@ -248,7 +263,7 @@ public class FarmingBlock extends BlockContainer {
 			}
 			
 			if (!taskMap.containsKey(base)) {
-				LogisticsTaskPlantItem task = new LogisticsTaskPlantItem(this.networkComponent, "Plant Sapling", this.getSeed(), worldObj, base);
+				LogisticsTaskPlantItem task = new LogisticsTaskPlantItem(this.networkComponent, "Plant Sapling", this.getSeed(base), worldObj, base);
 				this.taskMap.put(base, task);
 				network.getTaskRegistry().register(task, this);
 			}
@@ -295,25 +310,28 @@ public class FarmingBlock extends BlockContainer {
 				
 				if (isGrownCrop(worldObj, pos)) {
 					grownCrops.add(pos.toImmutable());
-				} else if (isPlantableSpot(worldObj, pos.down(), this.getSeed())) {
+				} else if (isPlantableSpot(worldObj, pos.down(), this.getSeed(pos))) {
 					emptySpots.add(pos.toImmutable());
 				}
 			}
 			
 			for (BlockPos base : grownCrops) {
-				if (known.remove(base)) {
-					; // We already knew about it, so don't create a new one
+				if (known.contains(base) && taskMap.get(base) instanceof LogisticsTaskHarvest) {
+					known.remove(base); // We already knew about it, so don't create a new one
 				} else {
 					// Didn't know, so record!
 					// Don't make task cause we filter better later
 					makeHarvestTask(base);
+					
+					// Also remember what state we saw here
+					rememberState(base, worldObj.getBlockState(base));
 				}
 			}
 			
 			// Repeat for plant tasks
 			for (BlockPos base : emptySpots) {
-				if (known.remove(base)) {
-					; // We already knew about it, so don't create a new one
+				if (known.contains(base) && taskMap.get(base) instanceof LogisticsTaskPlantItem) {
+					known.remove(base); // We already knew about it, so don't create a new one
 				} else {
 					// Didn't know, so record!
 					// Don't make task cause we filter better later
@@ -344,9 +362,45 @@ public class FarmingBlock extends BlockContainer {
 			}
 		}
 		
+		protected static ItemStack ResolveSeed(@Nullable IBlockState state) {
+			ItemStack seeds = null;
+			if (state != null) {
+				seeds = SeedMap.get(Block.getStateId(state));
+				if (seeds != null) {
+					return seeds.copy();
+				}
+				
+				// Try and figure out what the seed would be
+				if (state.getBlock() instanceof BlockCrops) {
+					try {
+						Method getSeed = ReflectionHelper.findMethod(BlockCrops.class, (BlockCrops) state.getBlock(), new String[] {"getSeed", "func_149866_i"});
+						seeds = new ItemStack((Item) getSeed.invoke((BlockCrops) state.getBlock()));
+					} catch (Exception e) {
+						seeds = null;
+					}
+				}
+			}
+			
+			if (seeds == null) {
+				seeds = new ItemStack(Items.WHEAT_SEEDS);
+			}
+			
+			if (state != null) {
+				// Cache this lookup
+				SeedMap.put(Block.getStateId(state), seeds.copy());
+			}
+			
+			return seeds;
+		}
+		
 		// TODO make configurable!
-		public ItemStack getSeed() {
-			return new ItemStack(Items.WHEAT_SEEDS);
+		public ItemStack getSeed(BlockPos pos) {
+			final @Nullable IBlockState state = seenStates.get(pos);
+			
+			// Try and figure out what the seed would be
+			ItemStack seeds = ResolveSeed(state);
+			
+			return seeds;
 		}
 
 		@Override

@@ -567,7 +567,7 @@ public class CommonProxy {
 				FeySoulStone.createFake(ResidentType.GNOME),
 				new ItemStack[] {FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_LARGE, 1), new ItemStack(Items.CLAY_BALL), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
 				new RRequirementResearch("gnomes"),
-				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.GNOME))))
+				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.GNOME)), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
     	RitualRegistry.instance().addRitual(
@@ -578,7 +578,7 @@ public class CommonProxy {
 				FeySoulStone.createFake(ResidentType.ELF),
 				new ItemStack[] {FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_LARGE, 1), new ItemStack(Blocks.SAPLING, 1, OreDictionary.WILDCARD_VALUE), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
 				new RRequirementResearch("elves"),
-				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.ELF))))
+				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.ELF)), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
     	RitualRegistry.instance().addRitual(
@@ -589,7 +589,7 @@ public class CommonProxy {
 				FeySoulStone.createFake(ResidentType.DWARF),
 				new ItemStack[] {FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_LARGE, 1), new ItemStack(Blocks.STONE), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
 				new RRequirementResearch("dwarves"),
-				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.DWARF))))
+				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.DWARF)), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
     	RitualRegistry.instance().addRitual(
@@ -600,7 +600,7 @@ public class CommonProxy {
 				FeySoulStone.createFake(ResidentType.FAIRY),
 				new ItemStack[] {FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_LARGE, 1), new ItemStack(Items.GLASS_BOTTLE), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
 				new RRequirementResearch("fairies"),
-				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.FAIRY))))
+				new OutcomeSpawnItem(new ItemStack(FeyHomeBlock.instance(ResidentType.FAIRY)), FeySoulStone.create(SoulStoneType.GAEL)))
 			);
     	
     	RitualRegistry.instance().addRitual(
@@ -611,7 +611,7 @@ public class CommonProxy {
 				FeySoulStone.createFake(ResidentType.ELF),
 				new ItemStack[] {NostrumResourceItem.getItem(ResourceType.ENDER_BRISTLE, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_MEDIUM, 1), new ItemStack(Blocks.VINE), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
 				new RRequirementResearch("elves"),
-				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.EMERALD, 1)))
+				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.EMERALD, 1), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
     	RitualRegistry.instance().addRitual(
@@ -622,7 +622,7 @@ public class CommonProxy {
 				FeySoulStone.createFake(ResidentType.GNOME),
 				new ItemStack[] {NostrumResourceItem.getItem(ResourceType.WISP_PEBBLE, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_MEDIUM, 1), new ItemStack(Items.FLINT), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
 				new RRequirementResearch("gnomes"),
-				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.GARNET, 1)))
+				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.GARNET, 1), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
     	RitualRegistry.instance().addRitual(
@@ -633,7 +633,7 @@ public class CommonProxy {
 				FeySoulStone.createFake(ResidentType.DWARF),
 				new ItemStack[] {NostrumResourceItem.getItem(ResourceType.SPRITE_CORE, 1), NostrumResourceItem.getItem(ResourceType.CRYSTAL_MEDIUM, 1), new ItemStack(Blocks.OBSIDIAN), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1)},
 				new RRequirementResearch("dwarves"),
-				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.AQUAMARINE, 1)))
+				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.AQUAMARINE, 1), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
     	RitualRegistry.instance().addRitual(

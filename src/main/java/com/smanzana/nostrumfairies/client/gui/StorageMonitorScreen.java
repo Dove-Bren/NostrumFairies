@@ -136,6 +136,7 @@ public class StorageMonitorScreen extends GuiScreen {
 		final int topOffset = (this.height - GUI_TEXT_HEIGHT) / 2;
 		
 		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+		GlStateManager.disableLighting();
 		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXT);
 		
 		if (monitor.getNetwork() != null) {
