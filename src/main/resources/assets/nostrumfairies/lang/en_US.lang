@@ -92,6 +92,9 @@ status.fairy.work.deposit=Depositing Items
 status.gnome.relax=Relaxing
 status.gnome.revolt=Revolting
 status.gnome.wander=Wandering
+status.gnome.work.pickup=Gathering
+status.gnome.work.harvest=Harvesting
+status.gnome.work.plant=Planting
 
 info.tablet.fail=You already know the secrets of the fey...
 info.fairy_gael.cracked=Cracked

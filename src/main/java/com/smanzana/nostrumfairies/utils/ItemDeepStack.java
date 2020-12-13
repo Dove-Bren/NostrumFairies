@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 
 /**
  * Wrapper to ItemStacks that ignore the original itemstack limits and instead permit a limit of a 64-bit signed int.
+ * In general, DeepStacks CAN have stack size 0.
  * @author Skyler
  *
  */
@@ -80,7 +81,7 @@ public class ItemDeepStack {
 		// Could make sure both lists are sorted by itemstack, and have iterators on both to make this merge fast.
 		// Optimization oppertunity!
 		for (ItemStack stack : items) {
-			if (stack == null || stack.stackSize <= 0) {
+			if (stack == null || stack.stackSize < 0) {
 				continue;
 			}
 			

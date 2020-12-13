@@ -751,22 +751,50 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		
 		InventoryPlayer playerInv = ((EntityPlayer) owner).inventory;
 		
-		List<ItemStack> templateList = new ArrayList<>(fairyInventory.getPullTemplateSize());
+		List<ItemStack> pullList = new ArrayList<>(fairyInventory.getPullTemplateSize());
 		for (int i = 0; i < fairyInventory.getPullTemplateSize(); i++) {
 			ItemStack template = fairyInventory.getPullTemplate(i);
 			if (template != null) {
-				templateList.add(template.copy());
+				pullList.add(template.copy());
+			}
+		}
+		
+		List<ItemStack> pushList = new ArrayList<>(fairyInventory.getPullTemplateSize());
+		for (int i = 0; i < fairyInventory.getPushTemplateSize(); i++) {
+			ItemStack template = fairyInventory.getPushTemplate(i);
+			if (template != null) {
+				pushList.add(template.copy());
 			}
 		}
 		
 		// Create copy collection of items we already have
 		List<ItemDeepStack> owned = ItemDeepStack.toDeepList(playerInv);
-		List<ItemDeepStack> wishList = ItemDeepStack.toDeepList(templateList);
+		List<ItemDeepStack> wishList = ItemDeepStack.toDeepList(pullList);
+		List<ItemDeepStack> limits = ItemDeepStack.toDeepList(pushList);
 		
 		// Remove items that we already have
 		Iterator<ItemDeepStack> it = wishList.iterator();
 		while (it.hasNext()) {
 			ItemDeepStack request = it.next();
+			
+			// Is request above what we're capped at? If so, drop request
+			boolean limitted = false;
+			Iterator<ItemDeepStack> limitIt = limits.iterator();
+			while (limitIt.hasNext()) {
+				ItemDeepStack cap = limitIt.next();
+				if (cap.canMerge(request)) {
+					// If cap is less than request, just bail
+					if (cap.getCount() < request.getCount()) {
+						limitted = true;
+					}
+					break;
+				}
+			}
+			if (limitted) {
+				it.remove();
+				continue;
+			}
+			
 			Iterator<ItemDeepStack> ownedIt = owned.iterator();
 			while (ownedIt.hasNext()) {
 				ItemDeepStack existing = ownedIt.next();
@@ -787,15 +815,15 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		}
 		
 		// Dissolve back into itemstacks
-		templateList.clear();
+		pushList.clear();
 		for (ItemDeepStack req : wishList) {
 			while (req.getCount() > 0) {
-				templateList.add(req.splitStack(Math.min(64, req.getTemplate().getMaxStackSize())));
+				pushList.add(req.splitStack(Math.min(64, req.getTemplate().getMaxStackSize())));
 			}
 		}
 		
 		// Check for what we have room for
-		Iterator<ItemStack> stackIt = templateList.iterator();
+		Iterator<ItemStack> stackIt = pushList.iterator();
 		boolean canFit =  false;
 		while (stackIt.hasNext()) {
 			ItemStack request = stackIt.next();
@@ -805,11 +833,11 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			}
 		}
 		
-		if (templateList.isEmpty() || !canFit) {
-			templateList = null;
+		if (pushList.isEmpty() || !canFit) {
+			pushList = null;
 		}
 		
-		return templateList;
+		return pushList;
 	}
 	
 	/**

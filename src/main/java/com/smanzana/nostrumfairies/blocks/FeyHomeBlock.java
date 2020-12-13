@@ -974,14 +974,26 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		}
 		
 		protected int getAetherCost() {
+			if (this.getAvailableFeyEntities().isEmpty()) {
+				// No fey means no workers taking aether
+			}
+			
 			// Ruby downgrades decrease aether cost
 			final float skipChance = .3f * getUpgradeCount(FeySlotType.DOWNGRADE, FeyStoneMaterial.RUBY);
 			if (skipChance > 0 && NostrumFairies.random.nextFloat() < skipChance) {
 				return 0;
 			}
 			
-			int AETHER_PER_TICK = 1;
-			return AETHER_PER_TICK * this.getAvailableFeyEntities().size();
+			// Take aether for all fey that are currently working or re-couping
+			int count = 0;
+			for (EntityFeyBase fey : this.getAvailableFeyEntities()) {
+				if (fey != null && !fey.isDead && (fey.getCurrentTask() != null || fey.getHappiness() < 100f)) {
+					count++;
+				}
+			}
+			
+			final int AETHER_PER_TICK = 1;
+			return AETHER_PER_TICK * count;
 		}
 		
 		/**

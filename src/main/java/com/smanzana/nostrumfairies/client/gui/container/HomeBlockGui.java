@@ -24,6 +24,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
@@ -357,7 +358,7 @@ public class HomeBlockGui {
 				GlStateManager.popMatrix();
 				
 				// -> Status
-				name = fey.getMoodSummary();
+				name = I18n.format(fey.getMoodSummary());
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
 				GlStateManager.scale(nameScale, nameScale, nameScale);
@@ -365,7 +366,7 @@ public class HomeBlockGui {
 				GlStateManager.popMatrix();
 				
 				// -> Activity report
-				name = fey.getActivitySummary();
+				name = I18n.format(fey.getActivitySummary());
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
 				GlStateManager.scale(nameScale, nameScale, nameScale);

@@ -350,15 +350,35 @@ public class FairyScreenGui {
 				if (slotIdx != -1) {
 					// template slot
 					if (player.inventory.getItemStack() == null) {
-						// empty hand. Right-click?
-						if (dragType == 1 && clickTypeIn == ClickType.PICKUP) {
-							// If template is present, clear it
-							if (isPull) {
-								inv.setPullTemplate(slotIdx, null);
-							} else {
-								inv.setPushTemplate(slotIdx, null);
+						// empty hand
+						if (clickTypeIn == ClickType.PICKUP) {
+							// Right-click?
+							if (dragType == 1) {
+								// If template is present, clear it
+								if (isPull) {
+									inv.setPullTemplate(slotIdx, null);
+								} else {
+									inv.setPushTemplate(slotIdx, null);
+								}
+							} else if (dragType == 0) {
+								// left-click means set template stack size to 0
+								final ItemStack template;
+								if (isPull) {
+									template = inv.getPullTemplate(slotIdx);
+									if (template != null) {
+										template.stackSize = 0;
+										inv.setPullTemplate(slotIdx, template);
+									}
+								} else {
+									template = inv.getPushTemplate(slotIdx);
+									if (template != null) {
+										template.stackSize = 0;
+										inv.setPushTemplate(slotIdx, template);
+									}
+								}
 							}
 						}
+						
 					} else {
 						// Item in hand. Clicking empty output slot?
 						if (clickTypeIn == ClickType.PICKUP) {
