@@ -5,8 +5,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
@@ -77,9 +80,9 @@ public class ItemDeepStack {
 		return new ItemDeepStack(item.copy(), count);
 	}
 	
-	protected static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, Iterable<ItemStack> items) {
+	public static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, Iterable<ItemStack> items) {
 		// Could make sure both lists are sorted by itemstack, and have iterators on both to make this merge fast.
-		// Optimization oppertunity!
+		// Optimization opportunity!
 		for (ItemStack stack : items) {
 			if (stack == null || stack.stackSize < 0) {
 				continue;
@@ -106,8 +109,34 @@ public class ItemDeepStack {
 		return toDeepList(out, items);
 	}
 	
-	public static List<ItemDeepStack> toDeepList(IInventory inventory) {
-		List<ItemDeepStack> out = new ArrayList<>(inventory.getSizeInventory());
+	public static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, InventoryPlayer inventory) {
+		out = toDeepList(out, (IInventory) inventory);
+		
+		final @Nullable ItemStack heldStack = inventory.getItemStack();
+		
+		if (heldStack != null) {
+			boolean merged = false;
+			for (ItemDeepStack condensed : out) {
+				if (condensed.canMerge(heldStack)) {
+					condensed.add(heldStack);
+					merged = true;
+					break;
+				}
+			}
+			
+			if (!merged) {
+				out.add(new ItemDeepStack(heldStack));
+			}
+		}
+		
+		return out;
+	}
+	
+	public static List<ItemDeepStack> toDeepList(InventoryPlayer inventory) {
+		return toDeepList(new ArrayList<>(inventory.getSizeInventory()), inventory);
+	}
+	
+	public static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, IInventory inventory) {
 		return toDeepList(out, () -> {
 			return new Iterator<ItemStack>() {
 				
@@ -124,6 +153,10 @@ public class ItemDeepStack {
 				}
 			};
 		});
+	}
+	
+	public static List<ItemDeepStack> toDeepList(IInventory inventory) {
+		return toDeepList(new ArrayList<>(inventory.getSizeInventory()), inventory);
 	}
 	
 	public static List<ItemDeepStack> toCondensedDeepList(Collection<ItemDeepStack> deeps) {

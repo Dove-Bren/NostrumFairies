@@ -18,6 +18,7 @@ import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.OutputLogisticsPanel;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
@@ -72,8 +73,8 @@ import com.smanzana.nostrummagica.blocks.MimicBlock;
 import com.smanzana.nostrummagica.items.MageStaff;
 import com.smanzana.nostrummagica.items.MirrorItem;
 import com.smanzana.nostrummagica.items.NostrumResourceItem;
-import com.smanzana.nostrummagica.items.ReagentBag;
 import com.smanzana.nostrummagica.items.NostrumResourceItem.ResourceType;
+import com.smanzana.nostrummagica.items.ReagentBag;
 import com.smanzana.nostrummagica.items.ReagentItem;
 import com.smanzana.nostrummagica.items.ReagentItem.ReagentType;
 import com.smanzana.nostrummagica.items.ThanoPendant;
@@ -409,6 +410,12 @@ public class CommonProxy {
     	GameRegistry.register(
     			(new ItemBlock(LogisticsSensorBlock.instance())).setRegistryName(LogisticsSensorBlock.ID));
     	LogisticsSensorBlock.init();
+    	
+    	GameRegistry.register(OutputLogisticsPanel.instance(),
+    			new ResourceLocation(NostrumFairies.MODID, OutputLogisticsPanel.ID));
+    	GameRegistry.register(
+    			(new ItemBlock(OutputLogisticsPanel.instance())).setRegistryName(OutputLogisticsPanel.ID));
+    	OutputLogisticsPanel.init();
     }
     
     private void registerLore() {
@@ -733,6 +740,17 @@ public class CommonProxy {
 				new ItemStack[] {null, new ItemStack(Items.DYE, 1, 2), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), null},
 				new RRequirementResearch("adv_logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(InputLogisticsChest.instance())))
+			);
+
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("lpanel_output",
+				new ItemStack(OutputLogisticsPanel.instance()),
+				null,
+				new ReagentType[] {ReagentType.GINSENG, ReagentType.SKY_ASH, ReagentType.BLACK_PEARL, ReagentType.MANI_DUST},
+				new ItemStack(OutputLogisticsChest.instance()),
+				new ItemStack[] {null, FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), null, null},
+				new RRequirementResearch("adv_logistics_items"),
+				new OutcomeSpawnItem(new ItemStack(OutputLogisticsPanel.instance(), 4)))
 			);
 
     	RitualRegistry.instance().addRitual(

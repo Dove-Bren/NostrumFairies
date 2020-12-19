@@ -22,6 +22,7 @@ import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
 import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
+import com.smanzana.nostrumfairies.blocks.OutputLogisticsPanel;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
@@ -396,6 +397,10 @@ public class ClientProxy extends CommonProxy {
 		registerModel(SoulJar.instance(),
 				stack.getMetadata(),
 				SoulJar.instance().getModelName(stack));
+		
+		registerModel(Item.getItemFromBlock(OutputLogisticsPanel.instance()),
+				0,
+				OutputLogisticsPanel.ID);
 	}
 	
 	@Override

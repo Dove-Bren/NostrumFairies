@@ -240,5 +240,7 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 		if (this.chainListener != null) {
 			this.chainListener.onTaskComplete(task, worker);
 		}
+		
+		this.currentTasks.remove(task);
 	}
 }

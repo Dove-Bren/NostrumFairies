@@ -8,6 +8,7 @@ import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.InputLogisticsChest.InputChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock.LogisticsSensorTileEntity;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest.OutputChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.OutputLogisticsPanel.OutputPanelTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest.StorageChestTileEntity;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
@@ -23,6 +24,7 @@ import com.smanzana.nostrumfairies.client.gui.container.InputChestGui.InputChest
 import com.smanzana.nostrumfairies.client.gui.container.LogisticsSensorGui;
 import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui.OutputChestGuiContainer;
+import com.smanzana.nostrumfairies.client.gui.container.OutputPanelGui;
 import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui.StorageChestGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.TemplateWandGui;
@@ -52,6 +54,7 @@ public class NostrumFairyGui implements IGuiHandler {
 	public static final int craftGnomeID = 11;
 	
 	public static final int logisticsSensorID = 12;
+	public static final int outputPanelID = 13;
 	
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
@@ -160,6 +163,15 @@ public class NostrumFairyGui implements IGuiHandler {
 				return new LogisticsSensorGui.LogisticsSensorContainer(
 						player.inventory,
 						(LogisticsSensorTileEntity) ent); // should be tile inventory
+			}
+		}
+		
+		if (ID == outputPanelID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof OutputPanelTileEntity) {
+				return new OutputPanelGui.OutputPanelContainer(
+						player.inventory,
+						(OutputPanelTileEntity) ent); // should be tile inventory
 			}
 		}
 		
@@ -280,6 +292,15 @@ public class NostrumFairyGui implements IGuiHandler {
 				return new LogisticsSensorGui.LogisticsSensorGuiContainer(new LogisticsSensorGui.LogisticsSensorContainer(
 						player.inventory,
 						(LogisticsSensorTileEntity) ent)); // should be tile inventory
+			}
+		}
+		
+		if (ID == outputPanelID) {
+			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
+			if (ent != null && ent instanceof OutputPanelTileEntity) {
+				return new OutputPanelGui.OutputPanelGuiContainer(new OutputPanelGui.OutputPanelContainer(
+						player.inventory,
+						(OutputPanelTileEntity) ent)); // should be tile inventory
 			}
 		}
 		
