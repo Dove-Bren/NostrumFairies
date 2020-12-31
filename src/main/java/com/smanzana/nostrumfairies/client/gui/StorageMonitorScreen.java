@@ -134,8 +134,10 @@ public class StorageMonitorScreen extends GuiScreen {
 		
 		final int leftOffset = (this.width - GUI_TEXT_WIDTH) / 2; //distance from left
 		final int topOffset = (this.height - GUI_TEXT_HEIGHT) / 2;
-		
+
+		GlStateManager.color(1.0f, 1.0f, 1.0f, 0.9f);
 		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+		GlStateManager.enableLighting();
 		GlStateManager.disableLighting();
 		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXT);
 		

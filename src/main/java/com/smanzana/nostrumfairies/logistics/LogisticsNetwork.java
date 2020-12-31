@@ -623,6 +623,20 @@ public class LogisticsNetwork {
 			cachedItemMap.put(component, makeItemListEntry(component, list));
 		}
 		
+		Collections.sort(cachedCondensedItems, (l, r) -> {
+			if (l == null && r == null) {
+				return 0;
+			}
+			if (l == null) {
+				return -1;
+			}
+			if (r == null) {
+				return 1;
+			}
+			
+			return (int) (r.getCount() - l.getCount());
+		});
+		
 		refreshCacheKey();
 	}
 	

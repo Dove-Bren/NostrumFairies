@@ -263,7 +263,7 @@ public class FarmingBlock extends BlockContainer {
 			}
 			
 			if (!taskMap.containsKey(base)) {
-				LogisticsTaskPlantItem task = new LogisticsTaskPlantItem(this.networkComponent, "Plant Sapling", this.getSeed(base), worldObj, base);
+				LogisticsTaskPlantItem task = new LogisticsTaskPlantItem(this.networkComponent, "Plant Sapling", this.getSeed(worldObj, base), worldObj, base);
 				this.taskMap.put(base, task);
 				network.getTaskRegistry().register(task, this);
 			}
@@ -310,7 +310,7 @@ public class FarmingBlock extends BlockContainer {
 				
 				if (isGrownCrop(worldObj, pos)) {
 					grownCrops.add(pos.toImmutable());
-				} else if (isPlantableSpot(worldObj, pos.down(), this.getSeed(pos))) {
+				} else if (isPlantableSpot(worldObj, pos.down(), this.getSeed(worldObj, pos))) {
 					emptySpots.add(pos.toImmutable());
 				}
 			}
@@ -362,7 +362,7 @@ public class FarmingBlock extends BlockContainer {
 			}
 		}
 		
-		protected static ItemStack ResolveSeed(@Nullable IBlockState state) {
+		protected static @Nullable ItemStack ResolveSeed(@Nullable IBlockState state) {
 			ItemStack seeds = null;
 			if (state != null) {
 				seeds = SeedMap.get(Block.getStateId(state));
@@ -379,26 +379,40 @@ public class FarmingBlock extends BlockContainer {
 						seeds = null;
 					}
 				}
-			}
-			
-			if (seeds == null) {
-				seeds = new ItemStack(Items.WHEAT_SEEDS);
-			}
-			
-			if (state != null) {
+				
 				// Cache this lookup
-				SeedMap.put(Block.getStateId(state), seeds.copy());
+				SeedMap.put(Block.getStateId(state), seeds == null ? new ItemStack(Items.WHEAT_SEEDS) : seeds.copy());
 			}
 			
 			return seeds;
 		}
 		
 		// TODO make configurable!
-		public ItemStack getSeed(BlockPos pos) {
-			final @Nullable IBlockState state = seenStates.get(pos);
+		public ItemStack getSeed(World world, BlockPos pos) {
+			@Nullable IBlockState state = seenStates.get(pos);
 			
 			// Try and figure out what the seed would be
-			ItemStack seeds = ResolveSeed(state);
+			@Nullable ItemStack seeds = ResolveSeed(state);
+			
+			// Attempt to use nearby seeds if we couldn't figure one out
+			if (seeds == null) {
+				for (BlockPos nearby : new BlockPos[] {pos.north(), pos.south(), pos.east(), pos.west()}) {
+					state = seenStates.get(nearby);
+					if (state == null) {
+						state = world.getBlockState(nearby);
+					}
+					
+					seeds = ResolveSeed(state);
+					if (seeds != null) {
+						break;
+					}
+				}
+			}
+			
+			if (seeds == null) {
+				// Could look for available seeds
+				seeds = new ItemStack(Items.WHEAT_SEEDS);
+			}
 			
 			return seeds;
 		}

@@ -19,6 +19,7 @@ tile.logistics_crafting_station_dwarf.name=Dwarvern Crafting Station
 tile.logistics_crafting_station_gnome.name=Gnomish Crafting Station
 tile.logistics_crafting_station_elf.name=Elven Crafting Station
 tile.logistics_sensor.name=Logistics Sensor
+tile.logistics_output_panel.name=Output Panel
 
 tile.home_block_fairy.name=Fairy Home
 tile.home_block_elf.name=Elf Home
