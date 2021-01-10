@@ -1,10 +1,9 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
@@ -209,9 +208,10 @@ public class LogisticsSensorBlock extends BlockContainer
 			return;
 		
 		LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) ent;
+		final boolean activated = sensor.logicComp.isActivated();
 		sensor.unlinkFromNetwork();
 		
-		if (sensor.logicValidCache) {
+		if (activated) {
 			for (EnumFacing side : EnumFacing.values()) {
 				world.notifyNeighborsOfStateChange(pos.offset(side), this);
 			}
@@ -235,84 +235,30 @@ public class LogisticsSensorBlock extends BlockContainer
 		}
 		
 		return 0;
-		
-//		TileEntity te = blockAccess.getTileEntity(pos);
-//		if (te != null && te instanceof LogisticsSensorTileEntity) {
-//			LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) te;
-//			if (sensor.checkConditions()) {
-//				return 15;
-//			} else {
-//				return 0;
-//			}
-//		}
 	}
 
-	public static class LogisticsSensorTileEntity extends LogisticsTileEntity implements ITickable {
-	
-		private static final String NBT_LOGIC_ITEM = "logic_item";
-		private static final String NBT_LOGIC_OP = "logic_op";
-		private static final String NBT_LOGIC_COUNT = "logic_count";
+	public static class LogisticsSensorTileEntity extends LogisticsTileEntity implements ITickable, ILogicListener, ILogisticsLogicProvider {
 		
-		public static enum SensorLogicOp {
-			LESS,
-			EQUAL,
-			MORE;
-		}
-		
-		private SensorLogicOp op;
-		private int count;
-		private @Nullable ItemStack template;
-		
-		private UUID logicCacheID;
-		private boolean logicValidCache;
 		private boolean logicLastWorld;
+		
+		private static final String NBT_LOGIC_COMP = "logic";
+		
+		private final LogisticsLogicComponent logicComp;
 		
 		private boolean placed = false;
 		
 		public LogisticsSensorTileEntity() {
 			super();
-			op = SensorLogicOp.EQUAL;
-		}
-		
-		public int getLogicCount() {
-			return this.count;
-		}
-		
-		public SensorLogicOp getLogicOp() {
-			return this.op;
-		}
-		
-		public @Nullable ItemStack getLogicTemplate() {
-			return this.template;
-		}
-		
-		public void setLogicOp(SensorLogicOp op) {
-			this.op = op;
-			logicCacheID = null;
-			this.markDirty();
-		}
-		
-		public void setLogicTemplate(@Nullable ItemStack stack) {
-			this.template = stack != null ? stack.copy() : null;
-			logicCacheID = null;
-			this.markDirty();
-		}
-	
-		public void setLogicCount(int val) {
-			this.count = val;
-			logicCacheID = null;
-			this.markDirty();
+			logicComp = new LogisticsLogicComponent(true, this);
 		}
 		
 		@Override
 		public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 			nbt = super.writeToNBT(nbt);
 			
-			nbt.setInteger(NBT_LOGIC_COUNT, count);
-			nbt.setString(NBT_LOGIC_OP, op.name());
-			if (template != null) {
-				nbt.setTag(NBT_LOGIC_ITEM, template.serializeNBT());
-			}
+			NBTTagCompound tag = new NBTTagCompound();
+			logicComp.writeToNBT(tag);
+			nbt.setTag(NBT_LOGIC_COMP, tag);
 			
 			return nbt;
 		}
@@ -321,41 +267,36 @@ public class LogisticsSensorBlock extends BlockContainer
 		public void readFromNBT(NBTTagCompound nbt) {
 			super.readFromNBT(nbt);
 			
-			try {
-				this.op = SensorLogicOp.valueOf(nbt.getString(NBT_LOGIC_OP).toUpperCase());
-			} catch (Exception e) {
-				this.op = SensorLogicOp.EQUAL;
+			NBTTagCompound sub = nbt.getCompoundTag(NBT_LOGIC_COMP);
+			if (sub != null) {
+				logicComp.readFromNBT(sub);
 			}
-			
-			this.template = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_LOGIC_ITEM));
-			this.count = nbt.getInteger(NBT_LOGIC_COUNT);
-			
-			this.logicCacheID = null;
 		}
 		
 		@Override
 		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
 			super.setNetworkComponent(component);
+			logicComp.setNetwork(component.getNetwork());
 		}
 		
 		@Override
 		public void setWorldObj(World worldIn) {
 			super.setWorldObj(worldIn);
 			
-			if (this.networkComponent != null && !worldIn.isRemote) {
-				updateLogic();
-			}
+			logicComp.setLocation(worldIn, pos);
 		}
 		
 		@Override
 		public void onLeaveNetwork() {
 			super.onLeaveNetwork();
+			logicComp.setNetwork(null);
 		}
 		
 		@Override
 		public void onJoinNetwork(LogisticsNetwork network) {
-			updateLogic();
+			//updateLogic();
 			super.onJoinNetwork(network);
+			logicComp.setNetwork(network);
 		}
 		
 		@Override
@@ -363,46 +304,8 @@ public class LogisticsSensorBlock extends BlockContainer
 			super.markDirty();
 		}
 		
-		protected void updateLogic() {
-			ItemStack req = this.getLogicTemplate();
-			if (!placed || this.getNetwork() == null || req == null) {
-				this.logicCacheID = null;
-				this.logicValidCache = false;
-				return;
-			}
-			
-			if (this.logicCacheID == null || !logicCacheID.equals(getNetwork().getCacheKey())) {
-				logicCacheID = getNetwork().getCacheKey();
-				
-				long available = getNetwork().getItemCount(req);
-				
-				switch(getLogicOp()) {
-					case EQUAL:
-					default:
-						logicValidCache = (available == this.count);
-						break;
-					case LESS:
-						logicValidCache = (available < this.count);
-						break;
-					case MORE:
-						logicValidCache = (available > this.count);
-						break;
-				}
-			}
-		}
-		
-		protected boolean checkConditions() {
-			if (worldObj == null || !placed) {
-				return false;
-			}
-			
-			updateLogic();
-			return logicValidCache;
-		}
-		
 		public void notifyNeighborChanged() {
-			this.logicCacheID = null;
-			this.updateLogic();
+			; // This used to bust logic cache. Needed?
 		}
 		
 		@Override
@@ -412,28 +315,19 @@ public class LogisticsSensorBlock extends BlockContainer
 		
 		@Override
 		public void update() {
-			if (!placed) {
-				placed = true;
+			if (!placed || worldObj.getTotalWorldTime() % 5 == 0) {
 				if (!worldObj.isRemote) {
-					this.logicCacheID = null;
-					this.updateLogic();
-					//worldObj.notifyNeighborsOfStateChange(pos, worldObj.getBlockState(pos).getBlock());
-					worldObj.setBlockState(pos, instance().getDefaultState().withProperty(ACTIVE, this.logicValidCache), 3);
-					logicLastWorld = logicValidCache;
-				}
-			}
-			
-			if (worldObj.getTotalWorldTime() % 5 == 0) {
-				if (!worldObj.isRemote) {
-					this.updateLogic();
+					final boolean activated = this.logicComp.isActivated(); 
 
-					if (logicLastWorld != logicValidCache) {
+					if (!placed || logicLastWorld != activated) {
 						// Make sure to update the world so that redstone will be updated
 						//worldObj.notifyNeighborsOfStateChange(pos, worldObj.getBlockState(pos).getBlock());
-						worldObj.setBlockState(pos, instance().getDefaultState().withProperty(ACTIVE, this.logicValidCache), 3);
-						logicLastWorld = logicValidCache;
+						worldObj.setBlockState(pos, instance().getDefaultState().withProperty(ACTIVE, activated), 3);
+						logicLastWorld = activated;
 					}
 				}
+				
+				placed = true;
 			}
 		}
 
@@ -450,6 +344,22 @@ public class LogisticsSensorBlock extends BlockContainer
 		@Override
 		public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
 			return !(oldState.getBlock().equals(newState.getBlock()));
+		}
+
+		@Override
+		public void onStateChange(boolean activated) {
+			; // We handle this in a tick loop, which adds lag between redstone but also won't change blockstates
+			// multiples times if item count jumps back and forth across a boundary in a single tick
+		}
+
+		@Override
+		public void onDirty() {
+			this.markDirty();
+		}
+		
+		@Override
+		public LogisticsLogicComponent getLogicComponent() {
+			return this.logicComp;
 		}
 	}
 }

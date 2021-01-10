@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
@@ -39,37 +39,20 @@ import net.minecraft.util.ITickable;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity implements ILogisticsTaskListener, ITickable {
+public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
+											implements ILogisticsTaskListener, ITickable, ILogisticsLogicProvider, ILogicListener {
 
 	private static final String NBT_TEMPLATES = "templates";
 	private static final String NBT_BUILD_POINTS = "build_points";
-	private static final String NBT_CRITERIA_MODE = "criteria_mode";
-	private static final String NBT_CRITERIA_OP = "criteria_op";
-	private static final String NBT_CRITERIA_COUNT = "criteria_count";
+	private static final String NBT_LOGIC_COMP = "logic";
 	
 	private static final String NBT_TEMPLATE_INDEX = "index";
 	private static final String NBT_TEMPLATE_ITEM = "item";
 	
-	public static enum CraftingCriteriaMode {
-		ALWAYS,
-		REDSTONE_HIGH,
-		REDSTONE_LOW,
-		LOGIC;
-	}
-	
-	public static enum CraftingLogicOp {
-		LESS,
-		EQUAL,
-		MORE;
-	}
-	
 	private String displayName;
 	private ItemStack[] templates;
 	private float buildPoints; // out of 100
-	//private ItemStack criteriaItem; item in slot [TEMPLATE_SLOTS + 1]
-	private CraftingCriteriaMode criteriaMode;
-	private CraftingLogicOp criteriaOp;
-	private int criteriaCount;
+	private final LogisticsLogicComponent logicComp;
 	private LogisticsItemWithdrawRequester withdrawRequester;
 	private LogisticsItemDepositRequester depositRequester;
 	
@@ -85,9 +68,6 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 	private boolean ingredientsDirty;
 	private boolean ingredientsValidCache;
 	
-	private UUID logicCacheID;
-	private boolean logicValidCache;
-	
 	// Task data (transient)
 	private List<LogisticsTaskWorkBlock> tasks;
 	
@@ -102,8 +82,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		ingredientsDirty = true;
 		recipeIssuesCache = new boolean[TEMPLATE_SLOTS];
 		recipeBonusesCache = new boolean[TEMPLATE_SLOTS];
-		this.criteriaOp = CraftingLogicOp.EQUAL;
-		this.criteriaMode = CraftingCriteriaMode.ALWAYS;
+		logicComp = new LogisticsLogicComponent(false, this);
 		this.tasks = new ArrayList<>();
 		
 
@@ -113,6 +92,22 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 	}
 	
 	public abstract int getCraftGridDim();
+	
+	@Override
+	public void onStateChange(boolean activated) {
+		; // We handle this in a tick loop, which adds lag between redstone but also won't change blockstates
+		// multiples times if item count jumps back and forth across a boundary in a single tick
+	}
+
+	@Override
+	public void onDirty() {
+		this.markDirty();
+	}
+	
+	@Override
+	public LogisticsLogicComponent getLogicComponent() {
+		return this.logicComp;
+	}
 	
 	@Override
 	public String getName() {
@@ -186,36 +181,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		return this.getStackInSlot(TEMPLATE_SLOTS + 2);
 	}
 	
-	public int getCriteriaCount() {
-		return this.criteriaCount;
-	}
-	
-	public CraftingCriteriaMode getCriteriaMode() {
-		return this.criteriaMode;
-	}
-	
-	public CraftingLogicOp getCriteriaOp() {
-		return this.criteriaOp;
-	}
-	
 	public @Nullable ItemStack getCriteriaTemplate() {
 		return this.getStackInSlot(TEMPLATE_SLOTS + 1);
-	}
-	
-	public void setCriteriaMode(CraftingCriteriaMode mode) {
-		this.criteriaMode = mode;
-		logicCacheID = null;
-		this.markDirty();
-	}
-	
-	public void setCriteriaOp(CraftingLogicOp op) {
-		this.criteriaOp = op;
-		logicCacheID = null;
-	}
-
-	public void setCriteriaCount(int val) {
-		this.criteriaCount = val;
-		this.markDirty();
 	}
 	
 	/**
@@ -415,12 +382,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		}
 		nbt.setTag(NBT_TEMPLATES, templates);
 		
-		nbt.setString(NBT_CRITERIA_MODE, criteriaMode.name());
-//		if (criteriaItem != null) { // Handled by inventory saving
-//			nbt.setTag(NBT_CRITERIA_TYPE, criteriaItem.serializeNBT());
-//		}
-		nbt.setInteger(NBT_CRITERIA_COUNT, criteriaCount);
-		nbt.setString(NBT_CRITERIA_OP, criteriaOp.name());
+		nbt.setTag(NBT_LOGIC_COMP, logicComp.writeToNBT(new NBTTagCompound()));
+		
 		nbt.setFloat(NBT_BUILD_POINTS, buildPoints);
 		
 		return nbt;
@@ -446,20 +409,11 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 			templates[index] = stack;
 		}
 		
-		try {
-			this.criteriaMode = CraftingCriteriaMode.valueOf(nbt.getString(NBT_CRITERIA_MODE).toUpperCase());
-		} catch (Exception e) {
-			this.criteriaMode = CraftingCriteriaMode.ALWAYS;
+		NBTTagCompound tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
+		if (tag != null) {
+			this.logicComp.readFromNBT(tag);
 		}
 		
-		try {
-			this.criteriaOp = CraftingLogicOp.valueOf(nbt.getString(NBT_CRITERIA_OP).toUpperCase());
-		} catch (Exception e) {
-			this.criteriaOp = CraftingLogicOp.EQUAL;
-		}
-		
-		//this.criteriaItem = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_CRITERIA_TYPE));
-		this.criteriaCount = nbt.getInteger(NBT_CRITERIA_COUNT);
 		this.buildPoints = nbt.getFloat(NBT_BUILD_POINTS);
 		
 		// Do super afterwards so taht we have templates already
@@ -472,6 +426,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 	@Override
 	protected void setNetworkComponent(LogisticsTileEntityComponent component) {
 		super.setNetworkComponent(component);
+		logicComp.setNetwork(component.getNetwork());
 		
 		if (worldObj != null && !worldObj.isRemote && withdrawRequester == null) {
 			withdrawRequester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent);
@@ -485,6 +440,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 	@Override
 	public void setWorldObj(World worldIn) {
 		super.setWorldObj(worldIn);
+		logicComp.setLocation(worldIn, pos);
 		
 		if (this.networkComponent != null && !worldIn.isRemote) {
 			if (withdrawRequester == null) {
@@ -495,7 +451,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 				depositRequester.updateRequestedItems(getPushRequests());
 			}
 			
-			checkTasks();
+			//checkTasks();
 		}
 	}
 	
@@ -509,6 +465,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		}
 		
 		super.onLeaveNetwork();
+		logicComp.setNetwork(null);
 	}
 	
 	@Override
@@ -522,6 +479,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		
 		checkTasks();
 		super.onJoinNetwork(network);
+		logicComp.setNetwork(network);
 	}
 	
 	private List<ItemStack> getItemRequests() {
@@ -605,7 +563,6 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 			depositRequester.updateRequestedItems(getPushRequests());
 		}
 		this.ingredientsDirty = true;
-		this.logicCacheID = null;
 		this.recipeDirty = true;
 		this.checkTasks();
 	}
@@ -615,9 +572,9 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		if (id == 0) {
 			return (int) (this.getProgress() * 100);
 		} else if (id == 1) {
-			return this.criteriaMode.ordinal();
+			return 0;// this.criteriaMode.ordinal();
 		} else if (id == 2) {
-			return this.criteriaOp.ordinal();
+			return 0;//this.criteriaOp.ordinal();
 		} else if (id <= TEMPLATE_SLOTS + 2) {
 			// if issue, return -1. If bonus, return 1. Else, 0.
 			if (recipeIssuesCache[id-3]) {
@@ -636,9 +593,9 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		if (id == 0) {
 			this.buildPoints = (((float) value / 100f) * 100f); // last 100f is how many build points per build
 		} else if (id == 1) {
-			this.criteriaMode = CraftingCriteriaMode.values()[value % CraftingCriteriaMode.values().length];
+			//this.criteriaMode = CraftingCriteriaMode.values()[value % CraftingCriteriaMode.values().length];
 		} else if (id == 2) {
-			this.criteriaOp = CraftingLogicOp.values()[value % CraftingLogicOp.values().length];
+			//this.criteriaOp = CraftingLogicOp.values()[value % CraftingLogicOp.values().length];
 		} else if (id < TEMPLATE_SLOTS) {
 			if (value == -1) {
 				this.recipeIssuesCache[id - 3] = true;
@@ -707,7 +664,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 	}
 	
 	protected void checkTasks() {
-		if (this.validateRecipe() && this.validateIngredients() && this.getNetwork() != null && this.worldObj != null && checkConditions()) {
+		if (this.validateRecipe() && this.validateIngredients() && this.getNetwork() != null && this.worldObj != null && logicComp.isActivated()) {
 			while (this.tasks.size() < getMaxWorkJobs()) {
 				createTask();
 			}
@@ -807,62 +764,6 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		return true;
 	}
 	
-	protected void runLogic() {
-		ItemStack req = getCriteriaTemplate();
-		if (!placed || this.getNetwork() == null || req == null) {
-			this.logicCacheID = null;
-			this.logicValidCache = false;
-			return;
-		}
-		
-		if (this.logicCacheID == null || !logicCacheID.equals(getNetwork().getCacheKey())) {
-			logicCacheID = getNetwork().getCacheKey();
-			
-			long available = getNetwork().getItemCount(req);
-			
-			switch(getCriteriaOp()) {
-				case EQUAL:
-				default:
-					logicValidCache = (available == this.criteriaCount);
-					break;
-				case LESS:
-					logicValidCache = (available < this.criteriaCount);
-					break;
-				case MORE:
-					logicValidCache = (available > this.criteriaCount);
-					break;
-			}
-				
-		}
-	}
-	
-	protected boolean checkConditions() {
-		if (worldObj == null || !placed) {
-			return false;
-		}
-		
-		CraftingCriteriaMode mode = this.getCriteriaMode();
-		final boolean clear;
-		switch (mode) {
-		case ALWAYS:
-		default:
-			clear = true;
-			break;
-		case REDSTONE_HIGH:
-			clear = worldObj.isBlockPowered(pos);
-			break;
-		case REDSTONE_LOW:
-			clear = !worldObj.isBlockPowered(pos);
-			break;
-		case LOGIC:
-			runLogic();
-			clear = logicValidCache;
-			break;
-		}
-		
-		return clear;
-	}
-	
 	@Override
 	public void onTaskDrop(ILogisticsTask task, IFeyWorker worker) {
 		
@@ -879,7 +780,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 	}
 	
 	public void notifyNeighborChanged() {
-		this.logicCacheID = null;
+		logicComp.onWorldUpdate();
 		this.checkTasks();
 	}
 	
@@ -893,8 +794,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity i
 		if (!placed) {
 			placed = true;
 			if (!worldObj.isRemote) {
-				this.logicCacheID = null;
-				this.runLogic();
+				// TODO used to update logic
 			}
 		}
 		

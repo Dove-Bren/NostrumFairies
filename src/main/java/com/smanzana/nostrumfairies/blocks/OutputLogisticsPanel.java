@@ -9,6 +9,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
@@ -227,6 +228,11 @@ public class OutputLogisticsPanel extends BlockContainer {
 		if (!canPlaceAt(worldIn, pos, face)) {
 			this.dropBlockAsItem(worldIn, pos, state, 0);
 			worldIn.setBlockToAir(pos);
+		} else {
+			TileEntity ent = worldIn.getTileEntity(pos);
+			if (ent != null && ent instanceof OutputPanelTileEntity) {
+				((OutputPanelTileEntity) ent).notifyNeighborChanged();
+			}
 		}
 		
 		super.neighborChanged(state, worldIn, pos, blockIn);
@@ -247,20 +253,39 @@ public class OutputLogisticsPanel extends BlockContainer {
 		return true;
 	}
 	
-	public static class OutputPanelTileEntity extends LogisticsTileEntity implements ITickable {
+	public static class OutputPanelTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsLogicProvider, ILogicListener {
 
 		private static final int SLOTS = 3;
 		private static final String NBT_TEMPLATES = "templates";
 		private static final String NBT_TEMPLATE_INDEX = "index";
 		private static final String NBT_TEMPLATE_ITEM = "item";
+		private static final String NBT_LOGIC_COMP = "logic";
 		
 		private ItemStack[] templates;
 		private LogisticsItemWithdrawRequester requester;
 		private int ticksExisted; // Not persisted
+		private final LogisticsLogicComponent logicComp;
 		
 		public OutputPanelTileEntity() {
 			super();
 			templates = new ItemStack[SLOTS];
+			logicComp = new LogisticsLogicComponent(false, this);
+		}
+		
+		@Override
+		public void onStateChange(boolean activated) {
+			; // We handle this in a tick loop, which adds lag between redstone but also won't change blockstates
+			// multiples times if item count jumps back and forth across a boundary in a single tick
+		}
+
+		@Override
+		public void onDirty() {
+			this.markDirty();
+		}
+		
+		@Override
+		public LogisticsLogicComponent getLogicComponent() {
+			return this.logicComp;
 		}
 		
 		@Override
@@ -323,6 +348,8 @@ public class OutputLogisticsPanel extends BlockContainer {
 			}
 			nbt.setTag(NBT_TEMPLATES, templates);
 			
+			nbt.setTag(NBT_LOGIC_COMP, this.logicComp.writeToNBT(new NBTTagCompound()));
+			
 			return nbt;
 		}
 		
@@ -344,6 +371,11 @@ public class OutputLogisticsPanel extends BlockContainer {
 				ItemStack stack = ItemStack.loadItemStackFromNBT(template.getCompoundTag(NBT_TEMPLATE_ITEM));
 				
 				templates[index] = stack;
+			}
+			
+			NBTTagCompound tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
+			if (tag != null) {
+				this.logicComp.readFromNBT(tag);
 			}
 			
 			// Do super afterwards so taht we have templates already
@@ -371,6 +403,7 @@ public class OutputLogisticsPanel extends BlockContainer {
 		@Override
 		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
 			super.setNetworkComponent(component);
+			logicComp.setNetwork(component.getNetwork());
 			
 			if (worldObj != null && !worldObj.isRemote && requester == null) {
 				requester = makeRequester(this.networkComponent.getNetwork(), this.networkComponent);
@@ -381,6 +414,7 @@ public class OutputLogisticsPanel extends BlockContainer {
 		@Override
 		public void setWorldObj(World worldIn) {
 			super.setWorldObj(worldIn);
+			logicComp.setLocation(worldIn, pos);
 			
 			if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
 				requester = makeRequester(this.networkComponent.getNetwork(), this.networkComponent);
@@ -396,6 +430,7 @@ public class OutputLogisticsPanel extends BlockContainer {
 			}
 			
 			super.onLeaveNetwork();
+			logicComp.setNetwork(null);
 		}
 		
 		@Override
@@ -406,6 +441,7 @@ public class OutputLogisticsPanel extends BlockContainer {
 			}
 			
 			super.onJoinNetwork(network);
+			logicComp.setNetwork(network);
 		}
 		
 		private @Nullable IItemHandler getLinkedInventoryHandler() {
@@ -472,6 +508,12 @@ public class OutputLogisticsPanel extends BlockContainer {
 		}
 		
 		private List<ItemStack> getItemRequests() {
+			
+			// Globally return 0 requests if logic says we shouldn't run
+			if (!logicComp.isActivated()) {
+				return new ArrayList<>(0);
+			}
+			
 			final List<ItemStack> requests = new LinkedList<>();
 			final List<ItemDeepStack> available = getLinkedItems();
 			
@@ -565,6 +607,10 @@ public class OutputLogisticsPanel extends BlockContainer {
 			if (this.ticksExisted % 8 == 0) {
 				tickRequester();
 			}
+		}
+		
+		public void notifyNeighborChanged() {
+			logicComp.onWorldUpdate();
 		}
 	}
 

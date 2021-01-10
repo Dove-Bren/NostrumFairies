@@ -1,17 +1,20 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
+import java.io.IOException;
+
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest.OutputChestTileEntity;
+import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
+import com.smanzana.nostrumfairies.client.gui.container.LogicPanel.LogicPanelGui;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ClickType;
-import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
@@ -24,6 +27,8 @@ public class OutputChestGui {
 	private static final ResourceLocation TEXT = new ResourceLocation(NostrumFairies.MODID + ":textures/gui/container/output_chest.png");
 	private static final int GUI_TEXT_WIDTH = 176;
 	private static final int GUI_TEXT_HEIGHT = 132;
+	private static final int GUI_PANEL_WIDTH = 80;
+	private static final int GUI_PANEL_HEIGHT = 100;
 	private static final int GUI_INV_CELL_LENGTH = 18;
 	private static final int GUI_TEXT_MISSING_ICON_HOFFSET = GUI_TEXT_WIDTH;
 	private static final int GUI_TEXT_WORKING_ICON_HOFFSET = GUI_TEXT_WIDTH + GUI_INV_CELL_LENGTH;
@@ -34,12 +39,14 @@ public class OutputChestGui {
 	private static final int GUI_HOTBAR_INV_HOFFSET = 8;
 	private static final int GUI_HOTBAR_INV_VOFFSET = 108;
 
-	public static class OutputChestContainer extends Container {
+	public static class OutputChestContainer extends LogicContainer {
 		
 		protected OutputChestTileEntity chest;
+		protected final LogicPanel logicPanel;
 		private int chestIDStart;
 		
 		public OutputChestContainer(IInventory playerInv, OutputChestTileEntity chest) {
+			super(chest);
 			this.chest = chest;
 						
 			// Construct player inventory
@@ -84,6 +91,8 @@ public class OutputChestGui {
 					}
 				});
 			}
+
+			logicPanel = new LogicPanel(this, chest, -GUI_PANEL_WIDTH, 0, GUI_PANEL_WIDTH, GUI_PANEL_HEIGHT);
 		}
 		
 		@Override
@@ -124,6 +133,10 @@ public class OutputChestGui {
 		
 		@Override
 		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
+			if (logicPanel.handleSlotClick(slotId, dragType, clickTypeIn, player)) {
+				return null;
+			}
+			
 			if (player.inventory.getItemStack() == null) {
 				// empty hand. Right-click?
 				if (slotId >= chestIDStart && dragType == 1 && clickTypeIn == ClickType.PICKUP && chest.getStackInSlot(slotId - chestIDStart) == null) {
@@ -155,13 +168,15 @@ public class OutputChestGui {
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class OutputChestGuiContainer extends GuiContainer {
+	public static class OutputChestGuiContainer extends LogicGuiContainer {
 
 		private OutputChestContainer container;
+		private final LogicPanelGui panelGui;
 		
 		public OutputChestGuiContainer(OutputChestContainer container) {
 			super(container);
 			this.container = container;
+			this.panelGui = new LogicPanelGui(container.logicPanel, this, 0xFFE2E0C3, true);
 			
 			this.xSize = GUI_TEXT_WIDTH;
 			this.ySize = GUI_TEXT_HEIGHT;
@@ -170,6 +185,7 @@ public class OutputChestGui {
 		@Override
 		public void initGui() {
 			super.initGui();
+			panelGui.initGui(mc, guiLeft, guiTop);
 		}
 		
 		private void drawStatus(float partialTicks, boolean available) {
@@ -238,6 +254,8 @@ public class OutputChestGui {
 				
 				GlStateManager.popMatrix();
 			}
+			
+			panelGui.draw(mc, horizontalMargin, verticalMargin);
 
 			GlStateManager.enableBlend();
 			GlStateManager.enableAlpha();
@@ -247,6 +265,33 @@ public class OutputChestGui {
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 			;
+		}
+		
+		@Override
+		public void actionPerformed(GuiButton button) {
+			if (panelGui.actionPerformed(button)) {
+				return;
+			}
+			
+			; // No other buttons for sensor
+		}
+		
+		@Override
+		protected void keyTyped(char typedChar, int keyCode) throws IOException {
+			if (panelGui.keyTyped(typedChar, keyCode)) {
+				return;
+			}
+			
+			super.keyTyped(typedChar, keyCode);
+		}
+		
+		@Override
+		protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+			if (panelGui.mouseClicked(mouseX, mouseY, mouseButton, this.guiLeft, this.guiTop)) {
+				return;
+			}
+			
+			super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
 		
 	}

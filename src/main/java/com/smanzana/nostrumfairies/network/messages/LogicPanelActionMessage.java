@@ -3,8 +3,10 @@ package com.smanzana.nostrumfairies.network.messages;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock.LogisticsSensorTileEntity;
-import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock.LogisticsSensorTileEntity.SensorLogicOp;
+import com.smanzana.nostrumfairies.blocks.ILogisticsLogicProvider;
+import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent;
+import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.LogicMode;
+import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.LogicOp;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
@@ -22,35 +24,40 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
  * @author Skyler
  *
  */
-public class LogisticsSensorActionMessage implements IMessage {
+public class LogicPanelActionMessage implements IMessage {
 
-	public static class Handler implements IMessageHandler<LogisticsSensorActionMessage, IMessage> {
+	public static class Handler implements IMessageHandler<LogicPanelActionMessage, IMessage> {
 
 		@Override
-		public IMessage onMessage(LogisticsSensorActionMessage message, MessageContext ctx) {
+		public IMessage onMessage(LogicPanelActionMessage message, MessageContext ctx) {
 			
 			try {
 				final Action type = Action.valueOf(message.tag.getString(NBT_TYPE));
 				final BlockPos pos = BlockPos.fromLong(message.tag.getLong(NBT_POS));
 				final World world = ctx.getServerHandler().playerEntity.worldObj;
 				
-				LogisticsSensorTileEntity te = (LogisticsSensorTileEntity) world.getTileEntity(pos);
+				// Implemented ILogisticsLogicProvider on your tile entity if it has a logic component that uses the logic panel gui
+				ILogisticsLogicProvider te = (ILogisticsLogicProvider) world.getTileEntity(pos);
 				
 				ctx.getServerHandler().playerEntity.getServerWorld().addScheduledTask(() -> {
+					final LogisticsLogicComponent comp = te.getLogicComponent();
 					if (type == Action.TEMPLATE) {
 						@Nullable ItemStack stack = ItemStack.loadItemStackFromNBT(message.tag.getCompoundTag(NBT_ITEM_VAL));
-						te.setLogicTemplate(stack);
+						comp.setLogicTemplate(stack);
 					} else if (type == Action.OP) {
-						SensorLogicOp op = SensorLogicOp.valueOf(message.tag.getString(NBT_INT_VAL));
-						te.setLogicOp(op);
+						LogicOp op = LogicOp.valueOf(message.tag.getString(NBT_INT_VAL));
+						comp.setLogicOp(op);
+					} else if (type == Action.MODE) {
+						LogicMode mode = LogicMode.valueOf(message.tag.getString(NBT_INT_VAL));
+						comp.setLogicMode(mode);
 					} else {
 						final int val = Integer.parseInt(message.tag.getString(NBT_INT_VAL));
-						te.setLogicCount(val);
+						comp.setLogicCount(val);
 					}
 					
 					// Cause an update to be sent back
-					IBlockState state = te.getWorld().getBlockState(te.getPos());
-					te.getWorld().notifyBlockUpdate(te.getPos(), state, state, 2);
+					IBlockState state = world.getBlockState(pos);
+					world.notifyBlockUpdate(pos, state, state, 2);
 				});
 				
 				
@@ -69,6 +76,7 @@ public class LogisticsSensorActionMessage implements IMessage {
 		TEMPLATE,
 		OP,
 		COUNT,
+		MODE,
 	}
 
 	private static final String NBT_TYPE = "type";
@@ -78,23 +86,27 @@ public class LogisticsSensorActionMessage implements IMessage {
 	
 	protected NBTTagCompound tag;
 	
-	public LogisticsSensorActionMessage() {
+	public LogicPanelActionMessage() {
 		this(null, (String) null, null);
 	}
 	
-	public LogisticsSensorActionMessage(LogisticsSensorTileEntity ent, @Nullable ItemStack template) {
+	public LogicPanelActionMessage(ILogisticsLogicProvider ent, @Nullable ItemStack template) {
 		this(Action.TEMPLATE, template, ent.getPos());
 	}
 	
-	public LogisticsSensorActionMessage(LogisticsSensorTileEntity ent, SensorLogicOp op) {
+	public LogicPanelActionMessage(ILogisticsLogicProvider ent, LogicOp op) {
 		this(Action.OP, op.name(), ent.getPos());
 	}
 	
-	public LogisticsSensorActionMessage(LogisticsSensorTileEntity ent, int val) {
+	public LogicPanelActionMessage(ILogisticsLogicProvider ent, int val) {
 		this(Action.COUNT, String.format("%d", val), ent.getPos());
 	}
+
+	public LogicPanelActionMessage(ILogisticsLogicProvider ent, LogicMode mode) {
+		this(Action.MODE, mode.name(), ent.getPos());
+	}
 	
-	protected LogisticsSensorActionMessage(Action type, String val, BlockPos pos) {
+	protected LogicPanelActionMessage(Action type, String val, BlockPos pos) {
 		tag = new NBTTagCompound();
 		
 		if (type != null) {
@@ -104,7 +116,7 @@ public class LogisticsSensorActionMessage implements IMessage {
 		}
 	}
 	
-	protected LogisticsSensorActionMessage(Action type, @Nullable ItemStack template, BlockPos pos) {
+	protected LogicPanelActionMessage(Action type, @Nullable ItemStack template, BlockPos pos) {
 		tag = new NBTTagCompound();
 		
 		if (type != null) {

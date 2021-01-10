@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.blocks;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -7,12 +8,14 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
@@ -79,21 +82,40 @@ public class OutputLogisticsChest extends BlockContainer {
 		return true;
 	}
 	
-	public static class OutputChestTileEntity extends LogisticsChestTileEntity {
+	public static class OutputChestTileEntity extends LogisticsChestTileEntity implements ILogisticsLogicProvider, ILogicListener {
 
 		private static final int SLOTS = 3;
 		private static final String NBT_TEMPLATES = "templates";
 		private static final String NBT_TEMPLATE_INDEX = "index";
 		private static final String NBT_TEMPLATE_ITEM = "item";
+		private static final String NBT_LOGIC_COMP = "logic";
 		
 		private String displayName;
 		private ItemStack[] templates;
 		private LogisticsItemWithdrawRequester requester;
+		private final LogisticsLogicComponent logicComp;
 		
 		public OutputChestTileEntity() {
 			super();
 			displayName = "Output Chest";
 			templates = new ItemStack[SLOTS];
+			logicComp = new LogisticsLogicComponent(false, this);
+		}
+		
+		@Override
+		public void onStateChange(boolean activated) {
+			; // We handle this in a tick loop, which adds lag between redstone but also won't change blockstates
+			// multiples times if item count jumps back and forth across a boundary in a single tick
+		}
+
+		@Override
+		public void onDirty() {
+			this.markDirty();
+		}
+		
+		@Override
+		public LogisticsLogicComponent getLogicComponent() {
+			return this.logicComp;
 		}
 		
 		@Override
@@ -184,6 +206,7 @@ public class OutputLogisticsChest extends BlockContainer {
 				templates.appendTag(template);
 			}
 			nbt.setTag(NBT_TEMPLATES, templates);
+			nbt.setTag(NBT_LOGIC_COMP, this.logicComp.writeToNBT(new NBTTagCompound()));
 			
 			return nbt;
 		}
@@ -208,6 +231,11 @@ public class OutputLogisticsChest extends BlockContainer {
 				templates[index] = stack;
 			}
 			
+			NBTTagCompound tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
+			if (tag != null) {
+				this.logicComp.readFromNBT(tag);
+			}
+			
 			// Do super afterwards so taht we have templates already
 			super.readFromNBT(nbt);
 		}
@@ -215,6 +243,7 @@ public class OutputLogisticsChest extends BlockContainer {
 		@Override
 		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
 			super.setNetworkComponent(component);
+			logicComp.setNetwork(component.getNetwork());
 			
 			if (worldObj != null && !worldObj.isRemote && requester == null) {
 				requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent); // TODO make using buffer chests configurable!
@@ -225,6 +254,7 @@ public class OutputLogisticsChest extends BlockContainer {
 		@Override
 		public void setWorldObj(World worldIn) {
 			super.setWorldObj(worldIn);
+			logicComp.setLocation(worldIn, pos);
 			
 			if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
 				requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent);
@@ -240,6 +270,7 @@ public class OutputLogisticsChest extends BlockContainer {
 			}
 			
 			super.onLeaveNetwork();
+			logicComp.setNetwork(null);
 		}
 		
 		@Override
@@ -250,9 +281,15 @@ public class OutputLogisticsChest extends BlockContainer {
 			}
 			
 			super.onJoinNetwork(network);
+			logicComp.setNetwork(network);
 		}
 		
 		private List<ItemStack> getItemRequests() {
+			// Globally return 0 requests if logic says we shouldn't run
+			if (!logicComp.isActivated()) {
+				return new ArrayList<>(0);
+			}
+			
 			List<ItemStack> requests = new LinkedList<>();
 			
 			for (int i = 0; i < templates.length; i++) {
@@ -329,6 +366,10 @@ public class OutputLogisticsChest extends BlockContainer {
 				requester.updateRequestedItems(getItemRequests());
 			}
 		}
+		
+		public void notifyNeighborChanged() {
+			logicComp.onWorldUpdate();
+		}
 	}
 
 	@Override
@@ -365,5 +406,16 @@ public class OutputLogisticsChest extends BlockContainer {
 		}
 		
 		table.unlinkFromNetwork();
+	}
+	
+	@SuppressWarnings("deprecation")
+	@Override
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+		TileEntity ent = worldIn.getTileEntity(pos);
+		if (ent != null && ent instanceof OutputChestTileEntity) {
+			((OutputChestTileEntity) ent).notifyNeighborChanged();
+		}
+		
+		super.neighborChanged(state, worldIn, pos, blockIn);
 	}
 }
