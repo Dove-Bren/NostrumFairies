@@ -15,6 +15,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisti
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
@@ -187,7 +188,8 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	}
 	
 	public void addItem(ItemStack stack) {
-		;
+		EntityItem ent = new EntityItem(worldObj, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, stack);
+		worldObj.spawnEntityInWorld(ent);
 	}
 	
 	public boolean isItemBuffer() {

@@ -1,12 +1,19 @@
 package com.smanzana.nostrumfairies.blocks;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
@@ -247,10 +254,14 @@ public class StorageMonitor extends BlockContainer {
 		return true;
 	}
 	
-	public static class StorageMonitorTileEntity extends LogisticsTileEntity {
+	public static class StorageMonitorTileEntity extends LogisticsTileEntity implements ILogisticsTaskListener {
+
+		private LogisticsItemWithdrawRequester requester;
+		private List<ItemStack> requests;
 
 		public StorageMonitorTileEntity() {
 			super();
+			requests = new ArrayList<>();
 		}
 		
 		@Override
@@ -267,6 +278,108 @@ public class StorageMonitor extends BlockContainer {
 		public boolean canAccept(List<ItemDeepStack> stacks) {
 			return false;
 		}
+		
+		protected void makeRequester() {
+			requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent); // TODO make using buffer chests configurable!
+			requester.addChainListener(this);
+			requester.updateRequestedItems(getItemRequests());
+		}
+		
+		@Override
+		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
+			super.setNetworkComponent(component);
+			
+			if (worldObj != null && !worldObj.isRemote && requester == null) {
+				makeRequester();
+			}
+		}
+		
+		@Override
+		public void setWorldObj(World worldIn) {
+			super.setWorldObj(worldIn);
+			
+			if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
+				makeRequester();
+			}
+		}
+		
+		@Override
+		public void onLeaveNetwork() {
+			if (!worldObj.isRemote && requester != null) {
+				requester.clearRequests();
+				requester.setNetwork(null);
+			}
+			
+			super.onLeaveNetwork();
+		}
+		
+		@Override
+		public void onJoinNetwork(LogisticsNetwork network) {
+			if (!worldObj.isRemote && requester != null) {
+				requester.setNetwork(network);
+				requester.updateRequestedItems(getItemRequests());
+			}
+			
+			super.onJoinNetwork(network);
+		}
+		
+		public List<ItemStack> getItemRequests() {
+			return requests;
+		}
+
+		@Override
+		public void onTaskDrop(ILogisticsTask task, IFeyWorker worker) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onTaskAccept(ILogisticsTask task, IFeyWorker worker) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onTaskComplete(ILogisticsTask task, IFeyWorker worker) {
+			// Remove item from our request list
+			ItemDeepStack fetched = ((LogisticsTaskWithdrawItem) task).getAttachedItem();
+			if (fetched != null) {
+				Iterator<ItemStack> it = requests.iterator();
+				while (fetched.getCount() > 0 && it.hasNext()) {
+					ItemStack cur = it.next();
+					if (cur == null) {
+						continue;
+					}
+					
+					if (fetched.canMerge(cur)) {
+						if (cur.stackSize <= fetched.getCount()) {
+							it.remove();
+							fetched.add(-cur.stackSize);
+						} else {
+							cur.stackSize -= fetched.getCount();
+							fetched.setCount(0);
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+		public void addRequest(ItemStack stack) {
+			requests.add(stack);
+		}
+		
+		public void removeRequest(ItemStack stack) {
+			Iterator<ItemStack> it = requests.iterator();
+			while (it.hasNext()) {
+				ItemStack cur = it.next();
+				if (stack.getItem() == cur.getItem() && stack.stackSize == cur.stackSize) {
+					it.remove();
+					break;
+				}
+			}
+		}
+		
 	}
 
 	@Override

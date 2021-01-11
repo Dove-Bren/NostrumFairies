@@ -717,7 +717,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		// Check pull requests first
 		if (pulls != null && !pulls.isEmpty()) {
 			for (LogisticsNetwork network : networks) {
-				List<ItemDeepStack> items = network.getAllCondensedNetworkItems();
+				Collection<ItemDeepStack> items = network.getAllCondensedNetworkItems();
 				for (ItemDeepStack avail : items) {
 					for (ItemStack pull : pulls) {
 						if (avail.canMerge(pull)) {
