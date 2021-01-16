@@ -23,6 +23,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisti
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrumfairies.utils.Location;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.utils.ItemStacks;
@@ -82,12 +83,16 @@ public class LogisticsNetwork {
 	
 	private static final class CachedItemList {
 		public List<ItemDeepStack> rawItems;
-		public List<ItemDeepStack> availableItems;
+		public List<ItemDeepStack> netItems;
 		public List<ItemDeepStack> grossItems;
 		
-		public CachedItemList(List<ItemDeepStack> raws, List<ItemDeepStack> available, List<ItemDeepStack> gross) {
+		public CachedItemList() {
+			this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+		}
+		
+		public CachedItemList(List<ItemDeepStack> raws, List<ItemDeepStack> net, List<ItemDeepStack> gross) {
 			this.rawItems = raws;
-			this.availableItems = available;
+			this.netItems = net;
 			this.grossItems = gross;
 		}
 	}
@@ -138,7 +143,7 @@ public class LogisticsNetwork {
 	
 	// Items
 	protected boolean cacheDirty;
-	protected List<ItemDeepStack> cachedCondensedItems; // List of itemstacks with over-stacked sizes
+	protected CachedItemList cachedCondensedItems; // List of itemstacks with over-stacked sizes
 	protected Map<ILogisticsComponent, CachedItemList> cachedItemMap;
 	protected Map<ILogisticsComponent, List<RequestedItemRecord>> activeItemRequests; // current items that are being taken from each component
 	protected Map<ILogisticsComponent, List<IncomingItemRecord>> activeItemDeliveries; // current items that are soon to be added to the logistics network
@@ -163,7 +168,7 @@ public class LogisticsNetwork {
 	
 	public LogisticsNetwork(UUID uuid, boolean register) {
 		this.uuid = uuid;
-		this.cachedCondensedItems = new LinkedList<>();
+		this.cachedCondensedItems = new CachedItemList();
 		this.components = new HashSet<>(); // components will load and re-attach
 		this.componentGraph = new HashMap<>();
 		this.activeItemRequests = new HashMap<>();
@@ -503,23 +508,14 @@ public class LogisticsNetwork {
 		this.cacheDirty = true;
 	}
 	
-	private void addToCondensed(List<ItemDeepStack> items) {
+	private void addToCondensed(List<ItemDeepStack> raw, List<ItemDeepStack> net, List<ItemDeepStack> gross) {
 		// Could make sure both lists are sorted by itemstack, and have iterators on both to make this merge fast.
 		// Optimization oppertunity!
-		for (ItemDeepStack stack : items) {
-			boolean merged = false;
-			for (ItemDeepStack condensed : cachedCondensedItems) {
-				if (condensed.canMerge(stack)) {
-					condensed.add(stack);
-					merged = true;
-					break;
-				}
-			}
-			
-			if (!merged) {
-				cachedCondensedItems.add(stack);
-			}
-		}
+		// TODO I started this with ItemDeepStackList but was too nervous to add it while also adding better breakdown of total lists
+		
+		ItemDeepStacks.addAll(cachedCondensedItems.rawItems, raw);
+		ItemDeepStacks.addAll(cachedCondensedItems.netItems, net);
+		ItemDeepStacks.addAll(cachedCondensedItems.grossItems, gross);
 	}
 	
 	private List<ItemDeepStack> makeAdjustedList(ILogisticsComponent component, List<ItemDeepStack> raws, boolean net) {
@@ -580,20 +576,21 @@ public class LogisticsNetwork {
 	}
 	
 	protected void refreshAvailableLists(ILogisticsComponent component) {
-		// Corner case for if this network's first interaction is adding an incoming item
-		if (cachedItemMap == null) {
-			this.refresh();
-		} else {
-			CachedItemList cache = cachedItemMap.get(component);
-			if (cache == null) {
-				return;
-			}
-			
-			// COULD make the func do both at the same time for effeciency
-			cache.availableItems = makeAvailableList(component, cache.rawItems);
-			cache.grossItems = makeGrossList(component, cache.rawItems); 
-			refreshCacheKey();
-		}
+		this.dirty();
+//		// Corner case for if this network's first interaction is adding an incoming item
+//		if (cachedItemMap == null) {
+//			this.refresh();
+//		} else {
+//			CachedItemList cache = cachedItemMap.get(component);
+//			if (cache == null) {
+//				return;
+//			}
+//			
+//			// COULD make the func do both at the same time for effeciency
+//			cache.netItems = makeAvailableList(component, cache.rawItems);
+//			cache.grossItems = makeGrossList(component, cache.rawItems); 
+//			refreshCacheKey();
+//		}
 	}
 	
 	private CachedItemList makeItemListEntry(ILogisticsComponent component, List<ItemDeepStack> raws) {
@@ -611,7 +608,7 @@ public class LogisticsNetwork {
 		
 		this.cacheDirty = false;
 		cachedItemMap = new HashMap<>();
-		cachedCondensedItems = new LinkedList<>();
+		cachedCondensedItems = new CachedItemList();
 		
 		for (ILogisticsComponent component : components) {
 			List<ItemDeepStack> list = ItemDeepStack.toDeepList(component.getItems());
@@ -619,23 +616,24 @@ public class LogisticsNetwork {
 				return stack == null || stack.getTemplate() == null;
 			});
 			Collections.sort(list, (stack1, stack2) -> {return stack1.getTemplate().getUnlocalizedName().compareTo(stack2.getTemplate().getUnlocalizedName());});
-			addToCondensed(list);
-			cachedItemMap.put(component, makeItemListEntry(component, list));
+			CachedItemList itemList = makeItemListEntry(component, list);
+			addToCondensed(itemList.rawItems, itemList.netItems, itemList.grossItems);
+			cachedItemMap.put(component, itemList);
 		}
 		
-		Collections.sort(cachedCondensedItems, (l, r) -> {
-			if (l == null && r == null) {
-				return 0;
-			}
-			if (l == null) {
-				return -1;
-			}
-			if (r == null) {
-				return 1;
-			}
-			
-			return (int) (r.getCount() - l.getCount());
-		});
+//		Collections.sort(cachedCondensedItems, (l, r) -> {
+//			if (l == null && r == null) {
+//				return 0;
+//			}
+//			if (l == null) {
+//				return -1;
+//			}
+//			if (r == null) {
+//				return 1;
+//			}
+//			
+//			return (int) (r.getCount() - l.getCount());
+//		});
 		
 		refreshCacheKey();
 	}
@@ -675,9 +673,22 @@ public class LogisticsNetwork {
 		}
 	}
 	
-	public List<ItemDeepStack> getAllCondensedNetworkItems() {
+	public List<ItemDeepStack> getAllCondensedNetworkItems(ItemCacheType type) {
 		refresh();
-		return cachedCondensedItems;
+		switch (type) {
+		case GROSS:
+			return cachedCondensedItems.grossItems;
+		case NET:
+			return cachedCondensedItems.netItems;
+		case RAW:
+			return cachedCondensedItems.rawItems;
+		}
+		
+		return null;
+	}
+	
+	public List<ItemDeepStack> getAllCondensedNetworkItems() {
+		return getAllCondensedNetworkItems(ItemCacheType.RAW);
 	}
 	
 	public long getItemCount(ItemStack stack) {
@@ -685,7 +696,7 @@ public class LogisticsNetwork {
 	}
 	
 	public long getItemCount(ItemDeepStack stack) {
-		List<ItemDeepStack> networkItems = getAllCondensedNetworkItems();
+		Collection<ItemDeepStack> networkItems = getAllCondensedNetworkItems();
 		long available = 0;
 		for (ItemDeepStack networkItem : networkItems) {
 			if (networkItem.canMerge(stack)) {
@@ -749,7 +760,7 @@ public class LogisticsNetwork {
 					filteredMap.put(component, entry.getValue().grossItems);
 					break;
 				case NET:
-					filteredMap.put(component, entry.getValue().availableItems);
+					filteredMap.put(component, entry.getValue().netItems);
 					break;
 				case RAW:
 					filteredMap.put(component, entry.getValue().rawItems);

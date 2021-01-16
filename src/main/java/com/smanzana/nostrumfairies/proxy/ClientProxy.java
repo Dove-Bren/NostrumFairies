@@ -23,6 +23,7 @@ import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsPanel;
+import com.smanzana.nostrumfairies.blocks.ReinforcedStorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
@@ -401,6 +402,16 @@ public class ClientProxy extends CommonProxy {
 		registerModel(Item.getItemFromBlock(OutputLogisticsPanel.instance()),
 				0,
 				OutputLogisticsPanel.ID);
+		
+		registerModel(Item.getItemFromBlock(ReinforcedStorageLogisticsChest.Iron()),
+				0,
+				ReinforcedStorageLogisticsChest.Iron().getID());
+		registerModel(Item.getItemFromBlock(ReinforcedStorageLogisticsChest.Gold()),
+				0,
+				ReinforcedStorageLogisticsChest.Gold().getID());
+		registerModel(Item.getItemFromBlock(ReinforcedStorageLogisticsChest.Diamond()),
+				0,
+				ReinforcedStorageLogisticsChest.Diamond().getID());
 	}
 	
 	@Override

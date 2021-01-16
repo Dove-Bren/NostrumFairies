@@ -20,6 +20,9 @@ tile.logistics_crafting_station_gnome.name=Gnomish Crafting Station
 tile.logistics_crafting_station_elf.name=Elven Crafting Station
 tile.logistics_sensor.name=Logistics Sensor
 tile.logistics_output_panel.name=Output Panel
+tile.logistics_reinforced_chest_iron.name=Iron Logistics Storage Chest
+tile.logistics_reinforced_chest_gold.name=Gold Logistics Storage Chest
+tile.logistics_reinforced_chest_diamond.name=Diamond Logistics Storage Chest
 
 tile.home_block_fairy.name=Fairy Home
 tile.home_block_elf.name=Elf Home
@@ -149,6 +152,9 @@ ritual.crafting_block.gnome.name=Create Gnomish Crafting Station
 ritual.crafting_block.elf.name=Create Elven Crafting Station
 ritual.crafting_block.dwarf.name=Create Dwarvern Crafting Station
 ritual.soul_jar.name=Craft Soul Jar
+ritual.lchest_reinforced_iron.name=Craft Iron Storage Chest
+ritual.lchest_reinforced_gold.name=Craft Gold Storage Chest
+ritual.lchest_reinforced_diamond.name=Craft Diamond Storage Chest
 
 research.tab.fey.name=Fey
 
@@ -227,3 +233,6 @@ research.logistics_relays.info=  All of the logistics blocks you've worked with 
 research.soul_jars.name=Soul Jars
 research.soul_jars.desc=Gotta Catch'em All
 research.soul_jars.info=  Soul gems are great for transporting fey around. What if you applied that to other entities?|  Unfortunately, it doesn't appear to be that simple. You've created another type of soul canister -- the soul jar -- that can store and transport more types of entities, but it seems to still require the entity has a bond with you. As such, you can only carry tamed mobs.
+research.adv_logistics_storage.name=Advanced Logistics Storage
+research.adv_logistics_storage.desc=Deeper pockets!
+research.adv_logistics_storage.info=  Logistics storage chests are great for fairies to store stuff and for players to access in a friendly fashion. However, they end up getting pretty bulky even though the fairies could probably fit in anywhere.|  This has inspired you to create a series of more compact storage chests! The compact nature of the chests means that they can hold many more stacks of items, but also means that players can't fit their hands inside to interact with it directly!||  Advanced logistics chests cannot be right-clicked to open. Instead, all interaction must be done through Fey. However, they have much more storage space!|  Iron chests can store 81 slots! Gold stores 162, and diamond 324 stacks!

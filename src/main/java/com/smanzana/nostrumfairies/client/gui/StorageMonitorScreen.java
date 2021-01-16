@@ -11,10 +11,11 @@ import org.lwjgl.input.Mouse;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
+import com.smanzana.nostrumfairies.network.messages.StorageMonitorRequestMessage;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemDeepStackList;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -68,7 +69,7 @@ public class StorageMonitorScreen extends GuiScreen {
 	public void updateScreen() {
 		if (monitor.getNetwork() != null) {
 			// TODO toggle excluding 'buffer' chest items
-			final Collection<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems();
+			final Collection<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
 			final int len = items.size();
 			final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
 			final int spilloverRows = rows - GUI_CELL_ROWS; // scroll bar represents this many rows of pixels
@@ -213,7 +214,7 @@ public class StorageMonitorScreen extends GuiScreen {
 		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXT);
 		
 		if (monitor.getNetwork() != null) {
-			final ItemDeepStackList items = monitor.getNetwork().getAllCondensedNetworkItems();
+			final List<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
 			final int len = items.size();
 			final int rows = (int) Math.ceil((double)len / (double)GUI_CELL_COLS);
 			final int spilloverRows = rows - GUI_CELL_ROWS;
@@ -304,13 +305,38 @@ public class StorageMonitorScreen extends GuiScreen {
 			return;
 		}
 		
+		/*
+		 * for (ItemStack request : requests) {
+				if (request == null) {
+					continue;
+				}
+				
+				int x = leftOffset - (GUI_TEXT_MENUITEM_WIDTH);
+				int y = topOffset + (i * GUI_TEXT_MENUITEM_HEIGHT);
+				drawMenuItem(x, y, request, mouseX >= x && mouseX < x + GUI_TEXT_MENUITEM_WIDTH && mouseY >= y && mouseY < y + GUI_TEXT_MENUITEM_HEIGHT);
+				i++;
+			}
+		 * 
+		 */
+		
 		// Menu item?
-		// TODO
+		final int requests = monitor.getItemRequests().size();
+		if (mouseX >= leftOffset + -GUI_TEXT_MENUITEM_WIDTH && mouseX <= leftOffset
+				&& mouseY >= topOffset && mouseY <= topOffset + (GUI_TEXT_MENUITEM_HEIGHT * requests)) {
+			// Which?
+			final int index = (mouseY - topOffset) / GUI_TEXT_MENUITEM_HEIGHT;
+			ItemStack req = monitor.getItemRequests().get(index);
+			NetworkHandler.getSyncChannel().sendToServer(new StorageMonitorRequestMessage(monitor, req, true));
+		}
 		
 		// Slot?
 		if (mouseX >= leftOffset + GUI_TOP_INV_HOFFSET && mouseX <= leftOffset + GUI_TOP_INV_HOFFSET + (GUI_INV_CELL_LENGTH * GUI_CELL_COLS)
 				&& mouseY >= topOffset + GUI_TOP_INV_VOFFSET && mouseY <= topOffset + GUI_TOP_INV_VOFFSET + (GUI_INV_CELL_LENGTH * GUI_CELL_ROWS)) {
-			final ItemDeepStackList items = monitor.getNetwork().getAllCondensedNetworkItems();
+			// Only left and right mouse buttons
+			if (mouseButton != 0 && mouseButton != 1) {
+				return;
+			}
+			final List<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
 			final int len = items.size();
 			final int rows = (int) Math.ceil((double)len / (double)GUI_CELL_COLS);
 			final int spilloverRows = rows - GUI_CELL_ROWS;
@@ -336,8 +362,11 @@ public class StorageMonitorScreen extends GuiScreen {
 			if (index < len) {
 				ItemDeepStack clicked = items.get(index);
 				ItemStack req = clicked.getTemplate().copy();
-				req.stackSize = (int) Math.min(Math.max(0, clicked.getCount()), clicked.getTemplate().getMaxStackSize());
-				monitor.addRequest(req);
+				req.stackSize = mouseButton == 0
+						? (int) Math.min(Math.max(0, clicked.getCount()), clicked.getTemplate().getMaxStackSize())
+						: 1;
+				//monitor.addRequest(req); local
+				NetworkHandler.getSyncChannel().sendToServer(new StorageMonitorRequestMessage(monitor, req, false));
 			}
 			return;
 		}
@@ -354,7 +383,7 @@ public class StorageMonitorScreen extends GuiScreen {
 		if (finalize) {
 			// Round scroll to an even increment for the inventory
 			if (monitor.getNetwork() != null) {
-				final Collection<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems();
+				final Collection<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
 				final int len = items.size();
 				final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
 				final int spilloverRows = rows - GUI_CELL_ROWS;
@@ -393,7 +422,7 @@ public class StorageMonitorScreen extends GuiScreen {
 		if (wheel != 0) {
 			// 120 seems to be scroll bar rotation magnitude?
 			if (monitor.getNetwork() != null) {
-				final Collection<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems();
+				final Collection<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
 				final int len = items.size();
 				final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
 				final int spilloverRows = rows - GUI_CELL_ROWS; // scroll bar represents this many rows of pixels

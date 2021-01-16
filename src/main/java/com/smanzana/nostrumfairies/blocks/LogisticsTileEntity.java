@@ -188,8 +188,10 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	}
 	
 	public void addItem(ItemStack stack) {
-		EntityItem ent = new EntityItem(worldObj, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, stack);
-		worldObj.spawnEntityInWorld(ent);
+		if (!worldObj.isRemote) {
+			EntityItem ent = new EntityItem(worldObj, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, stack);
+			worldObj.spawnEntityInWorld(ent);
+		}
 	}
 	
 	public boolean isItemBuffer() {

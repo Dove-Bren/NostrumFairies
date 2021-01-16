@@ -7,6 +7,7 @@ import com.smanzana.nostrumfairies.network.messages.LogicPanelActionMessage;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateResponse;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateSingleResponse;
+import com.smanzana.nostrumfairies.network.messages.StorageMonitorRequestMessage;
 import com.smanzana.nostrumfairies.network.messages.TemplateWandUpdate;
 
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -48,6 +49,7 @@ public class NetworkHandler {
 		syncChannel.registerMessage(FairyGuiActionMessage.Handler.class, FairyGuiActionMessage.class, discriminator++, Side.SERVER);
 		syncChannel.registerMessage(TemplateWandUpdate.Handler.class, TemplateWandUpdate.class, discriminator++, Side.SERVER);
 		syncChannel.registerMessage(LogicPanelActionMessage.Handler.class, LogicPanelActionMessage.class, discriminator++, Side.SERVER);
+		syncChannel.registerMessage(StorageMonitorRequestMessage.Handler.class, StorageMonitorRequestMessage.class, discriminator++, Side.SERVER);
 	}
 	
 }

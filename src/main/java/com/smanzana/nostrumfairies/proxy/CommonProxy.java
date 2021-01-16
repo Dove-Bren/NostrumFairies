@@ -19,6 +19,7 @@ import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsPanel;
+import com.smanzana.nostrumfairies.blocks.ReinforcedStorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
@@ -416,6 +417,22 @@ public class CommonProxy {
     	GameRegistry.register(
     			(new ItemBlock(OutputLogisticsPanel.instance())).setRegistryName(OutputLogisticsPanel.ID));
     	OutputLogisticsPanel.init();
+    	
+    	GameRegistry.register(ReinforcedStorageLogisticsChest.Iron(),
+    			new ResourceLocation(NostrumFairies.MODID, ReinforcedStorageLogisticsChest.Iron().getID()));
+    	GameRegistry.register(
+    			(new ItemBlock(ReinforcedStorageLogisticsChest.Iron())).setRegistryName(ReinforcedStorageLogisticsChest.Iron().getID()));
+    	
+    	GameRegistry.register(ReinforcedStorageLogisticsChest.Gold(),
+    			new ResourceLocation(NostrumFairies.MODID, ReinforcedStorageLogisticsChest.Gold().getID()));
+    	GameRegistry.register(
+    			(new ItemBlock(ReinforcedStorageLogisticsChest.Gold())).setRegistryName(ReinforcedStorageLogisticsChest.Gold().getID()));
+    	
+    	GameRegistry.register(ReinforcedStorageLogisticsChest.Diamond(),
+    			new ResourceLocation(NostrumFairies.MODID, ReinforcedStorageLogisticsChest.Diamond().getID()));
+    	GameRegistry.register(
+    			(new ItemBlock(ReinforcedStorageLogisticsChest.Diamond())).setRegistryName(ReinforcedStorageLogisticsChest.Diamond().getID()));
+    	ReinforcedStorageLogisticsChest.init();
     }
     
     private void registerLore() {
@@ -884,6 +901,51 @@ public class CommonProxy {
 				new RRequirementResearch("soul_jars"),
 				new OutcomeSpawnItem(SoulJar.createFake(false)))
 			);
+
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("lchest_reinforced_iron",
+				new ItemStack(ReinforcedStorageLogisticsChest.Iron()),
+				null,
+				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
+				new ItemStack(StorageLogisticsChest.instance()),
+				new ItemStack[] {null, new ItemStack(Blocks.CHEST), new ItemStack(Blocks.IRON_BLOCK), null},
+				new RRequirementResearch("adv_logistics_storage"),
+				new OutcomeSpawnItem(new ItemStack(ReinforcedStorageLogisticsChest.Iron())))
+			);
+
+    	// shortcut iron recipe
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("lchest_reinforced_iron",
+				new ItemStack(ReinforcedStorageLogisticsChest.Iron()),
+				null,
+				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
+				new ItemStack(Blocks.IRON_BLOCK),
+				new ItemStack[] {new ItemStack(Blocks.CHEST), new ItemStack(Items.DYE, 1, 4), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), new ItemStack(Blocks.CHEST)},
+				new RRequirementResearch("adv_logistics_storage"),
+				new OutcomeSpawnItem(new ItemStack(ReinforcedStorageLogisticsChest.Iron())))
+			);
+
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("lchest_reinforced_gold",
+				new ItemStack(ReinforcedStorageLogisticsChest.Gold()),
+				null,
+				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
+				new ItemStack(ReinforcedStorageLogisticsChest.Iron()),
+				new ItemStack[] {null, new ItemStack(Blocks.CHEST), new ItemStack(Blocks.GOLD_BLOCK), null},
+				new RRequirementResearch("adv_logistics_storage"),
+				new OutcomeSpawnItem(new ItemStack(ReinforcedStorageLogisticsChest.Gold())))
+			);
+
+    	RitualRegistry.instance().addRitual(
+			RitualRecipe.createTier3("lchest_reinforced_diamond",
+				new ItemStack(ReinforcedStorageLogisticsChest.Diamond()),
+				null,
+				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
+				new ItemStack(ReinforcedStorageLogisticsChest.Gold()),
+				new ItemStack[] {null, new ItemStack(Blocks.CHEST), new ItemStack(Blocks.DIAMOND_BLOCK), null},
+				new RRequirementResearch("adv_logistics_storage"),
+				new OutcomeSpawnItem(new ItemStack(ReinforcedStorageLogisticsChest.Diamond())))
+			);
     	
     }
     
@@ -1033,6 +1095,14 @@ public class CommonProxy {
 			.reference("ritual::lchest_output", "ritual.lchest_output.name")
 			.reference("ritual::lchest_input", "ritual.lchest_input.name")
 		.build("adv_logistics_items", NostrumFairies.researchTab, Size.LARGE, 0, 4, true, new ItemStack(OutputLogisticsChest.instance()));
+
+		NostrumResearch.startBuilding()
+			.parent("adv_logistics_items")
+			.hiddenParent("logistics_sensors")
+			.reference("ritual::lchest_reinforced_iron", "ritual.lchest_reinforced_iron.name")
+			.reference("ritual::lchest_reinforced_gold", "ritual.lchest_reinforced_gold.name")
+			.reference("ritual::lchest_reinforced_diamond", "ritual.lchest_reinforced_diamond.name")
+		.build("adv_logistics_storage", NostrumFairies.researchTab, Size.LARGE, 0, 5, true, new ItemStack(ReinforcedStorageLogisticsChest.Gold()));
 		
 		NostrumResearch.startBuilding()
 			.parent("logistics_items")

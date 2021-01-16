@@ -1,0 +1,6 @@
+{
+    "parent": "block/cube_all",
+    "textures": {
+        "all": "nostrumfairies:blocks/logistics_reinforced_chest_diamond"
+    }
+}

@@ -158,4 +158,21 @@ public class ItemDeepStacks {
 		
 		return true;
 	}
+
+	public static final void addAll(List<ItemDeepStack> to, List<ItemDeepStack> from) {
+		for (ItemDeepStack stack : from) {
+			boolean merged = false;
+			for (ItemDeepStack condensed : to) {
+				if (condensed.canMerge(stack)) {
+					condensed.add(stack);
+					merged = true;
+					break;
+				}
+			}
+			
+			if (!merged) {
+				to.add(stack);
+			}
+		}
+	}
 }

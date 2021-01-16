@@ -30,6 +30,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
@@ -39,6 +41,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class StorageMonitor extends BlockContainer {
@@ -256,6 +259,8 @@ public class StorageMonitor extends BlockContainer {
 	
 	public static class StorageMonitorTileEntity extends LogisticsTileEntity implements ILogisticsTaskListener {
 
+		private static final String NBT_REQUESTS = "requests";
+		
 		private LogisticsItemWithdrawRequester requester;
 		private List<ItemStack> requests;
 
@@ -363,10 +368,21 @@ public class StorageMonitor extends BlockContainer {
 					}
 				}
 			}
+
+			IBlockState state = worldObj.getBlockState(pos);
+			worldObj.notifyBlockUpdate(pos, state, state, 2);
+			
+			this.markDirty();
 		}
 		
 		public void addRequest(ItemStack stack) {
 			requests.add(stack);
+			requester.updateRequestedItems(getItemRequests());
+
+			IBlockState state = worldObj.getBlockState(pos);
+			worldObj.notifyBlockUpdate(pos, state, state, 2);
+			
+			this.markDirty();
 		}
 		
 		public void removeRequest(ItemStack stack) {
@@ -375,11 +391,50 @@ public class StorageMonitor extends BlockContainer {
 				ItemStack cur = it.next();
 				if (stack.getItem() == cur.getItem() && stack.stackSize == cur.stackSize) {
 					it.remove();
+					requester.updateRequestedItems(getItemRequests());
+
+					IBlockState state = worldObj.getBlockState(pos);
+					worldObj.notifyBlockUpdate(pos, state, state, 2);
+					
+					this.markDirty();
 					break;
 				}
 			}
 		}
 		
+		@Override
+		public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+			super.writeToNBT(nbt);
+			
+			NBTTagList list = new NBTTagList();
+			for (ItemStack stack : requests) {
+				list.appendTag(stack.serializeNBT());
+			}
+			nbt.setTag(NBT_REQUESTS, list);
+			
+			return nbt;
+		}
+		
+		@Override
+		public void readFromNBT(NBTTagCompound nbt) {
+			super.readFromNBT(nbt);
+			
+			requests.clear();
+			NBTTagList list = nbt.getTagList(NBT_REQUESTS, NBT.TAG_COMPOUND);
+			if (list != null && list.tagCount() > 0) {
+				for (int i = 0; i < list.tagCount(); i++) {
+					NBTTagCompound tag = list.getCompoundTagAt(i);
+					ItemStack stack = ItemStack.loadItemStackFromNBT(tag);
+					if (stack != null) {
+						requests.add(stack);
+					}
+				}
+			}
+			
+			if (this.worldObj != null && this.requester != null) {
+				this.requester.updateRequestedItems(getItemRequests());
+			}
+		}
 	}
 
 	@Override

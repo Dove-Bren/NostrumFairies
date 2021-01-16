@@ -200,7 +200,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	
 	@Override
 	public void addItem(ItemStack stack) {
-		super.addItem(stack);
+		//super.addItem(stack);
 		ItemStack leftover = Inventories.addItem(this, stack);
 		if (leftover != null) {
 			EntityItem item = new EntityItem(this.worldObj, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, leftover);
