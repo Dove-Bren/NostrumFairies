@@ -15,6 +15,8 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
+import com.smanzana.nostrummagica.client.particles.NostrumParticles;
+import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
@@ -691,7 +693,11 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	protected void onCientTick() {
-		;
+		int color = 0x40CCFFDD;
+		NostrumParticles.GLOW_ORB.spawn(worldObj, new SpawnParams(
+				1, posX, posY + height/2f, posZ, 0, 40, 0,
+				new Vec3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), false
+				).color(color));
 	}
 	
 	@Override

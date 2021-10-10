@@ -21,6 +21,8 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
+import com.smanzana.nostrummagica.client.particles.NostrumParticles;
+import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
 import com.smanzana.nostrummagica.entity.IEntityPet;
 import com.smanzana.nostrummagica.entity.PetInfo;
 import com.smanzana.nostrummagica.entity.PetInfo.ManagedPetInfo;
@@ -867,6 +869,29 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				worldObj.playSound(posX, posY, posZ, SoundEvents.BLOCK_LADDER_STEP, SoundCategory.NEUTRAL, .4f, 2f, false);
 			}
 		}
+		
+		// Spawn particles with color based on job
+		final int color;
+		switch (this.getJob()) {
+		case BUILDER:
+			color = 0x4066FF90;
+			break;
+		case LOGISTICS:
+			color = 0x400055FF;
+			break;
+		case WARRIOR:
+			color = 0x40FF3333;
+			break;
+		default:
+			color = 0x40CCFFDD; // regular fairy color
+			break;
+		
+		}
+		
+		NostrumParticles.GLOW_ORB.spawn(worldObj, new SpawnParams(
+				1, posX, posY + height/2f, posZ, 0, 40, 0,
+				new Vec3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), false
+				).color(color));
 	}
 	
 	@Override

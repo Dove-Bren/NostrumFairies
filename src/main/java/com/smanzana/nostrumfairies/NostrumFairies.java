@@ -76,10 +76,6 @@ public class NostrumFairies {
     	instance = this;
     	logisticsRegistryInitRecurseGuard = false;
     	
-//	    if (Loader.isModLoaded("Baubles")) {
-//	    	baubles.enable();
-//	    }
-    	
     	logisticsComponentRegistry = new LogisticsComponentRegistry();
     	
     	NostrumFairies.creativeTab = new CreativeTabs(MODID){

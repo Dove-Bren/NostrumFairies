@@ -505,7 +505,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 			int chance = 1 + lootingModifier;
 			if (rand.nextInt(2) < chance) {
 				
-				this.entityDropItem(FeyResource.create(FeyResourceType.ESSENCE_CORRUPTED, rand.nextInt(1 + lootingModifier/2)), 0);
+				this.entityDropItem(FeyResource.create(FeyResourceType.ESSENCE_CORRUPTED, 1 + rand.nextInt(1 + lootingModifier/2)), 0);
 				
 			}
 			

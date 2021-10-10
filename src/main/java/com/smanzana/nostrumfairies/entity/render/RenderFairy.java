@@ -23,7 +23,7 @@ public class RenderFairy extends RenderLiving<EntityFairy> {
 //			);
 	
 	public RenderFairy(RenderManager renderManagerIn, float shadowSizeIn) {
-		super(renderManagerIn, new ModelFairy(), .25f);
+		super(renderManagerIn, new ModelFairy(), .05f);
 	}
 
 	@Override
@@ -34,9 +34,9 @@ public class RenderFairy extends RenderLiving<EntityFairy> {
 	@Override
 	public void doRender(EntityFairy entity, double x, double y, double z, float entityYaw, float partialTicks) {
 		GlStateManager.pushMatrix();
-		GlStateManager.translate(x, y, z);
+		GlStateManager.translate(x, y + .1, z);
 		GlStateManager.pushMatrix();
-		GlStateManager.scale(.25, .25, .25);
+		GlStateManager.scale(.05, .05, .05);
 		super.doRender(entity, 0, 0, 0, entityYaw, partialTicks);
 		GlStateManager.popMatrix();
 		
