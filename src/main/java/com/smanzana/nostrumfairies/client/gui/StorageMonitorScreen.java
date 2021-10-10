@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 import org.lwjgl.input.Mouse;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
 import com.smanzana.nostrumfairies.network.NetworkHandler;

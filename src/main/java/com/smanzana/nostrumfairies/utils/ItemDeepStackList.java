@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.collect.Lists;
 
 import net.minecraft.item.ItemStack;
@@ -113,7 +115,7 @@ public class ItemDeepStackList implements Collection<ItemDeepStack> {
 			@Override
 			public ItemDeepStack next() {
 				ItemStack key = internalIt.next();
-				if (key != null) {
+				if (!key.isEmpty()) {
 					return new ItemDeepStack(key, storage.get(key));
 				}
 				
@@ -172,7 +174,7 @@ public class ItemDeepStackList implements Collection<ItemDeepStack> {
 		
 		Iterator<ItemStack> it = storage.keySet().iterator();
 		while (it.hasNext()) {
-			ItemStack key = it.next();
+			@Nonnull ItemStack key = it.next();
 			boolean found = false;
 			for (ItemDeepStack allowed : input) {
 				if (allowed.canMerge(key)) {
@@ -209,7 +211,7 @@ public class ItemDeepStackList implements Collection<ItemDeepStack> {
 	public ItemDeepStack get(int index) {
 		// Sort of like a linked list lol
 		Iterator<ItemStack> it = storage.navigableKeySet().iterator();
-		ItemStack key = null;
+		ItemStack key = ItemStack.EMPTY;
 		for (int i = 0; i <= index; i++) {
 			key = it.next();
 		}

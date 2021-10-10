@@ -5,10 +5,10 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.ILogisticsLogicProvider;
-import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent;
-import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.LogicMode;
-import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.LogicOp;
+import com.smanzana.nostrumfairies.blocks.tiles.ILogisticsLogicProvider;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.LogicMode;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.LogicOp;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogicPanelActionMessage;

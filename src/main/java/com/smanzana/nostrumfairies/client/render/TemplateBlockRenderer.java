@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.lwjgl.util.vector.Vector3f;
 
-import com.smanzana.nostrumfairies.blocks.TemplateBlock.TemplateBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESR;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrummagica.utils.RenderFuncs;

@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.blocks;
+package com.smanzana.nostrumfairies.blocks.tiles;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;

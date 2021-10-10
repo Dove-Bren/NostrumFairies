@@ -55,7 +55,7 @@ public class EntityTippedArrowEx extends EntityTippedArrow {
 	@Override
 	protected Entity findEntityOnPath(Vec3d start, Vec3d end) {
 		Entity entity = null;
-		List<Entity> list = this.worldObj.getEntitiesInAABBexcluding(this, this.getEntityBoundingBox().addCoord(this.motionX, this.motionY, this.motionZ).expandXyz(1.0D), this.filter);
+		List<Entity> list = this.world.getEntitiesInAABBexcluding(this, this.getEntityBoundingBox().addCoord(this.motionX, this.motionY, this.motionZ).expandXyz(1.0D), this.filter);
 		double d0 = 0.0D;
 
 		for (int i = 0; i < list.size(); ++i) {

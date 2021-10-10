@@ -1,13 +1,8 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.tiles.StorageChestTileEntity;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
@@ -16,7 +11,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
@@ -58,60 +52,18 @@ public class StorageLogisticsChest extends BlockContainer {
 	}
 	
 	@Override
-	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
 		
 		playerIn.openGui(NostrumFairies.instance,
 				NostrumFairyGui.storageChestID, worldIn,
 				pos.getX(), pos.getY(), pos.getZ());
 		
 		return true;
-	}
-	
-	public static class StorageChestTileEntity extends LogisticsChestTileEntity {
-
-		private static final int SLOTS = 27;
-		
-		private String displayName;
-		
-		public StorageChestTileEntity() {
-			super();
-			displayName = "Storage Chest";
-		}
-		
-		@Override
-		public String getName() {
-			return displayName;
-		}
-
-		@Override
-		public boolean hasCustomName() {
-			return false;
-		}
-		
-		@Override
-		public int getSizeInventory() {
-			return SLOTS;
-		}
-		
-		@Override
-		public double getDefaultLogisticsRange() {
-			return 20;
-		}
-
-		@Override
-		public double getDefaultLinkRange() {
-			return 10;
-		}
-		
-		@Override
-		public boolean canAccept(List<ItemDeepStack> stacks) {
-			return ItemDeepStacks.canFitAll(this, stacks);
-		}
 	}
 	
 	@Override
@@ -139,11 +91,11 @@ public class StorageLogisticsChest extends BlockContainer {
 		
 		StorageChestTileEntity table = (StorageChestTileEntity) ent;
 		for (int i = 0; i < table.getSizeInventory(); i++) {
-			if (table.getStackInSlot(i) != null) {
+			if (!table.getStackInSlot(i).isEmpty()) {
 				EntityItem item = new EntityItem(
 						world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 						table.removeStackFromSlot(i));
-				world.spawnEntityInWorld(item);
+				world.spawnEntity(item);
 			}
 		}
 		

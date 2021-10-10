@@ -1,6 +1,9 @@
 package com.smanzana.nostrumfairies.logistics.task;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.Validate;
 
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 
@@ -18,12 +21,14 @@ import net.minecraftforge.common.IPlantable;
  */
 public class LogisticsTaskPlantItem extends LogisticsTaskPlaceBlock {
 	
-	private ItemStack seed;
+	private @Nonnull ItemStack seed;
 	
 	protected LogisticsTaskPlantItem(@Nullable ILogisticsComponent owningComponent, @Nullable EntityLivingBase entity,
 			String displayName, ItemStack plantable, World world, BlockPos pos, BlockPos placeAt) {
 		super(owningComponent, entity, displayName, plantable, getPlantable(plantable).getPlant(world, pos.down()), world, pos, placeAt);
 		this.seed = plantable;
+		
+		Validate.notNull(plantable);
 	}
 
 	public LogisticsTaskPlantItem(ILogisticsComponent owningComponent, String displayName,

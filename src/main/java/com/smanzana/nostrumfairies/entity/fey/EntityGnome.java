@@ -5,8 +5,8 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -210,7 +210,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		if (task instanceof LogisticsTaskPlantItem) {
 			LogisticsTaskPlantItem plant = (LogisticsTaskPlantItem) task;
 			
-			if (plant.getWorld() != this.worldObj) {
+			if (plant.getWorld() != this.world) {
 				return false;
 			}
 			
@@ -253,7 +253,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		} else if (task instanceof LogisticsTaskHarvest) {
 			LogisticsTaskHarvest harvest = (LogisticsTaskHarvest) task;
 			
-			if (harvest.getWorld() != this.worldObj) {
+			if (harvest.getWorld() != this.world) {
 				return false;
 			}
 			
@@ -291,8 +291,8 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	private void dropItem() {
-		EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, getCarriedItem());
-		worldObj.spawnEntityInWorld(item);
+		EntityItem item = new EntityItem(this.world, posX, posY, posZ, getCarriedItem());
+		world.spawnEntityInWorld(item);
 		this.dataManager.set(DATA_HELD_ITEM, Optional.absent());
 	}
 
@@ -340,7 +340,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 			
 			LogisticsNetwork network = this.getLogisticsNetwork();
 			if (network != null) {
-				@Nullable ILogisticsComponent storage = network.getStorageForItem(worldObj, getPosition(), held);
+				@Nullable ILogisticsComponent storage = network.getStorageForItem(world, getPosition(), held);
 				if (storage != null) {
 					ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", held.copy());
 					network.getTaskRegistry().register(task, null);
@@ -374,7 +374,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 							center.getX() + (Math.cos(angle) * dist),
 							center.getY() + (Math.cos(tilt) * dist),
 							center.getZ() + (Math.sin(angle) * dist)));
-					while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+					while (targ.getY() > 0 && world.isAirBlock(targ)) {
 						targ = targ.down();
 					}
 					if (targ.getY() < 256) {
@@ -390,7 +390,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 							airBlock = airBlock.up();
 						}
 						
-						if (!worldObj.isAirBlock(airBlock)) {
+						if (!world.isAirBlock(airBlock)) {
 							targ = null;
 							break;
 						}
@@ -429,7 +429,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 					// On the client, spawn some particles if we're using our wand
 					// lel what if we sweat? xD
 //					if (ticksExisted % 5 == 0 && getPose() == ArmPose.CHOPPING) {
-//						worldObj.spawnParticle(EnumParticleTypes.DRAGON_BREATH,
+//						world.spawnParticle(EnumParticleTypes.DRAGON_BREATH,
 //								posX, posY, posZ,
 //								0, 0.3, 0,
 //								new int[0]);
@@ -441,7 +441,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 						break;
 					}
 					this.swingArm(this.getActiveHand());
-					NostrumFairiesSounds.GNOME_WORK.play(worldObj, posX, posY, posZ);
+					NostrumFairiesSounds.GNOME_WORK.play(world, posX, posY, posZ);
 				}
 				break;
 			}
@@ -466,7 +466,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 									center.getX() + (Math.cos(angle) * dist),
 									center.getY() + (Math.cos(tilt) * dist),
 									center.getZ() + (Math.sin(angle) * dist)));
-							while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+							while (targ.getY() > 0 && world.isAirBlock(targ)) {
 								targ = targ.down();
 							}
 							if (targ.getY() < 256) {
@@ -482,7 +482,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 									airBlock = airBlock.up();
 								}
 								
-								if (!worldObj.isAirBlock(airBlock)) {
+								if (!world.isAirBlock(airBlock)) {
 									targ = null;
 									break;
 								}
@@ -722,7 +722,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	public EntityFeyBase switchToSpecialization(FeyStoneMaterial material) {
-		if (worldObj.isRemote) {
+		if (world.isRemote) {
 			return this;
 		}
 		
@@ -730,20 +730,20 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		if (material != this.getCurrentSpecialization()) {
 			if (material == FeyStoneMaterial.EMERALD) {
 				// Gathering
-				replacement = new EntityGnomeCollector(worldObj);
+				replacement = new EntityGnomeCollector(world);
 			} else if (material == FeyStoneMaterial.GARNET) {
 				// Crafting
-				replacement = new EntityGnomeCrafter(worldObj);
+				replacement = new EntityGnomeCrafter(world);
 			} else {
-				replacement = new EntityGnome(worldObj);
+				replacement = new EntityGnome(world);
 			}
 		}
 		
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			worldObj.removeEntityDangerously(this);
-			worldObj.spawnEntityInWorld(replacement);
+			world.removeEntityDangerously(this);
+			world.spawnEntityInWorld(replacement);
 		}
 		
 		return replacement == null ? this : replacement;

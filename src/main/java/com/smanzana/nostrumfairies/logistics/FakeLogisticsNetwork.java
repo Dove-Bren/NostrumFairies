@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
@@ -223,7 +223,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			
 			NBTTagList list = new NBTTagList();
 			for (ItemStack stack : this.items) {
-				if (stack == null) {
+				if (stack.isEmpty()) {
 					continue;
 				}
 				list.appendTag(stack.writeToNBT(new NBTTagCompound()));
@@ -243,7 +243,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			NBTTagList list = tag.getTagList(NBT_COMP_ITEMS, NBT.TAG_COMPOUND);
 			List<ItemStack> items = new ArrayList<>(list.tagCount());
 			for (int i = list.tagCount() - 1; i >= 0; i--) {
-				items.add(ItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i)));
+				items.add(new ItemStack(list.getCompoundTagAt(i)));
 			}
 			
 			world = NostrumFairies.getWorld(dim);
@@ -261,7 +261,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			NBTTagList list = tag.getTagList(NBT_COMP_ITEMS, NBT.TAG_COMPOUND);
 			List<ItemStack> items = new ArrayList<>(list.tagCount());
 			for (int i = list.tagCount() - 1; i >= 0; i--) {
-				items.add(ItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i)));
+				items.add(new ItemStack(list.getCompoundTagAt(i)));
 			}
 			
 			world = NostrumFairies.getWorld(dim);

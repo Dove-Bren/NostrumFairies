@@ -1,27 +1,27 @@
 package com.smanzana.nostrumfairies.utils;
 
-import java.util.List;
-
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.oredict.OreDictionary;
 
 public final class OreDict {
 
 	public static boolean stackMatchesOreDict(@Nullable ItemStack stack, String oreDictName, boolean strict) {
-		if (stack == null) {
+		if (stack.isEmpty()) {
 			return false;
 		}
 		
-		List<ItemStack> dictionary = OreDictionary.getOres(oreDictName);
+		NonNullList<ItemStack> dictionary = OreDictionary.getOres(oreDictName);
 		return OreDictionary.containsMatch(strict, dictionary, stack);
 	}
 	
-	public static boolean stackMatchesAny(@Nullable ItemStack stack, String[] oreDictNames, boolean strict) {
-		if (stack == null) {
+	public static boolean stackMatchesAny(@Nonnull ItemStack stack, String[] oreDictNames, boolean strict) {
+		if (stack.isEmpty()) {
 			return false;
 		}
 		
@@ -40,7 +40,7 @@ public final class OreDict {
 		}
 		
 		Item item = Item.getItemFromBlock(state.getBlock());
-        ItemStack stack = item == null ? null : new ItemStack(item, 1, state.getBlock().damageDropped(state));
+        @Nonnull ItemStack stack = item == null ? ItemStack.EMPTY : new ItemStack(item, 1, state.getBlock().damageDropped(state));
 		return OreDict.stackMatchesOreDict(stack, oreDictName, strict);
 	}
 	
@@ -50,7 +50,7 @@ public final class OreDict {
 		}
 		
 		Item item = Item.getItemFromBlock(state.getBlock());
-        ItemStack stack = item == null ? null : new ItemStack(item, 1, state.getBlock().damageDropped(state));
+        ItemStack stack = item == null ? ItemStack.EMPTY : new ItemStack(item, 1, state.getBlock().damageDropped(state));
         return OreDict.stackMatchesAny(stack, oreDictNames, strict);
 	}
 	

@@ -205,7 +205,7 @@ public class OverlayRenderer extends Gui {
 				if (templateScroll != null) {
 					Vec3d center = event.getTarget().hitVec;
 					BlockPos blockPos = event.getTarget().getBlockPos().offset(event.getTarget().sideHit);
-					EnumFacing face = EnumFacing.getFacingFromVector((float) (center.xCoord - player.posX), 0f, (float) (center.zCoord - player.posZ));
+					EnumFacing face = EnumFacing.getFacingFromVector((float) (center.x - player.posX), 0f, (float) (center.z - player.posZ));
 					renderBlueprintPreview(blockPos, cachedBlueprint.getPreview(), face, event.getPartialTicks());
 				}
 			}
@@ -218,9 +218,9 @@ public class OverlayRenderer extends Gui {
 	private void renderAnchorBlock(BlockPos pos, float partialTicks) {
 		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
-		Vec3d offset = new Vec3d(pos.getX() - playerPos.xCoord,
-				pos.getY() - playerPos.yCoord,
-				pos.getZ() - playerPos.zCoord);
+		Vec3d offset = new Vec3d(pos.getX() - playerPos.x,
+				pos.getY() - playerPos.y,
+				pos.getZ() - playerPos.z);
 		
 		GlStateManager.pushMatrix();
 		
@@ -233,7 +233,7 @@ public class OverlayRenderer extends Gui {
 		GlStateManager.disableDepth();
 		GlStateManager.color(.4f, .7f, 1f, .4f);
 		
-		GlStateManager.translate(offset.xCoord, offset.yCoord, offset.zCoord);
+		GlStateManager.translate(offset.x, offset.y, offset.z);
 		
 		Tessellator tessellator = Tessellator.getInstance();
 		VertexBuffer buffer = tessellator.getBuffer();
@@ -280,9 +280,9 @@ public class OverlayRenderer extends Gui {
 	private void renderSelectionBox(BlockPos min, BlockPos max, float partialTicks) {
 		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
-		Vec3d offset = new Vec3d(min.getX() - playerPos.xCoord,
-				min.getY() - playerPos.yCoord,
-				min.getZ() - playerPos.zCoord);
+		Vec3d offset = new Vec3d(min.getX() - playerPos.x,
+				min.getY() - playerPos.y,
+				min.getZ() - playerPos.z);
 		
 		GlStateManager.pushMatrix();
 		
@@ -295,8 +295,8 @@ public class OverlayRenderer extends Gui {
 		GlStateManager.disableDepth();
 		
 		// Disable cull if inside
-		if (playerPos.xCoord > min.getX() && playerPos.yCoord > min.getY() && playerPos.zCoord > min.getZ()
-				&& playerPos.xCoord < max.getX() && playerPos.yCoord < max.getY() && playerPos.zCoord < max.getZ()) {
+		if (playerPos.x > min.getX() && playerPos.y > min.getY() && playerPos.z > min.getZ()
+				&& playerPos.x < max.getX() && playerPos.y < max.getY() && playerPos.z < max.getZ()) {
 			GlStateManager.disableCull();
 		}
 		
@@ -320,7 +320,7 @@ public class OverlayRenderer extends Gui {
 		
 		// TODO apply partial tick offset to effects too! lol!
 		
-		GlStateManager.translate(offset.xCoord, offset.yCoord, offset.zCoord);
+		GlStateManager.translate(offset.x, offset.y, offset.z);
 		GlStateManager.scale((max.getX() - min.getX()) + 1,
 				(max.getY() - min.getY()) + 1,
 				(max.getZ() - min.getZ()) + 1);
@@ -372,9 +372,9 @@ public class OverlayRenderer extends Gui {
 		Minecraft mc = Minecraft.getMinecraft();
 		EntityPlayerSP player = mc.thePlayer;
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
-		Vec3d offset = new Vec3d(center.getX() - playerPos.xCoord,
-				center.getY() - playerPos.yCoord,
-				center.getZ() - playerPos.zCoord);
+		Vec3d offset = new Vec3d(center.getX() - playerPos.x,
+				center.getY() - playerPos.y,
+				center.getZ() - playerPos.z);
 		
 		// Compile drawlist if not present
 		if (cachedRenderList == -1) {
@@ -463,7 +463,7 @@ public class OverlayRenderer extends Gui {
 		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 		GlStateManager.color(1f, 1f, 1f, 1f);
 		
-		GlStateManager.translate(offset.xCoord + rotX, offset.yCoord, offset.zCoord + rotZ);
+		GlStateManager.translate(offset.x + rotX, offset.y, offset.z + rotZ);
 		GlStateManager.rotate(angle, 0, 1, 0);
 		
 		mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);

@@ -1,12 +1,8 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrumfairies.blocks.tiles.PylonTileEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -18,7 +14,6 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
@@ -91,7 +86,7 @@ public class LogisticsPylon extends BlockContainer {
 	}
 	
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
 		return this.getDefaultState()
 				.withProperty(FACING, facing == EnumFacing.DOWN ? facing : EnumFacing.UP);
 	}
@@ -109,11 +104,6 @@ public class LogisticsPylon extends BlockContainer {
 	@Override
 	public boolean isFullCube(IBlockState state) {
 		return true;
-	}
-	
-	@Override
-	public boolean isVisuallyOpaque() {
-		return false;
 	}
 	
 	@Override
@@ -150,7 +140,7 @@ public class LogisticsPylon extends BlockContainer {
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
 		if (state.getValue(FACING) == EnumFacing.DOWN) {
 			IBlockState ceilState = worldIn.getBlockState(pos.up());
 			if (ceilState == null || !ceilState.isSideSolid(worldIn, pos.up(), EnumFacing.DOWN)) {
@@ -159,39 +149,17 @@ public class LogisticsPylon extends BlockContainer {
 			}
 		}
 		
-		super.neighborChanged(state, worldIn, pos, blockIn);
+		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
 	}
 	
 	@Override
-	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
 		return false; // could do a cool ping animation or something
-	}
-	
-	public static class PylonTileEntity extends LogisticsTileEntity {
-
-		public PylonTileEntity() {
-			super();
-		}
-		
-		@Override
-		public double getDefaultLogisticsRange() {
-			return 0;
-		}
-
-		@Override
-		public double getDefaultLinkRange() {
-			return 20;
-		}
-
-		@Override
-		public boolean canAccept(List<ItemDeepStack> stacks) {
-			return false;
-		}
 	}
 	
 	@Override

@@ -2,13 +2,15 @@ package com.smanzana.nostrumfairies.blocks;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.Validate;
+
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
+import com.smanzana.nostrumfairies.blocks.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
@@ -24,13 +26,11 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -40,10 +40,9 @@ import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
@@ -57,13 +56,13 @@ public class TemplateBlock extends BlockContainer {
 	 * @param templatedState
 	 * @return
 	 */
-	public static final @Nullable ItemStack GetRequiredItem(IBlockState templatedState) {
+	public static final @Nonnull ItemStack GetRequiredItem(IBlockState templatedState) {
 		if (templatedState == null) {
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
 		if (StateItemOverrides.containsKey(templatedState)) {
-			// Note: Always returning if key is there so that things can register 'null' to say that
+			// Note: Always returning if key is there so that things can register 'empty' to say that
 			// a block can't be build from template
 			return StateItemOverrides.get(templatedState);
 		}
@@ -72,19 +71,19 @@ public class TemplateBlock extends BlockContainer {
 		Block block = templatedState.getBlock();
 		
 		// Try reflection
-		if (required == null) {
+		if (required.isEmpty()) {
 			try {
-				Method Block_CreateStackedBlock = ReflectionHelper.findMethod(Block.class, block, new String[]{"createStackedBlock", "field_178999_b", "field_178999_b"},
+				Method Block_CreateStackedBlock = ObfuscationReflectionHelper.findMethod(Block.class, "getSilkTouchDrop", ItemStack.class,
 						IBlockState.class);
 				if (Block_CreateStackedBlock != null) {
 					required = (ItemStack) Block_CreateStackedBlock.invoke(block, templatedState);
 				}
 			} catch (Exception e) {
-				required = null;
+				required = ItemStack.EMPTY;
 			}
 		}
 		
-		if (required == null) {
+		if (required.isEmpty()) {
 			Item item = Item.getItemFromBlock(block);
 			if (item != null) {
 				if (!item.getHasSubtypes()) {
@@ -98,7 +97,7 @@ public class TemplateBlock extends BlockContainer {
 			}
 		}
 		
-		if (required != null) {
+		if (!required.isEmpty()) {
 			// Cache it!
 			StateItemCache.put(templatedState, required);
 		}
@@ -109,7 +108,8 @@ public class TemplateBlock extends BlockContainer {
 	private static Map<IBlockState, ItemStack> StateItemOverrides = new HashMap<>();
 	private static Map<IBlockState, ItemStack> StateItemCache = new HashMap<>();
 	
-	public static final void RegisterItemForBlock(IBlockState state, ItemStack stack) {
+	public static final void RegisterItemForBlock(IBlockState state, @Nonnull ItemStack stack) {
+		Validate.notNull(stack);
 		StateItemOverrides.put(state, stack.copy());
 	}
 	
@@ -177,8 +177,8 @@ public class TemplateBlock extends BlockContainer {
 	}
 	
 	@Override
-	public void getSubBlocks(Item itemIn, CreativeTabs tab, List<ItemStack> list) {
-		super.getSubBlocks(itemIn, tab, list);
+	public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> list) {
+		super.getSubBlocks(tab, list);
 	}
 	
 	@Override
@@ -201,16 +201,11 @@ public class TemplateBlock extends BlockContainer {
 	}
 	
 	@Override
-	public boolean isSideSolid(IBlockState base_state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return false;
 	}
 	
-	@Override
-	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
-		return false;
-	}
-	
-	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
 		return Block.NULL_AABB;
 	}
 	
@@ -219,20 +214,16 @@ public class TemplateBlock extends BlockContainer {
 		return Block.FULL_BLOCK_AABB;
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
-		return super.getStateForPlacement(world, pos, facing, hitX, hitY, hitZ, meta, placer, stack);
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
+		return super.getStateForPlacement(world, pos, facing, hitX, hitY, hitZ, meta, placer);
 	}
 	
 	@Override
 	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
         return true;
     }
-	
-	@Override
-	public boolean isVisuallyOpaque() {
-		return false;
-	}
 	
 	@Override
 	public boolean isOpaqueCube(IBlockState state) {
@@ -274,16 +265,16 @@ public class TemplateBlock extends BlockContainer {
 	public void onBlockHighlight(DrawBlockHighlightEvent event) {
 		if (event.getTarget().typeOfHit == RayTraceResult.Type.BLOCK) {
 			BlockPos pos = event.getTarget().getBlockPos();
-			IBlockState hit = event.getPlayer().worldObj.getBlockState(pos);
+			IBlockState hit = event.getPlayer().world.getBlockState(pos);
 			if (hit != null && hit.getBlock() == this) {
 				// Get block from Tile Entity
-				TemplateBlockTileEntity ent = GetEntity(event.getPlayer().worldObj, pos);
+				TemplateBlockTileEntity ent = GetEntity(event.getPlayer().world, pos);
 				IBlockState blockState = ent.getTemplateState();
 				if (blockState == null) {
 					blockState = Blocks.STONE.getDefaultState();
 				}
 				
-				RenderFuncs.RenderBlockOutline(event.getPlayer(), event.getPlayer().worldObj, pos, hit, event.getPartialTicks());
+				RenderFuncs.RenderBlockOutline(event.getPlayer(), event.getPlayer().world, pos, hit, event.getPartialTicks());
 				
 				event.setCanceled(true);
 				return;
@@ -303,8 +294,8 @@ public class TemplateBlock extends BlockContainer {
 		
 		if (!force) {
 			// Make sure there's an item that matches this as a pseudo way of making sure it's allowed
-			ItemStack material = GetRequiredItem(templatedState);
-			if (material == null) {
+			@Nonnull ItemStack material = GetRequiredItem(templatedState);
+			if (material.isEmpty()) {
 				return;
 			}
 		}
@@ -333,91 +324,6 @@ public class TemplateBlock extends BlockContainer {
 	@Override
 	public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
 		super.breakBlock(worldIn, pos, state);
-	}
-	
-	public static class TemplateBlockTileEntity extends TileEntity {
-		
-		private IBlockState state;
-		
-		public TemplateBlockTileEntity() {
-			this(null);
-		}
-		
-		public TemplateBlockTileEntity(IBlockState state) {
-			this.state = state;
-		}
-		
-		@Override
-		public boolean hasFastRenderer() {
-			return true;
-		}
-		
-		public void setBlockState(IBlockState state) {
-			this.state = state;
-			this.markDirty();
-		}
-		
-		public @Nullable IBlockState getTemplateState() {
-			return state;
-		}
-		
-		@Override
-		public SPacketUpdateTileEntity getUpdatePacket() {
-			return new SPacketUpdateTileEntity(this.pos, 3, this.getUpdateTag());
-		}
-
-		@Override
-		public NBTTagCompound getUpdateTag() {
-			return this.writeToNBT(new NBTTagCompound());
-		}
-		
-		@Override
-		public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
-			super.onDataPacket(net, pkt);
-			handleUpdateTag(pkt.getNbtCompound());
-		}
-		
-		private static final String NBT_STATE = "state";
-		
-		public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-			super.writeToNBT(compound);
-			
-			if (state != null) {
-				compound.setInteger(NBT_STATE, Block.getStateId(state));
-			}
-			
-			return compound;
-		}
-		
-		public void readFromNBT(NBTTagCompound compound) {
-			super.readFromNBT(compound);
-			
-			if (this.state != null) {
-				this.setBlockState(null);
-			}
-			
-			if (compound.hasKey(NBT_STATE, NBT.TAG_INT)) {
-				this.state = Block.getStateById(compound.getInteger(NBT_STATE));
-				if (this.worldObj != null && this.worldObj.isRemote) {
-					StaticTESRRenderer.instance.update(worldObj, pos, this);
-				}
-			}
-		}
-		
-		protected void flush() {
-			if (worldObj != null && !worldObj.isRemote) {
-				IBlockState state = worldObj.getBlockState(pos);
-				worldObj.notifyBlockUpdate(pos, state, state, 2);
-			}
-		}
-		
-		@Override
-		public void invalidate() {
-			super.invalidate();
-			if (worldObj != null && worldObj.isRemote) {
-				StaticTESRRenderer.instance.update(worldObj, pos, null);
-			}
-		}
 	}
 	
 }

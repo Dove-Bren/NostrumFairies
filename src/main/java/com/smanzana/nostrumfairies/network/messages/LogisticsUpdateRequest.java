@@ -29,11 +29,11 @@ public class LogisticsUpdateRequest implements IMessage {
 			
 			// We actually ignore this message if we're running integrated, as the client will already have
 			// correct information in the singleton registry
-			if (!ctx.getServerHandler().playerEntity.getServer().isDedicatedServer()) {
+			if (!ctx.getServerHandler().player.getServer().isDedicatedServer()) {
 				return null;
 			}
 			
-			ctx.getServerHandler().playerEntity.getServerWorld().addScheduledTask(() -> {
+			ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
 				IMessage response;
 				
 				// Is this about a single network, or all of them?
@@ -48,7 +48,7 @@ public class LogisticsUpdateRequest implements IMessage {
 				}
 				
 				NetworkHandler.getSyncChannel().sendTo(response,
-						ctx.getServerHandler().playerEntity);
+						ctx.getServerHandler().player);
 			});
 			
 			// This is dumb. Because of network thread, this interface has to return null and instead send

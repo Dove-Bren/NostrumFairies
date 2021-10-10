@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
@@ -28,11 +28,11 @@ public class ItemDeepStack {
 		this.item = template.copy();
 		this.count = count;
 		
-		this.item.stackSize = 1;
+		this.item.setCount(1);
 	}
 	
 	public ItemDeepStack(ItemStack original) {
-		this(original, original.stackSize);
+		this(original, original.getCount());
 	}
 	
 	public long getCount() {
@@ -52,7 +52,7 @@ public class ItemDeepStack {
 	}
 	
 	public void add(ItemStack original) {
-		add(original.stackSize);
+		add(original.getCount());
 	}
 	
 	public void add(ItemDeepStack original) {
@@ -70,8 +70,8 @@ public class ItemDeepStack {
 	public ItemStack splitStack(int requestedCount) {
 		ItemStack stack = item.copy();
 		
-		stack.stackSize = (int) Math.min(this.count, requestedCount);
-		this.count -= stack.stackSize;
+		stack.setCount((int) Math.min(this.count, requestedCount));
+		this.count -= stack.getCount();
 		
 		return stack;
 	}
@@ -84,7 +84,7 @@ public class ItemDeepStack {
 		// Could make sure both lists are sorted by itemstack, and have iterators on both to make this merge fast.
 		// Optimization opportunity!
 		for (ItemStack stack : items) {
-			if (stack == null || stack.stackSize < 0) {
+			if (stack.isEmpty()) {
 				continue;
 			}
 			
@@ -112,9 +112,9 @@ public class ItemDeepStack {
 	public static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, InventoryPlayer inventory) {
 		out = toDeepList(out, (IInventory) inventory);
 		
-		final @Nullable ItemStack heldStack = inventory.getItemStack();
+		final @Nonnull ItemStack heldStack = inventory.getItemStack();
 		
-		if (heldStack != null) {
+		if (!heldStack.isEmpty()) {
 			boolean merged = false;
 			for (ItemDeepStack condensed : out) {
 				if (condensed.canMerge(heldStack)) {

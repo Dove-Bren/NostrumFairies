@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.capabilities.AttributeProvider;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
@@ -25,7 +25,7 @@ import net.minecraft.entity.IEntityOwnable;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -81,15 +81,9 @@ public class NostrumFairies {
     	NostrumFairies.creativeTab = new CreativeTabs(MODID){
 	    	@Override
 	        @SideOnly(Side.CLIENT)
-	        public Item getTabIconItem(){
-	    		return FeySoulStone.instance();
+			public ItemStack getTabIconItem() {
+	    		return FeySoulStone.create(FeySoulStone.SoulStoneType.GEM);
 	        }
-	    	
-	    	@Override
-	        @SideOnly(Side.CLIENT)
-	    	public int getIconItemDamage() {
-	    		return FeySoulStone.create(SoulStoneType.GEM).getMetadata();
-	    	}
 	    };
 	    FeySoulStone.instance().setCreativeTab(NostrumFairies.creativeTab);
 	    
@@ -164,9 +158,9 @@ public class NostrumFairies {
     
     public static @Nullable World getWorld(int dimension) {
     	EntityPlayer p = proxy.getPlayer();
-    	if (p != null && p.worldObj.isRemote) {
-    		if (p.worldObj.provider.getDimension() == dimension) {
-				return p.worldObj;
+    	if (p != null && p.world.isRemote) {
+    		if (p.world.provider.getDimension() == dimension) {
+				return p.world;
 			}
     		return null;
     	}

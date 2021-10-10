@@ -6,10 +6,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.Validate;
+
 import com.google.common.collect.Lists;
-import com.smanzana.nostrumfairies.blocks.InputLogisticsChest.InputChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.InputChestTileEntity;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -37,7 +40,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 	}
 	
 	private String displayName;
-	private ItemStack item; // stacksize used for quantity and merge status
+	private @Nonnull ItemStack item = ItemStack.EMPTY; // stacksize used for quantity and merge status
 	private @Nullable ILogisticsComponent component;
 	private @Nullable EntityLivingBase entity;
 	
@@ -62,7 +65,8 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 	 */
 	private boolean networkCachedItemResult;
 	
-	private LogisticsTaskDepositItem(String displayName, ItemStack item) {
+	private LogisticsTaskDepositItem(String displayName, @Nonnull ItemStack item) {
+		Validate.notNull(item);
 		this.displayName = displayName;
 		this.item = item;
 		phase = Phase.IDLE;
@@ -81,7 +85,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 	private static LogisticsTaskDepositItem makeComposite(LogisticsTaskDepositItem left, LogisticsTaskDepositItem right) {
 		LogisticsTaskDepositItem composite;
 		ItemStack item = left.item.copy();
-		item.stackSize += right.item.stackSize;
+		item.grow(right.item.getCount());
 		if (left.entity == null) {
 			composite = new LogisticsTaskDepositItem(left.component, left.displayName, item);
 		} else {
@@ -105,7 +109,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 	
 	@Override
 	public String getDisplayName() {
-		return displayName + " (" + item.getUnlocalizedName() + " x " + item.stackSize + " - " + phase.name() + ")";
+		return displayName + " (" + item.getUnlocalizedName() + " x " + item.getCount() + " - " + phase.name() + ")";
 	}
 
 	@Override
@@ -190,7 +194,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 				return false;
 			}
 			
-			return ItemStacks.stacksMatch(item, otherTask.item) && (item.stackSize + otherTask.item.stackSize <= item.getMaxStackSize());
+			return ItemStacks.stacksMatch(item, otherTask.item) && (item.getCount() + otherTask.item.getCount() <= item.getMaxStackSize());
 		}
 		
 		return false;
@@ -198,7 +202,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 	
 	private void dropMerged(LogisticsTaskDepositItem otherTask) {
 		if (this.mergedTasks.remove(otherTask)) {
-			this.item.stackSize -= otherTask.item.stackSize;
+			this.item.shrink(otherTask.item.getCount());
 			otherTask.compositeTask = null;
 			
 			if (!this.mergedTasks.isEmpty()) {
@@ -208,7 +212,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 	}
 	
 	private void mergeToComposite(LogisticsTaskDepositItem otherTask) {
-		this.item.stackSize += otherTask.item.stackSize;
+		this.item.grow(otherTask.item.getCount());
 		mergedTasks.add(otherTask);
 		otherTask.compositeTask = this;
 		tryTasks(fairy);
@@ -274,7 +278,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 				// If this is a composite task, trust what the merge tasks have picked (and be
 				// comfy because we make sure only same-destination tasks can be merged)
 				if (this.mergedTasks == null) {
-					dropoffComponent = network.getStorageForItem(component == null ? entity.worldObj : component.getWorld(),
+					dropoffComponent = network.getStorageForItem(component == null ? entity.world : component.getWorld(),
 							component == null ? entity.getPosition() : component.getPosition(),
 							item,
 							(comp) -> {

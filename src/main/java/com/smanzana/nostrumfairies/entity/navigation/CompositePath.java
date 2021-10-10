@@ -96,7 +96,7 @@ public class CompositePath extends Path {
 		refreshCache(false);
 		if (cachedCurrPathIndex - 1 >= 0) {
 			PathPoint point = paths[cachedCurrPathIndex-1].getPathPointFromIndex(0);
-			return new BlockPos(point.xCoord, point.yCoord, point.zCoord);
+			return new BlockPos(point.x, point.y, point.z);
 		}
 		
 		return null;
@@ -106,7 +106,7 @@ public class CompositePath extends Path {
 		Path segment = getCurrentPath();
 		if (segment != null) {
 			PathPoint point = segment.getFinalPathPoint();
-			return new BlockPos(point.xCoord, point.yCoord, point.zCoord);
+			return new BlockPos(point.x, point.y, point.z);
 		}
 		
 		return null;
@@ -225,7 +225,7 @@ public class CompositePath extends Path {
 
 	public Vec3d getCurrentPos() {
 		PathPoint pathpoint = this.getPathPointFromIndex(compoundPathIndex);
-		return new Vec3d((double)pathpoint.xCoord, (double)pathpoint.yCoord, (double)pathpoint.zCoord);
+		return new Vec3d((double)pathpoint.x, (double)pathpoint.y, (double)pathpoint.z);
 	}
 
 	/**

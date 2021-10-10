@@ -1,5 +1,7 @@
 package com.smanzana.nostrumfairies.network.messages;
 
+import javax.annotation.Nonnull;
+
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
@@ -28,19 +30,19 @@ public class TemplateWandUpdate implements IMessage {
 				final WandUpdateType type = WandUpdateType.valueOf(message.tag.getString(NBT_TYPE));
 				final boolean val = message.tag.getBoolean(NBT_VAL);
 				
-				ctx.getServerHandler().playerEntity.getServerWorld().addScheduledTask(() -> {
-					ItemStack wand = ctx.getServerHandler().playerEntity.getHeldItemMainhand();
-					if (wand == null || !(wand.getItem() instanceof TemplateWand) || 
+				ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+					@Nonnull ItemStack wand = ctx.getServerHandler().player.getHeldItemMainhand();
+					if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand) || 
 							(type == WandUpdateType.SCROLL && TemplateWand.getModeOf(wand) != WandMode.SPAWN)) {
-						wand = ctx.getServerHandler().playerEntity.getHeldItemOffhand();
+						wand = ctx.getServerHandler().player.getHeldItemOffhand();
 					}
 					
-					if (wand != null && wand.getItem() instanceof TemplateWand &&
+					if (!wand.isEmpty() && wand.getItem() instanceof TemplateWand &&
 							(type != WandUpdateType.SCROLL || TemplateWand.getModeOf(wand) == WandMode.SPAWN)) {
 						if (type == WandUpdateType.MODE) {
-							TemplateWand.HandleModeChange(ctx.getServerHandler().playerEntity, wand, val);
+							TemplateWand.HandleModeChange(ctx.getServerHandler().player, wand, val);
 						} else {
-							TemplateWand.HandleScroll(ctx.getServerHandler().playerEntity, wand, val);
+							TemplateWand.HandleScroll(ctx.getServerHandler().player, wand, val);
 						}
 					}
 				});

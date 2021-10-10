@@ -8,9 +8,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity.FeyAwayRecord;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity.HomeBlockSlotInventory;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
 import com.smanzana.nostrumfairies.client.gui.FeySoulIcon;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;

@@ -7,7 +7,7 @@ import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.util.math.MathHelper;
 
 public class ModelElfArcher extends ModelElf {
@@ -80,7 +80,7 @@ public class ModelElfArcher extends ModelElf {
 			isAttacking = shadow.getStance() != EntityShadowFey.BattleStance.IDLE;
 			useBow = shadow.getStance() != EntityShadowFey.BattleStance.MELEE;
 		} else {
-			isAttacking = (entity instanceof EntityLivingBase ? ((EntityLivingBase) entity).getAITarget() != null : false);
+			isAttacking = (entity instanceof EntityLiving ? ((EntityLiving) entity).getAttackTarget() != null : false);
 			useBow = false;
 		}
 		

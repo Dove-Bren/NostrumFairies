@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.blocks;
+package com.smanzana.nostrumfairies.blocks.tiles;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.ILogicListener;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
@@ -228,7 +228,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		}
 		
 		for (IRecipe recipe : CraftingManager.getInstance().getRecipeList()) {
-			if (canCraft(recipe) && recipe.matches(inv, worldObj)) {
+			if (canCraft(recipe) && recipe.matches(inv, world)) {
 				return recipe;
 			}
 		}
@@ -428,7 +428,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		super.setNetworkComponent(component);
 		logicComp.setNetwork(component.getNetwork());
 		
-		if (worldObj != null && !worldObj.isRemote && withdrawRequester == null) {
+		if (world != null && !world.isRemote && withdrawRequester == null) {
 			withdrawRequester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent);
 			withdrawRequester.updateRequestedItems(getItemRequests());
 			
@@ -457,7 +457,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	@Override
 	public void onLeaveNetwork() {
-		if (!worldObj.isRemote && withdrawRequester != null) {
+		if (!world.isRemote && withdrawRequester != null) {
 			withdrawRequester.clearRequests();
 			withdrawRequester.setNetwork(null);
 			depositRequester.clearRequests();
@@ -470,7 +470,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	@Override
 	public void onJoinNetwork(LogisticsNetwork network) {
-		if (!worldObj.isRemote && withdrawRequester != null) {
+		if (!world.isRemote && withdrawRequester != null) {
 			withdrawRequester.setNetwork(network);
 			withdrawRequester.updateRequestedItems(getItemRequests());
 			depositRequester.setNetwork(network);
@@ -550,15 +550,15 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		
 		// Any leftover?
 		if (stack != null && stack.stackSize > 0) {
-			EntityItem ent = new EntityItem(worldObj, pos.getX() + .5, pos.getY() + 1.2, pos.getZ() + .5, stack);
-			worldObj.spawnEntityInWorld(ent);
+			EntityItem ent = new EntityItem(world, pos.getX() + .5, pos.getY() + 1.2, pos.getZ() + .5, stack);
+			world.spawnEntity(ent);
 		}
 	}
 	
 	@Override
 	public void markDirty() {
 		super.markDirty();
-		if (worldObj != null && !worldObj.isRemote && withdrawRequester != null) {
+		if (world != null && !world.isRemote && withdrawRequester != null) {
 			withdrawRequester.updateRequestedItems(getItemRequests());
 			depositRequester.updateRequestedItems(getPushRequests());
 		}
@@ -631,7 +631,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	protected LogisticsTaskWorkBlock createTask() {
-		LogisticsTaskWorkBlock task = new LogisticsTaskWorkBlock(this.getNetworkComponent(), "Craft Task", worldObj, pos.toImmutable()) {
+		LogisticsTaskWorkBlock task = new LogisticsTaskWorkBlock(this.getNetworkComponent(), "Craft Task", world, pos.toImmutable()) {
 			@Override
 			protected void workBlock() {
 				if (this.getCurrentWorker() == null) {
@@ -664,7 +664,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	protected void checkTasks() {
-		if (this.validateRecipe() && this.validateIngredients() && this.getNetwork() != null && this.worldObj != null && logicComp.isActivated()) {
+		if (this.validateRecipe() && this.validateIngredients() && this.getNetwork() != null && this.world != null && logicComp.isActivated()) {
 			while (this.tasks.size() < getMaxWorkJobs()) {
 				createTask();
 			}
@@ -793,13 +793,13 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	public void update() {
 		if (!placed) {
 			placed = true;
-			if (!worldObj.isRemote) {
+			if (!world.isRemote) {
 				// TODO used to update logic
 			}
 		}
 		
-		if (worldObj.getTotalWorldTime() % 5 == 0) {
-			if (!worldObj.isRemote) {
+		if (world.getTotalWorldTime() % 5 == 0) {
+			if (!world.isRemote) {
 				this.checkTasks();
 			}
 		}

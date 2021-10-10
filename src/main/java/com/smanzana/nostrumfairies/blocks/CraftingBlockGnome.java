@@ -1,12 +1,8 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import javax.annotation.Nullable;
-
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockGnomeTileEntity;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.inventory.FeySlotType;
-import com.smanzana.nostrumfairies.items.FeyStone;
-import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -20,8 +16,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
@@ -91,7 +85,7 @@ public class CraftingBlockGnome extends BlockContainer {
 	}
 	
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
 		return this.getDefaultState()
 				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
 	}
@@ -117,13 +111,8 @@ public class CraftingBlockGnome extends BlockContainer {
 	}
 	
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
 		return COL_AABB;
-	}
-	
-	@Override
-	public boolean isVisuallyOpaque() {
-		return false;
 	}
 	
 	@Override
@@ -149,22 +138,22 @@ public class CraftingBlockGnome extends BlockContainer {
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
 		if (!canPlaceBlockAt(worldIn, pos)) {
 			this.dropBlockAsItem(worldIn, pos, state, 0);
 			worldIn.setBlockToAir(pos);
 		}
 		
-		super.neighborChanged(state, worldIn, pos, blockIn);
+		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
 	}
 	
 	@Override
-	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
 		
 		if (!worldIn.isRemote) {
 			worldIn.notifyBlockUpdate(pos, state, state, 2);
@@ -190,76 +179,6 @@ public class CraftingBlockGnome extends BlockContainer {
 		}
 	}
 	
-	public static class CraftingBlockGnomeTileEntity extends CraftingBlockTileEntity {
-
-		public CraftingBlockGnomeTileEntity() {
-			super();
-		}
-
-		@Override
-		public int getCraftGridDim() {
-			return 2;
-		}
-
-		@Override
-		protected boolean canCraftWith(ItemStack item) {
-			return true;
-		}
-
-		@Override
-		protected float getCraftBonus(ItemStack item) {
-			if (item == null) {
-				return 0f;
-			}
-			
-			if (FeyStone.instance().getFeySlot(this.getUpgrade()) == FeySlotType.DOWNGRADE
-					&& FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
-				return .2f;
-			}
-			
-			Item itemBase = item.getItem();
-			String unloc = itemBase.getUnlocalizedName().toLowerCase();
-			if (unloc.contains("leaves")
-					|| unloc.contains("leaf")
-					|| unloc.contains("plant")
-					|| unloc.contains("crop")
-					|| unloc.contains("seed")
-					|| unloc.contains("dirt")
-					|| unloc.contains("water")
-					|| unloc.contains("flower")) {
-				return .3f;
-			}
-		
-			return 0f;
-		}
-		
-		@Override
-		protected ItemStack generateOutput() {
-			ItemStack out = super.generateOutput();
-			if (out != null
-					&& !out.getUnlocalizedName().toLowerCase().contains("block")
-					&& !out.getUnlocalizedName().toLowerCase().contains("ingot")
-					&& !out.getUnlocalizedName().toLowerCase().contains("nugget")) {
-				if (FeyStone.instance().getFeySlot(this.getUpgrade()) == FeySlotType.UPGRADE
-						&& FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
-					int bonus = 0;
-					int chances = 5;
-					
-					for (int i = 0; i < out.stackSize; i++) {
-						if (NostrumFairies.random.nextInt(chances) == 0) {
-							bonus++;
-							chances += 2;
-						}
-					}
-					
-					out.stackSize = Math.min(out.getMaxStackSize(), out.stackSize + bonus);
-				}
-			}
-			
-			return out;
-		}
-	}
-
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		return new CraftingBlockGnomeTileEntity();
@@ -283,11 +202,11 @@ public class CraftingBlockGnome extends BlockContainer {
 		
 		CraftingBlockGnomeTileEntity table = (CraftingBlockGnomeTileEntity) ent;
 		for (int i = 0; i < table.getSizeInventory(); i++) {
-			if (table.getStackInSlot(i) != null) {
+			if (!table.getStackInSlot(i).isEmpty()) {
 				EntityItem item = new EntityItem(
 						world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 						table.removeStackFromSlot(i));
-				world.spawnEntityInWorld(item);
+				world.spawnEntity(item);
 			}
 		}
 		

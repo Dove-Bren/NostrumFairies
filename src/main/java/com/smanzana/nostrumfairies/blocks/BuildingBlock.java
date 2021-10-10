@@ -1,27 +1,8 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
-import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.tiles.BuildingBlockTileEntity;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
-import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
-import com.smanzana.nostrumfairies.items.TemplateScroll;
-import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
-import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
-import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -36,27 +17,19 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.ExplosionEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class BuildingBlock extends BlockContainer {
@@ -120,7 +93,7 @@ public class BuildingBlock extends BlockContainer {
 	}
 	
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
 		return this.getDefaultState()
 				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
 	}
@@ -141,11 +114,6 @@ public class BuildingBlock extends BlockContainer {
 	}
 	
 	@Override
-	public boolean isVisuallyOpaque() {
-		return false;
-	}
-	
-	@Override
 	public boolean isOpaqueCube(IBlockState state) {
 		return false;
 	}
@@ -160,7 +128,7 @@ public class BuildingBlock extends BlockContainer {
 	}
 	
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
 		if (blockState.getValue(FACING).getHorizontalIndex() % 2 == 0) {
 			return AABB_NS;
 		} else {
@@ -186,319 +154,27 @@ public class BuildingBlock extends BlockContainer {
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
 		if (!canPlaceBlockAt(worldIn, pos)) {
 			this.dropBlockAsItem(worldIn, pos, state, 0);
 			worldIn.setBlockToAir(pos);
 		}
 		
-		super.neighborChanged(state, worldIn, pos, blockIn);
+		super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
 	}
 	
 	@Override
-	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
 		playerIn.openGui(NostrumFairies.MODID, NostrumFairyGui.buildBlockID, worldIn, pos.getX(), pos.getY(), pos.getZ());
 		return true;
 	}
 	
-	public static class BuildingBlockTileEntity extends LogisticsTileEntity implements ITickable,  ILogisticsTaskListener, IFeySign {
-
-		private static final String NBT_SLOT = "itemslot";
-		
-		private int tickCount;
-		private Map<BlockPos, ILogisticsTask> taskMap;
-		private double radius;
-		private ItemStack slot;
-		private int scanCounter;
-		
-		public BuildingBlockTileEntity() {
-			this(16);
-		}
-		
-		public BuildingBlockTileEntity(double blockRadius) {
-			super();
-			taskMap = new HashMap<>();
-			this.radius = blockRadius;
-			
-			MinecraftForge.EVENT_BUS.register(this);
-		}
-		
-		@Override
-		public double getDefaultLogisticsRange() {
-			return radius;
-		}
-
-		@Override
-		public double getDefaultLinkRange() {
-			return 10;
-		}
-
-		@Override
-		public boolean canAccept(List<ItemDeepStack> stacks) {
-			return false;
-		}
-		
-		private void makePlaceTask(BlockPos base, IBlockState missingState) {
-			LogisticsNetwork network = this.getNetwork();
-			if (network == null) {
-				return;
-			}
-			
-			if (!taskMap.containsKey(base)) {
-				ItemStack item = TemplateBlock.GetRequiredItem(missingState);
-				LogisticsTaskBuildBlock task = new LogisticsTaskBuildBlock(this.getNetworkComponent(), "Repair Task",
-						item, missingState,
-						worldObj, base);
-				this.taskMap.put(base, task);
-				network.getTaskRegistry().register(task, this);
-			}
-		}
-		
-		private void removeTask(BlockPos base) {
-			ILogisticsTask task = taskMap.remove(base);
-			if (task == null) {
-				// wut
-				return;
-			}
-			
-			LogisticsNetwork network = this.getNetwork();
-			if (network == null) {
-				return;
-			}
-			
-			network.getTaskRegistry().revoke(task);
-		}
-		
-		private void scanBlueprint() {
-			if (this.getNetwork() == null) {
-				return;
-			}
-			
-			TemplateBlueprint blueprint = TemplateScroll.GetTemplate(slot);
-			if (blueprint == null) {
-				return;
-			}
-			
-			final long startTime = System.currentTimeMillis();
-			
-			List<BlockPos> blocks = blueprint.spawn(worldObj, pos, EnumFacing.NORTH);
-			if (!blocks.isEmpty()) {
-				for (BlockPos pos : blocks) {
-					this.makePlaceTask(pos, TemplateBlock.GetTemplatedState(worldObj, pos));
-				}
-			}
-			
-			final long end = System.currentTimeMillis();
-			if (end - startTime >= 5) {
-				System.out.println("Took " + (end - startTime) + "ms to scan for blueprint changes!");
-			}
-		}
-		
-		private void scan(int y) {
-			if (this.getNetwork() == null) {
-				return;
-			}
-			
-			final BlockPos center = this.getPos();
-			
-			if (center.getY() + y < 0 || center.getY() + y > 255) {
-				return;
-			}
-			
-			final long startTime = System.currentTimeMillis();
-			
-			Set<BlockPos> known = Sets.newHashSet(taskMap.keySet());
-			List<BlockPos> templateSpots = new LinkedList<>();
-			
-			final MutableBlockPos cursor = new MutableBlockPos();
-			for (int x = (int) Math.floor(-radius); x <= Math.ceil(radius); x++)
-			for (int z = (int) Math.floor(-radius); z <= Math.ceil(radius); z++) {
-				cursor.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);
-				if (!worldObj.isBlockLoaded(cursor)) {
-					break; // skip this whole column
-				}
-				
-				IBlockState state = worldObj.getBlockState(cursor);
-				if (state != null && state.getBlock() instanceof TemplateBlock) {
-					templateSpots.add(cursor.toImmutable());
-				}
-			}
-			
-			for (BlockPos base : templateSpots) {
-				if (known.remove(base)) {
-					; // We already knew about it, so don't create a new one
-				} else {
-					// Didn't know, so record!
-					// Don't make task cause we filter better later
-					makePlaceTask(base, TemplateBlock.GetTemplatedState(worldObj, base));
-				}
-			}
-			
-			// For any left in known, the template spot is not there anymore! Remove!
-			for (BlockPos base : known) {
-				if (base.getY() - center.getY() == y) {
-					removeTask(base);
-				}
-			}
-			
-			final long end = System.currentTimeMillis();
-			if (end - startTime >= 5) {
-				System.out.println("Took " + (end - startTime) + "ms to scan for lost templates!");
-			}
-		}
-		
-		@Override
-		public void update() {
-			if (this.worldObj.isRemote) {
-				return;
-			}
-			
-			this.tickCount++;
-			if (this.tickCount % (20 * 2) == 0) {
-				final int y = (int) ((scanCounter++ % (radius * 2)) - radius);
-				scan(y);
-			}
-			if (this.slot != null && this.tickCount % 10 == 0) {
-				scanBlueprint();
-			}
-		}
-		
-		@Override
-		public void onTaskDrop(ILogisticsTask task, IFeyWorker worker) {
-			; 
-		}
-
-		@Override
-		public void onTaskAccept(ILogisticsTask task, IFeyWorker worker) {
-			;
-		}
-
-		@Override
-		public void onTaskComplete(ILogisticsTask task, IFeyWorker worker) {
-			if (task instanceof LogisticsTaskBuildBlock) {
-				LogisticsTaskBuildBlock placeTask = (LogisticsTaskBuildBlock) task;
-				BlockPos pos = placeTask.getTargetBlock();
-				taskMap.remove(pos);
-			}
-		}
-		
-		@SubscribeEvent
-		public void onExplosion(ExplosionEvent.Detonate event) {
-			if (event.isCanceled() || !event.getWorld().equals(worldObj)) {
-				return;
-			}
-			
-			List<BlockPos> positions = new ArrayList<>();
-			List<IBlockState> states = new ArrayList<>();
-			for (BlockPos loc : event.getAffectedBlocks()) {
-				if (loc.equals(pos)) {
-					// We got blown up
-					return;
-				}
-				
-				if (Math.abs(pos.getX() - loc.getX()) < radius
-						|| Math.abs(pos.getY() - loc.getY()) < radius
-						|| Math.abs(pos.getZ() - loc.getZ()) < radius) {
-					positions.add(loc);
-					states.add(worldObj.getBlockState(loc));
-				}
-			}
-			
-			if (!positions.isEmpty()) {
-				NostrumMagica.playerListener.registerTimer((type, entity, data) -> {
-					for (int i = 0; i < positions.size(); i++) {
-						if (worldObj.isAirBlock(positions.get(i))) {
-							TemplateBlock.SetTemplate(worldObj, positions.get(i), states.get(i));
-						}
-					}
-					
-					// Remove us from the listener
-					return true;
-				}, 1, 1);
-			}
-		}
-		
-		@Override
-		public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-			nbt = super.writeToNBT(nbt);
-			
-			if (this.slot != null) {
-				nbt.setTag(NBT_SLOT, slot.serializeNBT());
-			}
-			
-			return nbt;
-		}
-		
-		@Override
-		public void readFromNBT(NBTTagCompound nbt) {
-			super.readFromNBT(nbt);
-			
-			this.slot = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_SLOT));
-			
-			if (this.worldObj != null && this.worldObj.isRemote) {
-				StaticTESRRenderer.instance.update(worldObj, pos, this);
-			}
-		}
-		
-		public IInventory getInventory() {
-			BuildingBlockTileEntity self = this;
-			IInventory inv = new InventoryBasic("BuildingBlockInv", false, 1) {
-				
-				@Override
-				public void markDirty() {
-					if (slot != null && this.getStackInSlot(0) == null && !self.worldObj.isRemote) {
-						System.out.println("Clearing item");
-					}
-					
-					slot = this.getStackInSlot(0);
-					super.markDirty();
-					self.markDirty();
-					IBlockState state = self.worldObj.getBlockState(pos);
-					self.worldObj.notifyBlockUpdate(pos, state, state, 2);
-				}
-				
-				@Override
-				public boolean isItemValidForSlot(int index, ItemStack stack) {
-					return index == 0 && (stack == null || stack.getItem() instanceof TemplateScroll);
-				}
-			};
-			
-			inv.setInventorySlotContents(0, slot);
-			return inv;
-		}
-		
-		private static final ItemStack SIGN_ICON = new ItemStack(Blocks.BRICK_BLOCK);
-
-		@Override
-		public ItemStack getSignIcon(IFeySign sign) {
-			return SIGN_ICON;
-		}
-		
-		@Override
-		public EnumFacing getSignFacing(IFeySign sign) {
-			IBlockState state = worldObj.getBlockState(pos);
-			return state.getValue(FACING);
-		}
-		
-		@Override
-		public void invalidate() {
-			super.invalidate();
-			if (worldObj != null && worldObj.isRemote) {
-				StaticTESRRenderer.instance.update(worldObj, pos, null);
-			}
-		}
-		
-		public @Nullable ItemStack getTemplateScroll() {
-			return this.slot;
-		}
-	}
-	
-		@Override
+	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		TileEntity ent = new BuildingBlockTileEntity();
 		return ent;
@@ -522,11 +198,11 @@ public class BuildingBlock extends BlockContainer {
 		
 		BuildingBlockTileEntity block = (BuildingBlockTileEntity) ent;
 		block.unlinkFromNetwork();
-		if (block.getTemplateScroll() != null) {
+		if (!block.getTemplateScroll().isEmpty()) {
 			EntityItem item = new EntityItem(
 					world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 					block.getTemplateScroll());
-			world.spawnEntityInWorld(item);
+			world.spawnEntity(item);
 		}
 		MinecraftForge.EVENT_BUS.unregister(block);
 	}
@@ -549,7 +225,7 @@ public class BuildingBlock extends BlockContainer {
 	}
 	
 	public static boolean isPlantableSpot(World world, BlockPos base, ItemStack seed) {
-		if (world == null || base == null || seed == null) {
+		if (world == null || base == null || seed.isEmpty()) {
 			return false;
 		}
 		

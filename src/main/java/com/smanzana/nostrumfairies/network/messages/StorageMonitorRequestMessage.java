@@ -1,9 +1,9 @@
 package com.smanzana.nostrumfairies.network.messages;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.StorageMonitorTileEntity;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
@@ -31,11 +31,11 @@ public class StorageMonitorRequestMessage implements IMessage {
 			
 			try {
 				final BlockPos pos = BlockPos.fromLong(message.tag.getLong(NBT_POS));
-				final World world = ctx.getServerHandler().playerEntity.worldObj;
-				final ItemStack request = ItemStack.loadItemStackFromNBT(message.tag.getCompoundTag(NBT_REQ));
+				final World world = ctx.getServerHandler().player.world;
+				final @Nonnull ItemStack request = new ItemStack(message.tag.getCompoundTag(NBT_REQ));
 				final boolean delete = message.tag.getBoolean(NBT_DEL);
 				
-				ctx.getServerHandler().playerEntity.getServerWorld().addScheduledTask(() -> {
+				ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
 					final TileEntity te = world.getTileEntity(pos);
 					if (te != null && te instanceof StorageMonitorTileEntity) {
 						StorageMonitorTileEntity monitor = (StorageMonitorTileEntity) te;
@@ -73,10 +73,10 @@ public class StorageMonitorRequestMessage implements IMessage {
 		this(null, null, false);
 	}
 	
-	public StorageMonitorRequestMessage(StorageMonitorTileEntity monitor, @Nullable ItemStack template, boolean delete) {
+	public StorageMonitorRequestMessage(StorageMonitorTileEntity monitor, @Nonnull ItemStack template, boolean delete) {
 		tag = new NBTTagCompound();
 		
-		if (template != null) {
+		if (!template.isEmpty()) {
 			tag.setLong(NBT_POS, monitor.getPos().toLong());
 			tag.setTag(NBT_REQ, template.serializeNBT());
 			tag.setBoolean(NBT_DEL, delete);

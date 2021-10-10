@@ -55,7 +55,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 	}
 	
 	protected @Nullable BlockPos findBuildSpot(BlockPos buildCell) {
-		BlockPos buildPos = GetBuildSpot(worldObj, buildCell);
+		BlockPos buildPos = GetBuildSpot(world, buildCell);
 		if (buildPos != null) {
 			return buildPos;
 		}
@@ -64,11 +64,11 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		
 		// Is the block we shifted to where we are?
 		if (this.getPosition().equals(buildPos) || this.getDistanceSqToCenter(buildPos) <= 1) {
-			AddBuildSpot(worldObj, buildCell, buildPos);
+			AddBuildSpot(world, buildCell, buildPos);
 			return buildPos; // do nothing. Next loop will call it 'success'
 		}
 		if (this.getNavigator().tryMoveToXYZ(buildPos.getX(), buildPos.getY(), buildPos.getZ(), 1.0f)) {
-			AddBuildSpot(worldObj, buildCell, buildPos);
+			AddBuildSpot(world, buildCell, buildPos);
 			return buildPos; // Sweet.
 		}
 		
@@ -90,7 +90,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 				}
 				if (!lastSolid) {
 					// Last block was breathable. Are we suddenly in solid ground?
-					lastSolid = worldObj.getBlockState(cursor).getMaterial().blocksMovement();
+					lastSolid = world.getBlockState(cursor).getMaterial().blocksMovement();
 					if (lastSolid) {
 						// Can we path there?
 						//System.out.println("Solid: " + cursor);
@@ -98,13 +98,13 @@ public class EntityDwarfBuilder extends EntityDwarf {
 						if (this.getPosition().equals(candidate)
 								|| this.getDistanceSqToCenter(candidate) <= 1
 								|| this.getNavigator().tryMoveToXYZ(candidate.getX(), candidate.getY(), candidate.getZ(), 1.0f)) {
-							AddBuildSpot(worldObj, buildCell, candidate);
+							AddBuildSpot(world, buildCell, candidate);
 							return candidate; // Yay
 						}
 					}
 				} else {
 					// Last block was solid so we can't stand there. Keep travelling down looking for air
-					lastSolid = worldObj.getBlockState(cursor).getMaterial().blocksMovement();
+					lastSolid = world.getBlockState(cursor).getMaterial().blocksMovement();
 				}
 				cursor.setY(cursor.getY() + yIncr);
 			}
@@ -119,7 +119,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 			// TODO require a specialization\
 			LogisticsTaskBuildBlock build = (LogisticsTaskBuildBlock) task;
 			
-			if (build.getWorld() != this.worldObj) {
+			if (build.getWorld() != this.world) {
 				return false;
 			}
 			
@@ -186,7 +186,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 					|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < 1)) {
 					task.markSubtaskComplete();
 					if (movePos != null) {
-						ClearBuildSpot(worldObj, movePos);
+						ClearBuildSpot(world, movePos);
 					}
 					movePos = null;
 					moveEntity = null;
@@ -250,11 +250,11 @@ public class EntityDwarfBuilder extends EntityDwarf {
 	public void onUpdate() {
 		super.onUpdate();
 		
-//		if (worldObj.isRemote && isSwingInProgress) {
+//		if (world.isRemote && isSwingInProgress) {
 //			if (this.getPose() == ArmPose.MINING) {
 //				// 20% into animation is the hit
 //				if (this.swingProgressInt == Math.floor(this.getArmSwingAnimationEnd() * .2)) {
-//					NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), worldObj, posX, posY, posZ);
+//					NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), world, posX, posY, posZ);
 //				}
 //			}
 //		}

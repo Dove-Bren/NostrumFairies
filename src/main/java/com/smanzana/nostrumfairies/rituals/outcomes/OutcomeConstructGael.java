@@ -2,6 +2,8 @@ package com.smanzana.nostrumfairies.rituals.outcomes;
 
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.items.FairyGael;
 import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
@@ -11,6 +13,7 @@ import com.smanzana.nostrummagica.rituals.outcomes.OutcomeSpawnItem;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -19,22 +22,22 @@ public class OutcomeConstructGael extends OutcomeSpawnItem {
 	private final FairyGaelType type;
 	
 	public OutcomeConstructGael(FairyGaelType type) {
-		super(null);
+		super(ItemStack.EMPTY);
 		this.type = type;
 	}
 	
 	@Override
-	public void perform(World world, EntityPlayer player, ItemStack centerItem, ItemStack otherItems[], BlockPos center, RitualRecipe recipe) {
+	public void perform(World world, EntityPlayer player, ItemStack centerItem, NonNullList<ItemStack> otherItems, BlockPos center, RitualRecipe recipe) {
 		// set up stack and then call super to spawn it
 		this.stack = FairyGael.upgrade(type, centerItem);
 		
 		super.perform(world, player, centerItem, otherItems, center, recipe);
 	}
 
-	private static ItemStack RES = null;
+	private static ItemStack RES = ItemStack.EMPTY;
 	@Override
-	public ItemStack getResult() {
-		if (RES == null)
+	public @Nonnull ItemStack getResult() {
+		if (RES.isEmpty())
 			RES = FairyGael.create(type, null);
 		
 		return RES;

@@ -5,7 +5,7 @@ import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
-import com.smanzana.nostrumfairies.blocks.MiningBlock.MiningBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.MiningBlockTileEntity;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 import net.minecraft.client.Minecraft;

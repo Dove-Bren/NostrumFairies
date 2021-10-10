@@ -191,7 +191,7 @@ public class SoulJar extends Item implements ILoreTagged {
 	
 	@Override
 	public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer playerIn, EntityLivingBase target, EnumHand hand) {
-		if (playerIn.worldObj.isRemote) {
+		if (playerIn.world.isRemote) {
 			return true;
 		}
 		
@@ -222,7 +222,7 @@ public class SoulJar extends Item implements ILoreTagged {
 			
 			if (filled != null) {
 				playerIn.setHeldItem(hand, filled);
-				playerIn.worldObj.removeEntityDangerously(target);
+				playerIn.world.removeEntityDangerously(target);
 				return true;
 			}
 		}

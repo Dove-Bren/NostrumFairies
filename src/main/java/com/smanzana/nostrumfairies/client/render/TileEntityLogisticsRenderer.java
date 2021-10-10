@@ -5,7 +5,7 @@ import java.util.Collection;
 
 import org.lwjgl.opengl.GL11;
 
-import com.smanzana.nostrumfairies.blocks.LogisticsTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.potion.FeyVisibilityPotion;
@@ -113,7 +113,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 //							dotAmt = Math.max(0f, 1f - (perI * Math.abs(dotI - (float) pretendI)));
 //						}
 						
-						buffer.pos(point.xCoord, point.yCoord, point.zCoord)
+						buffer.pos(point.x, point.y, point.z)
 								.color(0f, 1f, 0f, alpha).endVertex();
 						
 					}

@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrummagica.utils.Inventories;
@@ -23,9 +24,9 @@ public class ItemDeepStacks {
 		for (ItemDeepStack deep : stacks) {
 			deep = deep.copy();
 			while (deep.getCount() > 0) {
-				ItemStack stack = deep.splitStack(deep.getTemplate().getMaxStackSize());
-				ItemStack leftover = Inventories.addItem(inventory, stack);
-				if (leftover != null) {
+				@Nonnull ItemStack stack = deep.splitStack(deep.getTemplate().getMaxStackSize());
+				@Nonnull ItemStack leftover = Inventories.addItem(inventory, stack);
+				if (!leftover.isEmpty()) {
 					// Inventory can't fit anymore of this item!
 					// Add back however many we couldn't and push this deep into our ret list
 					deep.add(leftover);
@@ -71,12 +72,12 @@ public class ItemDeepStacks {
 		
 		int freeSlots = 0;
 		for (int i = 0; i < inventory.getSizeInventory(); i++) {
-			@Nullable ItemStack inSlot = inventory.getStackInSlot(i);
-			if (inSlot == null) {
+			@Nonnull ItemStack inSlot = inventory.getStackInSlot(i);
+			if (inSlot.isEmpty()) {
 				freeSlots++;
 			} else if (!stacks.isEmpty()) {
 				// Find any of our stacks that match the item in this slot
-				int room = Math.min(inventory.getInventoryStackLimit(), inSlot.getMaxStackSize()) - inSlot.stackSize;
+				int room = Math.min(inventory.getInventoryStackLimit(), inSlot.getMaxStackSize()) - inSlot.getCount();
 				
 				if (room == 0) {
 					continue;

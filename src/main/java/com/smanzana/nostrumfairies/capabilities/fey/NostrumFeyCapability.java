@@ -240,7 +240,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				
 				if (owner instanceof EntityPlayer) {
 					this.buildPlanner.setInventory(((EntityPlayer) owner).inventory);
-					this.buildPlanner.setWorld(owner.worldObj);
+					this.buildPlanner.setWorld(owner.world);
 				}
 			}
 		}
@@ -255,7 +255,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			for (int z = -BUILD_SCAN_RADIUS; z <= BUILD_SCAN_RADIUS; z++)
 			for (int y = -BUILD_SCAN_RADIUS; y <= BUILD_SCAN_RADIUS; y++) {
 				cursor.setPos(owner.posX + x, owner.posY + y, owner.posZ + z);
-				IBlockState state = owner.worldObj.getBlockState(cursor);
+				IBlockState state = owner.world.getBlockState(cursor);
 				if (state != null && state.getBlock() instanceof TemplateBlock) {
 					builds.add(cursor.toImmutable());
 				}
@@ -352,7 +352,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 								}
 							} else {
 								// Otherwise get all networks and use the closest
-								NostrumFairies.instance.getLogisticsRegistry().getLogisticsNetworksFor(owner.worldObj, owner.getPosition().toImmutable(), tickNetworks);
+								NostrumFairies.instance.getLogisticsRegistry().getLogisticsNetworksFor(owner.world, owner.getPosition().toImmutable(), tickNetworks);
 							}
 						}
 						
@@ -386,7 +386,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						if (network == null) {
 							if (pullItems != null || pushItems != null) {
 								// Find the network to use this tick
-								network = findUsefulNetwork(tickNetworks, pullItems, pushItems, owner.worldObj, owner.getPosition());
+								network = findUsefulNetwork(tickNetworks, pullItems, pushItems, owner.world, owner.getPosition());
 							}
 						}
 						
@@ -457,7 +457,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 							continue;
 						}
 						
-						deployFairy(i, type, gael, owner.worldObj, owner.posX, owner.posY, owner.posZ);
+						deployFairy(i, type, gael, owner.world, owner.posX, owner.posY, owner.posZ);
 					}
 				}
 			}
@@ -498,7 +498,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	
 	@SubscribeEvent
 	public void onEntityTick(LivingUpdateEvent event) {
-		if (event.getEntityLiving() == this.owner && !owner.worldObj.isRemote) {
+		if (event.getEntityLiving() == this.owner && !owner.world.isRemote) {
 			this.tick();
 		}
 	}
@@ -506,7 +506,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	protected void clearFairies() {
 		for (FairyGaelType type : FairyGaelType.values()) { 
 			for (FairyRecord record : this.deployedFairies.get(type)) {
-				record.fairy.worldObj.removeEntity(record.fairy);
+				record.fairy.world.removeEntity(record.fairy);
 			}
 			this.deployedFairies.get(type).clear();
 		}
@@ -620,7 +620,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						FairyGael.setStoredEntity(gael, fairy);
 						fairyInventory.markDirty();
 						fairy.setDead();
-						fairy.worldObj.removeEntity(fairy);
+						fairy.world.removeEntity(fairy);
 					}
 				}
 				return true;

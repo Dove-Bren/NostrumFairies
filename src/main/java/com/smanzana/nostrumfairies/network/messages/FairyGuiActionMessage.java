@@ -26,12 +26,12 @@ public class FairyGuiActionMessage implements IMessage {
 
 		@Override
 		public CapabilitySyncMessage onMessage(FairyGuiActionMessage message, MessageContext ctx) {
-			ctx.getServerHandler().playerEntity.getServerWorld().addScheduledTask(() -> {
-				INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(ctx.getServerHandler().playerEntity);
+			ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+				INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(ctx.getServerHandler().player);
 				FairyHolderInventory inv = (attr == null ? null : attr.getFairyInventory());
 				
-				if (inv != null && ctx.getServerHandler().playerEntity.openContainer instanceof FairyScreenGui.FairyScreenContainer) {
-					FairyScreenGui.FairyScreenContainer container = (FairyScreenGui.FairyScreenContainer) ctx.getServerHandler().playerEntity.openContainer;
+				if (inv != null && ctx.getServerHandler().player.openContainer instanceof FairyScreenGui.FairyScreenContainer) {
+					FairyScreenGui.FairyScreenContainer container = (FairyScreenGui.FairyScreenContainer) ctx.getServerHandler().player.openContainer;
 					container.handleAction(message.action, message.slot, message.selection);
 				} else {
 					NostrumFairies.logger.error("Got a Fairy screen gui action but no inventory present or gui isn't open");

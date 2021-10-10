@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
@@ -773,7 +774,7 @@ public class LogisticsNetwork {
 		return filteredMap;
 	}
 	
-	public @Nullable ILogisticsComponent getStorageForItem(World world, BlockPos pos, ItemStack stack, @Nullable Predicate<ILogisticsComponent> filter) {
+	public @Nullable ILogisticsComponent getStorageForItem(World world, BlockPos pos, @Nonnull ItemStack stack, @Nullable Predicate<ILogisticsComponent> filter) {
 		ILogisticsComponent nearest = null;
 		double minDist = 0;
 		

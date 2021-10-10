@@ -1,12 +1,12 @@
 package com.smanzana.nostrumfairies.network.messages;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.ILogisticsLogicProvider;
-import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent;
-import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.LogicMode;
-import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.LogicOp;
+import com.smanzana.nostrumfairies.blocks.tiles.ILogisticsLogicProvider;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.LogicMode;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.LogicOp;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
@@ -34,15 +34,15 @@ public class LogicPanelActionMessage implements IMessage {
 			try {
 				final Action type = Action.valueOf(message.tag.getString(NBT_TYPE));
 				final BlockPos pos = BlockPos.fromLong(message.tag.getLong(NBT_POS));
-				final World world = ctx.getServerHandler().playerEntity.worldObj;
+				final World world = ctx.getServerHandler().player.world;
 				
 				// Implemented ILogisticsLogicProvider on your tile entity if it has a logic component that uses the logic panel gui
 				ILogisticsLogicProvider te = (ILogisticsLogicProvider) world.getTileEntity(pos);
 				
-				ctx.getServerHandler().playerEntity.getServerWorld().addScheduledTask(() -> {
+				ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
 					final LogisticsLogicComponent comp = te.getLogicComponent();
 					if (type == Action.TEMPLATE) {
-						@Nullable ItemStack stack = ItemStack.loadItemStackFromNBT(message.tag.getCompoundTag(NBT_ITEM_VAL));
+						@Nonnull ItemStack stack = new ItemStack(message.tag.getCompoundTag(NBT_ITEM_VAL));
 						comp.setLogicTemplate(stack);
 					} else if (type == Action.OP) {
 						LogicOp op = LogicOp.valueOf(message.tag.getString(NBT_INT_VAL));
@@ -90,7 +90,7 @@ public class LogicPanelActionMessage implements IMessage {
 		this(null, (String) null, null);
 	}
 	
-	public LogicPanelActionMessage(ILogisticsLogicProvider ent, @Nullable ItemStack template) {
+	public LogicPanelActionMessage(ILogisticsLogicProvider ent, @Nonnull ItemStack template) {
 		this(Action.TEMPLATE, template, ent.getPos());
 	}
 	
@@ -116,12 +116,12 @@ public class LogicPanelActionMessage implements IMessage {
 		}
 	}
 	
-	protected LogicPanelActionMessage(Action type, @Nullable ItemStack template, BlockPos pos) {
+	protected LogicPanelActionMessage(Action type, @Nonnull ItemStack template, BlockPos pos) {
 		tag = new NBTTagCompound();
 		
 		if (type != null) {
 			tag.setString(NBT_TYPE, type.name());
-			if (template != null) {
+			if (!template.isEmpty()) {
 				tag.setTag(NBT_ITEM_VAL, template.serializeNBT());
 			}
 			tag.setLong(NBT_POS, pos.toLong());

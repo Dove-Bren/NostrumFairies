@@ -4,8 +4,8 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
@@ -202,7 +202,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		if (task instanceof LogisticsTaskChopTree) {
 			LogisticsTaskChopTree chop = (LogisticsTaskChopTree) task;
 			
-			if (chop.getWorld() != this.worldObj) {
+			if (chop.getWorld() != this.world) {
 				return false;
 			}
 			
@@ -281,7 +281,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 							center.getX() + (Math.cos(angle) * dist),
 							center.getY() + (Math.cos(tilt) * dist),
 							center.getZ() + (Math.sin(angle) * dist)));
-					while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+					while (targ.getY() > 0 && world.isAirBlock(targ)) {
 						targ = targ.down();
 					}
 					if (targ.getY() < 256) {
@@ -297,7 +297,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 							airBlock = airBlock.up();
 						}
 						
-						if (!worldObj.isAirBlock(airBlock)) {
+						if (!world.isAirBlock(airBlock)) {
 							targ = null;
 							break;
 						}
@@ -336,13 +336,13 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 				if (this.isSwingInProgress) {
 					// On the client, spawn some particles if we're using our wand
 					if (ticksExisted % 5 == 0 && getPose() == ArmPose.WORKING) {
-						worldObj.spawnParticle(EnumParticleTypes.DRAGON_BREATH,
+						world.spawnParticle(EnumParticleTypes.DRAGON_BREATH,
 								posX, posY, posZ,
 								0, 0.3, 0,
 								new int[0]);
 					}
 					if (taskTickCount % 15 == 0 && getPose() == ArmPose.WORKING && rand.nextBoolean()) {
-						worldObj.playSound(null, posX, posY, posZ, SoundEvents.BLOCK_GRAVEL_STEP, SoundCategory.NEUTRAL, 1f, 1.6f);
+						world.playSound(null, posX, posY, posZ, SoundEvents.BLOCK_GRAVEL_STEP, SoundCategory.NEUTRAL, 1f, 1.6f);
 					}
 				} else {
 					task.markSubtaskComplete();
@@ -370,7 +370,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 									center.getX() + (Math.cos(angle) * dist),
 									center.getY() + (Math.cos(tilt) * dist),
 									center.getZ() + (Math.sin(angle) * dist)));
-							while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+							while (targ.getY() > 0 && world.isAirBlock(targ)) {
 								targ = targ.down();
 							}
 							if (targ.getY() < 256) {
@@ -386,7 +386,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 									airBlock = airBlock.up();
 								}
 								
-								if (!worldObj.isAirBlock(airBlock)) {
+								if (!world.isAirBlock(airBlock)) {
 									targ = null;
 									break;
 								}
@@ -587,7 +587,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			
 			double x = posX - xdiff;
 			double z = posZ + zdiff;
-			worldObj.spawnParticle(EnumParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0, new int[0]);
+			world.spawnParticle(EnumParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0, new int[0]);
 		}
 	}
 
@@ -650,7 +650,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 
 	@Override
 	public EntityFeyBase switchToSpecialization(FeyStoneMaterial material) {
-		if (worldObj.isRemote) {
+		if (world.isRemote) {
 			return this;
 		}
 		
@@ -658,20 +658,20 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		if (material != this.getCurrentSpecialization()) {
 			if (material == FeyStoneMaterial.GARNET) {
 				// Crafting
-				replacement = new EntityElfCrafter(worldObj);
+				replacement = new EntityElfCrafter(world);
 			} else if (material == FeyStoneMaterial.AQUAMARINE) {
 				// Archery
-				replacement = new EntityElfArcher(worldObj);
+				replacement = new EntityElfArcher(world);
 			} else {
-				replacement = new EntityElf(worldObj);
+				replacement = new EntityElf(world);
 			}
 		}
 		
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			worldObj.removeEntityDangerously(this);
-			worldObj.spawnEntityInWorld(replacement);
+			world.removeEntityDangerously(this);
+			world.spawnEntityInWorld(replacement);
 		}
 		
 		return replacement == null ? this : replacement;

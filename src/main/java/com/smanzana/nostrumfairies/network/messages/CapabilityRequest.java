@@ -19,10 +19,10 @@ public class CapabilityRequest implements IMessage {
 
 		@Override
 		public CapabilitySyncMessage onMessage(CapabilityRequest message, MessageContext ctx) {
-			ctx.getServerHandler().playerEntity.getServerWorld().addScheduledTask(() -> {
-				CapabilitySyncMessage response = new CapabilitySyncMessage(NostrumFairies.getFeyWrapper(ctx.getServerHandler().playerEntity));
+			ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+				CapabilitySyncMessage response = new CapabilitySyncMessage(NostrumFairies.getFeyWrapper(ctx.getServerHandler().player));
 				NetworkHandler.getSyncChannel().sendTo(response,
-						ctx.getServerHandler().playerEntity);
+						ctx.getServerHandler().player);
 			});
 			
 			// This is dumb. Because of network thread, this interface has to return null and instead send

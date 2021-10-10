@@ -27,7 +27,7 @@ public class EntityElfCrafter extends EntityElf {
 			// TODO require a specialization
 			LogisticsTaskWorkBlock work = (LogisticsTaskWorkBlock) task;
 			
-			if (work.getWorld() != this.worldObj) {
+			if (work.getWorld() != this.world) {
 				return false;
 			}
 			
@@ -38,7 +38,7 @@ public class EntityElfCrafter extends EntityElf {
 			}
 			
 			// Dwarves only want to work at ones from dwarf blocks
-			IBlockState block = worldObj.getBlockState(target);
+			IBlockState block = world.getBlockState(target);
 			if (block == null || !(block.getBlock() instanceof CraftingBlockElf)) {
 				return false;
 			}
@@ -117,7 +117,7 @@ public class EntityElfCrafter extends EntityElf {
 			
 			double x = posX - xdiff;
 			double z = posZ + zdiff;
-			worldObj.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, posY + 1.25, z, 0, .015, 0, new int[0]);
+			world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, posY + 1.25, z, 0, .015, 0, new int[0]);
 		}
 	}
 	

@@ -1,9 +1,7 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import javax.annotation.Nullable;
-
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.LogisticsLogicComponent.ILogicListener;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsSensorTileEntity;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
@@ -19,14 +17,11 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -89,8 +84,12 @@ public class LogisticsSensorBlock extends BlockContainer
 		return state.getValue(ACTIVE);
 	}
 	
+	public static IBlockState getStateWithActive(boolean active) {
+		return instance().getDefaultState().withProperty(ACTIVE, active);
+	}
+	
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
 		return this.getDefaultState()
 				.withProperty(ACTIVE, false);
 	}
@@ -111,11 +110,6 @@ public class LogisticsSensorBlock extends BlockContainer
 	}
 	
 	@Override
-	public boolean isVisuallyOpaque() {
-		return false;
-	}
-	
-	@Override
 	public boolean isOpaqueCube(IBlockState state) {
 		return false;
 	}
@@ -126,7 +120,7 @@ public class LogisticsSensorBlock extends BlockContainer
 	}
 	
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
 		return Block.FULL_BLOCK_AABB;
 	}
 	
@@ -148,22 +142,22 @@ public class LogisticsSensorBlock extends BlockContainer
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
 		if (!canPlaceBlockAt(worldIn, pos)) {
 			this.dropBlockAsItem(worldIn, pos, state, 0);
 			worldIn.setBlockToAir(pos);
 		}
 		
-		super.neighborChanged(state, worldIn, pos, blockIn);
+		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
 	}
 	
 	@Override
-	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
 		
 		// Kick off a request to refresh info.
 		if (worldIn.isRemote) {
@@ -208,12 +202,12 @@ public class LogisticsSensorBlock extends BlockContainer
 			return;
 		
 		LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) ent;
-		final boolean activated = sensor.logicComp.isActivated();
+		final boolean activated = sensor.getLogicComponent().isActivated();
 		sensor.unlinkFromNetwork();
 		
 		if (activated) {
 			for (EnumFacing side : EnumFacing.values()) {
-				world.notifyNeighborsOfStateChange(pos.offset(side), this);
+				world.notifyNeighborsOfStateChange(pos.offset(side), this, false);
 			}
 		}
 	}
@@ -235,131 +229,5 @@ public class LogisticsSensorBlock extends BlockContainer
 		}
 		
 		return 0;
-	}
-
-	public static class LogisticsSensorTileEntity extends LogisticsTileEntity implements ITickable, ILogicListener, ILogisticsLogicProvider {
-		
-		private boolean logicLastWorld;
-		
-		private static final String NBT_LOGIC_COMP = "logic";
-		
-		private final LogisticsLogicComponent logicComp;
-		
-		private boolean placed = false;
-		
-		public LogisticsSensorTileEntity() {
-			super();
-			logicComp = new LogisticsLogicComponent(true, this);
-		}
-		
-		@Override
-		public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-			nbt = super.writeToNBT(nbt);
-			
-			NBTTagCompound tag = new NBTTagCompound();
-			logicComp.writeToNBT(tag);
-			nbt.setTag(NBT_LOGIC_COMP, tag);
-			
-			return nbt;
-		}
-		
-		@Override
-		public void readFromNBT(NBTTagCompound nbt) {
-			super.readFromNBT(nbt);
-			
-			NBTTagCompound sub = nbt.getCompoundTag(NBT_LOGIC_COMP);
-			if (sub != null) {
-				logicComp.readFromNBT(sub);
-			}
-		}
-		
-		@Override
-		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
-			super.setNetworkComponent(component);
-			logicComp.setNetwork(component.getNetwork());
-		}
-		
-		@Override
-		public void setWorldObj(World worldIn) {
-			super.setWorldObj(worldIn);
-			
-			logicComp.setLocation(worldIn, pos);
-		}
-		
-		@Override
-		public void onLeaveNetwork() {
-			super.onLeaveNetwork();
-			logicComp.setNetwork(null);
-		}
-		
-		@Override
-		public void onJoinNetwork(LogisticsNetwork network) {
-			//updateLogic();
-			super.onJoinNetwork(network);
-			logicComp.setNetwork(network);
-		}
-		
-		@Override
-		public void markDirty() {
-			super.markDirty();
-		}
-		
-		public void notifyNeighborChanged() {
-			; // This used to bust logic cache. Needed?
-		}
-		
-		@Override
-		public void validate() {
-			super.validate();
-		}
-		
-		@Override
-		public void update() {
-			if (!placed || worldObj.getTotalWorldTime() % 5 == 0) {
-				if (!worldObj.isRemote) {
-					final boolean activated = this.logicComp.isActivated(); 
-
-					if (!placed || logicLastWorld != activated) {
-						// Make sure to update the world so that redstone will be updated
-						//worldObj.notifyNeighborsOfStateChange(pos, worldObj.getBlockState(pos).getBlock());
-						worldObj.setBlockState(pos, instance().getDefaultState().withProperty(ACTIVE, activated), 3);
-						logicLastWorld = activated;
-					}
-				}
-				
-				placed = true;
-			}
-		}
-
-		@Override
-		protected double getDefaultLinkRange() {
-			return 10;
-		}
-
-		@Override
-		protected double getDefaultLogisticsRange() {
-			return 5;
-		}
-		
-		@Override
-		public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
-			return !(oldState.getBlock().equals(newState.getBlock()));
-		}
-
-		@Override
-		public void onStateChange(boolean activated) {
-			; // We handle this in a tick loop, which adds lag between redstone but also won't change blockstates
-			// multiples times if item count jumps back and forth across a boundary in a single tick
-		}
-
-		@Override
-		public void onDirty() {
-			this.markDirty();
-		}
-		
-		@Override
-		public LogisticsLogicComponent getLogicComponent() {
-			return this.logicComp;
-		}
 	}
 }

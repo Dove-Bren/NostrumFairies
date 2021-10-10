@@ -140,15 +140,15 @@ public class StaticTESRRenderer {
 		final double eyeY = player.getEyeHeight();
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, eyeY, 0);
 		BlockPos pos = target.te.getPos();
-		Vec3d offset = new Vec3d(pos.getX() - playerPos.xCoord,
-				pos.getY() - playerPos.yCoord,
-				pos.getZ() - playerPos.zCoord);
+		Vec3d offset = new Vec3d(pos.getX() - playerPos.x,
+				pos.getY() - playerPos.y,
+				pos.getZ() - playerPos.z);
 		
 		//GlStateManager.enableLighting();
 		GlStateManager.enableBlend();
 		GlStateManager.enableAlpha();
 		GlStateManager.pushMatrix();
-		GlStateManager.translate(offset.xCoord, offset.yCoord, offset.zCoord);
+		GlStateManager.translate(offset.x, offset.y, offset.z);
 		GlStateManager.callList(target.drawlist);
 		GlStateManager.popMatrix();
 	}

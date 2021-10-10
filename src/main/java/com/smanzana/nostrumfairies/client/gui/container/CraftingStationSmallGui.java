@@ -1,7 +1,7 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.CraftingBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockTileEntity;
 import com.smanzana.nostrumfairies.client.gui.container.CraftingStationGui.CraftingStationContainer;
 import com.smanzana.nostrumfairies.client.gui.container.CraftingStationGui.CraftingStationGuiContainer;
 

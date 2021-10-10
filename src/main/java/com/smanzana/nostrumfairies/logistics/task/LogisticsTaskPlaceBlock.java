@@ -6,7 +6,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.Validate;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
@@ -46,7 +49,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	private World world;
 	private BlockPos block;
 	private BlockPos placeAt;
-	private ItemStack item; // Item to pickup
+	private @Nonnull ItemStack item = ItemStack.EMPTY; // Item to pickup
 	private IBlockState state; // blockstate to put down
 	private @Nullable ILogisticsComponent component;
 	private @Nullable EntityLivingBase entity;
@@ -69,7 +72,8 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	protected int animCount = 0;
 	
 	protected LogisticsTaskPlaceBlock(@Nullable ILogisticsComponent owningComponent, @Nullable EntityLivingBase entity,
-			String displayName, ItemStack item, IBlockState state, World world, BlockPos pos, BlockPos placeAt) {
+			String displayName, @Nonnull ItemStack item, IBlockState state, World world, BlockPos pos, BlockPos placeAt) {
+		Validate.notNull(item);
 		this.displayName = displayName;
 		this.block = pos;
 		this.placeAt = placeAt;
@@ -270,7 +274,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 				
 				// If we didn't figure it out already, pull from network
 				if (pickupTask == null) {
-					Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.worldObj : component.getWorld(),
+					Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.world : component.getWorld(),
 							component == null ? entity.getPosition() : component.getPosition(),
 							250.0, ItemCacheType.NET);
 					ItemDeepStack match = null;
@@ -283,7 +287,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 						for (ItemDeepStack deep : entry.getValue()) {
 							if (deep.canMerge(this.item)) {
 								// This item matches. Does it have all that we want to pickup?
-								if (deep.getCount() >= this.item.stackSize) {
+								if (deep.getCount() >= this.item.getCount()) {
 									match = deep;
 									break;
 								}
@@ -438,7 +442,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 				if (items == null) {
 					networkCacheResult = false;
 				} else {
-					long count = this.item.stackSize;
+					long count = this.item.getCount();
 					for (ItemDeepStack deep : items) {
 						if (deep.canMerge(this.item)) {
 							count -= deep.getCount();

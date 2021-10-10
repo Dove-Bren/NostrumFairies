@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.blocks;
+package com.smanzana.nostrumfairies.blocks.tiles;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -113,9 +113,9 @@ public abstract class LogisticsTileEntity extends TileEntity {
     @Override
     public void updateContainingBlockInfo() {
     	super.updateContainingBlockInfo();
-    	if (/*!worldObj.isRemote && */ this.networkComponent == null) {
+    	if (/*!world.isRemote && */ this.networkComponent == null) {
     		setNetworkComponent(makeNetworkComponent());
-    		if (!worldObj.isRemote) {
+    		if (!world.isRemote) {
     			NostrumFairies.instance.getLogisticsRegistry().addNewComponent(networkComponent);
     		}
 		}
@@ -125,9 +125,9 @@ public abstract class LogisticsTileEntity extends TileEntity {
     public void setWorldObj(World worldIn) {
     	super.setWorldObj(worldIn);
     	// Sometimes the position isn't set yet >:(
-//    	if (/*!worldObj.isRemote && */ this.networkComponent == null) {
+//    	if (/*!world.isRemote && */ this.networkComponent == null) {
 //    		setNetworkComponent(makeNetworkComponent());
-//    		if (!worldObj.isRemote) {
+//    		if (!world.isRemote) {
 //    			NostrumFairies.instance.getLogisticsRegistry().addNewComponent(networkComponent);
 //    		}
 //		}
@@ -136,9 +136,9 @@ public abstract class LogisticsTileEntity extends TileEntity {
     @Override
     public void validate() {
     	super.validate();
-    	if (worldObj != null && this.networkComponent == null) {
+    	if (world != null && this.networkComponent == null) {
     		setNetworkComponent(makeNetworkComponent());
-    		if (!worldObj.isRemote) {
+    		if (!world.isRemote) {
     			NostrumFairies.instance.getLogisticsRegistry().addNewComponent(networkComponent);
     		}
 		}
@@ -156,7 +156,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		return null;
 	}
 	
-	protected void unlinkFromNetwork() {
+	public void unlinkFromNetwork() {
 		LogisticsNetwork network = this.getNetwork();
 		if (network != null) {
 			network.removeComponent(networkComponent);
@@ -188,9 +188,9 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	}
 	
 	public void addItem(ItemStack stack) {
-		if (!worldObj.isRemote) {
-			EntityItem ent = new EntityItem(worldObj, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, stack);
-			worldObj.spawnEntityInWorld(ent);
+		if (!world.isRemote) {
+			EntityItem ent = new EntityItem(world, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, stack);
+			world.spawnEntity(ent);
 		}
 	}
 	
@@ -222,7 +222,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		public LogisticsTileEntityComponent(LogisticsTileEntity tileEntity, double linkRange, double logisticsRange) {
 			componentID = UUID.randomUUID();
 			teCache = tileEntity;
-			world = teCache.worldObj;
+			world = teCache.world;
 			pos = teCache.getPos();
 			map.put(componentID, this);
 			this.linkRange = linkRange;

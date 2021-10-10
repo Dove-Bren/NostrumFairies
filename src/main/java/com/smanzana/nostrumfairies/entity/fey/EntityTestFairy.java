@@ -3,8 +3,8 @@ package com.smanzana.nostrumfairies.entity.fey;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -139,7 +139,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 //		if (task instanceof LogisticsTaskChopTree) {
 //			LogisticsTaskChopTree chop = (LogisticsTaskChopTree) task;
 //			
-//			if (chop.getWorld() != this.worldObj) {
+//			if (chop.getWorld() != this.world) {
 //				return false;
 //			}
 //			
@@ -165,7 +165,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 //		} else if (task instanceof LogisticsTaskMineBlock) {
 //			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
 //			
-//			if (mine.getWorld() != this.worldObj) {
+//			if (mine.getWorld() != this.world) {
 //				return false;
 //			}
 //			
@@ -206,7 +206,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 //		} else if (task instanceof LogisticsTaskPlaceBlock) {
 //			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
 //			
-//			if (place.getWorld() != this.worldObj) {
+//			if (place.getWorld() != this.world) {
 //				return false;
 //			}
 //			
@@ -248,7 +248,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		if (task instanceof LogisticsTaskPlantItem) {
 			LogisticsTaskPlantItem plant = (LogisticsTaskPlantItem) task;
 			
-			if (plant.getWorld() != this.worldObj) {
+			if (plant.getWorld() != this.world) {
 				return false;
 			}
 			
@@ -299,8 +299,8 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			if (heldItem == null) {
 				continue;
 			}
-			EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, heldItem);
-			worldObj.spawnEntityInWorld(item);
+			EntityItem item = new EntityItem(this.world, posX, posY, posZ, heldItem);
+			world.spawnEntityInWorld(item);
 		}
 		inventory.clear();
 	}
@@ -341,7 +341,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			if (held != null) {
 				LogisticsNetwork network = this.getLogisticsNetwork();
 				if (network != null) {
-					@Nullable ILogisticsComponent storage = network.getStorageForItem(worldObj, getPosition(), held);
+					@Nullable ILogisticsComponent storage = network.getStorageForItem(world, getPosition(), held);
 					if (storage != null) {
 						ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", held.copy());
 						network.getTaskRegistry().register(task, null);
@@ -376,7 +376,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 							center.getX() + (Math.cos(angle) * dist),
 							center.getY() + (Math.cos(tilt) * dist),
 							center.getZ() + (Math.sin(angle) * dist)));
-					while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+					while (targ.getY() > 0 && world.isAirBlock(targ)) {
 						targ = targ.down();
 					}
 					if (targ.getY() < 256) {
@@ -392,7 +392,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 							airBlock = airBlock.up();
 						}
 						
-						if (!worldObj.isAirBlock(airBlock)) {
+						if (!world.isAirBlock(airBlock)) {
 							targ = null;
 							break;
 						}
@@ -415,7 +415,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		
 		// Mining dwarves should place down lights in the mines and refresh those around them
 		if (task instanceof LogisticsTaskMineBlock && this.ticksExisted % 5 == 0) {
-			if (!this.worldObj.canBlockSeeSky(this.getPosition())) {
+			if (!this.world.canBlockSeeSky(this.getPosition())) {
 				// No light from the 'sky' which means we're underground
 				// Refreseh magic lights around. Then see if it's too dark
 				IBlockState state;
@@ -424,17 +424,17 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				for (int y = -1; y <= 1; y++)
 				for (int z = -1; z <= 1; z++) {
 					cursor.setPos(x, y, z);
-					state = worldObj.getBlockState(cursor);
+					state = world.getBlockState(cursor);
 					if (state != null && state.getBlock() instanceof MagicLight) {
-						MagicLight.Bright().refresh(worldObj, cursor.toImmutable());
+						MagicLight.Bright().refresh(world, cursor.toImmutable());
 					}
 				}
 				
-				if (this.worldObj.getLightFor(EnumSkyBlock.BLOCK, this.getPosition()) < 8) {
-					if (this.worldObj.isAirBlock(this.getPosition().up().up())) {
-						worldObj.setBlockState(this.getPosition().up().up(), MagicLight.Bright().getDefaultState());
-					} else if (this.worldObj.isAirBlock(this.getPosition().up())) {
-						worldObj.setBlockState(this.getPosition().up(), MagicLight.Bright().getDefaultState());
+				if (this.world.getLightFor(EnumSkyBlock.BLOCK, this.getPosition()) < 8) {
+					if (this.world.isAirBlock(this.getPosition().up().up())) {
+						world.setBlockState(this.getPosition().up().up(), MagicLight.Bright().getDefaultState());
+					} else if (this.world.isAirBlock(this.getPosition().up())) {
+						world.setBlockState(this.getPosition().up(), MagicLight.Bright().getDefaultState());
 					}
 				}
 			}
@@ -479,7 +479,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 									center.getX() + (Math.cos(angle) * dist),
 									center.getY() + (Math.cos(tilt) * dist),
 									center.getZ() + (Math.sin(angle) * dist)));
-							while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+							while (targ.getY() > 0 && world.isAirBlock(targ)) {
 								targ = targ.down();
 							}
 							if (targ.getY() < 256) {
@@ -495,7 +495,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 									airBlock = airBlock.up();
 								}
 								
-								if (!worldObj.isAirBlock(airBlock)) {
+								if (!world.isAirBlock(airBlock)) {
 									targ = null;
 									break;
 								}

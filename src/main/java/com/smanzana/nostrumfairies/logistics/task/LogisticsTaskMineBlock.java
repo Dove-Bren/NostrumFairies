@@ -18,6 +18,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
@@ -437,20 +438,19 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 	private void mineBlock() {
 		IBlockState state = world.getBlockState(block);
 		
-		List<ItemStack> drops;
+		NonNullList<ItemStack> drops = NonNullList.create();
 		if (state.getBlock() instanceof BlockFalling) {
-			drops = new LinkedList<>();
 			// Walk and DESTROY ALL GRAVEL that's up
 			MutableBlockPos cursor = new MutableBlockPos(block);
 			do {
-				drops.addAll(state.getBlock().getDrops(world, cursor, state, 0)); // Fortune?
+				state.getBlock().getDrops(drops, world, cursor, state, 0); // Fortune?
 				world.destroyBlock(cursor, false);
 				
 				cursor.move(EnumFacing.UP);
 				state = world.getBlockState(cursor);
 			} while (cursor.getY() < 256 && state.getBlock() instanceof BlockFalling);
 		} else {
-			drops = state.getBlock().getDrops(world, block, state, 0); // Fortune?
+			state.getBlock().getDrops(drops, world, block, state, 0); // Fortune?
 			world.destroyBlock(block, false);
 		}
 		
@@ -460,7 +460,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 				fairy.addItem(drop);
 			} else {
 				// drop on the floor
-				world.spawnEntityInWorld(new EntityItem(world, block.getX() + .5, block.getY() + .5, block.getZ() + .5, drop));
+				world.spawnEntity(new EntityItem(world, block.getX() + .5, block.getY() + .5, block.getZ() + .5, drop));
 			}
 		}
 	}
@@ -486,18 +486,18 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		}
 		
 		for (int i = 0; i < heldItems.length; i++) {
-			if (heldItems[i] == null) {
+			if (heldItems[i].isEmpty()) {
 				continue;
 			}
 			items[i] = heldItems[i].copy();
 		}
 		
 		for (ItemStack stack : items) {
-			if (stack == null) {
+			if (stack.isEmpty()) {
 				continue;
 			}
 			fairy.removeItem(stack);
-			world.spawnEntityInWorld(new EntityItem(world, x, y, z, stack));
+			world.spawnEntity(new EntityItem(world, x, y, z, stack));
 		}
 	}
 	

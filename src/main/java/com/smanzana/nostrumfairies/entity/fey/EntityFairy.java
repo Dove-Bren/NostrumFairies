@@ -3,8 +3,8 @@ package com.smanzana.nostrumfairies.entity.fey;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -185,14 +185,14 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 			} else {
 				BlockPos pos = source.getPosition();
 				
-				if (!worldObj.isAirBlock(pos)) {
-					if (worldObj.isAirBlock(pos.north())) {
+				if (!world.isAirBlock(pos)) {
+					if (world.isAirBlock(pos.north())) {
 						pos = pos.north();
-					} else if (worldObj.isAirBlock(pos.south())) {
+					} else if (world.isAirBlock(pos.south())) {
 						pos = pos.south();
-					} else if (worldObj.isAirBlock(pos.east())) {
+					} else if (world.isAirBlock(pos.east())) {
 						pos = pos.east();
-					} else if (worldObj.isAirBlock(pos.west())) {
+					} else if (world.isAirBlock(pos.west())) {
 						pos = pos.west();
 					} else {
 						pos = pos.up();
@@ -226,14 +226,14 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 			} else {
 				BlockPos pos = source.getPosition();
 				
-				if (!worldObj.isAirBlock(pos)) {
-					if (worldObj.isAirBlock(pos.north())) {
+				if (!world.isAirBlock(pos)) {
+					if (world.isAirBlock(pos.north())) {
 						pos = pos.north();
-					} else if (worldObj.isAirBlock(pos.south())) {
+					} else if (world.isAirBlock(pos.south())) {
 						pos = pos.south();
-					} else if (worldObj.isAirBlock(pos.east())) {
+					} else if (world.isAirBlock(pos.east())) {
 						pos = pos.east();
-					} else if (worldObj.isAirBlock(pos.west())) {
+					} else if (world.isAirBlock(pos.west())) {
 						pos = pos.west();
 					} else {
 						pos = pos.up();
@@ -268,8 +268,8 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected void dropItem() {
-		EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, getHeldItem());
-		worldObj.spawnEntityInWorld(item);
+		EntityItem item = new EntityItem(this.world, posX, posY, posZ, getHeldItem());
+		world.spawnEntityInWorld(item);
 		this.dataManager.set(DATA_HELD_ITEM, Optional.absent());
 	}
 
@@ -308,7 +308,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		if (heldItem != null) {
 			LogisticsNetwork network = this.getLogisticsNetwork();
 			if (network != null) {
-				@Nullable ILogisticsComponent storage = network.getStorageForItem(worldObj, getPosition(), heldItem);
+				@Nullable ILogisticsComponent storage = network.getStorageForItem(world, getPosition(), heldItem);
 				if (storage != null) {
 					ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", heldItem.copy());
 					network.getTaskRegistry().register(task, null);
@@ -342,13 +342,13 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 							center.getX() + (Math.cos(angle) * dist),
 							center.getY() + (Math.cos(tilt) * dist),
 							center.getZ() + (Math.sin(angle) * dist)));
-//					while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+//					while (targ.getY() > 0 && world.isAirBlock(targ)) {
 //						targ = targ.down();
 //					}
 //					if (targ.getY() < 256) {
 //						targ = targ.up();
 //					}
-					while (targ.getY() < 256 && !worldObj.isAirBlock(targ)) {
+					while (targ.getY() < 256 && !world.isAirBlock(targ)) {
 						targ = targ.up();
 					}
 					
@@ -361,7 +361,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 							airBlock = airBlock.up();
 						}
 						
-						if (!worldObj.isAirBlock(airBlock)) {
+						if (!world.isAirBlock(airBlock)) {
 							targ = null;
 							break;
 						}
@@ -408,7 +408,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 									center.getX() + (Math.cos(angle) * dist),
 									center.getY() + (Math.cos(tilt) * dist),
 									center.getZ() + (Math.sin(angle) * dist)));
-							while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+							while (targ.getY() > 0 && world.isAirBlock(targ)) {
 								targ = targ.down();
 							}
 							if (targ.getY() < 256) {
@@ -424,7 +424,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 									airBlock = airBlock.up();
 								}
 								
-								if (!worldObj.isAirBlock(airBlock)) {
+								if (!world.isAirBlock(airBlock)) {
 									targ = null;
 									break;
 								}
@@ -468,14 +468,14 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							//}
 						} else {
-							if (!worldObj.isAirBlock(movePos)) {
-								if (worldObj.isAirBlock(movePos.north())) {
+							if (!world.isAirBlock(movePos)) {
+								if (world.isAirBlock(movePos.north())) {
 									movePos = movePos.north();
-								} else if (worldObj.isAirBlock(movePos.south())) {
+								} else if (world.isAirBlock(movePos.south())) {
 									movePos = movePos.south();
-								} else if (worldObj.isAirBlock(movePos.east())) {
+								} else if (world.isAirBlock(movePos.east())) {
 									movePos = movePos.east();
-								} else if (worldObj.isAirBlock(movePos.west())) {
+								} else if (world.isAirBlock(movePos.west())) {
 									movePos = movePos.west();
 								} else {
 									movePos = movePos.up();
@@ -506,13 +506,13 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 //						EntityLivingBase entity = sub.getEntity();
 //						
 //					} else {
-//						if (worldObj.isAirBlock(pos.north())) {
+//						if (world.isAirBlock(pos.north())) {
 //							pos = pos.north();
-//						} else if (worldObj.isAirBlock(pos.south())) {
+//						} else if (world.isAirBlock(pos.south())) {
 //							pos = pos.south();
-//						} else if (worldObj.isAirBlock(pos.east())) {
+//						} else if (world.isAirBlock(pos.east())) {
 //							pos = pos.east();
-//						} else if (worldObj.isAirBlock(pos.west())) {
+//						} else if (world.isAirBlock(pos.west())) {
 //							pos = pos.west();
 //						}
 //						
@@ -694,7 +694,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void onCientTick() {
 		int color = 0x40CCFFDD;
-		NostrumParticles.GLOW_ORB.spawn(worldObj, new SpawnParams(
+		NostrumParticles.GLOW_ORB.spawn(world, new SpawnParams(
 				1, posX, posY + height/2f, posZ, 0, 40, 0,
 				new Vec3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), false
 				).color(color));
@@ -744,19 +744,19 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	public EntityPersonalFairy promotoToPersonal() {
-		if (worldObj.isRemote) {
+		if (world.isRemote) {
 			return null;
 		}
 		
-		EntityPersonalFairy replacement = new EntityPersonalFairy(worldObj);
+		EntityPersonalFairy replacement = new EntityPersonalFairy(world);
 		
 		// Kill this entity and add the other one
 		if (this.getHome() != null) {
 			this.setHome(null);
 		}
 		replacement.copyFrom(this);
-		worldObj.removeEntityDangerously(this);
-		worldObj.spawnEntityInWorld(replacement);
+		world.removeEntityDangerously(this);
+		world.spawnEntityInWorld(replacement);
 		
 		return replacement;
 	}

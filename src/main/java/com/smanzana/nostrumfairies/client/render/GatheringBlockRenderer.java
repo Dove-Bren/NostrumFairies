@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import com.smanzana.nostrumfairies.blocks.GatheringBlock.GatheringBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.GatheringBlockTileEntity;
 
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 

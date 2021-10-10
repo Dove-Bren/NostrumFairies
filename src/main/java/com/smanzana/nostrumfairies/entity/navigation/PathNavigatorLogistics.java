@@ -72,15 +72,15 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			} else {
 				subpath = currentPath;
 				PathPoint point = subpath.getPathPointFromIndex(0);
-				start = new BlockPos(point.xCoord, point.yCoord, point.zCoord);
+				start = new BlockPos(point.x, point.y, point.z);
 				point = subpath.getFinalPathPoint();
-				end = new BlockPos(point.xCoord, point.yCoord, point.zCoord);
+				end = new BlockPos(point.x, point.y, point.z);
 			}
 			
 			if (subpath != null && start != null && end != null) {
 				LogisticsNetwork network = fey.getLogisticsNetwork();
-				Location startL = new Location(theEntity.worldObj, start);
-				Location endL = new Location(theEntity.worldObj, end);
+				Location startL = new Location(theEntity.world, start);
+				Location endL = new Location(theEntity.world, end);
 				network.removeCachedPath(startL, endL, subpath);
 			}
 		}
@@ -140,7 +140,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	}
 	
 	private @Nullable Path getMinorPathTo(BlockPos src, BlockPos dest, float range) {
-		Path path = pathFinder.findPath(theEntity.worldObj, theEntity,
+		Path path = pathFinder.findPath(theEntity.world, theEntity,
 			src.getX() + .5, src.getY() + .5, src.getZ() + .5,
 			dest.getX() + .5, dest.getY() + .5, dest.getZ() + .5,
 			range);
@@ -161,7 +161,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 		List<Location> beacons = Lists.newArrayList(network.getAllBeacons());
 		
 		beacons.removeIf((loc) -> {
-			return (loc.getDimension() != theEntity.worldObj.provider.getDimension());
+			return (loc.getDimension() != theEntity.world.provider.getDimension());
 		});
 		
 		if (!beacons.isEmpty()) {
@@ -175,7 +175,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			for (Location beacon : beacons) {
 				//Path subpath = super.getPathToPos(beacon.getPos());
 				Path subpath = getMinorPathTo(beacon.getPos(), target, range);
-				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), theEntity.worldObj.isAirBlock(beacon.getPos()) ? 0 : 1)) {
+				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), theEntity.world.isAirBlock(beacon.getPos()) ? 0 : 1)) {
 					LogisticsNode node = new LogisticsNode(beacon.getPos(), null, subpath, 0, getH(target, beacon.getPos()));
 					return node;
 					
@@ -263,7 +263,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			
 			// Now check all of our neighbors. This is the set of all graph neighbors + the set of beacons that
 			// are within range
-			Collection<ILogisticsComponent> components = network.getConnectedComponents(new Location(theEntity.worldObj, node.pos));
+			Collection<ILogisticsComponent> components = network.getConnectedComponents(new Location(theEntity.world, node.pos));
 			if (components != null) {
 				for (ILogisticsComponent comp : components) {
 					if (seen.contains(comp.getPosition())) {
@@ -274,8 +274,8 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 					// See if we can even path to this node.
 					boolean newPath = false;
 					final Path path;
-					final Location locStart = new Location(theEntity.worldObj, node.pos);
-					final Location locEnd = new Location(theEntity.worldObj, comp.getPosition());
+					final Location locStart = new Location(theEntity.world, node.pos);
+					final Location locEnd = new Location(theEntity.world, comp.getPosition());
 					if (network.hasCachedPath(locStart, locEnd)) {
 						path = network.getCachedPathRaw(locStart, locEnd); 
 					} else {
@@ -312,8 +312,8 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 				// See if we can even path to this node.
 				boolean newPath = false;
 				final Path path;
-				final Location locStart = new Location(theEntity.worldObj, node.pos);
-				final Location locEnd = new Location(theEntity.worldObj, beacon.getPos());
+				final Location locStart = new Location(theEntity.world, node.pos);
+				final Location locEnd = new Location(theEntity.world, beacon.getPos());
 				if (network.hasCachedPath(locStart, locEnd)) {
 					path = network.getCachedPathRaw(locStart, locEnd); 
 				} else {

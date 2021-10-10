@@ -5,7 +5,7 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest.OutputChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.OutputChestTileEntity;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.LogicPanel.LogicPanelGui;
 import com.smanzana.nostrummagica.utils.Inventories;

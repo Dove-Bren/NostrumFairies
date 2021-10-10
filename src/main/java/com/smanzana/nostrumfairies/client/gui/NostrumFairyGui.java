@@ -1,16 +1,16 @@
 package com.smanzana.nostrumfairies.client.gui;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest.BufferChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.BuildingBlock.BuildingBlockTileEntity;
-import com.smanzana.nostrumfairies.blocks.CraftingBlockTileEntity;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
-import com.smanzana.nostrumfairies.blocks.InputLogisticsChest.InputChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock.LogisticsSensorTileEntity;
-import com.smanzana.nostrumfairies.blocks.OutputLogisticsChest.OutputChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.OutputLogisticsPanel.OutputPanelTileEntity;
-import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest.StorageChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.BufferChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.BuildingBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.InputChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsSensorTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.OutputChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.OutputPanelTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.StorageChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui.BufferChestGuiContainer;

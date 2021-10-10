@@ -144,7 +144,7 @@ public class EntityElfArcher extends EntityElf {
 				// Otherwise, find a logistics component connected to the current one and go to it.
 				if (patrolTarget != null) {
 					// Make sure there's still a component there
-					ILogisticsComponent comp = network.getComponentAt(worldObj, patrolTarget);
+					ILogisticsComponent comp = network.getComponentAt(world, patrolTarget);
 					if (comp == null) {
 						patrolTarget = null;
 					} else {
@@ -168,7 +168,7 @@ public class EntityElfArcher extends EntityElf {
 				// If we come out the above loop with no target, we  either haven't been to a node or
 				// the node is gone now. So act like we need to get back to the network.
 				if (patrolTarget == null) {
-					ILogisticsComponent comp = network.getLogisticsFor(worldObj, this.getPosition());
+					ILogisticsComponent comp = network.getLogisticsFor(world, this.getPosition());
 					if (comp != null) {
 						patrolTarget = comp.getPosition();
 					}
@@ -275,7 +275,7 @@ public class EntityElfArcher extends EntityElf {
 	protected void onCombatTick() {
 		setPose(ArmPose.ATTACKING);
 		
-		if (!worldObj.isRemote) {
+		if (!world.isRemote) {
 			if (this.shouldUseBow()) {
 				setBattleStance(BattleStance.RANGED);
 			} else {
@@ -304,7 +304,7 @@ public class EntityElfArcher extends EntityElf {
 			
 			double x = posX - xdiff;
 			double z = posZ + zdiff;
-			worldObj.spawnParticle(EnumParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0, new int[0]);
+			world.spawnParticle(EnumParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0, new int[0]);
 		}
 	}
 	
@@ -316,7 +316,7 @@ public class EntityElfArcher extends EntityElf {
 	});
 	
 	protected void shootArrowAt(EntityLivingBase target, float distanceFactor) {
-		EntityTippedArrowEx entitytippedarrow = new EntityTippedArrowEx(this.worldObj, this);
+		EntityTippedArrowEx entitytippedarrow = new EntityTippedArrowEx(this.world, this);
 		entitytippedarrow.setFilter(ELF_ARCHER_ARROW_FILTER);
 		double d0 = target.posX - this.posX;
 		double d1 = target.getEntityBoundingBox().minY + (double)(target.height / 3.0F) - entitytippedarrow.posY;
@@ -357,7 +357,7 @@ public class EntityElfArcher extends EntityElf {
 		}
 
 		//this.playSound(SoundEvents.ENTITY_SKELETON_SHOOT, 1.0F, 1.0F / (this.getRNG().nextFloat() * 0.4F + 0.8F));
-		this.worldObj.spawnEntityInWorld(entitytippedarrow);
+		this.world.spawnEntityInWorld(entitytippedarrow);
 	}
 	
 	protected void slashAt(EntityLivingBase target, float distanceFactor) {

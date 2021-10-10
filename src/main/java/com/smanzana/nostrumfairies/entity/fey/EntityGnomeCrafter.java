@@ -26,7 +26,7 @@ public class EntityGnomeCrafter extends EntityGnome {
 		if (task instanceof LogisticsTaskWorkBlock) {
 			LogisticsTaskWorkBlock work = (LogisticsTaskWorkBlock) task;
 			
-			if (work.getWorld() != this.worldObj) {
+			if (work.getWorld() != this.world) {
 				return false;
 			}
 			
@@ -36,7 +36,7 @@ public class EntityGnomeCrafter extends EntityGnome {
 				return false;
 			}
 			
-			IBlockState block = worldObj.getBlockState(target);
+			IBlockState block = world.getBlockState(target);
 			if (block == null || !(block.getBlock() instanceof CraftingBlockGnome)) {
 				return false;
 			}

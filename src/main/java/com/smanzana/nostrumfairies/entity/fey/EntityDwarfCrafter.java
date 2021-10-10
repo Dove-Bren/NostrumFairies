@@ -29,7 +29,7 @@ public class EntityDwarfCrafter extends EntityDwarf {
 			// TODO require a specialization
 			LogisticsTaskWorkBlock work = (LogisticsTaskWorkBlock) task;
 			
-			if (work.getWorld() != this.worldObj) {
+			if (work.getWorld() != this.world) {
 				return false;
 			}
 			
@@ -40,7 +40,7 @@ public class EntityDwarfCrafter extends EntityDwarf {
 			}
 			
 			// Dwarves only want to work at ones from dwarf blocks
-			IBlockState block = worldObj.getBlockState(target);
+			IBlockState block = world.getBlockState(target);
 			if (block == null || !(block.getBlock() instanceof CraftingBlockDwarf)) {
 				return false;
 			}
@@ -120,6 +120,6 @@ public class EntityDwarfCrafter extends EntityDwarf {
 	
 	@Override
 	protected void playWorkSound() {
-		worldObj.playSound(posX, posY, posZ, SoundEvents.BLOCK_ANVIL_PLACE, SoundCategory.NEUTRAL, .8f, 1.6f, false);
+		world.playSound(posX, posY, posZ, SoundEvents.BLOCK_ANVIL_PLACE, SoundCategory.NEUTRAL, .8f, 1.6f, false);
 	}
 }

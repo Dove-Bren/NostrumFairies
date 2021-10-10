@@ -16,8 +16,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.items.FeyResource;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
@@ -136,7 +136,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 * @return true when the status change went thr ough
 	 */
 	protected boolean changeStatus(FairyGeneralStatus status) {
-		if (worldObj.isRemote) {
+		if (world.isRemote) {
 			return true;
 		}
 		
@@ -197,17 +197,17 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	}
 	
 	protected @Nullable HomeBlockTileEntity getHomeEnt(BlockPos pos) {
-		if (!worldObj.isBlockLoaded(pos)) {
+		if (!world.isBlockLoaded(pos)) {
 			return null;
 		}
 		
-		IBlockState state = worldObj.getBlockState(pos);
+		IBlockState state = world.getBlockState(pos);
 		if (state == null || !(state.getBlock() instanceof FeyHomeBlock)) {
 			return null;
 		}
 		
-		BlockPos center = ((FeyHomeBlock) state.getBlock()).getMasterPos(worldObj, pos, state);
-		TileEntity te = worldObj.getTileEntity(center);
+		BlockPos center = ((FeyHomeBlock) state.getBlock()).getMasterPos(world, pos, state);
+		TileEntity te = world.getTileEntity(center);
 		if (te == null || !(te instanceof HomeBlockTileEntity)) {
 			return null;
 		}
@@ -365,7 +365,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	protected abstract boolean shouldPerformTask(ILogisticsTask task);
 	
 	protected boolean canWorkTimeCheck() {
-		return worldObj.isDaytime();
+		return world.isDaytime();
 	}
 	
 	/**
@@ -497,8 +497,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			this.isSwingInProgress = true;
 			this.swingingHand = hand;
 
-			if (this.worldObj instanceof WorldServer) {
-				((WorldServer)this.worldObj).getEntityTracker().sendToAllTrackingEntity(this, new SPacketAnimation(this, hand == EnumHand.MAIN_HAND ? 0 : 3));
+			if (this.world instanceof WorldServer) {
+				((WorldServer)this.world).getEntityTracker().sendToAllTrackingEntity(this, new SPacketAnimation(this, hand == EnumHand.MAIN_HAND ? 0 : 3));
 			}
 		}
 	}
@@ -534,14 +534,14 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		
 		this.updateArmSwingProgress();
 		
-		if (worldObj.isRemote) {
+		if (world.isRemote) {
 			// Do some client-side tracking
 			if (this.getStatus() == FairyGeneralStatus.IDLE) {
 				idleTicks++;
 				if (this.getIdleSound() != null) {
-					if (worldObj.isRemote) {
+					if (world.isRemote) {
 						if (idleChatTicks == 0) {
-							getIdleSound().play(NostrumFairies.proxy.getPlayer(), worldObj, posX, posY, posZ);
+							getIdleSound().play(NostrumFairies.proxy.getPlayer(), world, posX, posY, posZ);
 							idleChatTicks = -1;
 						}
 						
@@ -559,7 +559,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			onCientTick();
 		}
 		
-		if (worldObj.isRemote || this.isDead) {
+		if (world.isRemote || this.isDead) {
 			return;
 		}
 		
@@ -678,18 +678,18 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				for (int z = -radius; z <= radius; z++)
 				for (int y = -radius; y <= radius; y++) {
 					cursor.setPos(posX + x, posY + y, posZ + z);
-					if (!worldObj.isBlockLoaded(cursor)) {
+					if (!world.isBlockLoaded(cursor)) {
 						continue;
 					}
 					
-					IBlockState state = worldObj.getBlockState(cursor);
+					IBlockState state = world.getBlockState(cursor);
 					if (state.getBlock() instanceof FeyHomeBlock) {
 						FeyHomeBlock block = (FeyHomeBlock) state.getBlock();
 						if (!block.isCenter(state)) {
 							continue;
 						}
 						
-						TileEntity te = worldObj.getTileEntity(cursor);
+						TileEntity te = world.getTileEntity(cursor);
 						if (te == null || !(te instanceof HomeBlockTileEntity)) {
 							continue;
 						}
@@ -853,7 +853,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	}
 	
 	protected void verifyHome() {
-		if (this.getHome() != null && !worldObj.isBlockLoaded(this.getHome())) {
+		if (this.getHome() != null && !world.isBlockLoaded(this.getHome())) {
 			// Can't actually verify, so just pretend it's fine.
 			return;
 		}
@@ -1022,7 +1022,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 
 					if (this.rand.nextFloat() < f1) {
 						entityplayer.getCooldownTracker().setCooldown(Items.SHIELD, 100);
-						this.worldObj.setEntityState(entityplayer, (byte)30);
+						this.world.setEntityState(entityplayer, (byte)30);
 					}
 				}
 			}
@@ -1074,49 +1074,49 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	}
 	
 	protected @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
-		if (!worldObj.isAirBlock(targetPos)) {
+		if (!world.isAirBlock(targetPos)) {
 			do {
-				if (worldObj.isAirBlock(targetPos.north())) {
-					if (worldObj.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
+				if (world.isAirBlock(targetPos.north())) {
+					if (world.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
 						targetPos = targetPos.north();
 						break;
-					} else if (worldObj.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
+					} else if (world.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
 						targetPos = targetPos.north().down();
 						break;
 					}
 				}
-				if (worldObj.isAirBlock(targetPos.south())) {
-					if (worldObj.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
+				if (world.isAirBlock(targetPos.south())) {
+					if (world.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
 						targetPos = targetPos.south();
 						break;
-					} else if (worldObj.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
+					} else if (world.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
 						targetPos = targetPos.south().down();
 						break;
 					}
 				}
-				if (worldObj.isAirBlock(targetPos.east())) {
-					if (worldObj.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
+				if (world.isAirBlock(targetPos.east())) {
+					if (world.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
 						targetPos = targetPos.east();
 						break;
-					} else if (worldObj.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
+					} else if (world.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
 						targetPos = targetPos.east().down();
 						break;
 					}
 				}
-				if (worldObj.isAirBlock(targetPos.west())) {
-					if (worldObj.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
+				if (world.isAirBlock(targetPos.west())) {
+					if (world.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
 						targetPos = targetPos.west();
 						break;
-					} else if (worldObj.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
+					} else if (world.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
 						targetPos = targetPos.west().down();
 						break;
 					}
 				}
-				if (worldObj.isAirBlock(targetPos.up()) && worldObj.isSideSolid(targetPos, EnumFacing.UP)) {
+				if (world.isAirBlock(targetPos.up()) && world.isSideSolid(targetPos, EnumFacing.UP)) {
 					targetPos = targetPos.up();
 					break;
 				}
-				if (worldObj.isAirBlock(targetPos.down()) && worldObj.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
+				if (world.isAirBlock(targetPos.down()) && world.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
 					targetPos = targetPos.down();
 					break;
 				}
@@ -1124,7 +1124,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		}
 		
 		if (allOrNothing) {
-			if (!worldObj.isAirBlock(targetPos)) {
+			if (!world.isAirBlock(targetPos)) {
 				targetPos = null;
 			}
 		}
@@ -1134,7 +1134,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	@Override
 	protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
-		if (isCursed() && !worldObj.isRemote) {
+		if (isCursed() && !world.isRemote) {
 			this.entityDropItem(FeyResource.create(FeyResourceType.TEARS, 1 + lootingModifier), 0);
 			
 			if (wasRecentlyHit && rand.nextInt(5) < (1 + lootingModifier)) {
@@ -1194,7 +1194,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 					center.getZ() + (Math.sin(angle) * dist)));
 			
 			if (!fey.hasNoGravity()) {
-				while (targ.getY() > 0 && fey.worldObj.isAirBlock(targ)) {
+				while (targ.getY() > 0 && fey.world.isAirBlock(targ)) {
 					targ = targ.down();
 				}
 				if (targ.getY() < 256) {
@@ -1211,7 +1211,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 					airBlock = airBlock.up();
 				}
 				
-				if (!fey.worldObj.isAirBlock(airBlock)) {
+				if (!fey.world.isAirBlock(airBlock)) {
 					targ = null;
 					break;
 				}
@@ -1241,7 +1241,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	}
 	
 	protected static boolean FeyFollowNearby(EntityFeyBase fey, Predicate<? super Entity> filter, boolean lazy, double maxSightDist, double minFollowDist, double maxFollowDist) {
-		List<Entity> ents = fey.worldObj.getEntitiesInAABBexcluding(fey,
+		List<Entity> ents = fey.world.getEntitiesInAABBexcluding(fey,
 				new AxisAlignedBB(fey.posX - maxSightDist, fey.posY - maxSightDist, fey.posZ - maxSightDist, fey.posX + maxSightDist, fey.posY + maxSightDist, fey.posZ + maxSightDist),
 				filter);
 		

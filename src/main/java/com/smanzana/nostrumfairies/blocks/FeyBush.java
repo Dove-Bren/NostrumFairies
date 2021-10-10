@@ -23,6 +23,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -67,11 +68,6 @@ public class FeyBush extends BlockBush implements IShearable {
     }
 	
 	@Override
-	public boolean isVisuallyOpaque() {
-		return false;
-	}
-	
-	@Override
 	public boolean isOpaqueCube(IBlockState state) {
 		return false;
 	}
@@ -113,8 +109,8 @@ public class FeyBush extends BlockBush implements IShearable {
 	}
 	
 	@SideOnly(Side.CLIENT)
-    public void getSubBlocks(Item itemIn, CreativeTabs tab, List<ItemStack> list) {
-		super.getSubBlocks(itemIn, tab, list);
+    public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> list) {
+		super.getSubBlocks(tab, list);
 	}
 	
 	@Override
@@ -158,9 +154,9 @@ public class FeyBush extends BlockBush implements IShearable {
 		if (target instanceof EntityFeyBase && !(target instanceof EntityPersonalFairy)) {
 			EntityFeyBase fey = (EntityFeyBase) target;
 			if (fey.getStatus() == FairyGeneralStatus.WANDERING) {
-				if (!target.worldObj.isRemote) {
+				if (!target.world.isRemote) {
 					target.entityDropItem(FeyResource.create(FeyResourceType.TABLET, 1), .1f);
-					((WorldServer) target.worldObj).spawnParticle(EnumParticleTypes.HEART,
+					((WorldServer) target.world).spawnParticle(EnumParticleTypes.HEART,
 							target.posX,
 							target.posY,	
 							target.posZ,

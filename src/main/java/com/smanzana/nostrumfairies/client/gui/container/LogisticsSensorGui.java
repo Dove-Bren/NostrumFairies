@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 import java.io.IOException;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock.LogisticsSensorTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsSensorTileEntity;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.LogicPanel.LogicPanelGui;
 

@@ -306,7 +306,7 @@ public class FeyResource extends Item implements ILoreTagged {
 		
 		for (int i = 0; i <= event.getLootingLevel(); i++) {
 			if (NostrumFairies.random.nextFloat() < chance) {
-				EntityItem entity = new EntityItem(event.getEntity().worldObj,
+				EntityItem entity = new EntityItem(event.getEntity().world,
 						event.getEntity().posX,
 						event.getEntity().posY,
 						event.getEntity().posZ,

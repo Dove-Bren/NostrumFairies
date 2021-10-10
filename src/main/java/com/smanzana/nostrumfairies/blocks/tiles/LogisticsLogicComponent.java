@@ -1,7 +1,8 @@
-package com.smanzana.nostrumfairies.blocks;
+package com.smanzana.nostrumfairies.blocks.tiles;
 
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -48,7 +49,7 @@ public class LogisticsLogicComponent {
 	private LogicMode mode;
 	private LogicOp op;
 	private int count;
-	private @Nullable ItemStack template;
+	private @Nonnull ItemStack template = ItemStack.EMPTY;
 	
 	private @Nullable LogisticsNetwork network;
 	private final @Nullable ILogicListener listener; 
@@ -87,7 +88,7 @@ public class LogisticsLogicComponent {
 		
 		if (mode == LogicMode.LOGIC) {
 			ItemStack req = this.getLogicTemplate();
-			if (req == null || network == null) {
+			if (req.isEmpty() || network == null) {
 				this.logicCacheID = null;
 				this.logicValidCache = false;
 				return;
@@ -174,7 +175,7 @@ public class LogisticsLogicComponent {
 		return this.op;
 	}
 	
-	public @Nullable ItemStack getLogicTemplate() {
+	public @Nonnull ItemStack getLogicTemplate() {
 		return this.template;
 	}
 	
@@ -193,8 +194,8 @@ public class LogisticsLogicComponent {
 		this.dirty();
 	}
 	
-	public void setLogicTemplate(@Nullable ItemStack stack) {
-		this.template = stack != null ? stack.copy() : null;
+	public void setLogicTemplate(@Nonnull ItemStack stack) {
+		this.template = stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
 		bustCache();
 		this.dirty();
 	}
@@ -209,7 +210,7 @@ public class LogisticsLogicComponent {
 		nbt.setString(NBT_LOGIC_MODE, mode.name());
 		nbt.setInteger(NBT_LOGIC_COUNT, count);
 		nbt.setString(NBT_LOGIC_OP, op.name());
-		if (template != null) {
+		if (!template.isEmpty()) {
 			nbt.setTag(NBT_LOGIC_ITEM, template.serializeNBT());
 		}
 		
@@ -229,7 +230,7 @@ public class LogisticsLogicComponent {
 			this.op = LogicOp.EQUAL;
 		}
 		
-		this.template = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_LOGIC_ITEM));
+		this.template = new ItemStack(nbt.getCompoundTag(NBT_LOGIC_ITEM));
 		this.count = nbt.getInteger(NBT_LOGIC_COUNT);
 		
 		this.logicCacheID = null;

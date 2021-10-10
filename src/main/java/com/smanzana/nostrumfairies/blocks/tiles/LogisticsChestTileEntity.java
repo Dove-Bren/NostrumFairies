@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.blocks;
+package com.smanzana.nostrumfairies.blocks.tiles;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,7 +29,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	@Override
 	public void markDirty() {
 		LogisticsNetwork network = getNetwork();
-		if (network != null && !this.worldObj.isRemote) {
+		if (network != null && !this.world.isRemote) {
 			network.dirty();
 		}
 		super.markDirty();
@@ -203,8 +203,8 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 		//super.addItem(stack);
 		ItemStack leftover = Inventories.addItem(this, stack);
 		if (leftover != null) {
-			EntityItem item = new EntityItem(this.worldObj, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, leftover);
-			worldObj.spawnEntityInWorld(item);
+			EntityItem item = new EntityItem(this.world, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, leftover);
+			world.spawnEntity(item);
 		}
 	}
 }

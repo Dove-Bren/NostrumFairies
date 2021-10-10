@@ -254,7 +254,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 			this.setAttackTarget(null);
 		}
 		
-		if (!worldObj.isRemote) {
+		if (!world.isRemote) {
 			if (this.getAttackTarget() == null || this.getMorphing()) {
 				setBattleStance(BattleStance.IDLE);
 			} else {
@@ -268,9 +268,9 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		
 		if (this.getStance() == BattleStance.IDLE) {
 			this.idleTicks++;
-			if (worldObj.isRemote) {
+			if (world.isRemote) {
 				if (idleChatTicks == 0) {
-					NostrumFairiesSounds.SHADOW_FEY_IDLE.play(NostrumFairies.proxy.getPlayer(), worldObj, posX, posY, posZ);
+					NostrumFairiesSounds.SHADOW_FEY_IDLE.play(NostrumFairies.proxy.getPlayer(), world, posX, posY, posZ);
 					idleChatTicks = -1;
 				}
 				
@@ -303,7 +303,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	});
 	
 	protected void shootArrowAt(EntityLivingBase target, float distanceFactor) {
-		EntityTippedArrowEx entitytippedarrow = new EntityTippedArrowEx(this.worldObj, this);
+		EntityTippedArrowEx entitytippedarrow = new EntityTippedArrowEx(this.world, this);
 		entitytippedarrow.setFilter(SHADOW_FEY_ARROW_FILTER);
 		double d0 = target.posX - this.posX;
 		double d1 = target.getEntityBoundingBox().minY + (double)(target.height / 3.0F) - entitytippedarrow.posY;
@@ -344,7 +344,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		}
 
 		//this.playSound(SoundEvents.ENTITY_SKELETON_SHOOT, 1.0F, 1.0F / (this.getRNG().nextFloat() * 0.4F + 0.8F));
-		this.worldObj.spawnEntityInWorld(entitytippedarrow);
+		this.world.spawnEntityInWorld(entitytippedarrow);
 	}
 	
 	protected void slashAt(EntityLivingBase target, float distanceFactor) {
@@ -389,8 +389,8 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 			this.isSwingInProgress = true;
 			this.swingingHand = hand;
 
-			if (this.worldObj instanceof WorldServer) {
-				((WorldServer)this.worldObj).getEntityTracker().sendToAllTrackingEntity(this, new SPacketAnimation(this, hand == EnumHand.MAIN_HAND ? 0 : 3));
+			if (this.world instanceof WorldServer) {
+				((WorldServer)this.world).getEntityTracker().sendToAllTrackingEntity(this, new SPacketAnimation(this, hand == EnumHand.MAIN_HAND ? 0 : 3));
 			}
 		}
 	}
@@ -417,32 +417,32 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		final EntityFeyBase fey;
 		switch (rand.nextInt(5)) {
 		case 0:
-			fey = new EntityFairy(worldObj);
+			fey = new EntityFairy(world);
 			break;
 		case 1:
-			fey = new EntityDwarf(worldObj);
+			fey = new EntityDwarf(world);
 			break;
 		case 2:
-			fey = new EntityGnome(worldObj);
+			fey = new EntityGnome(world);
 			break;
 		case 3:
-			fey = new EntityElf(worldObj);
+			fey = new EntityElf(world);
 			break;
 		case 4:
 		default:
-			fey = new EntityElfArcher(worldObj);
+			fey = new EntityElfArcher(world);
 			break;
 		}
 		fey.copyLocationAndAnglesFrom(this);
-		fey.onInitialSpawn(this.worldObj.getDifficultyForLocation(new BlockPos(fey)), (IEntityLivingData)null);
+		fey.onInitialSpawn(this.world.getDifficultyForLocation(new BlockPos(fey)), (IEntityLivingData)null);
 		
-		worldObj.removeEntity(this);
-		worldObj.spawnEntityInWorld(fey);
+		world.removeEntity(this);
+		world.spawnEntityInWorld(fey);
 		fey.setCursed(true);
 		
-		this.worldObj.playEvent((EntityPlayer)null, 1027, new BlockPos((int)this.posX, (int)this.posY, (int)this.posZ), 0);
+		this.world.playEvent((EntityPlayer)null, 1027, new BlockPos((int)this.posX, (int)this.posY, (int)this.posZ), 0);
 		
-		for (EntityPlayer player : worldObj.playerEntities) {
+		for (EntityPlayer player : world.playerEntities) {
 			if (player.getDistanceSqToEntity(this) < 36) {
 				INostrumMagic attr = NostrumMagica.getMagicWrapper(player);
 				if (attr != null) {
@@ -459,9 +459,9 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		this.updateArmSwingProgress();
 		
 		// I'll just go ahead and loop this. Can't be that big.
-		if (!worldObj.isRemote) {
+		if (!world.isRemote) {
 			boolean morphing = false;
-			for (EntityPlayer player : worldObj.playerEntities) {
+			for (EntityPlayer player : world.playerEntities) {
 				if ((isDangerItem(player.getHeldItemMainhand()) || isDangerItem(player.getHeldItemOffhand()))
 						&& player.getDistanceSqToEntity(this) < 36) {
 					morphing = true;
@@ -501,7 +501,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	
 	@Override
 	protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
-		if (wasRecentlyHit && !worldObj.isRemote) {
+		if (wasRecentlyHit && !world.isRemote) {
 			int chance = 1 + lootingModifier;
 			if (rand.nextInt(2) < chance) {
 				
@@ -521,7 +521,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	protected boolean isValidLightLevel() {
 		return super.isValidLightLevel();
 //		BlockPos pos = new BlockPos(this.posX, this.getEntityBoundingBox().minY, this.posZ);
-//		if (this.worldObj.getLightFor(EnumSkyBlock.SKY, pos) < 6) {
+//		if (this.world.getLightFor(EnumSkyBlock.SKY, pos) < 6) {
 //			return false;
 //		};
 //		

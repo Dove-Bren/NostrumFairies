@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest.BufferChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.BufferChestTileEntity;
 
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 

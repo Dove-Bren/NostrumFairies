@@ -1,12 +1,10 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
+import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedDiamondChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedGoldChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedIronChestTileEntity;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
@@ -15,7 +13,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
@@ -90,13 +87,13 @@ public class ReinforcedStorageLogisticsChest extends BlockContainer {
 	}
 	
 	@Override
-	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
-		return super.onBlockActivated(worldIn, pos, state, playerIn, hand, heldItem, side, hitX, hitY, hitZ);
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+		return super.onBlockActivated(worldIn, pos, state, playerIn, hand, side, hitX, hitY, hitZ);
 	}
 	
 	@Override
@@ -132,94 +129,14 @@ public class ReinforcedStorageLogisticsChest extends BlockContainer {
 		
 		ReinforcedChestTileEntity table = (ReinforcedChestTileEntity) ent;
 		for (int i = 0; i < table.getSizeInventory(); i++) {
-			if (table.getStackInSlot(i) != null) {
+			if (!table.getStackInSlot(i).isEmpty()) {
 				EntityItem item = new EntityItem(
 						world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 						table.removeStackFromSlot(i));
-				world.spawnEntityInWorld(item);
+				world.spawnEntity(item);
 			}
 		}
 		
 		table.unlinkFromNetwork();
-	}
-	
-	public static abstract class ReinforcedChestTileEntity extends LogisticsChestTileEntity {
-
-		private String displayName;
-		
-		public ReinforcedChestTileEntity() {
-			super();
-			displayName = "Reinforced Storage Chest";
-		}
-		
-		@Override
-		public String getName() {
-			return displayName;
-		}
-
-		@Override
-		public boolean hasCustomName() {
-			return false;
-		}
-		
-		@Override
-		public double getDefaultLogisticsRange() {
-			return 20;
-		}
-
-		@Override
-		public double getDefaultLinkRange() {
-			return 10;
-		}
-		
-		@Override
-		public boolean canAccept(List<ItemDeepStack> stacks) {
-			return ItemDeepStacks.canFitAll(this, stacks);
-		}
-	}
-	
-	public static class ReinforcedIronChestTileEntity extends ReinforcedChestTileEntity {
-		
-		public static final int INV_SIZE = 81;
-
-		public ReinforcedIronChestTileEntity() {
-			super();
-		}
-		
-		@Override
-		public int getSizeInventory() {
-			return INV_SIZE;
-		}
-		
-	}
-	
-	public static class ReinforcedGoldChestTileEntity extends ReinforcedChestTileEntity {
-		
-		public static final int INV_SIZE = 162;
-
-		public ReinforcedGoldChestTileEntity() {
-			super();
-		}
-		
-		@Override
-		public int getSizeInventory() {
-			return INV_SIZE;
-		}
-		
-	}
-	
-	public static class ReinforcedDiamondChestTileEntity extends ReinforcedChestTileEntity {
-		
-		public static final int INV_SIZE = 324;
-
-		public ReinforcedDiamondChestTileEntity() {
-			super();
-		}
-		
-		@Override
-		public int getSizeInventory() {
-			return INV_SIZE;
-		}
-		
 	}
 }

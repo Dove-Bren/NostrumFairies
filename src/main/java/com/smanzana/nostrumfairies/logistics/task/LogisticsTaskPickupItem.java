@@ -111,7 +111,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 		tryTasks(worker);
 		
 		if (deliverTask != null) {
-			deliveryRecord = fairy.getLogisticsNetwork().addIncomingItem(dropoffComponent, this, new ItemDeepStack(item.getEntityItem()));
+			deliveryRecord = fairy.getLogisticsNetwork().addIncomingItem(dropoffComponent, this, new ItemDeepStack(item.getItem()));
 		}
 		
 		this.networkCacheKey = null; //reset so 'isValid' runs fully the first time
@@ -179,7 +179,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 			LogisticsNetwork network = fairy.getLogisticsNetwork();
 			if (network != null) {
 				// Find a place where we can drop off the item after we pick it up.
-				dropoffComponent = network.getStorageForItem(item.worldObj, item.getPosition(), item.getEntityItem());
+				dropoffComponent = network.getStorageForItem(item.world, item.getPosition(), item.getItem());
 				
 				if (dropoffComponent != null) {
 					deliverTask = LogisticsSubTask.Move(dropoffComponent.getPosition());
@@ -248,12 +248,12 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 	}
 	
 	private void pickupItem() {
-		ItemDeepStack giveItem = new ItemDeepStack(item.getEntityItem());
+		ItemDeepStack giveItem = new ItemDeepStack(item.getItem());
 		while (giveItem.getCount() > 0) {
 			ItemStack stack = giveItem.splitStack((int) Math.min(giveItem.getTemplate().getMaxStackSize(), giveItem.getCount()));
 			fairy.addItem(stack);
 		}
-		item.worldObj.removeEntity(item);
+		item.world.removeEntity(item);
 	}
 	
 	private void giveItems() {
@@ -262,7 +262,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 		ItemStack items[] = Arrays.copyOf(old, old.length);
 		
 		for (ItemStack stack : items) {
-			if (stack == null) {
+			if (stack.isEmpty()) {
 				continue;
 			}
 			dropoffComponent.addItem(stack);

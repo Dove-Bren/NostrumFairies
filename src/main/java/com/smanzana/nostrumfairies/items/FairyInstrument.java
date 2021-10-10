@@ -171,7 +171,7 @@ public class FairyInstrument extends Item implements ILoreTagged {
 				// toggle enable
 				attr.setEnabled(!attr.isEnabled());
 				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
-				NostrumFairiesSounds.BELL.play(playerIn.worldObj, playerIn.posX, playerIn.posY, playerIn.posZ);
+				NostrumFairiesSounds.BELL.play(playerIn.world, playerIn.posX, playerIn.posY, playerIn.posZ);
 				return ActionResult.newResult(EnumActionResult.PASS, stack);
 			}
 				

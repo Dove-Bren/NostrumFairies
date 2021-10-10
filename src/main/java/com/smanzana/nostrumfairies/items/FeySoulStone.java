@@ -332,7 +332,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	
 	@Override
 	public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer playerIn, EntityLivingBase target, EnumHand hand) {
-		if (playerIn.worldObj.isRemote) {
+		if (playerIn.world.isRemote) {
 			return true;
 		}
 		
@@ -349,7 +349,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			ItemStack newStack = storeEntity(stack, (EntityFeyBase) target);
 			if (newStack != null) {
 				playerIn.setHeldItem(hand, newStack);
-				playerIn.worldObj.removeEntity(target);
+				playerIn.world.removeEntity(target);
 				return true;
 			}
 		}

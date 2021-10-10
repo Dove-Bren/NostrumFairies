@@ -55,15 +55,15 @@ public enum NostrumFairiesSounds {
 	}
 	
 	public void play(Entity at) {
-		play(null, at.worldObj, at.getPositionVector());
+		play(null, at.world, at.getPositionVector());
 	}
 	
 	public void play(EntityPlayer at) {
-		play(at, at.worldObj, at.getPositionVector());
+		play(at, at.world, at.getPositionVector());
 	}
 	
 	public void play(EntityPlayer player, World world, Vec3d at) {
-		play(player, world, at.xCoord, at.yCoord, at.zCoord);
+		play(player, world, at.x, at.y, at.z);
 	}
 	
 	public void play(World world, double x, double y, double z) {

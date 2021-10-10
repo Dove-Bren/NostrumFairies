@@ -1,23 +1,9 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
-import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
-import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
-import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.blocks.tiles.GatheringBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.IFeySign;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ILogisticsTaskUniqueData;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
-import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrummagica.items.ReagentBag;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -31,23 +17,16 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.item.ItemExpireEvent;
-import net.minecraftforge.event.entity.item.ItemTossEvent;
-import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class GatheringBlock extends BlockContainer {
@@ -113,7 +92,7 @@ public class GatheringBlock extends BlockContainer {
 	}
 	
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
 		return this.getDefaultState()
 				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
 	}
@@ -134,11 +113,6 @@ public class GatheringBlock extends BlockContainer {
 	}
 	
 	@Override
-	public boolean isVisuallyOpaque() {
-		return false;
-	}
-	
-	@Override
 	public boolean isOpaqueCube(IBlockState state) {
 		return false;
 	}
@@ -153,7 +127,7 @@ public class GatheringBlock extends BlockContainer {
 	}
 	
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
 		if (blockState.getValue(FACING).getHorizontalIndex() % 2 == 0) {
 			return IFeySign.AABB_NS;
 		} else {
@@ -179,224 +153,25 @@ public class GatheringBlock extends BlockContainer {
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
 		if (!canPlaceBlockAt(worldIn, pos)) {
 			this.dropBlockAsItem(worldIn, pos, state, 0);
 			worldIn.setBlockToAir(pos);
 		}
 		
-		super.neighborChanged(state, worldIn, pos, blockIn);
+		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
 	}
 	
 	@Override
-	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
 		return false;
 	}
 	
-	public static class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener, IFeySign {
-
-		private int tickCount;
-		private Map<EntityItem, LogisticsTaskPickupItem> taskMap;
-		private double radius;
-		
-		private AxisAlignedBB boxCache;
-		private double radiusCache;
-		
-		public GatheringBlockTileEntity() {
-			this(10);
-		}
-		
-		public GatheringBlockTileEntity(double blockRadius) {
-			super();
-			taskMap = new HashMap<>();
-			this.radius = blockRadius;
-		}
-		
-		@Override
-		public double getDefaultLogisticsRange() {
-			return 10;
-		}
-
-		@Override
-		public double getDefaultLinkRange() {
-			return 10;
-		}
-
-		@Override
-		public boolean canAccept(List<ItemDeepStack> stacks) {
-			return false;
-		}
-		
-		private void makeTask(EntityItem item) {
-			LogisticsNetwork network = this.getNetwork();
-			if (network == null) {
-				return;
-			}
-			
-			if (network.taskDataAdd(GATHERING_ITEM, item)) {
-				LogisticsTaskPickupItem task = new LogisticsTaskPickupItem(this.getNetworkComponent(), "Item Pickup Task", item);
-				this.taskMap.put(item, task);
-				network.getTaskRegistry().register(task, this);
-			}
-		}
-		
-		private void removeTask(EntityItem item) {
-			LogisticsTaskPickupItem task = taskMap.remove(item);
-			if (task == null) {
-				// wut
-				return;
-			}
-			
-			LogisticsNetwork network = this.getNetwork();
-			if (network == null) {
-				return;
-			}
-			
-			network.getTaskRegistry().revoke(task);
-			network.taskDataRemove(GATHERING_ITEM, item);
-		}
-		
-		private void scan() {
-			// Update BB cache if needed
-			if (boxCache == null || radiusCache != radius) {
-				boxCache = new AxisAlignedBB(this.pos).expandXyz(radius);
-				this.radiusCache = radius;
-			}
-			
-			if (this.getNetwork() == null) {
-				return;
-			}
-			
-			// Check items on the ground nearby and create/destroy any tasks needed
-			List<EntityItem> items = this.worldObj.getEntitiesWithinAABB(EntityItem.class, boxCache);
-			Set<EntityItem> known = Sets.newHashSet(taskMap.keySet());
-			for (EntityItem item : items) {
-				if (known.remove(item)) {
-					// we knew about that item.
-					continue;
-				}
-				
-				// else this is an unknown item
-				makeTask(item);
-			}
-			
-			// For any left in known, the item is not there anymore! Remove!
-			for (EntityItem item : known) {
-				// Ignore any tasks that don't have entities anymore but that's because the worker
-				// picked it up
-				if (taskMap.get(item).hasTakenItems()) {
-					continue;
-				}
-				
-				removeTask(item);
-			}
-		}
-		
-		@Override
-		public void update() {
-			if (this.worldObj.isRemote) {
-				return;
-			}
-			
-			this.tickCount++;
-			if (this.tickCount % 20 == 0) {
-				scan();
-			}
-		}
-		
-		private boolean inRange(EntityItem e) {
-			// Max distance with a square radius of X is X times sqrt(3).
-			// sqrt(3) is ~1.7321
-			
-			// Idk if this is actually faster than 6 conditionals.
-			return (e.worldObj == this.worldObj &&
-					this.getDistanceSq(e.posX, e.posY, e.posZ) <=
-						Math.pow(radius * 1.7321, 2));
-		}
-		
-		@SubscribeEvent
-		public void onPickup(EntityItemPickupEvent e) {
-			 if (inRange(e.getItem())) {
-				 this.scan();
-			 }
-		}
-		
-		@SubscribeEvent
-		public void onToss(ItemTossEvent e) {
-			 if (inRange(e.getEntityItem())) {
-				 this.scan();
-			 }
-		}
-		
-		@SubscribeEvent
-		public void onExpire(ItemExpireEvent e) {
-			 if (inRange(e.getEntityItem())) {
-				 this.scan();
-			 }
-		}
-		
-		@Override
-		public void setWorldObj(World worldIn) {
-			super.setWorldObj(worldIn);
-			if (!worldIn.isRemote) {
-				MinecraftForge.EVENT_BUS.register(this);
-			}
-		}
-
-		@Override
-		public void onTaskDrop(ILogisticsTask task, IFeyWorker worker) {
-			;
-		}
-
-		@Override
-		public void onTaskAccept(ILogisticsTask task, IFeyWorker worker) {
-			;
-		}
-
-		@Override
-		public void onTaskComplete(ILogisticsTask task, IFeyWorker worker) {
-			if (task != null && task instanceof LogisticsTaskPickupItem) {
-				LogisticsTaskPickupItem pickup = (LogisticsTaskPickupItem) task;
-				this.removeTask(pickup.getEntityItem());
-			}
-		}
-		
-		private static final ItemStack SIGN_ICON = new ItemStack(ReagentBag.instance());
-
-		@Override
-		public ItemStack getSignIcon(IFeySign sign) {
-			return SIGN_ICON;
-		}
-		
-		@Override
-		public EnumFacing getSignFacing(IFeySign sign) {
-			IBlockState state = worldObj.getBlockState(pos);
-			return state.getValue(FACING);
-		}
-		
-		@Override
-		public void readFromNBT(NBTTagCompound compound) {
-			super.readFromNBT(compound);
-			
-			if (this.worldObj != null && this.worldObj.isRemote) {
-				StaticTESRRenderer.instance.update(worldObj, pos, this);
-			}
-		}
-		
-		@Override
-		public void invalidate() {
-			super.invalidate();
-			if (worldObj != null && worldObj.isRemote) {
-				StaticTESRRenderer.instance.update(worldObj, pos, null);
-			}
-		}
-	}
-
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		TileEntity ent = new GatheringBlockTileEntity();

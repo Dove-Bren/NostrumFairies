@@ -28,7 +28,7 @@ public class CapabilityHandler {
 			//attach that shizz
 			event.addCapability(FEY_CAP_LOC, new AttributeProvider(event.getObject()));
 			
-			if (event.getObject().worldObj != null && event.getObject().worldObj.isRemote) {
+			if (event.getObject().world != null && event.getObject().world.isRemote) {
 				NostrumFairies.proxy.requestCapabilityRefresh();
 			}
 		}
@@ -41,7 +41,7 @@ public class CapabilityHandler {
 			event.getEntityPlayer().getCapability(AttributeProvider.CAPABILITY, null)
 				.readNBT(cap.toNBT());
 		//}
-		//if (!event.getEntityPlayer().worldObj.isRemote)
+		//if (!event.getEntityPlayer().world.isRemote)
 		//	NostrumMagica.proxy.syncPlayer((EntityPlayerMP) event.getEntityPlayer());
 	}
 	

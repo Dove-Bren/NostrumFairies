@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import com.smanzana.nostrumfairies.blocks.StorageMonitor.StorageMonitorTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.StorageMonitorTileEntity;
 
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 

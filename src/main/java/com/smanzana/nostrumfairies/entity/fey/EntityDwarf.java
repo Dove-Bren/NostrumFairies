@@ -6,10 +6,10 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.MiningBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
-import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.entity.ItemArraySerializer;
 import com.smanzana.nostrumfairies.entity.navigation.PathFinderPublic;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
@@ -300,8 +300,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		// We also change the order we evaluate spots based on the same thing. we prefer above for repair, and prefer at or below
 		// for non-repair
 		
-		if (repair || ((!worldObj.isAirBlock(targetPos) && worldObj.getBlockState(targetPos).getMaterial().blocksMovement() && worldObj.getBlockState(targetPos).getMaterial() != Material.LAVA)
-						|| !worldObj.isSideSolid(targetPos.down(), EnumFacing.UP))) {
+		if (repair || ((!world.isAirBlock(targetPos) && world.getBlockState(targetPos).getMaterial().blocksMovement() && world.getBlockState(targetPos).getMaterial() != Material.LAVA)
+						|| !world.isSideSolid(targetPos.down(), EnumFacing.UP))) {
 			// could get enum facing from diffs in dir to start at the side closest!
 			BlockPos[] initOffsets = {targetPos.north(), targetPos.east(), targetPos.south(), targetPos.west()};
 			BlockPos[] offsets;
@@ -325,8 +325,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		
 			// Check each candidate to see if we can stand there
 			for (BlockPos pos : offsets) {
-				if ((worldObj.isAirBlock(pos) || worldObj.getBlockState(pos).getMaterial() == Material.LAVA || !worldObj.getBlockState(pos).getMaterial().blocksMovement())
-						&& worldObj.getBlockState(pos.down()).getMaterial().blocksMovement()) {
+				if ((world.isAirBlock(pos) || world.getBlockState(pos).getMaterial() == Material.LAVA || !world.getBlockState(pos).getMaterial().blocksMovement())
+						&& world.getBlockState(pos.down()).getMaterial().blocksMovement()) {
 					targetPos = pos;
 					break;
 				}
@@ -334,73 +334,73 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		}
 		
 //		
-//		if ((repair) || (!worldObj.isAirBlock(targetPos) || !worldObj.isSideSolid(targetPos.down(), EnumFacing.UP))) {
+//		if ((repair) || (!world.isAirBlock(targetPos) || !world.isSideSolid(targetPos.down(), EnumFacing.UP))) {
 //			do {
-//				if (worldObj.isAirBlock(targetPos.north())) {
-//					if (worldObj.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
+//				if (world.isAirBlock(targetPos.north())) {
+//					if (world.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
 //						targetPos = targetPos.north();
 //						break;
-//					} else if (worldObj.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
 //						targetPos = targetPos.north().down();
 //						break;
-//					} else if (worldObj.isSideSolid(targetPos.north(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.north(), EnumFacing.UP)) {
 //						targetPos = targetPos.north().up();
 //						break;
-//					} else if (repair && worldObj.isSideSolid(targetPos.north().up(), EnumFacing.UP)) {
+//					} else if (repair && world.isSideSolid(targetPos.north().up(), EnumFacing.UP)) {
 //						targetPos = targetPos.north().up().up();
 //						break;
 //					}
 //				}
-//				if (worldObj.isAirBlock(targetPos.south())) {
-//					if (worldObj.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
+//				if (world.isAirBlock(targetPos.south())) {
+//					if (world.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
 //						targetPos = targetPos.south();
 //						break;
-//					} else if (worldObj.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
 //						targetPos = targetPos.south().down();
 //						break;
-//					} else if (worldObj.isSideSolid(targetPos.south(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.south(), EnumFacing.UP)) {
 //						targetPos = targetPos.south().up();
 //						break;
-//					} else if (repair && worldObj.isSideSolid(targetPos.south().up(), EnumFacing.UP)) {
+//					} else if (repair && world.isSideSolid(targetPos.south().up(), EnumFacing.UP)) {
 //						targetPos = targetPos.south().up().up();
 //						break;
 //					}
 //				}
-//				if (worldObj.isAirBlock(targetPos.east())) {
-//					if (worldObj.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
+//				if (world.isAirBlock(targetPos.east())) {
+//					if (world.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
 //						targetPos = targetPos.east();
 //						break;
-//					} else if (worldObj.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
 //						targetPos = targetPos.east().down();
 //						break;
-//					} else if (worldObj.isSideSolid(targetPos.east(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.east(), EnumFacing.UP)) {
 //						targetPos = targetPos.east().up();
 //						break;
-//					} else if (repair && worldObj.isSideSolid(targetPos.east().up(), EnumFacing.UP)) {
+//					} else if (repair && world.isSideSolid(targetPos.east().up(), EnumFacing.UP)) {
 //						targetPos = targetPos.east().up().up();
 //						break;
 //					}
 //				}
-//				if (worldObj.isAirBlock(targetPos.west())) {
-//					if (worldObj.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
+//				if (world.isAirBlock(targetPos.west())) {
+//					if (world.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
 //						targetPos = targetPos.west();
 //						break;
-//					} else if (worldObj.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
 //						targetPos = targetPos.west().down();
 //						break;
-//					} else if (worldObj.isSideSolid(targetPos.west(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.west(), EnumFacing.UP)) {
 //						targetPos = targetPos.west().up();
 //						break;
-//					} else if (repair && worldObj.isSideSolid(targetPos.west().up(), EnumFacing.UP)) {
+//					} else if (repair && world.isSideSolid(targetPos.west().up(), EnumFacing.UP)) {
 //						targetPos = targetPos.west().up().up();
 //						break;
 //					}
 //				}
-//				if (!repair && worldObj.isAirBlock(targetPos.up()) && worldObj.isSideSolid(targetPos, EnumFacing.UP)) {
+//				if (!repair && world.isAirBlock(targetPos.up()) && world.isSideSolid(targetPos, EnumFacing.UP)) {
 //					targetPos = targetPos.up();
 //					break;
 //				}
-//				if (worldObj.isAirBlock(targetPos.down()) && worldObj.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
+//				if (world.isAirBlock(targetPos.down()) && world.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
 //					targetPos = targetPos.down();
 //					break;
 //				}
@@ -408,9 +408,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 //		}
 		
 		if (allOrNothing) {
-			if (!worldObj.isAirBlock(targetPos)
-					&& worldObj.getBlockState(targetPos).getMaterial().blocksMovement()
-					&& worldObj.getBlockState(targetPos).getMaterial() != Material.LAVA) {
+			if (!world.isAirBlock(targetPos)
+					&& world.getBlockState(targetPos).getMaterial().blocksMovement()
+					&& world.getBlockState(targetPos).getMaterial() != Material.LAVA) {
 				targetPos = null;
 			}
 		}
@@ -423,7 +423,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		if (task instanceof LogisticsTaskMineBlock) {
 			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
 			
-			if (mine.getWorld() != this.worldObj) {
+			if (mine.getWorld() != this.world) {
 				return false;
 			}
 			
@@ -453,9 +453,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				// with what we already have.
 				// Otherwise we look for an empty spot and see if we can path.
 				if (mine.getSourceComponent() != null) {
-					TileEntity te = worldObj.getTileEntity(mine.getSourceComponent().getPosition());
-					if (te != null && te instanceof MiningBlock.MiningBlockTileEntity) {
-						return ((MiningBlock.MiningBlockTileEntity) te).taskAccessibleWithTasks(mine, this);
+					TileEntity te = world.getTileEntity(mine.getSourceComponent().getPosition());
+					if (te != null && te instanceof MiningBlockTileEntity) {
+						return ((MiningBlockTileEntity) te).taskAccessibleWithTasks(mine, this);
 					}
 				}
 			}
@@ -501,7 +501,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				&& !(task instanceof LogisticsTaskBuildBlock)) {
 			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
 			
-			if (place.getWorld() != this.worldObj) {
+			if (place.getWorld() != this.world) {
 				return false;
 			}
 			
@@ -559,8 +559,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			if (heldItem == null) {
 				continue;
 			}
-			EntityItem item = new EntityItem(this.worldObj, posX, posY, posZ, heldItem);
-			worldObj.spawnEntityInWorld(item);
+			EntityItem item = new EntityItem(this.world, posX, posY, posZ, heldItem);
+			world.spawnEntityInWorld(item);
 		}
 		updateItems(new ItemStack[INV_SIZE]);
 	}
@@ -610,7 +610,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			if (held != null) {
 				LogisticsNetwork network = this.getLogisticsNetwork();
 				if (network != null) {
-					@Nullable ILogisticsComponent storage = network.getStorageForItem(worldObj, getPosition(), held);
+					@Nullable ILogisticsComponent storage = network.getStorageForItem(world, getPosition(), held);
 					if (storage != null) {
 						ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", held.copy());
 						network.getTaskRegistry().register(task, null);
@@ -645,7 +645,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 							center.getX() + (Math.cos(angle) * dist),
 							center.getY() + (Math.cos(tilt) * dist),
 							center.getZ() + (Math.sin(angle) * dist)));
-					while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+					while (targ.getY() > 0 && world.isAirBlock(targ)) {
 						targ = targ.down();
 					}
 					if (targ.getY() < 256) {
@@ -661,7 +661,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 							airBlock = airBlock.up();
 						}
 						
-						if (!worldObj.isAirBlock(airBlock)) {
+						if (!world.isAirBlock(airBlock)) {
 							targ = null;
 							break;
 						}
@@ -684,7 +684,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		
 		// Mining dwarves should place down lights in the mines and refresh those around them
 		if (task instanceof LogisticsTaskMineBlock && this.ticksExisted % 5 == 0) {
-			if (!this.worldObj.canBlockSeeSky(this.getPosition())) {
+			if (!this.world.canBlockSeeSky(this.getPosition())) {
 				// No light from the 'sky' which means we're underground
 				// Refreseh magic lights around. Then see if it's too dark
 				IBlockState state;
@@ -693,19 +693,19 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				for (int y = -1; y <= 1; y++)
 				for (int z = -3; z <= 3; z++) {
 					cursor.setPos(posX + x, posY + y, posZ + z);
-					state = worldObj.getBlockState(cursor);
+					state = world.getBlockState(cursor);
 					if (state != null && state.getBlock() instanceof MagicLight) {
-						MagicLight.Bright().refresh(worldObj, cursor.toImmutable());
+						MagicLight.Bright().refresh(world, cursor.toImmutable());
 					}
 				}
 				
-				if (this.worldObj.getLightFor(EnumSkyBlock.BLOCK, this.getPosition()) < 8) {
-					if (!this.worldObj.isAirBlock(this.getPosition().up().up().up())
-							&& this.worldObj.isAirBlock(this.getPosition().up().up())) {
-						worldObj.setBlockState(this.getPosition().up().up(), MagicLight.Bright().getDefaultState());
-					} else if (!this.worldObj.isAirBlock(this.getPosition().up().up())
-							&& this.worldObj.isAirBlock(this.getPosition().up())) {
-						worldObj.setBlockState(this.getPosition().up(), MagicLight.Bright().getDefaultState());
+				if (this.world.getLightFor(EnumSkyBlock.BLOCK, this.getPosition()) < 8) {
+					if (!this.world.isAirBlock(this.getPosition().up().up().up())
+							&& this.world.isAirBlock(this.getPosition().up().up())) {
+						world.setBlockState(this.getPosition().up().up(), MagicLight.Bright().getDefaultState());
+					} else if (!this.world.isAirBlock(this.getPosition().up().up())
+							&& this.world.isAirBlock(this.getPosition().up())) {
+						world.setBlockState(this.getPosition().up(), MagicLight.Bright().getDefaultState());
 					}
 				}
 			}
@@ -769,7 +769,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 									center.getX() + (Math.cos(angle) * dist),
 									center.getY() + (Math.cos(tilt) * dist),
 									center.getZ() + (Math.sin(angle) * dist)));
-							while (targ.getY() > 0 && worldObj.isAirBlock(targ)) {
+							while (targ.getY() > 0 && world.isAirBlock(targ)) {
 								targ = targ.down();
 							}
 							if (targ.getY() < 256) {
@@ -785,7 +785,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 									airBlock = airBlock.up();
 								}
 								
-								if (!worldObj.isAirBlock(airBlock)) {
+								if (!world.isAirBlock(airBlock)) {
 									targ = null;
 									break;
 								}
@@ -1030,14 +1030,14 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected void playWorkSound() {
-		NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), worldObj, posX, posY, posZ);
+		NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), world, posX, posY, posZ);
 	}
 	
 	@Override
 	public void onUpdate() {
 		super.onUpdate();
 		
-		if (worldObj.isRemote && isSwingInProgress) {
+		if (world.isRemote && isSwingInProgress) {
 			if (this.getPose() == ArmPose.MINING) {
 				// 20% into animation is the hit
 				if (this.swingProgressInt == Math.floor(this.getArmSwingAnimationEnd() * .2)) {
@@ -1147,7 +1147,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	public EntityFeyBase switchToSpecialization(FeyStoneMaterial material) {
-		if (worldObj.isRemote) {
+		if (world.isRemote) {
 			return this;
 		}
 		
@@ -1155,20 +1155,20 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		if (material != this.getCurrentSpecialization()) {
 			if (material == FeyStoneMaterial.GARNET) {
 				// Crafting
-				replacement = new EntityDwarfCrafter(worldObj);
+				replacement = new EntityDwarfCrafter(world);
 			} else if (material == FeyStoneMaterial.EMERALD) {
 				// Builder
-				replacement = new EntityDwarfBuilder(worldObj);
+				replacement = new EntityDwarfBuilder(world);
 			} else {
-				replacement = new EntityDwarf(worldObj);
+				replacement = new EntityDwarf(world);
 			}
 		}
 		
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			worldObj.removeEntityDangerously(this);
-			worldObj.spawnEntityInWorld(replacement);
+			world.removeEntityDangerously(this);
+			world.spawnEntityInWorld(replacement);
 		}
 		
 		return replacement == null ? this : replacement;

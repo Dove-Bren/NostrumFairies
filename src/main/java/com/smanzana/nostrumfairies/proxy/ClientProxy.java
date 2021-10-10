@@ -16,8 +16,8 @@ import com.smanzana.nostrumfairies.blocks.FarmingBlock;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.tiles.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
-import com.smanzana.nostrumfairies.blocks.InputLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.LogisticsPylon;
 import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
@@ -496,7 +496,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@Override
 	public void pushCapabilityRefresh(EntityPlayer player) {
-		if (!player.worldObj.isRemote) {
+		if (!player.world.isRemote) {
 			super.pushCapabilityRefresh(player);
 		}
 		; // Nothing on client

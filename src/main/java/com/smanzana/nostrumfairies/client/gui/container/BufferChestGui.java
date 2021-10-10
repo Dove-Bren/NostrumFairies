@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest.BufferChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.BufferChestTileEntity;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.client.gui.Gui;

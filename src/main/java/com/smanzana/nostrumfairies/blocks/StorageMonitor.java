@@ -1,22 +1,11 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.tiles.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
-import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
-import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
-import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -29,9 +18,6 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
@@ -41,7 +27,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class StorageMonitor extends BlockContainer {
@@ -112,7 +97,7 @@ public class StorageMonitor extends BlockContainer {
 	}
 	
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
 		EnumFacing side = placer.getHorizontalFacing().getOpposite();
 		if (!this.canPlaceAt(world, pos, side)) {
 			// Rotate and find it
@@ -144,11 +129,6 @@ public class StorageMonitor extends BlockContainer {
 	}
 	
 	@Override
-	public boolean isVisuallyOpaque() {
-		return false;
-	}
-	
-	@Override
 	public boolean isOpaqueCube(IBlockState state) {
 		return false;
 	}
@@ -172,7 +152,7 @@ public class StorageMonitor extends BlockContainer {
 	}
 	
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
 		switch (blockState.getValue(FACING)) {
 		case NORTH:
 		case UP:
@@ -216,23 +196,23 @@ public class StorageMonitor extends BlockContainer {
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
 		EnumFacing face = state.getValue(FACING);
 		if (!canPlaceAt(worldIn, pos, face)) {
 			this.dropBlockAsItem(worldIn, pos, state, 0);
 			worldIn.setBlockToAir(pos);
 		}
 		
-		super.neighborChanged(state, worldIn, pos, blockIn);
+		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
 	}
 	
 	@Override
-	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
 		
 		// Kick off a request to refresh info.
 		if (worldIn.isRemote) {
@@ -257,186 +237,6 @@ public class StorageMonitor extends BlockContainer {
 		return true;
 	}
 	
-	public static class StorageMonitorTileEntity extends LogisticsTileEntity implements ILogisticsTaskListener {
-
-		private static final String NBT_REQUESTS = "requests";
-		
-		private LogisticsItemWithdrawRequester requester;
-		private List<ItemStack> requests;
-
-		public StorageMonitorTileEntity() {
-			super();
-			requests = new ArrayList<>();
-		}
-		
-		@Override
-		public double getDefaultLogisticsRange() {
-			return 0;
-		}
-
-		@Override
-		public double getDefaultLinkRange() {
-			return 10;
-		}
-
-		@Override
-		public boolean canAccept(List<ItemDeepStack> stacks) {
-			return false;
-		}
-		
-		protected void makeRequester() {
-			requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent); // TODO make using buffer chests configurable!
-			requester.addChainListener(this);
-			requester.updateRequestedItems(getItemRequests());
-		}
-		
-		@Override
-		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
-			super.setNetworkComponent(component);
-			
-			if (worldObj != null && !worldObj.isRemote && requester == null) {
-				makeRequester();
-			}
-		}
-		
-		@Override
-		public void setWorldObj(World worldIn) {
-			super.setWorldObj(worldIn);
-			
-			if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
-				makeRequester();
-			}
-		}
-		
-		@Override
-		public void onLeaveNetwork() {
-			if (!worldObj.isRemote && requester != null) {
-				requester.clearRequests();
-				requester.setNetwork(null);
-			}
-			
-			super.onLeaveNetwork();
-		}
-		
-		@Override
-		public void onJoinNetwork(LogisticsNetwork network) {
-			if (!worldObj.isRemote && requester != null) {
-				requester.setNetwork(network);
-				requester.updateRequestedItems(getItemRequests());
-			}
-			
-			super.onJoinNetwork(network);
-		}
-		
-		public List<ItemStack> getItemRequests() {
-			return requests;
-		}
-
-		@Override
-		public void onTaskDrop(ILogisticsTask task, IFeyWorker worker) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void onTaskAccept(ILogisticsTask task, IFeyWorker worker) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void onTaskComplete(ILogisticsTask task, IFeyWorker worker) {
-			// Remove item from our request list
-			ItemDeepStack fetched = ((LogisticsTaskWithdrawItem) task).getAttachedItem();
-			if (fetched != null) {
-				Iterator<ItemStack> it = requests.iterator();
-				while (fetched.getCount() > 0 && it.hasNext()) {
-					ItemStack cur = it.next();
-					if (cur == null) {
-						continue;
-					}
-					
-					if (fetched.canMerge(cur)) {
-						if (cur.stackSize <= fetched.getCount()) {
-							it.remove();
-							fetched.add(-cur.stackSize);
-						} else {
-							cur.stackSize -= fetched.getCount();
-							fetched.setCount(0);
-							break;
-						}
-					}
-				}
-			}
-
-			IBlockState state = worldObj.getBlockState(pos);
-			worldObj.notifyBlockUpdate(pos, state, state, 2);
-			
-			this.markDirty();
-		}
-		
-		public void addRequest(ItemStack stack) {
-			requests.add(stack);
-			requester.updateRequestedItems(getItemRequests());
-
-			IBlockState state = worldObj.getBlockState(pos);
-			worldObj.notifyBlockUpdate(pos, state, state, 2);
-			
-			this.markDirty();
-		}
-		
-		public void removeRequest(ItemStack stack) {
-			Iterator<ItemStack> it = requests.iterator();
-			while (it.hasNext()) {
-				ItemStack cur = it.next();
-				if (stack.getItem() == cur.getItem() && stack.stackSize == cur.stackSize) {
-					it.remove();
-					requester.updateRequestedItems(getItemRequests());
-
-					IBlockState state = worldObj.getBlockState(pos);
-					worldObj.notifyBlockUpdate(pos, state, state, 2);
-					
-					this.markDirty();
-					break;
-				}
-			}
-		}
-		
-		@Override
-		public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-			super.writeToNBT(nbt);
-			
-			NBTTagList list = new NBTTagList();
-			for (ItemStack stack : requests) {
-				list.appendTag(stack.serializeNBT());
-			}
-			nbt.setTag(NBT_REQUESTS, list);
-			
-			return nbt;
-		}
-		
-		@Override
-		public void readFromNBT(NBTTagCompound nbt) {
-			super.readFromNBT(nbt);
-			
-			requests.clear();
-			NBTTagList list = nbt.getTagList(NBT_REQUESTS, NBT.TAG_COMPOUND);
-			if (list != null && list.tagCount() > 0) {
-				for (int i = 0; i < list.tagCount(); i++) {
-					NBTTagCompound tag = list.getCompoundTagAt(i);
-					ItemStack stack = ItemStack.loadItemStackFromNBT(tag);
-					if (stack != null) {
-						requests.add(stack);
-					}
-				}
-			}
-			
-			if (this.worldObj != null && this.requester != null) {
-				this.requester.updateRequestedItems(getItemRequests());
-			}
-		}
-	}
-
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		return new StorageMonitorTileEntity();

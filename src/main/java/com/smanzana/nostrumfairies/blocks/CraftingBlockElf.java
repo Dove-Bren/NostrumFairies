@@ -1,12 +1,8 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import javax.annotation.Nullable;
-
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockElfTileEntity;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.inventory.FeySlotType;
-import com.smanzana.nostrumfairies.items.FeyStone;
-import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -20,8 +16,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
@@ -90,7 +84,7 @@ public class CraftingBlockElf extends BlockContainer {
 	}
 	
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, ItemStack stack) {
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
 		return this.getDefaultState()
 				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
 	}
@@ -116,7 +110,7 @@ public class CraftingBlockElf extends BlockContainer {
 	}
 	
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, World worldIn, BlockPos pos) {
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
 		return AABB;
 	}
 	
@@ -138,23 +132,18 @@ public class CraftingBlockElf extends BlockContainer {
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn) {
+	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
 		if (!canPlaceBlockAt(worldIn, pos)) {
 			this.dropBlockAsItem(worldIn, pos, state, 0);
 			worldIn.setBlockToAir(pos);
 		}
 		
-		super.neighborChanged(state, worldIn, pos, blockIn);
+		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
 	}
 	
 	@Override
-	public boolean isBlockSolid(IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
 		return true;
-	}
-	
-	@Override
-	public boolean isVisuallyOpaque() {
-		return false;
 	}
 	
 	@Override
@@ -163,7 +152,7 @@ public class CraftingBlockElf extends BlockContainer {
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
 		
 		if (!worldIn.isRemote) {
 			worldIn.notifyBlockUpdate(pos, state, state, 2);
@@ -186,77 +175,6 @@ public class CraftingBlockElf extends BlockContainer {
 		TileEntity ent = world.getTileEntity(pos);
 		if (ent != null && ent instanceof CraftingBlockElfTileEntity) {
 			((CraftingBlockElfTileEntity) ent).notifyNeighborChanged();
-		}
-	}
-	
-	public static class CraftingBlockElfTileEntity extends CraftingBlockTileEntity {
-
-		public CraftingBlockElfTileEntity() {
-			super();
-		}
-
-		@Override
-		public int getCraftGridDim() {
-			return 3;
-		}
-
-		@Override
-		protected boolean canCraftWith(ItemStack item) {
-			if (item == null) {
-				return true;
-			}
-			
-			if (this.getUpgrade() != null) {
-				if (FeyStone.instance().getFeySlot(this.getUpgrade()) == FeySlotType.DOWNGRADE
-						&& FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
-					return true;
-				}
-			}
-			
-			Item itemBase = item.getItem();
-			String unloc = itemBase.getUnlocalizedName().toLowerCase();
-			if (unloc.contains("ingot")
-					|| unloc.contains("metal")
-					|| unloc.contains("iron")
-					|| unloc.contains("gold")) {
-				return false;
-			}
-			
-			return true;
-		}
-		
-		@Override
-		protected float getCraftBonus(ItemStack item) {
-			if (item == null) {
-				return 0f;
-			}
-			
-			float buff = .1f;
-			if (FeyStone.instance().getFeySlot(this.getUpgrade()) == FeySlotType.DOWNGRADE
-						&& FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
-				buff = .025f;
-			}
-			
-			Item itemBase = item.getItem();
-			String unloc = itemBase.getUnlocalizedName().toLowerCase();
-			if (unloc.contains("log")
-					|| unloc.contains("plank")
-					|| unloc.contains("wood")
-					|| unloc.contains("stick")) {
-				return buff;
-			}
-		
-			return 0f;
-		}
-		
-		@Override
-		protected int getMaxWorkJobs() {
-			final int base = super.getMaxWorkJobs();
-			if (FeyStone.instance().getFeySlot(this.getUpgrade()) == FeySlotType.UPGRADE
-					&& FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
-				return 2 * base;
-			}
-			return base;
 		}
 	}
 	
@@ -283,11 +201,11 @@ public class CraftingBlockElf extends BlockContainer {
 		
 		CraftingBlockElfTileEntity table = (CraftingBlockElfTileEntity) ent;
 		for (int i = 0; i < table.getSizeInventory(); i++) {
-			if (table.getStackInSlot(i) != null) {
+			if (!table.getStackInSlot(i).isEmpty()) {
 				EntityItem item = new EntityItem(
 						world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 						table.removeStackFromSlot(i));
-				world.spawnEntityInWorld(item);
+				world.spawnEntity(item);
 			}
 		}
 		

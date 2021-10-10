@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import com.smanzana.nostrumfairies.blocks.FarmingBlock.FarmingBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.FarmingBlockTileEntity;
 
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 

@@ -18,7 +18,7 @@ public final class Paths {
 		for (int i = 1; i < path.getCurrentPathLength(); i++) {
 			// isn't this dumb? lol. Wish there was .getPathPoints();
 			PathPoint point = path.getPathPointFromIndex(i);
-			points[i-1] = new PathPoint(point.xCoord, point.yCoord, point.zCoord);
+			points[i-1] = new PathPoint(point.x, point.y, point.z);
 		}
 		
 		return new Path(points);
@@ -41,7 +41,7 @@ public final class Paths {
 			for (int i = first ? 0 : 1; i < path.getCurrentPathLength(); i++) {
 				// isn't this dumb? lol. Wish there was .getPathPoints();
 				PathPoint point = path.getPathPointFromIndex(i);
-				points.add(new PathPoint(point.xCoord, point.yCoord, point.zCoord));
+				points.add(new PathPoint(point.x, point.y, point.z));
 			}
 			first = false;
 		}
@@ -56,7 +56,7 @@ public final class Paths {
 	 */
 	public static boolean IsComplete(Path path, BlockPos target, int maxDistance) {
 		PathPoint end = path.getFinalPathPoint();
-		return target.distanceSq(end.xCoord, end.yCoord, end.zCoord) <= Math.pow(maxDistance, 2); // 0 or 1 blocks away, please!
+		return target.distanceSq(end.x, end.y, end.z) <= Math.pow(maxDistance, 2); // 0 or 1 blocks away, please!
 	}
 	
 	public static PathPublic ClonePath(Path path) {

@@ -318,7 +318,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 				// So composites will blindly believe that the component that the tasks its merged out of has enough and make
 				// a task to go there.
 				if (this.mergedTasks == null) {
-					Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.worldObj : component.getWorld(),
+					Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.world : component.getWorld(),
 							component == null ? entity.getPosition() : component.getPosition(),
 							250.0, ItemCacheType.NET);
 					ItemDeepStack match = null;
@@ -497,10 +497,10 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 				if (entity instanceof EntityPlayer) {
 					EntityPlayer player = (EntityPlayer) entity;
 					player.inventory.addItemStackToInventory(stack.copy());
-					player.worldObj.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, .75f, 2f);
+					player.world.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, .75f, 2f);
 				} else {
-					EntityItem item = new EntityItem(entity.worldObj, entity.posX, entity.posY + .5, entity.posZ, stack);
-					entity.worldObj.spawnEntityInWorld(item);
+					EntityItem item = new EntityItem(entity.world, entity.posX, entity.posY + .5, entity.posZ, stack);
+					entity.world.spawnEntity(item);
 				}
 			}
 			worker.removeItem(stack);

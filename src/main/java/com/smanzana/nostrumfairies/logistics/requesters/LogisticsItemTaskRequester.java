@@ -145,7 +145,7 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 		
 		if (items != null) {
 			for (ItemStack item : items) {
-				if (item == null) {
+				if (item.isEmpty()) {
 					continue;
 				}
 				

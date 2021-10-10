@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock.LogisticsSensorTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsSensorTileEntity;
 
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 
