@@ -10,6 +10,7 @@ import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ILogisticsTaskUniqueData;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
@@ -31,6 +32,8 @@ import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener, IFeySign {
+	
+	protected static final ILogisticsTaskUniqueData<EntityItem> GATHERING_ITEM = new ILogisticsTaskUniqueData<EntityItem>() { };
 
 	private int tickCount;
 	private Map<EntityItem, LogisticsTaskPickupItem> taskMap;
@@ -70,7 +73,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 			return;
 		}
 		
-		if (network.taskDataAdd(GatheringBlock.GATHERING_ITEM, item)) {
+		if (network.taskDataAdd(GATHERING_ITEM, item)) {
 			LogisticsTaskPickupItem task = new LogisticsTaskPickupItem(this.getNetworkComponent(), "Item Pickup Task", item);
 			this.taskMap.put(item, task);
 			network.getTaskRegistry().register(task, this);
@@ -90,13 +93,13 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		}
 		
 		network.getTaskRegistry().revoke(task);
-		network.taskDataRemove(GatheringBlock.GATHERING_ITEM, item);
+		network.taskDataRemove(GATHERING_ITEM, item);
 	}
 	
 	private void scan() {
 		// Update BB cache if needed
 		if (boxCache == null || radiusCache != radius) {
-			boxCache = new AxisAlignedBB(this.pos).expandXyz(radius);
+			boxCache = new AxisAlignedBB(this.pos).grow(radius);
 			this.radiusCache = radius;
 		}
 		
@@ -173,8 +176,8 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	}
 	
 	@Override
-	public void setWorldObj(World worldIn) {
-		super.setWorldObj(worldIn);
+	public void setWorld(World worldIn) {
+		super.setWorld(worldIn);
 		if (!worldIn.isRemote) {
 			MinecraftForge.EVENT_BUS.register(this);
 		}

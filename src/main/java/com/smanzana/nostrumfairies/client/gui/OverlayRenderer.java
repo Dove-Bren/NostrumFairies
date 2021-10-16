@@ -20,12 +20,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -51,7 +51,7 @@ public class OverlayRenderer extends Gui {
 	
 	@SubscribeEvent
 	public void onRender(RenderGameOverlayEvent.Pre event) {
-//		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+//		EntityPlayerSP player = Minecraft.getMinecraft().player;
 //		ScaledResolution scaledRes = event.getResolution();
 	}
 	
@@ -63,7 +63,7 @@ public class OverlayRenderer extends Gui {
 	
 	protected boolean shouldDisplaySelection(EntityPlayer player) {
 		for (ItemStack stack : player.getEquipmentAndArmor()) {
-			if (stack == null || !stack.hasCapability(TemplateViewerCapability.CAPABILITY, null)) {
+			if (stack.isEmpty() || !stack.hasCapability(TemplateViewerCapability.CAPABILITY, null)) {
 				continue;
 			}
 			
@@ -78,7 +78,7 @@ public class OverlayRenderer extends Gui {
 	
 	protected boolean shouldDisplayPreview(EntityPlayer player) {
 		for (ItemStack stack : player.getHeldEquipment()) {
-			if (stack == null || !(stack.getItem() instanceof TemplateWand)) {
+			if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand)) {
 				continue;
 			}
 			
@@ -94,7 +94,7 @@ public class OverlayRenderer extends Gui {
 	
 	@SubscribeEvent
 	public void onRender(RenderWorldLastEvent event) {
-		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+		EntityPlayerSP player = Minecraft.getMinecraft().player;
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
 		Minecraft mc = Minecraft.getMinecraft();
 		
@@ -139,13 +139,13 @@ public class OverlayRenderer extends Gui {
 	
 	@SubscribeEvent
 	public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+		EntityPlayerSP player = Minecraft.getMinecraft().player;
 		
 		if (event.getType() == ElementType.CROSSHAIRS) {
 			if (shouldDisplayPreview(player)) {
 				String name = null;
 				for (ItemStack held : player.getHeldEquipment()) {
-					if (held == null || !(held.getItem() instanceof TemplateWand)) {
+					if (held.isEmpty() || !(held.getItem() instanceof TemplateWand)) {
 						continue;
 					}
 					
@@ -154,7 +154,7 @@ public class OverlayRenderer extends Gui {
 					}
 					
 					ItemStack templateScroll = TemplateWand.GetSelectedTemplate(held);
-					if (templateScroll != null) {
+					if (!templateScroll.isEmpty()) {
 						name = templateScroll.getDisplayName();
 						break;
 					}
@@ -178,12 +178,12 @@ public class OverlayRenderer extends Gui {
 	@SubscribeEvent
 	public void onHighlight(DrawBlockHighlightEvent event) {
 		if (event.getTarget().typeOfHit == RayTraceResult.Type.BLOCK) {
-			EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+			EntityPlayerSP player = Minecraft.getMinecraft().player;
 			
 			if (shouldDisplayPreview(player) && player.isSneaking()) {
-				ItemStack templateScroll = null;
+				ItemStack templateScroll = ItemStack.EMPTY;
 				for (ItemStack held : player.getHeldEquipment()) {
-					if (held == null || !(held.getItem() instanceof TemplateWand)) {
+					if (held.isEmpty() || !(held.getItem() instanceof TemplateWand)) {
 						continue;
 					}
 					
@@ -192,7 +192,7 @@ public class OverlayRenderer extends Gui {
 					}
 					
 					templateScroll = TemplateWand.GetSelectedTemplate(held);
-					if (templateScroll != null) {
+					if (!templateScroll.isEmpty()) {
 						TemplateBlueprint blueprint = TemplateScroll.GetTemplate(templateScroll);
 						if (blueprint != cachedBlueprint) {
 							cachedBlueprint = blueprint;
@@ -202,7 +202,7 @@ public class OverlayRenderer extends Gui {
 					}
 				}
 				
-				if (templateScroll != null) {
+				if (!templateScroll.isEmpty()) {
 					Vec3d center = event.getTarget().hitVec;
 					BlockPos blockPos = event.getTarget().getBlockPos().offset(event.getTarget().sideHit);
 					EnumFacing face = EnumFacing.getFacingFromVector((float) (center.x - player.posX), 0f, (float) (center.z - player.posZ));
@@ -216,7 +216,7 @@ public class OverlayRenderer extends Gui {
 	private int cachedRenderList = -1;
 	
 	private void renderAnchorBlock(BlockPos pos, float partialTicks) {
-		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+		EntityPlayerSP player = Minecraft.getMinecraft().player;
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
 		Vec3d offset = new Vec3d(pos.getX() - playerPos.x,
 				pos.getY() - playerPos.y,
@@ -236,7 +236,7 @@ public class OverlayRenderer extends Gui {
 		GlStateManager.translate(offset.x, offset.y, offset.z);
 		
 		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer buffer = tessellator.getBuffer();
+		BufferBuilder buffer = tessellator.getBuffer();
 		
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
 		
@@ -278,7 +278,7 @@ public class OverlayRenderer extends Gui {
 	}
 	
 	private void renderSelectionBox(BlockPos min, BlockPos max, float partialTicks) {
-		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+		EntityPlayerSP player = Minecraft.getMinecraft().player;
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
 		Vec3d offset = new Vec3d(min.getX() - playerPos.x,
 				min.getY() - playerPos.y,
@@ -326,7 +326,7 @@ public class OverlayRenderer extends Gui {
 				(max.getZ() - min.getZ()) + 1);
 		
 		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer buffer = tessellator.getBuffer();
+		BufferBuilder buffer = tessellator.getBuffer();
 		
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
 		
@@ -370,7 +370,7 @@ public class OverlayRenderer extends Gui {
 	
 	private void renderBlueprintPreview(BlockPos center, BlueprintBlock[][][] preview, EnumFacing rotation, float partialTicks) {
 		Minecraft mc = Minecraft.getMinecraft();
-		EntityPlayerSP player = mc.thePlayer;
+		EntityPlayerSP player = mc.player;
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
 		Vec3d offset = new Vec3d(center.getX() - playerPos.x,
 				center.getY() - playerPos.y,
@@ -489,7 +489,7 @@ public class OverlayRenderer extends Gui {
 		GlStateManager.disableBlend();
 		GlStateManager.pushMatrix();
 		
-		this.drawCenteredString(mc.fontRendererObj, name, 0, 0, 0xFFFFFFFF);
+		this.drawCenteredString(mc.fontRenderer, name, 0, 0, 0xFFFFFFFF);
 		
 		GlStateManager.popMatrix();
 		GlStateManager.enableBlend();

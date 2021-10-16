@@ -92,7 +92,7 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 	
 	@Nullable
 	public FeyStoneMaterial getStoneMaterial(@Nullable ItemStack stack) {
-		if (stack == null) {
+		if (stack.isEmpty()) {
 			return null;
 		}
 		

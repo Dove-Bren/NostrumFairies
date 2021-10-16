@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import java.io.IOException;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockTileEntity;
@@ -107,24 +107,24 @@ public class CraftingStationGui {
 					final int index = (i * dim) + j;
 					this.addSlotToContainer(new Slot(station, index, GUI_TEXT_SIDE_WIDTH + getCraftGridStartX() + j * 18, getCraftGridStartY() + (i * 18)) {
 						@Override
-						public boolean isItemValid(@Nullable ItemStack stack) {
+						public boolean isItemValid(@Nonnull ItemStack stack) {
 					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 					    }
 						
 						@Override
 						public int getSlotStackLimit() {
 							ItemStack template = station.getTemplate(index);
-							if (template == null) {
+							if (template.isEmpty()) {
 								return super.getSlotStackLimit();
 							} else {
-								return template.stackSize;
+								return template.getCount();
 							}
 						}
 						
 						@Override
-						public void putStack(@Nullable ItemStack stack) {
+						public void putStack(@Nonnull ItemStack stack) {
 	//						ItemStack template = chest.getTemplate(index);
-	//						if (template == null) {
+	//						if (template.isEmpty()) {
 	//							chest.setTemplate(index, stack);
 	//						} else {
 								super.putStack(stack);
@@ -160,7 +160,7 @@ public class CraftingStationGui {
 		
 		@Override
 		public ItemStack transferStackInSlot(EntityPlayer playerIn, int fromSlot) {
-			ItemStack prev = null;	
+			ItemStack prev = ItemStack.EMPTY;	
 			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
 			
 			if (slot != null && slot.getHasStack()) {
@@ -172,15 +172,15 @@ public class CraftingStationGui {
 					// We only allow that with the output slot
 					if (slot == outputSlot) {
 						if (playerIn.inventory.addItemStackToInventory(cur)) {
-							slot.putStack(null);
-							slot.onPickupFromSlot(playerIn, cur);
+							slot.putStack(ItemStack.EMPTY);
+							slot.onTake(playerIn, cur);
 						} else {
-							prev = null;
+							prev = ItemStack.EMPTY;
 						}
 					}
 				} else {
 					// shift-click in player inventory. Just disallow.
-					prev = null;
+					prev = ItemStack.EMPTY;
 				}
 			}
 			
@@ -195,20 +195,20 @@ public class CraftingStationGui {
 		@Override
 		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
 			if (panel.handleSlotClick(slotId, dragType, clickTypeIn, player)) {
-				return null;
+				return ItemStack.EMPTY;
 			}
 			
-			if (player.inventory.getItemStack() == null) {
+			if (player.inventory.getItemStack().isEmpty()) {
 				// empty hand.
 				if (clickTypeIn == ClickType.PICKUP) {
 					// Input slot?
 					if (slotId >= stationInputIDStart && slotId < stationInputIDEnd
-							&& station.getStackInSlot(slotId - stationInputIDStart) == null) {
+							&& station.getStackInSlot(slotId - stationInputIDStart).isEmpty()) {
 						
 						// Only care of it's a right-click.
 						if (dragType == 1) {
-							station.setTemplate(slotId - stationInputIDStart, null);
-							return null;
+							station.setTemplate(slotId - stationInputIDStart, ItemStack.EMPTY);
+							return ItemStack.EMPTY;
 						}
 					}
 				}
@@ -217,11 +217,11 @@ public class CraftingStationGui {
 				if (clickTypeIn == ClickType.PICKUP) {
 					// Input slot?
 					if (slotId >= stationInputIDStart && slotId < stationInputIDEnd
-							&& station.getTemplate(slotId - stationInputIDStart) == null) {
+							&& station.getTemplate(slotId - stationInputIDStart).isEmpty()) {
 						ItemStack template = player.inventory.getItemStack().copy();
-						template.stackSize = 1;
+						template.setCount(1);
 						station.setTemplate(slotId - stationInputIDStart, template);
-						return null;
+						return ItemStack.EMPTY;
 					}
 				}
 			}
@@ -307,8 +307,8 @@ public class CraftingStationGui {
 					256, 256);
 		}
 		
-		private void drawTemplate(@Nullable ItemStack template) {
-			if (template != null) {
+		private void drawTemplate(@Nonnull ItemStack template) {
+			if (!template.isEmpty()) {
 				GlStateManager.pushMatrix();
 				this.itemRender.renderItemIntoGUI(template, 0, 0);
 				GlStateManager.translate(0, 0, 110);
@@ -357,7 +357,7 @@ public class CraftingStationGui {
 						verticalMargin + container.getCraftGridStartY() + (y * GUI_INV_CELL_LENGTH),
 						0);
 				
-				if (stack == null) {
+				if (stack.isEmpty()) {
 					GlStateManager.pushMatrix();
 					GlStateManager.scale(1f, 1f, .05f);
 					drawTemplate(template);
@@ -408,7 +408,7 @@ public class CraftingStationGui {
 			}
 			
 			// Draw outcome
-			if (container.station.getOutputStack() == null)
+			if (container.station.getOutputStack().isEmpty())
 			{
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(horizontalMargin + GUI_OUTPUT_INV_HOFFSET, verticalMargin + GUI_OUTPUT_INV_VOFFSET, 0);

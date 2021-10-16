@@ -115,11 +115,11 @@ public class StorageMonitorScreen extends GuiScreen {
 		GlStateManager.color(value, value, value, 1.0f);
 		this.drawTexturedModalRect(x, y, GUI_TEXT_MENUITEM_HOFFSET, GUI_TEXT_MENUITEM_VOFFSET, GUI_TEXT_MENUITEM_WIDTH, GUI_TEXT_MENUITEM_HEIGHT);
 		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-		if (request != null) {
+		if (!request.isEmpty()) {
 			RenderHelper.disableStandardItemLighting();
 			RenderHelper.enableGUIStandardItemLighting();
 			this.itemRender.renderItemIntoGUI(request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET);
-			this.itemRender.renderItemOverlayIntoGUI(fontRendererObj, request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET, request.stackSize + "");
+			this.itemRender.renderItemOverlayIntoGUI(fontRenderer, request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET, request.getCount() + "");
 			RenderHelper.disableStandardItemLighting();
 			GlStateManager.disableTexture2D();
 			GlStateManager.enableTexture2D();
@@ -169,8 +169,8 @@ public class StorageMonitorScreen extends GuiScreen {
 			} else {
 				count = (countNum / 1000000) + "m";
 			}
-			final int width = this.fontRendererObj.getStringWidth(count);
-			final int height = this.fontRendererObj.FONT_HEIGHT;
+			final int width = this.fontRenderer.getStringWidth(count);
+			final int height = this.fontRenderer.FONT_HEIGHT;
 			RenderHelper.disableStandardItemLighting();
 			RenderHelper.enableGUIStandardItemLighting();
 			this.itemRender.renderItemIntoGUI(stack.getTemplate(), x + 1, y + 1);
@@ -181,7 +181,7 @@ public class StorageMonitorScreen extends GuiScreen {
 			Gui.drawRect(x + 1, y + (GUI_INV_CELL_LENGTH - 6) , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60000000);
 			GlStateManager.translate(x + GUI_INV_CELL_LENGTH + (-2) + (-width / 2), y + GUI_INV_CELL_LENGTH + (-height / 2) - 1, 0);
 			GlStateManager.scale(.5, .5, 1);
-			this.fontRendererObj.drawStringWithShadow(count, 0, 0, 0xFFFFFFFF);
+			this.fontRenderer.drawStringWithShadow(count, 0, 0, 0xFFFFFFFF);
 			GlStateManager.popMatrix();
 		}
 		
@@ -252,7 +252,7 @@ public class StorageMonitorScreen extends GuiScreen {
 			final List<ItemStack> requests = monitor.getItemRequests();
 			int i = 0;
 			for (ItemStack request : requests) {
-				if (request == null) {
+				if (request.isEmpty()) {
 					continue;
 				}
 				
@@ -362,9 +362,9 @@ public class StorageMonitorScreen extends GuiScreen {
 			if (index < len) {
 				ItemDeepStack clicked = items.get(index);
 				ItemStack req = clicked.getTemplate().copy();
-				req.stackSize = mouseButton == 0
+				req.setCount(mouseButton == 0
 						? (int) Math.min(Math.max(0, clicked.getCount()), clicked.getTemplate().getMaxStackSize())
-						: 1;
+						: 1);
 				//monitor.addRequest(req); local
 				NetworkHandler.getSyncChannel().sendToServer(new StorageMonitorRequestMessage(monitor, req, false));
 			}

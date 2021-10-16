@@ -12,7 +12,7 @@ import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -56,7 +56,7 @@ public class TemplateBlockRenderer extends TileEntitySpecialRenderer<TemplateBlo
 //	}
 	
 	@Override
-	public void renderTileEntityFast(TemplateBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, VertexBuffer buffer) {
+	public void renderTileEntityFast(TemplateBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 		Minecraft mc = Minecraft.getMinecraft();
 		
 		IBlockState state = te.getTemplateState();
@@ -98,8 +98,8 @@ public class TemplateBlockRenderer extends TileEntitySpecialRenderer<TemplateBlo
 
 	@Override
 	public void render(TemplateBlockTileEntity tileEntity, double x, double y, double z, IBlockState state, World world,
-			VertexBuffer buffer) {
-		renderTileEntityFast(tileEntity, x, y, z, 0, 0, buffer);
+			BufferBuilder buffer) {
+		renderTileEntityFast(tileEntity, x, y, z, 0, 0, 0, buffer);
 	}
 	
 }

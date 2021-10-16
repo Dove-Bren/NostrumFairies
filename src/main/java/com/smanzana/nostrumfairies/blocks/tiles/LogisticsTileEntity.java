@@ -122,8 +122,8 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	}
 
     @Override
-    public void setWorldObj(World worldIn) {
-    	super.setWorldObj(worldIn);
+    public void setWorld(World worldIn) {
+    	super.setWorld(worldIn);
     	// Sometimes the position isn't set yet >:(
 //    	if (/*!world.isRemote && */ this.networkComponent == null) {
 //    		setNetworkComponent(makeNetworkComponent());

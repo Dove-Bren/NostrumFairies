@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.blocks.BuildingBlock;
@@ -44,7 +44,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	private int tickCount;
 	private Map<BlockPos, ILogisticsTask> taskMap;
 	private double radius;
-	private ItemStack slot;
+	private ItemStack slot = ItemStack.EMPTY;
 	private int scanCounter;
 	
 	public BuildingBlockTileEntity() {
@@ -81,7 +81,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		}
 		
 		if (!taskMap.containsKey(base)) {
-			ItemStack item = TemplateBlock.GetRequiredItem(missingState);
+			@Nonnull ItemStack item = TemplateBlock.GetRequiredItem(missingState);
 			LogisticsTaskBuildBlock task = new LogisticsTaskBuildBlock(this.getNetworkComponent(), "Repair Task",
 					item, missingState,
 					world, base);
@@ -194,7 +194,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 			final int y = (int) ((scanCounter++ % (radius * 2)) - radius);
 			scan(y);
 		}
-		if (this.slot != null && this.tickCount % 10 == 0) {
+		if (!this.slot.isEmpty() && this.tickCount % 10 == 0) {
 			scanBlueprint();
 		}
 	}
@@ -282,7 +282,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 			
 			@Override
 			public void markDirty() {
-				if (slot != null && this.getStackInSlot(0) == null && !self.world.isRemote) {
+				if (!slot.isEmpty() && this.getStackInSlot(0).isEmpty() && !self.world.isRemote) {
 					System.out.println("Clearing item");
 				}
 				
@@ -295,7 +295,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 			
 			@Override
 			public boolean isItemValidForSlot(int index, ItemStack stack) {
-				return index == 0 && (stack == null || stack.getItem() instanceof TemplateScroll);
+				return index == 0 && (stack.isEmpty() || stack.getItem() instanceof TemplateScroll);
 			}
 		};
 		
@@ -324,7 +324,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		}
 	}
 	
-	public @Nullable ItemStack getTemplateScroll() {
+	public @Nonnull ItemStack getTemplateScroll() {
 		return this.slot;
 	}
 }

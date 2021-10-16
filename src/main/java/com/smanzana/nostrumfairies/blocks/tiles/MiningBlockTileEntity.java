@@ -1,19 +1,18 @@
 package com.smanzana.nostrumfairies.blocks.tiles;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity.LogisticsTileEntityComponent;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -35,7 +34,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagLong;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
@@ -52,8 +53,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		private int radius;
 		
 		// Persisted data
-		private ItemStack buildingMaterial;
-		private ItemStack torches;
+		private @Nonnull ItemStack buildingMaterial = ItemStack.EMPTY;
+		private @Nonnull ItemStack torches = ItemStack.EMPTY;
 		private Set<BlockPos> beacons; // Beacons we've placed (for re-placement on load) 
 		
 		private int chunkXOffset; // rediscovered each time
@@ -101,15 +102,15 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		
 		@Override
 		public void takeItem(ItemStack stack) {
-			if (buildingMaterial != null && ItemStacks.stacksMatch(stack, this.buildingMaterial)) {
-				this.buildingMaterial.stackSize -= stack.stackSize;
-				if (buildingMaterial.stackSize <= 0) {
-					buildingMaterial = null;
+			if (!buildingMaterial.isEmpty() && ItemStacks.stacksMatch(stack, this.buildingMaterial)) {
+				this.buildingMaterial.shrink(stack.getCount());
+				if (buildingMaterial.isEmpty()) {
+					buildingMaterial = ItemStack.EMPTY;
 				}
-			} else if (torches != null && ItemStacks.stacksMatch(stack, this.torches)) {
-				this.torches.stackSize -= stack.stackSize;
-				if (torches.stackSize <= 0) {
-					torches = null;
+			} else if (!torches.isEmpty() && ItemStacks.stacksMatch(stack, this.torches)) {
+				this.torches.shrink(stack.getCount());
+				if (torches.isEmpty()) {
+					torches = ItemStack.EMPTY;
 				}
 			}
 			this.dirty();
@@ -118,11 +119,11 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		@Override
 		public void addItem(ItemStack stack) {
 			// Less likely to be torches lol
-			if (torches != null && ItemStacks.stacksMatch(stack, this.torches)) {
-				torches.stackSize = Math.min(torches.getMaxStackSize(), torches.stackSize + stack.stackSize); 
-			} else if (buildingMaterial != null && ItemStacks.stacksMatch(stack, this.buildingMaterial)) {
-				buildingMaterial.stackSize = Math.min(buildingMaterial.getMaxStackSize(), buildingMaterial.stackSize + stack.stackSize);
-			} else if (buildingMaterial == null && isMaterials(stack)) {
+			if (!torches.isEmpty() && ItemStacks.stacksMatch(stack, this.torches)) {
+				torches.setCount(Math.min(torches.getMaxStackSize(), torches.getCount() + stack.getCount())); 
+			} else if (!buildingMaterial.isEmpty() && ItemStacks.stacksMatch(stack, this.buildingMaterial)) {
+				buildingMaterial.setCount(Math.min(buildingMaterial.getMaxStackSize(), buildingMaterial.getCount() + stack.getCount()));
+			} else if (!buildingMaterial.isEmpty() && isMaterials(stack)) {
 				this.buildingMaterial = stack;
 			}
 			this.dirty();
@@ -196,34 +197,33 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			return new ItemStack(Blocks.COBBLESTONE);
 		}
 		
-		protected List<ItemStack> getItemRequests() {
+		protected NonNullList<ItemStack> getItemRequests() {
 			ItemStack base;
 			LogisticsNetwork network = this.getNetwork();
 			
 			if (network == null) {
-				return new ArrayList<>();
+				return NonNullList.create();
 			}
 			
 			if (this.platformRequests == 0) {
-				return new ArrayList<>();
+				return NonNullList.create();
 			}
 			
-			
 			int existing = 0;
-			if (this.buildingMaterial != null) {
+			if (!buildingMaterial.isEmpty()) {
 				base = this.buildingMaterial;
-				existing = base.stackSize;
+				existing = base.getCount();
 			} else {
 				// If we're auto-fetching, just take cobble
 				base = getRepairStack();
 			}
 			
-			List<ItemStack> list = new ArrayList<>(platformRequests);
+			NonNullList<ItemStack> list = NonNullList.create();
 			int count = platformRequests - existing;
 			while (count > 0) {
 				ItemStack stack = base.copy();
-				stack.stackSize = Math.min(count, stack.getMaxStackSize());
-				count -= stack.stackSize;
+				stack.setCount(Math.min(count, stack.getMaxStackSize()));
+				count -= stack.getCount();
 				list.add(stack);
 			}
 			
@@ -283,16 +283,16 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				// Request block placement
 				LogisticsTaskPlaceBlock task;
 				IBlockState state = Blocks.COBBLESTONE.getDefaultState();
-				if (this.buildingMaterial != null) {
+				if (!buildingMaterial.isEmpty()) {
 					if (buildingMaterial.getItem() instanceof ItemBlock) {
 						// I don't trust the null entity in there...
 						ItemBlock itemBlock = (ItemBlock) buildingMaterial.getItem();
 						try {
 							int meta = itemBlock.getMetadata(buildingMaterial.getMetadata());
-							state = itemBlock.block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, meta, null);
+							state = itemBlock.getBlock().getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, meta, null, EnumHand.MAIN_HAND);
 						} catch (Exception e) {
 							// fall back to default state
-							state = itemBlock.block.getDefaultState(); 
+							state = itemBlock.getBlock().getDefaultState(); 
 						}
 					}
 				}
@@ -979,8 +979,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		@Override
-		public void setWorldObj(World worldIn) {
-			super.setWorldObj(worldIn);
+		public void setWorld(World worldIn) {
+			super.setWorld(worldIn);
 			if (!worldIn.isRemote) {
 				MinecraftForge.EVENT_BUS.register(this);
 			}
@@ -1028,10 +1028,10 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			}
 			nbt.setTag(NBT_BEACONS, list);
 			
-			if (this.buildingMaterial != null) {
+			if (!buildingMaterial.isEmpty()) {
 				nbt.setTag(NBT_PLATFORMS, this.buildingMaterial.serializeNBT());
 			}
-			if (this.torches != null) {
+			if (!torches.isEmpty()) {
 				nbt.setTag(NBT_TORCHES, this.torches.serializeNBT());
 			}
 			
@@ -1075,13 +1075,13 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				}
 			}
 			
-			this.buildingMaterial = null;
+			this.buildingMaterial = ItemStack.EMPTY;
 			if (nbt.hasKey(NBT_PLATFORMS)) {
-				this.buildingMaterial = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_PLATFORMS));
+				this.buildingMaterial = new ItemStack(nbt.getCompoundTag(NBT_PLATFORMS));
 			}
-			this.torches = null;
+			this.torches = ItemStack.EMPTY;
 			if (nbt.hasKey(NBT_TORCHES)) {
-				this.torches = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag(NBT_TORCHES));
+				this.torches = new ItemStack(nbt.getCompoundTag(NBT_TORCHES));
 			}
 			
 			if (this.world != null && this.world.isRemote) {
@@ -1107,31 +1107,31 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			}
 		}
 		
-		public @Nullable ItemStack getMaterials() {
+		public @Nonnull ItemStack getMaterials() {
 			return this.buildingMaterial;
 		}
 		
-		public boolean isMaterials(@Nullable ItemStack stack) {
-			return stack == null || stack.getItem() instanceof ItemBlock;
+		public boolean isMaterials(@Nonnull ItemStack stack) {
+			return stack.isEmpty() || stack.getItem() instanceof ItemBlock;
 		}
 		
-		public void setMaterials(@Nullable ItemStack stack) {
+		public void setMaterials(@Nonnull ItemStack stack) {
 			if (isMaterials(stack)) {
 				this.buildingMaterial = stack;
 				this.dirty();
 			}
 		}
 		
-		public @Nullable ItemStack getTorches() {
+		public @Nonnull ItemStack getTorches() {
 			return this.torches;
 		}
 		
-		public boolean isTorches(@Nullable ItemStack stack) {
-			return stack == null
+		public boolean isTorches(@Nonnull ItemStack stack) {
+			return stack.isEmpty()
 				|| (torches.getItem() instanceof ItemBlock && ((ItemBlock) torches.getItem()).getBlock() instanceof BlockTorch);
 		}
 		
-		public void setTorches(@Nullable ItemStack torches) {
+		public void setTorches(@Nonnull ItemStack torches) {
 			if (isTorches(torches)) {
 				this.torches = torches;
 				this.dirty();

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
@@ -32,7 +33,7 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITickable,  ILogisticsTaskListener, IFeySign {
 
@@ -196,40 +197,43 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 		}
 	}
 	
-	protected static @Nullable ItemStack ResolveSeed(@Nullable IBlockState state) {
-		ItemStack seeds = null;
+	protected static @Nonnull ItemStack ResolveSeed(@Nullable IBlockState state) {
+		ItemStack seeds = ItemStack.EMPTY;
 		if (state != null) {
 			seeds = SeedMap.get(Block.getStateId(state));
-			if (seeds != null) {
+			if (seeds != null && !seeds.isEmpty()) {
 				return seeds.copy();
+			}
+			if (seeds == null) {
+				seeds = ItemStack.EMPTY;
 			}
 			
 			// Try and figure out what the seed would be
 			if (state.getBlock() instanceof BlockCrops) {
 				try {
-					Method getSeed = ReflectionHelper.findMethod(BlockCrops.class, (BlockCrops) state.getBlock(), new String[] {"getSeed", "func_149866_i"});
+					Method getSeed = ObfuscationReflectionHelper.findMethod(BlockCrops.class, "getSeed", Item.class);
 					seeds = new ItemStack((Item) getSeed.invoke((BlockCrops) state.getBlock()));
 				} catch (Exception e) {
-					seeds = null;
+					seeds = ItemStack.EMPTY;
 				}
 			}
 			
 			// Cache this lookup
-			SeedMap.put(Block.getStateId(state), seeds == null ? new ItemStack(Items.WHEAT_SEEDS) : seeds.copy());
+			SeedMap.put(Block.getStateId(state), seeds.isEmpty() ? new ItemStack(Items.WHEAT_SEEDS) : seeds.copy());
 		}
 		
 		return seeds;
 	}
 	
 	// TODO make configurable!
-	public ItemStack getSeed(World world, BlockPos pos) {
+	public @Nonnull ItemStack getSeed(World world, BlockPos pos) {
 		@Nullable IBlockState state = seenStates.get(pos);
 		
 		// Try and figure out what the seed would be
-		@Nullable ItemStack seeds = ResolveSeed(state);
+		@Nonnull ItemStack seeds = ResolveSeed(state);
 		
 		// Attempt to use nearby seeds if we couldn't figure one out
-		if (seeds == null) {
+		if (seeds.isEmpty()) {
 			for (BlockPos nearby : new BlockPos[] {pos.north(), pos.south(), pos.east(), pos.west()}) {
 				state = seenStates.get(nearby);
 				if (state == null) {
@@ -237,13 +241,13 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 				}
 				
 				seeds = ResolveSeed(state);
-				if (seeds != null) {
+				if (!seeds.isEmpty()) {
 					break;
 				}
 			}
 		}
 		
-		if (seeds == null) {
+		if (seeds.isEmpty()) {
 			// Could look for available seeds
 			seeds = new ItemStack(Items.WHEAT_SEEDS);
 		}

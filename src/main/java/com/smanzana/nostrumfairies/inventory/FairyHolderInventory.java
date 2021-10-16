@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.inventory;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.items.FairyGael;
@@ -13,6 +13,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -38,15 +39,15 @@ public class FairyHolderInventory implements IInventory {
 	private static final int INV_SIZE = INV_SIZE_GAEL + INV_SIZE_SCROLL + INV_SIZE_FETCH + INV_SIZE_TEMPLATES + 1; 
 	
 	// First 9 are attack, next 9 are build, and last 9 are logistics spots
-	private ItemStack[] gaelSlots;
+	private NonNullList<ItemStack> gaelSlots;
 	// 9 slots for each of the ATTACK slots (for scroll, target, and placement selections)
-	private ItemStack[] scrollSlots;
+	private NonNullList<ItemStack> scrollSlots;
 	private FairyCastTarget[] targetSlots;
 	private FairyPlacementTarget[] placementSlots;
 	// 9 slots for each of the LOGISTICS slots
-	private ItemStack[] fetchSlots;
+	private NonNullList<ItemStack> fetchSlots;
 	// 6 slots for requests, and 6 for deposits
-	private ItemStack[] logisticsTemplates;
+	private NonNullList<ItemStack> logisticsTemplates;
 	// 1 slot for a security pointer to a network
 	private ItemStack gemSlot;
 	
@@ -108,9 +109,9 @@ public class FairyHolderInventory implements IInventory {
 	 * @param slot
 	 * @return
 	 */
-	public @Nullable ItemStack getGaelByType(FairyGael.FairyGaelType type, int slot) {
+	public @Nonnull ItemStack getGaelByType(FairyGael.FairyGaelType type, int slot) {
 		if (slot < 0 || slot >= 9) {
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
 		int offset = 0;
@@ -125,27 +126,27 @@ public class FairyHolderInventory implements IInventory {
 			offset = 18;
 			break;
 		}
-		return gaelSlots[slot + offset];
+		return gaelSlots.get(slot + offset);
 	}
 	
-	public @Nullable ItemStack getAttackGael(int slot) {
+	public @Nonnull ItemStack getAttackGael(int slot) {
 		return getGaelByType(FairyGael.FairyGaelType.ATTACK, slot);
 	}
 	
-	public @Nullable ItemStack getLogisticsGael(int slot) {
+	public @Nonnull ItemStack getLogisticsGael(int slot) {
 		return getGaelByType(FairyGael.FairyGaelType.LOGISTICS, slot);
 	}
 	
-	public @Nullable ItemStack getBuildGael(int slot) {
+	public @Nonnull ItemStack getBuildGael(int slot) {
 		return getGaelByType(FairyGael.FairyGaelType.BUILD, slot);
 	}
 	
-	public @Nullable ItemStack getScroll(int slot) {
+	public @Nonnull ItemStack getScroll(int slot) {
 		if (slot < 0 || slot >= INV_SIZE_SCROLL) {
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
-		return scrollSlots[slot];
+		return scrollSlots.get(slot);
 	}
 	
 	public FairyCastTarget getFairyCastTarget(int slot) {
@@ -164,31 +165,31 @@ public class FairyHolderInventory implements IInventory {
 		return placementSlots[slot];
 	}
 	
-	public @Nullable ItemStack getFetchContents(int slot) {
+	public @Nonnull ItemStack getFetchContents(int slot) {
 		if (slot < 0 || slot >= INV_SIZE_FETCH) {
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
-		return fetchSlots[slot];
+		return fetchSlots.get(slot);
 	}
 	
-	public @Nullable ItemStack getPullTemplate(int slot) {
+	public @Nonnull ItemStack getPullTemplate(int slot) {
 		if (slot < 0 || slot >= (INV_SIZE_TEMPLATES/2)) {
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
-		return logisticsTemplates[slot];
+		return logisticsTemplates.get(slot);
 	}
 	
-	public @Nullable ItemStack getPushTemplate(int slot) {
+	public @Nonnull ItemStack getPushTemplate(int slot) {
 		if (slot < 0 || slot >= (INV_SIZE_TEMPLATES/2)) {
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
-		return logisticsTemplates[(INV_SIZE_TEMPLATES/2) + slot];
+		return logisticsTemplates.get((INV_SIZE_TEMPLATES/2) + slot);
 	}
 	
-	public @Nullable ItemStack getLogisticsGem() {
+	public @Nonnull ItemStack getLogisticsGem() {
 		return this.gemSlot;
 	}
 	
@@ -208,33 +209,33 @@ public class FairyHolderInventory implements IInventory {
 		}
 	}
 	
-	public void setPullTemplate(int slot, @Nullable ItemStack template) {
+	public void setPullTemplate(int slot, @Nonnull ItemStack template) {
 		if (slot < 0 || slot >= INV_SIZE_TEMPLATES / 2) {
 			return;
 		}
 		
-		if (template != null) {
+		if (!template.isEmpty()) {
 			template = template.copy();
 		}
 		
-		this.logisticsTemplates[slot] = template;
+		this.logisticsTemplates.set(slot, template);
 		this.markDirty();
 	}
 	
-	public void setPushTemplate(int slot, @Nullable ItemStack template) {
+	public void setPushTemplate(int slot, @Nonnull ItemStack template) {
 		if (slot < 0 || slot >= INV_SIZE_TEMPLATES / 2) {
 			return;
 		}
 		
-		if (template != null) {
+		if (!template.isEmpty()) {
 			template = template.copy();
 		}
 		
-		this.logisticsTemplates[INV_SIZE_TEMPLATES / 2 + slot] = template;
+		this.logisticsTemplates.set(INV_SIZE_TEMPLATES / 2 + slot, template);
 		this.markDirty();
 	}
 	
-	public void setGaelByType(FairyGaelType type, int slot, ItemStack gael) {
+	public void setGaelByType(FairyGaelType type, int slot, @Nonnull ItemStack gael) {
 		if (slot < 0 || slot >= 9) {
 			return;
 		}
@@ -296,28 +297,28 @@ public class FairyHolderInventory implements IInventory {
 	}
 
 	@Override
-	public ItemStack getStackInSlot(int index) {
+	public @Nonnull ItemStack getStackInSlot(int index) {
 		if (index < 0 || index >= INV_SIZE) {
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
 		if (index < INV_SIZE_GAEL) {
-			return gaelSlots[index];			
+			return gaelSlots.get(index);			
 		}
 		index -= INV_SIZE_GAEL;
 		
 		if (index < INV_SIZE_SCROLL) {
-			return scrollSlots[index];			
+			return scrollSlots.get(index);			
 		}
 		index -= INV_SIZE_SCROLL;
 		
 		if (index < INV_SIZE_FETCH) {
-			return fetchSlots[index];			
+			return fetchSlots.get(index);			
 		}
 		index -= INV_SIZE_FETCH;
 		
 		if (index < INV_SIZE_TEMPLATES) {
-			return logisticsTemplates[index];
+			return logisticsTemplates.get(index);
 		}
 		index -= INV_SIZE_TEMPLATES;
 		
@@ -327,11 +328,11 @@ public class FairyHolderInventory implements IInventory {
 	@Override
 	public ItemStack decrStackSize(int index, int count) {
 		ItemStack inSlot = getStackInSlot(index);
-		ItemStack removed = null;
-		if (inSlot != null) {
+		ItemStack removed = ItemStack.EMPTY;
+		if (!inSlot.isEmpty()) {
 			removed = inSlot.splitStack(count);
-			if (inSlot.stackSize <= 0) {
-				setInventorySlotContents(index, null);
+			if (inSlot.isEmpty()) {
+				setInventorySlotContents(index, ItemStack.EMPTY);
 			}
 			
 			this.markDirty();
@@ -343,8 +344,8 @@ public class FairyHolderInventory implements IInventory {
 	@Override
 	public ItemStack removeStackFromSlot(int index) {
 		ItemStack inSlot = getStackInSlot(index);
-		if (inSlot != null) {
-			this.setInventorySlotContents(index, null);
+		if (!inSlot.isEmpty()) {
+			this.setInventorySlotContents(index, ItemStack.EMPTY);
 			this.markDirty();
 		}
 		return inSlot;
@@ -357,28 +358,28 @@ public class FairyHolderInventory implements IInventory {
 		}
 		
 		if (index < INV_SIZE_GAEL) {
-			gaelSlots[index] = stack;
+			gaelSlots.set(index, stack);
 			this.markDirty();
 			return;
 		}
 		index -= INV_SIZE_GAEL;
 		
 		if (index < INV_SIZE_SCROLL) {
-			scrollSlots[index] = stack;
+			scrollSlots.set(index, stack);
 			this.markDirty();
 			return;
 		}
 		index -= INV_SIZE_SCROLL;
 		
 		if (index < INV_SIZE_FETCH) {
-			fetchSlots[index] = stack;
+			fetchSlots.set(index, stack);
 			this.markDirty();
 			return;
 		}
 		index -= INV_SIZE_FETCH;
 		
 		if (index < INV_SIZE_TEMPLATES) {
-			logisticsTemplates[index] = stack;
+			logisticsTemplates.set(index, stack);
 			this.markDirty();
 			return;
 		}
@@ -400,7 +401,7 @@ public class FairyHolderInventory implements IInventory {
 	}
 
 	@Override
-	public boolean isUseableByPlayer(EntityPlayer player) {
+	public boolean isUsableByPlayer(EntityPlayer player) {
 		return true;
 	}
 
@@ -420,7 +421,7 @@ public class FairyHolderInventory implements IInventory {
 			return false;
 		}
 		
-		if (stack == null) {
+		if (stack.isEmpty()) {
 			return true;
 		}
 		
@@ -495,12 +496,12 @@ public class FairyHolderInventory implements IInventory {
 
 	@Override
 	public void clear() {
-		gaelSlots = new ItemStack[INV_SIZE_GAEL];
-		scrollSlots = new ItemStack[INV_SIZE_SCROLL];
+		gaelSlots = NonNullList.withSize(INV_SIZE_GAEL, ItemStack.EMPTY);
+		scrollSlots = NonNullList.withSize(INV_SIZE_SCROLL, ItemStack.EMPTY);
 		targetSlots = new FairyCastTarget[INV_SIZE_SCROLL];
 		placementSlots = new FairyPlacementTarget[INV_SIZE_SCROLL];
-		fetchSlots = new ItemStack[INV_SIZE_FETCH];
-		logisticsTemplates = new ItemStack[INV_SIZE_TEMPLATES];
+		fetchSlots = NonNullList.withSize(INV_SIZE_FETCH, ItemStack.EMPTY);
+		logisticsTemplates = NonNullList.withSize(INV_SIZE_TEMPLATES, ItemStack.EMPTY);
 		
 		for (int i = 0; i < INV_SIZE_SCROLL; i++) {
 			targetSlots[i] = FairyCastTarget.TARGET;
@@ -518,7 +519,7 @@ public class FairyHolderInventory implements IInventory {
 			for (int i = 0; i < INV_SIZE; i++) {
 				ItemStack inSlot = getStackInSlot(i);
 				NBTTagCompound tag = new NBTTagCompound();
-				if (inSlot != null) {
+				if (!inSlot.isEmpty()) {
 					inSlot.writeToNBT(tag);
 				}
 				list.appendTag(tag);
@@ -540,7 +541,7 @@ public class FairyHolderInventory implements IInventory {
 //			for (int i = 0; i < INV_SIZE_TEMPLATES; i++) {
 //				ItemStack inSlot = logisticsTemplates[i];
 //				NBTTagCompound tag = new NBTTagCompound();
-//				if (inSlot != null) {
+//				if (!inSlot.isEmpty()) {
 //					inSlot.writeToNBT(tag);
 //				}
 //				list.appendTag(tag);
@@ -551,7 +552,7 @@ public class FairyHolderInventory implements IInventory {
 //			for (int i = 0; i < INV_SIZE_TEMPLATES; i++) {
 //				ItemStack inSlot = logisticsTemplates[i + INV_SIZE_TEMPLATES];
 //				NBTTagCompound tag = new NBTTagCompound();
-//				if (inSlot != null) {
+//				if (!inSlot.isEmpty()) {
 //					inSlot.writeToNBT(tag);
 //				}
 //				list.appendTag(tag);
@@ -572,8 +573,8 @@ public class FairyHolderInventory implements IInventory {
 		NBTTagList list = nbt.getTagList("contents", NBT.TAG_COMPOUND);
 		for (int i = 0; i < INV_SIZE && i < list.tagCount(); i++) {
 			NBTTagCompound tag = list.getCompoundTagAt(i);
-			@Nullable ItemStack stack = ItemStack.loadItemStackFromNBT(tag);
-			this.setInventorySlotContents(i, stack); // May be null :)
+			@Nonnull ItemStack stack = new ItemStack(tag);
+			this.setInventorySlotContents(i, stack); // May be empty :)
 		}
 		
 		list = nbt.getTagList("targets", NBT.TAG_COMPOUND);
@@ -595,6 +596,16 @@ public class FairyHolderInventory implements IInventory {
 //			@Nullable ItemStack stack = ItemStack.loadItemStackFromNBT(tag);
 //			this.setInventorySlotContents(i, stack); // May be null :)
 //		}
+	}
+
+	@Override
+	public boolean isEmpty() {
+		for (int i = 0; i < INV_SIZE; i++) {
+			if (!this.getStackInSlot(i).isEmpty()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

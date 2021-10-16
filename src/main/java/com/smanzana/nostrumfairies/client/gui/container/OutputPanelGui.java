@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import java.io.IOException;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.tiles.OutputPanelTileEntity;
@@ -66,7 +66,7 @@ public class OutputPanelGui {
 			for (int i = 0; i < slots.getSizeInventory(); i++) {
 				this.addSlotToContainer(new Slot(slots, i, GUI_TOP_INV_HOFFSET + GUI_LPANEL_WIDTH + i * 18, GUI_TOP_INV_VOFFSET) {
 					@Override
-					public boolean isItemValid(@Nullable ItemStack stack) {
+					public boolean isItemValid(@Nonnull ItemStack stack) {
 				        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 				    }
 					
@@ -76,9 +76,9 @@ public class OutputPanelGui {
 					}
 					
 					@Override
-					public void putStack(@Nullable ItemStack stack) {
+					public void putStack(@Nonnull ItemStack stack) {
 //						ItemStack template = chest.getTemplate(index);
-//						if (template == null) {
+//						if (template.isEmpty()) {
 //							chest.setTemplate(index, stack);
 //						} else {
 							super.putStack(stack);
@@ -92,7 +92,7 @@ public class OutputPanelGui {
 		
 		@Override
 		public ItemStack transferStackInSlot(EntityPlayer playerIn, int fromSlot) {
-			ItemStack prev = null;	
+			ItemStack prev = ItemStack.EMPTY;	
 			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
 			
 			if (slot != null && slot.getHasStack()) {
@@ -107,9 +107,9 @@ public class OutputPanelGui {
 					
 					// TODO
 //					ItemStack leftover = Inventories.addItem(chest, cur);
-//					slot.putStack(leftover != null && leftover.stackSize <= 0 ? null : leftover);
-//					if (leftover != null && leftover.stackSize == prev.stackSize) {
-//						prev = null;
+//					slot.putStack(leftover.isEmpty() ? ItemStack.EMPTY : leftover);
+//					if (!leftover.isEmpty() && leftover.getCount() == prev.getCount()) {
+//						prev = ItemStack.EMPTY;
 //					}
 				}
 				
@@ -126,28 +126,28 @@ public class OutputPanelGui {
 		@Override
 		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
 			if (logicPanel.handleSlotClick(slotId, dragType, clickTypeIn, player)) {
-				return null;
+				return ItemStack.EMPTY;
 			}
 			
-			if (player.inventory.getItemStack() == null) {
+			if (player.inventory.getItemStack().isEmpty()) {
 				// empty hand. Right-click?
 				if (slotId >= panelIDStart && dragType == 1 && clickTypeIn == ClickType.PICKUP) {
-					panel.setTemplate(slotId - panelIDStart, null);
-					return null;
+					panel.setTemplate(slotId - panelIDStart, ItemStack.EMPTY);
+					return ItemStack.EMPTY;
 				}
 			} else {
 				// Item in hand. Clicking in template inventory?
 				if (slotId >= panelIDStart) {
 					// Clicking empty slot?
-					if (clickTypeIn == ClickType.PICKUP && panel.getTemplate(slotId - panelIDStart) == null) {
+					if (clickTypeIn == ClickType.PICKUP && panel.getTemplate(slotId - panelIDStart).isEmpty()) {
 						ItemStack template = player.inventory.getItemStack();
 						if (dragType == 1) { // right click
 							template = template.copy();
-							template.stackSize = 1;
+							template.setCount(1);
 						}
 						panel.setTemplate(slotId - panelIDStart, template);
 					}
-					return null;
+					return ItemStack.EMPTY;
 				}
 			}
 			
@@ -184,17 +184,17 @@ public class OutputPanelGui {
 			panelGui.initGui(mc, guiLeft, guiTop);
 		}
 		
-		private void drawTemplate(float partialTicks, @Nullable ItemStack template) {
-			if (template != null) {
+		private void drawTemplate(float partialTicks, @Nonnull ItemStack template) {
+			if (!template.isEmpty()) {
 				GlStateManager.pushMatrix();
 				this.itemRender.renderItemIntoGUI(template, 0, 0);
 				GlStateManager.translate(0, 0, 110);
-				if (template.stackSize > 1) {
-					final String count = "" + template.stackSize;
+				if (template.getCount() > 1) {
+					final String count = "" + template.getCount();
 					
-					this.fontRendererObj.drawStringWithShadow("" + template.stackSize,
-							GUI_INV_CELL_LENGTH - (this.fontRendererObj.getStringWidth(count) + 1),
-							GUI_INV_CELL_LENGTH - (this.fontRendererObj.FONT_HEIGHT),
+					this.fontRenderer.drawStringWithShadow("" + template.getCount(),
+							GUI_INV_CELL_LENGTH - (this.fontRenderer.getStringWidth(count) + 1),
+							GUI_INV_CELL_LENGTH - (this.fontRenderer.FONT_HEIGHT),
 							0xFFFFFFFF);
 				} else {
 					GlStateManager.enableAlpha();

@@ -3,7 +3,6 @@ package com.smanzana.nostrumfairies.blocks;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.tiles.GatheringBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.tiles.IFeySign;
-import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ILogisticsTaskUniqueData;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -15,7 +14,6 @@ import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
@@ -33,7 +31,6 @@ public class GatheringBlock extends BlockContainer {
 
 	public static final PropertyDirection FACING = BlockHorizontal.FACING;
 	public static final String ID = "logistics_gathering_block";
-	protected static final ILogisticsTaskUniqueData<EntityItem> GATHERING_ITEM = new ILogisticsTaskUniqueData<EntityItem>() { };
 	
 	private static GatheringBlock instance = null;
 	public static GatheringBlock instance() {

@@ -11,7 +11,7 @@ import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.init.Blocks;
@@ -57,12 +57,12 @@ public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> 
 	}
 	
 	@Override
-	public void renderTileEntityFast(T te, double x, double y, double z, float partialTicks, int destroyStage, VertexBuffer buffer) {
+	public void renderTileEntityFast(T te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 		Minecraft mc = Minecraft.getMinecraft();
 		
 		ItemStack icon = te.getSignIcon(te);
 		IBakedModel model = null;
-		if (icon != null) {
+		if (!icon.isEmpty()) {
 			model = mc.getRenderItem().getItemModelMesher().getItemModel(icon);
 		}
 		
@@ -82,7 +82,7 @@ public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> 
 
 	@Override
 	public void render(T tileEntity, double x, double y, double z, IBlockState state, World world,
-			VertexBuffer buffer) {
-		renderTileEntityFast(tileEntity, x, y, z, 0, 0, buffer);
+			BufferBuilder buffer) {
+		renderTileEntityFast(tileEntity, x, y, z, 0, 0, 0, buffer);
 	}
 }

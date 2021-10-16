@@ -2,7 +2,6 @@ package com.smanzana.nostrumfairies.blocks.tiles;
 
 import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock;
 import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.ILogicListener;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity.LogisticsTileEntityComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 import net.minecraft.block.state.IBlockState;
@@ -54,8 +53,8 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public void setWorldObj(World worldIn) {
-		super.setWorldObj(worldIn);
+	public void setWorld(World worldIn) {
+		super.setWorld(worldIn);
 		
 		logicComp.setLocation(worldIn, pos);
 	}

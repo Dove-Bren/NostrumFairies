@@ -12,12 +12,12 @@ import com.smanzana.nostrumfairies.potion.FeyVisibilityPotion;
 import com.smanzana.nostrummagica.utils.Curves;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
@@ -35,11 +35,11 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 	}
 	
 	@Override
-	public void renderTileEntityAt(T te, double x, double y, double z, float partialTicks, int destroyStage) {
-		super.renderTileEntityAt(te, x, y, z, partialTicks, destroyStage);
+	public void render(T te, double x, double y, double z, float partialTicks, int destroyStage, float alphaIn) {
+		super.render(te, x, y, z, partialTicks, destroyStage, alphaIn);
 		
 		Minecraft mc = Minecraft.getMinecraft();
-		EntityPlayer player = mc.thePlayer;
+		EntityPlayer player = mc.player;
 		PotionEffect effect = player.getActivePotionEffect(FeyVisibilityPotion.instance());
 		
 		if (player != null && (player.isSpectator() || player.isCreative() || effect != null)) { // REPLACE ME
@@ -68,7 +68,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				
 				Vec3d origin = new Vec3d(BlockPos.ORIGIN);
 				Tessellator tessellator = Tessellator.getInstance();
-				VertexBuffer buffer = tessellator.getBuffer();
+				BufferBuilder buffer = tessellator.getBuffer();
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(x + .5, y + 1.05, z + .5);
 				//GlStateManager.disableColorMaterial();

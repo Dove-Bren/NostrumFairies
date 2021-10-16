@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
@@ -13,14 +13,14 @@ public class FeySoulContainerSlot extends Slot {
 	
 	private final SoulStoneType type;
 
-	public FeySoulContainerSlot(IInventory inventoryIn, int index, int xPosition, int yPosition, SoulStoneType type) {
-		super(inventoryIn, index, xPosition, yPosition);
+	public FeySoulContainerSlot(IInventory inventoryIn, int index, int x, int y, SoulStoneType type) {
+		super(inventoryIn, index, x, y);
 		this.type = type;
 	}
 	
 	@Override
-	public boolean isItemValid(@Nullable ItemStack stack) {
-		if (stack != null) {
+	public boolean isItemValid(@Nonnull ItemStack stack) {
+		if (!stack.isEmpty()) {
 			if (!(stack.getItem() instanceof FeySoulStone)) {
 				return false;
 			}
@@ -39,7 +39,7 @@ public class FeySoulContainerSlot extends Slot {
 	}
 	
 	@Override
-	public void putStack(@Nullable ItemStack stack) {
+	public void putStack(@Nonnull ItemStack stack) {
 		super.putStack(stack);
 	}
 	

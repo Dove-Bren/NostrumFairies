@@ -400,7 +400,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		return EntityFeyBase.canUseSpecialization(type, material);
 	}
 	
-	protected static FeyStoneMaterial[] GetSpecMaterials(ResidentType type) {
+	public static FeyStoneMaterial[] GetSpecMaterials(ResidentType type) {
 		ArrayList<FeyStoneMaterial> mats = new ArrayList<>();
 		for (FeyStoneMaterial mat : FeyStoneMaterial.values()) {
 			if (SpecializationMaterialAllowed(type, mat)) {

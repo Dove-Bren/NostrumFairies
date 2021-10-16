@@ -12,7 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
@@ -28,7 +28,7 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 	
 	protected void renderCube(BlockPos origin, BlockPos target, float red, float green, float blue, float alpha) {
 		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer buffer = tessellator.getBuffer();
+		BufferBuilder buffer = tessellator.getBuffer();
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
 		buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
@@ -67,11 +67,11 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 	}
 	
 	@Override
-	public void renderTileEntityAt(MiningBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
-		super.renderTileEntityAt(te, x, y, z, partialTicks, destroyStage);
+	public void render(MiningBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float alphaIn) {
+		super.render(te, x, y, z, partialTicks, destroyStage, alphaIn);
 		
 		Minecraft mc = Minecraft.getMinecraft();
-		EntityPlayer player = mc.thePlayer;
+		EntityPlayer player = mc.player;
 		
 		// TODO make a capability and see if they can see logistics stuff / its turned on
 		if (player != null && player.isSpectator() || player.isCreative()) { // REPLACE ME

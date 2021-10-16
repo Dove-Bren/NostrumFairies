@@ -64,7 +64,7 @@ public class LogisticsSensorGui {
 		
 		@Override
 		public ItemStack transferStackInSlot(EntityPlayer playerIn, int fromSlot) {
-//			ItemStack prev = null;	
+//			ItemStack prev = ItemStack.EMPTY;	
 //			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
 //			
 //			if (slot != null && slot.getHasStack()) {
@@ -75,12 +75,12 @@ public class LogisticsSensorGui {
 //					;
 //				} else {
 //					// shift-click in player inventory. Just disallow.
-//					prev = null;
+//					prev = ItemStack.EMPTY;
 //				}
 //			}
 //			
 //			return prev;
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
 		@Override
@@ -91,7 +91,7 @@ public class LogisticsSensorGui {
 		@Override
 		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
 			if (panel.handleSlotClick(slotId, dragType, clickTypeIn, player)) {
-				return null;
+				return ItemStack.EMPTY;
 			}
 			
 			// Nothing special to do for sensor

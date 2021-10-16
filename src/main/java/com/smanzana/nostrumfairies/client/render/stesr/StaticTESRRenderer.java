@@ -16,7 +16,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.tileentity.TileEntity;
@@ -119,7 +119,7 @@ public class StaticTESRRenderer {
 	private <T extends TileEntity> int compile(T te, StaticTESR<T> render) {
 		int list = GLAllocation.generateDisplayLists(1);
 		Tessellator tess = Tessellator.getInstance();
-		VertexBuffer buffer = tess.getBuffer();
+		BufferBuilder buffer = tess.getBuffer();
 		
 		
 		GlStateManager.glNewList(list, GL11.GL_COMPILE);

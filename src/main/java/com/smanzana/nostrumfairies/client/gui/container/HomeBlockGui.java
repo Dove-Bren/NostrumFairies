@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity.FeyAwayRecord;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity.HomeBlockSlotInventory;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
 import com.smanzana.nostrumfairies.client.gui.FeySoulIcon;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
@@ -136,7 +139,7 @@ public class HomeBlockGui {
 		@Override
 		public ItemStack transferStackInSlot(EntityPlayer playerIn, int fromSlot) {
 			return super.transferStackInSlot(playerIn, fromSlot);
-//			ItemStack prev = null;	
+//			ItemStack prev = ItemStack.EMPTY;	
 //			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
 //			
 //			if (slot != null && slot.getHasStack()) {
@@ -146,17 +149,17 @@ public class HomeBlockGui {
 //				if (slot.inventory == this.home) {
 //					// Trying to take one of our items
 //					if (playerIn.inventory.addItemStackToInventory(cur)) {
-//						slot.putStack(null);
-//						slot.onPickupFromSlot(playerIn, cur);
+//						slot.putStack(ItemStack.EMPTY);
+//						slot.onTake(playerIn, cur);
 //					} else {
-//						prev = null;
+//						prev = ItemStack.EMPTY;
 //					}
 //				} else {
 //					// shift-click in player inventory
 //					ItemStack leftover = ItemStacks.addItem(home, cur);
-//					slot.putStack(leftover != null && leftover.stackSize <= 0 ? null : leftover);
-//					if (leftover != null && leftover.stackSize == prev.stackSize) {
-//						prev = null;
+//					slot.putStack(leftover.isEmpty() ? ItemStack.EMPTY : leftover);
+//					if (!leftover.isEmpty() && leftover.getCount() == prev.getCount()) {
+//						prev = ItemStack.EMPTY;
 //					}
 //				}
 //				
@@ -237,12 +240,12 @@ public class HomeBlockGui {
 			GlStateManager.pushMatrix();
 			GlStateManager.translate(x + 5, y + 2, 0);
 			
-			fontRendererObj.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
+			fontRenderer.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 			
 			GlStateManager.pushMatrix();
 			GlStateManager.translate(0, 14, 0);
 			GlStateManager.scale(scale, scale, scale);
-			fontRendererObj.drawString(String.format("%.0f%% Growth", (container.home.getGrowth() * 100)),
+			fontRenderer.drawString(String.format("%.0f%% Growth", (container.home.getGrowth() * 100)),
 					0, 0, 0xFFA0A0A0);
 			GlStateManager.popMatrix();
 			
@@ -251,12 +254,12 @@ public class HomeBlockGui {
 			
 			GlStateManager.translate(0, 26, 0);
 			GlStateManager.scale(scale, scale, scale);
-			fontRendererObj.drawString(count + "/" + maxcount + " Residents",
+			fontRenderer.drawString(count + "/" + maxcount + " Residents",
 					0, 0, 0xFFA0A0A0);
 			
 			String str = getAetherDescription(container.home.getAetherLevel());
-			fontRendererObj.drawString(str,
-					215 - (fontRendererObj.getStringWidth(str)), 0, 0xFFA0A0A0);
+			fontRenderer.drawString(str,
+					215 - (fontRenderer.getStringWidth(str)), 0, 0xFFA0A0A0);
 			GlStateManager.popMatrix();
 
 			GlStateManager.popMatrix();
@@ -272,27 +275,27 @@ public class HomeBlockGui {
 				if (record == null) {
 					// Show a 'VACANT' notice lol
 					String str = "Vacant";
-					this.fontRendererObj.drawStringWithShadow("Vacant",
-							x + (GUI_LIST_ITEM_WIDTH - fontRendererObj.getStringWidth(str)) / 2,
-							y + 1 + ((GUI_LIST_ITEM_HEIGHT - fontRendererObj.FONT_HEIGHT) / 2), 0xFFFFFFFF);
+					this.fontRenderer.drawStringWithShadow("Vacant",
+							x + (GUI_LIST_ITEM_WIDTH - fontRenderer.getStringWidth(str)) / 2,
+							y + 1 + ((GUI_LIST_ITEM_HEIGHT - fontRenderer.FONT_HEIGHT) / 2), 0xFFFFFFFF);
 				} else {
 					// display information about the fey for selection
 					String name = record.name;
-					if (fontRendererObj.getStringWidth(name) * .75f > GUI_LIST_ITEM_WIDTH - 4) {
+					if (fontRenderer.getStringWidth(name) * .75f > GUI_LIST_ITEM_WIDTH - 4) {
 						int len = 0;
 						int index = 0;
-						len += fontRendererObj.getStringWidth("..."); // offset to include ellipses
-						while ((len + fontRendererObj.getCharWidth(name.charAt(index))) * .75f < (GUI_LIST_ITEM_WIDTH - 4)) {
-							len += fontRendererObj.getCharWidth(name.charAt(index));
+						len += fontRenderer.getStringWidth("..."); // offset to include ellipses
+						while ((len + fontRenderer.getCharWidth(name.charAt(index))) * .75f < (GUI_LIST_ITEM_WIDTH - 4)) {
+							len += fontRenderer.getCharWidth(name.charAt(index));
 							index++;
 						}
 						name = name.substring(0, index) + "...";
 					}
 					
 					GlStateManager.pushMatrix();
-					GlStateManager.translate(x + 2, y + 1 + ((GUI_LIST_ITEM_HEIGHT - fontRendererObj.FONT_HEIGHT) / 2) / .75f, 0);
+					GlStateManager.translate(x + 2, y + 1 + ((GUI_LIST_ITEM_HEIGHT - fontRenderer.FONT_HEIGHT) / 2) / .75f, 0);
 					GlStateManager.scale(.75f, .75f, .75f);
-					this.fontRendererObj.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
+					this.fontRenderer.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 					GlStateManager.popMatrix();
 				}
 			}
@@ -328,21 +331,21 @@ public class HomeBlockGui {
 
 			// -> Name
 			String name = record.name;
-			if (fontRendererObj.getStringWidth(name) * nameScale > nameSpace) {
+			if (fontRenderer.getStringWidth(name) * nameScale > nameSpace) {
 				int len = 0;
 				int index = 0;
-				len += fontRendererObj.getStringWidth("..."); // offset to include ellipses
-				while ((len + fontRendererObj.getCharWidth(name.charAt(index))) * nameScale < nameSpace) {
-					len += fontRendererObj.getCharWidth(name.charAt(index));
+				len += fontRenderer.getStringWidth("..."); // offset to include ellipses
+				while ((len + fontRenderer.getCharWidth(name.charAt(index))) * nameScale < nameSpace) {
+					len += fontRenderer.getCharWidth(name.charAt(index));
 					index++;
 				}
 				name = name.substring(0, index) + "...";
 			}
 			
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(x + 2 + (nameSpace - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 5, 0);
+			GlStateManager.translate(x + 2 + (nameSpace - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 5, 0);
 			GlStateManager.scale(nameScale, nameScale, nameScale);
-			this.fontRendererObj.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
+			this.fontRenderer.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 			GlStateManager.popMatrix();
 			
 			if (record.cache != null) {
@@ -350,25 +353,25 @@ public class HomeBlockGui {
 				// -> Title
 				name = fey.getSpecializationName();
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + 2 + (nameSpace - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
+				GlStateManager.translate(x + 2 + (nameSpace - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
 				GlStateManager.scale(nameScale, nameScale, nameScale);
-				this.fontRendererObj.drawString(name, 0, 0, 0xFFF0A0FF);
+				this.fontRenderer.drawString(name, 0, 0, 0xFFF0A0FF);
 				GlStateManager.popMatrix();
 				
 				// -> Status
 				name = I18n.format(fey.getMoodSummary());
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
+				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
 				GlStateManager.scale(nameScale, nameScale, nameScale);
-				this.fontRendererObj.drawString(name, 0, 0, 0xFFE0E0E0);
+				this.fontRenderer.drawString(name, 0, 0, 0xFFE0E0E0);
 				GlStateManager.popMatrix();
 				
 				// -> Activity report
 				name = I18n.format(fey.getActivitySummary());
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
+				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
 				GlStateManager.scale(nameScale, nameScale, nameScale);
-				this.fontRendererObj.drawString(name, 0, 0, 0xFFE0E0E0);
+				this.fontRenderer.drawString(name, 0, 0, 0xFFE0E0E0);
 				GlStateManager.popMatrix();
 				
 				// render preview
@@ -402,17 +405,17 @@ public class HomeBlockGui {
 									GUI_TEXT_LIST_ITEM_HOFFSET, GUI_TEXT_LIST_ITEM_vOFFSET + GUI_LIST_ITEM_HEIGHT,
 									GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH, 256, 256);
 							GlStateManager.enableDepth();
-				            this.itemRender.renderItemAndEffectIntoGUI(this.mc.thePlayer, items[i], cellX + 1, cellY + 1);
-				            this.itemRender.renderItemOverlayIntoGUI(this.fontRendererObj, items[i], cellX + 1, cellY + 1, null);
+				            this.itemRender.renderItemAndEffectIntoGUI(this.mc.player, items[i], cellX + 1, cellY + 1);
+				            this.itemRender.renderItemOverlayIntoGUI(this.fontRenderer, items[i], cellX + 1, cellY + 1, null);
 						}
 					}
 				}
 			} else {
 				name = "Away";
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRendererObj.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
+				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
 				GlStateManager.scale(nameScale, nameScale, nameScale);
-				this.fontRendererObj.drawString(name, 0, 0, 0xFFE0E0E0);
+				this.fontRenderer.drawString(name, 0, 0, 0xFFE0E0E0);
 				GlStateManager.popMatrix();
 			}
 		}
@@ -501,11 +504,11 @@ public class HomeBlockGui {
 					if (selection != -1) {
 						slot = container.specializationSlots.get(selection);
 						slot.isSelected = false;
-						slot.xDisplayPosition = -1000;
+						slot.xPos = -1000;
 					}
 					slot = container.specializationSlots.get(index);
 					slot.isSelected = true;
-					slot.xDisplayPosition = GUI_DETAILS_HOFFSET + (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH - 2)) / 2;
+					slot.xPos = GUI_DETAILS_HOFFSET + (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH - 2)) / 2;
 					this.selection = index;
 					return;
 				}
@@ -571,8 +574,8 @@ public class HomeBlockGui {
 		
 		protected boolean isItemDisplay;
 		
-		public ResidentSlot(HomeBlockTileEntity te, int slot, int xPosition, int yPosition) {
-			super(te.getSlotInventory(), slot, xPosition, yPosition, te.getSlotInventory().getPrimarySoulType());
+		public ResidentSlot(HomeBlockTileEntity te, int slot, int x, int y) {
+			super(te.getSlotInventory(), slot, x, y, te.getSlotInventory().getPrimarySoulType());
 			this.inventory = te.getSlotInventory();
 			this.te = te;
 		}
@@ -601,7 +604,7 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		public boolean isItemValid(@Nullable ItemStack stack) {
+		public boolean isItemValid(@Nonnull ItemStack stack) {
 			if (!inventory.isItemValidForSlot(this.getSlotIndex(), stack)) {
 				return false;
 			}
@@ -616,7 +619,7 @@ public class HomeBlockGui {
 		
 		@Override
 		@SideOnly(Side.CLIENT)
-		public boolean canBeHovered() {
+		public boolean isEnabled() {
 			return isActive();
 		}
 		
@@ -628,17 +631,17 @@ public class HomeBlockGui {
 		@Override
 		public ItemStack getStack() {
 			if (isItemDisplay) {
-				return null;
+				return ItemStack.EMPTY;
 			}
 			
 			return super.getStack();
 		}
 		
 		@Override
-		public void putStack(@Nullable ItemStack stack) {
+		public void putStack(@Nonnull ItemStack stack) {
 			EntityFeyBase spawned = null;
 			
-			if (stack != null && te.getWorld() != null && !te.getWorld().isRemote) {
+			if (!stack.isEmpty() && te.getWorld() != null && !te.getWorld().isRemote) {
 				if (FeySoulStone.hasStoredFey(stack)) {
 					// They put in a soul stone and it has a fey in it. Automatically spawn them and add them
 					// to the entity list
@@ -677,8 +680,8 @@ public class HomeBlockGui {
 		
 		protected boolean isSelected;
 		
-		public SpecializationSlot(HomeBlockTileEntity te, int slot, int xPosition, int yPosition) {
-			super(te.getSlotInventory(), slot, xPosition, yPosition, FeySlotType.SPECIALIZATION);
+		public SpecializationSlot(HomeBlockTileEntity te, int slot, int x, int y) {
+			super(te.getSlotInventory(), slot, x, y, FeySlotType.SPECIALIZATION);
 			this.inventory = te.getSlotInventory();
 			this.te = te;
 			isSelected = (te.getWorld().isRemote ? false : true);
@@ -694,7 +697,7 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		public boolean isItemValid(@Nullable ItemStack stack) {
+		public boolean isItemValid(@Nonnull ItemStack stack) {
 			if (!inventory.isItemValidForSlot(this.getSlotIndex(), stack)) {
 				return false;
 			}
@@ -709,7 +712,7 @@ public class HomeBlockGui {
 		
 		@Override
 		@SideOnly(Side.CLIENT)
-		public boolean canBeHovered() {
+		public boolean isEnabled() {
 			return isActive();
 		}
 		
@@ -721,7 +724,7 @@ public class HomeBlockGui {
 		@Override
 		public ItemStack getStack() {
 			if (!isSelected) {
-				return null;
+				return ItemStack.EMPTY;
 			}
 			return super.getStack();
 		}

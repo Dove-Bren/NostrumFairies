@@ -3,6 +3,8 @@ package com.smanzana.nostrumfairies.blocks.tiles;
 import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -13,17 +15,18 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public abstract class LogisticsChestTileEntity extends LogisticsTileEntity implements IInventory {
 
 	private static final String NBT_INV = "inventory_contents";
 	
-	private ItemStack slots[];
+	private NonNullList<ItemStack> slots;
 	
 	public LogisticsChestTileEntity() {
 		super();
-		slots = new ItemStack[getSizeInventory()];
+		slots = NonNullList.withSize(getSizeInventory(), ItemStack.EMPTY);
 	}
 	
 	@Override
@@ -36,26 +39,26 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	}
 
 	@Override
-	public ItemStack getStackInSlot(int index) {
+	public @Nonnull ItemStack getStackInSlot(int index) {
 		if (index < 0 || index >= getSizeInventory())
-			return null;
+			return ItemStack.EMPTY;
 		
-		return slots[index];
+		return slots.get(index);
 	}
 	
 	@Override
 	public ItemStack decrStackSize(int index, int count) {
-		if (index < 0 || index >= getSizeInventory() || slots[index] == null)
-			return null;
+		if (index < 0 || index >= getSizeInventory() || slots.get(index).isEmpty())
+			return ItemStack.EMPTY;
 		
 		ItemStack stack;
-		if (slots[index].stackSize <= count) {
-			stack = slots[index];
-			slots[index] = null;
+		if (slots.get(index).getCount() <= count) {
+			stack = slots.get(index);
+			slots.set(index, ItemStack.EMPTY);
 		} else {
-			stack = slots[index].copy();
-			stack.stackSize = count;
-			slots[index].stackSize -= count;
+			stack = slots.get(index).copy();
+			stack.setCount(count);
+			slots.get(index).shrink(count);
 		}
 		
 		this.markDirty();
@@ -66,10 +69,10 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	@Override
 	public ItemStack removeStackFromSlot(int index) {
 		if (index < 0 || index >= getSizeInventory())
-			return null;
+			return ItemStack.EMPTY;
 		
-		ItemStack stack = slots[index];
-		slots[index] = null;
+		ItemStack stack = slots.get(index);
+		slots.set(index, ItemStack.EMPTY);
 		
 		this.markDirty();
 		return stack;
@@ -90,7 +93,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 		if (!isItemValidForSlot(index, stack))
 			return;
 		
-		slots[index] = stack;
+		slots.set(index, stack);
 	}
 
 	@Override
@@ -99,7 +102,17 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	}
 
 	@Override
-	public boolean isUseableByPlayer(EntityPlayer player) {
+	public boolean isUsableByPlayer(EntityPlayer player) {
+		return true;
+	}
+	
+	@Override
+	public boolean isEmpty() {
+		for (ItemStack stack : slots) {
+			if (!stack.isEmpty()) {
+				return false;
+			}
+		}
 		return true;
 	}
 
@@ -148,7 +161,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 		NBTTagCompound compound = new NBTTagCompound();
 		
 		for (int i = 0; i < getSizeInventory(); i++) {
-			if (getStackInSlot(i) == null)
+			if (getStackInSlot(i).isEmpty())
 				continue;
 			
 			NBTTagCompound tag = new NBTTagCompound();
@@ -178,7 +191,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 				continue;
 			}
 			
-			ItemStack stack = ItemStack.loadItemStackFromNBT(items.getCompoundTag(key));
+			ItemStack stack = new ItemStack(items.getCompoundTag(key));
 			this.setInventorySlotContents(id, stack);
 		}
 
@@ -187,8 +200,9 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	
 	@Override
 	public Collection<ItemStack> getItems() {
+		// Can this have empties in it? If so, just return slots...?
 		List<ItemStack> list = Lists.newArrayList(slots);
-		list.removeIf((stack) -> {return stack == null;});
+		list.removeIf((stack) -> {return stack.isEmpty();});
 		return list;
 	}
 	
@@ -202,7 +216,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	public void addItem(ItemStack stack) {
 		//super.addItem(stack);
 		ItemStack leftover = Inventories.addItem(this, stack);
-		if (leftover != null) {
+		if (!leftover.isEmpty()) {
 			EntityItem item = new EntityItem(this.world, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, leftover);
 			world.spawnEntity(item);
 		}

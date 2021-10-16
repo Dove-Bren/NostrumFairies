@@ -26,7 +26,7 @@ public class CraftingBlockGnomeTileEntity extends CraftingBlockTileEntity {
 
 	@Override
 	protected float getCraftBonus(ItemStack item) {
-		if (item == null) {
+		if (item.isEmpty()) {
 			return 0f;
 		}
 		
@@ -54,7 +54,7 @@ public class CraftingBlockGnomeTileEntity extends CraftingBlockTileEntity {
 	@Override
 	protected ItemStack generateOutput() {
 		ItemStack out = super.generateOutput();
-		if (out != null
+		if (!out.isEmpty()
 				&& !out.getUnlocalizedName().toLowerCase().contains("block")
 				&& !out.getUnlocalizedName().toLowerCase().contains("ingot")
 				&& !out.getUnlocalizedName().toLowerCase().contains("nugget")) {
@@ -63,14 +63,14 @@ public class CraftingBlockGnomeTileEntity extends CraftingBlockTileEntity {
 				int bonus = 0;
 				int chances = 5;
 				
-				for (int i = 0; i < out.stackSize; i++) {
+				for (int i = 0; i < out.getCount(); i++) {
 					if (NostrumFairies.random.nextInt(chances) == 0) {
 						bonus++;
 						chances += 2;
 					}
 				}
 				
-				out.stackSize = Math.min(out.getMaxStackSize(), out.stackSize + bonus);
+				out.setCount(Math.min(out.getMaxStackSize(), out.getCount() + bonus));
 			}
 		}
 		

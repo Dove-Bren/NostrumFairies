@@ -128,11 +128,11 @@ public class NostrumFairyGui implements IGuiHandler {
 			// Find the wand
 			ItemStack wand = player.getHeldItemMainhand();
 			int pos = player.inventory.currentItem + 27;
-			if (wand == null || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
+			if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
 				wand = player.getHeldItemOffhand();
 				pos = 40;
 			}
-			if (wand == null || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
+			if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
 				return null; // Not actually in their hand
 			}
 			
@@ -257,11 +257,11 @@ public class NostrumFairyGui implements IGuiHandler {
 			// Find the wand
 			ItemStack wand = player.getHeldItemMainhand();
 			int pos = player.inventory.currentItem + 27;
-			if (wand == null || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
+			if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
 				wand = player.getHeldItemOffhand();
 				pos = 40;
 			}
-			if (wand == null || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
+			if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
 				return null; // Not actually in their hand
 			}
 			

@@ -3,7 +3,6 @@ package com.smanzana.nostrumfairies.blocks;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.tiles.IFeySign;
 import com.smanzana.nostrumfairies.blocks.tiles.WoodcuttingBlockTileEntity;
-import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ILogisticsTaskUniqueData;
 import com.smanzana.nostrumfairies.utils.OreDict;
 
 import net.minecraft.block.Block;
@@ -35,7 +34,6 @@ public class WoodcuttingBlock extends BlockContainer {
 
 	public static final PropertyDirection FACING = BlockHorizontal.FACING;
 	public static final String ID = "logistics_woodcutting_block";
-	protected static final ILogisticsTaskUniqueData<BlockPos> WOODCUTTING_POSITION = new ILogisticsTaskUniqueData<BlockPos>() { };
 	
 	private static WoodcuttingBlock instance = null;
 	public static WoodcuttingBlock instance() {

@@ -48,6 +48,6 @@ public final class FeySoulIcon {
 	public static void draw(FeySoulContainerSlot slot, float scale) {
 		// offset to center based on scale, since slots always have a hover of 16x16
 		int offset = (int) (16 * (1f - scale) * .5);
-		draw(slot.xDisplayPosition + offset, slot.yDisplayPosition + offset, scale, slot.getType());
+		draw(slot.xPos + offset, slot.yPos + offset, scale, slot.getType());
 	}
 }

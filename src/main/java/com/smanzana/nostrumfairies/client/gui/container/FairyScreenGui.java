@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import java.io.IOException;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
@@ -187,7 +187,7 @@ public class FairyScreenGui {
 				for (int i = 0; i < 3; i++) {
 					for (int j = 0; j < 3; j++) {
 						HideableSlot slot = new HideableSlot(chest, i * 3 + j, GUI_ATTACK_SLOT_HOFFSET + j * 18, GUI_ATTACK_SLOT_VOFFSET + i * 18) {
-							public boolean isItemValid(@Nullable ItemStack stack) {
+							public boolean isItemValid(@Nonnull ItemStack stack) {
 						        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 						    }
 						};
@@ -203,7 +203,7 @@ public class FairyScreenGui {
 				for (int i = 0; i < 3; i++) {
 					for (int j = 0; j < 3; j++) {
 						HideableSlot slot = new HideableSlot(chest, (9) + i * 3 + j, GUI_BUILD_SLOT_HOFFSET + j * 18, GUI_BUILD_SLOT_VOFFSET + i * 18) {
-							public boolean isItemValid(@Nullable ItemStack stack) {
+							public boolean isItemValid(@Nonnull ItemStack stack) {
 						        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 						    }
 						};
@@ -220,7 +220,7 @@ public class FairyScreenGui {
 					for (int j = 0; j < 3; j++) {
 						// TODO fancy slots that show the 'FETCH' slot contents in the corner?
 						HideableSlot slot = new HideableSlot(chest, (18) + i * 3 + j, GUI_LOGISTICS_SLOT_HOFFSET + j * 18, GUI_LOGISTICS_SLOT_VOFFSET + i * 18) {
-							public boolean isItemValid(@Nullable ItemStack stack) {
+							public boolean isItemValid(@Nonnull ItemStack stack) {
 						        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 						    }
 						};
@@ -237,7 +237,7 @@ public class FairyScreenGui {
 					this.scrollSlots[i] = new HideableSlot(chest, (27) + i,
 							SIDEBAR_ATTACK_HOFFSET + SIDEBAR_ATTACK_SCROLL_SLOT_HOFFSET,
 							SIDEBAR_ATTACK_VOFFSET + SIDEBAR_ATTACK_SCROLL_SLOT_VOFFSET) {
-						public boolean isItemValid(@Nullable ItemStack stack) {
+						public boolean isItemValid(@Nonnull ItemStack stack) {
 					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 					    }
 					};
@@ -254,7 +254,7 @@ public class FairyScreenGui {
 					this.pullSlots[i] = new HideableSlot(chest, (45) + i,
 							SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_PULL_SLOT_HOFFSET + (x * 18),
 							SIDEBAR_LOGISTICS_VOFFSET + SIDEBAR_LOGISTICS_PULL_SLOT_VOFFSET + (y * 18)) {
-						public boolean isItemValid(@Nullable ItemStack stack) {
+						public boolean isItemValid(@Nonnull ItemStack stack) {
 					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 					    }
 					};
@@ -263,7 +263,7 @@ public class FairyScreenGui {
 					this.pushSlots[i] = new HideableSlot(chest, (51) + i,
 							SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_PUSH_SLOT_HOFFSET + (x * 18),
 							SIDEBAR_LOGISTICS_VOFFSET + SIDEBAR_LOGISTICS_PUSH_SLOT_VOFFSET + (y * 18)) {
-						public boolean isItemValid(@Nullable ItemStack stack) {
+						public boolean isItemValid(@Nonnull ItemStack stack) {
 					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 					    }
 					};
@@ -273,7 +273,7 @@ public class FairyScreenGui {
 				this.gemSlot = new HideableSlot(chest, 57,
 						SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_GEM_SLOT_HOFFSET,
 						SIDEBAR_LOGISTICS_VOFFSET + SIDEBAR_LOGISTICS_GEM_SLOT_VOFFSET) {
-					public boolean isItemValid(@Nullable ItemStack stack) {
+					public boolean isItemValid(@Nonnull ItemStack stack) {
 				        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 				    }
 				};
@@ -283,7 +283,7 @@ public class FairyScreenGui {
 		
 		@Override
 		public ItemStack transferStackInSlot(EntityPlayer playerIn, int fromSlot) {
-			ItemStack prev = null;	
+			ItemStack prev = ItemStack.EMPTY;	
 			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
 			
 			if (slot != null && slot.getHasStack()) {
@@ -293,17 +293,17 @@ public class FairyScreenGui {
 				if (slot.inventory == this.inv) {
 					// Trying to take one of our items
 					if (playerIn.inventory.addItemStackToInventory(cur)) {
-						slot.putStack(null);
-						slot.onPickupFromSlot(playerIn, cur);
+						slot.putStack(ItemStack.EMPTY);
+						slot.onTake(playerIn, cur);
 					} else {
-						prev = null;
+						prev = ItemStack.EMPTY;
 					}
 				} else {
 					// shift-click in player inventory
 					ItemStack leftover = Inventories.addItem(inv, cur);
-					slot.putStack(leftover != null && leftover.stackSize <= 0 ? null : leftover);
-					if (leftover != null && leftover.stackSize == prev.stackSize) {
-						prev = null;
+					slot.putStack(leftover.isEmpty() ? ItemStack.EMPTY : leftover);
+					if (!leftover.isEmpty() && leftover.getCount() == prev.getCount()) {
+						prev = ItemStack.EMPTY;
 					}
 				}
 				
@@ -321,7 +321,7 @@ public class FairyScreenGui {
 			Slot slot = (slotId > 0 && slotId < this.inventorySlots.size() ? this.inventorySlots.get(slotId) : null);
 			if (slot != null) {
 				if (slot instanceof HideableSlot && ((HideableSlot) slot).hidden) {
-					return null;
+					return ItemStack.EMPTY;
 				}
 				
 				int slotIdx = -1;
@@ -349,30 +349,30 @@ public class FairyScreenGui {
 				
 				if (slotIdx != -1) {
 					// template slot
-					if (player.inventory.getItemStack() == null) {
+					if (player.inventory.getItemStack().isEmpty()) {
 						// empty hand
 						if (clickTypeIn == ClickType.PICKUP) {
 							// Right-click?
 							if (dragType == 1) {
 								// If template is present, clear it
 								if (isPull) {
-									inv.setPullTemplate(slotIdx, null);
+									inv.setPullTemplate(slotIdx, ItemStack.EMPTY);
 								} else {
-									inv.setPushTemplate(slotIdx, null);
+									inv.setPushTemplate(slotIdx, ItemStack.EMPTY);
 								}
 							} else if (dragType == 0) {
 								// left-click means set template stack size to 0
 								final ItemStack template;
 								if (isPull) {
 									template = inv.getPullTemplate(slotIdx);
-									if (template != null) {
-										template.stackSize = 0;
+									if (!template.isEmpty()) {
+										template.setCount(0);
 										inv.setPullTemplate(slotIdx, template);
 									}
 								} else {
 									template = inv.getPushTemplate(slotIdx);
-									if (template != null) {
-										template.stackSize = 0;
+									if (!template.isEmpty()) {
+										template.setCount(0);
 										inv.setPushTemplate(slotIdx, template);
 									}
 								}
@@ -385,7 +385,7 @@ public class FairyScreenGui {
 							// Overwrite template
 							ItemStack template = player.inventory.getItemStack().copy();
 							if (dragType == 1) { // right click
-								template.stackSize = 1;
+								template.setCount(1);
 							}
 							if (isPull) {
 								inv.setPullTemplate(slotIdx, template);
@@ -395,7 +395,7 @@ public class FairyScreenGui {
 						}
 					}
 					
-					return null;
+					return ItemStack.EMPTY;
 				}
 			}
 			return super.slotClick(slotId, dragType, clickTypeIn, player);
@@ -427,14 +427,14 @@ public class FairyScreenGui {
 			protected final int originalX;
 			protected final int originalY;
 			
-			public HideableSlot(IInventory inventoryIn, int index, int xPosition, int yPosition) {
-				super(inventoryIn, index, xPosition, yPosition);
-				this.originalX = xPosition;
-				this.originalY = yPosition;
+			public HideableSlot(IInventory inventoryIn, int index, int x, int y) {
+				super(inventoryIn, index, x, y);
+				this.originalX = x;
+				this.originalY = y;
 			}
 			
 			@Override
-			public boolean canBeHovered() {
+			public boolean isEnabled() {
 				return !hidden;
 			}
 			
@@ -442,11 +442,11 @@ public class FairyScreenGui {
 				if (hide != hidden) {
 					hidden = hide;
 					if (hide) {
-						this.xDisplayPosition = -1000;
-						this.yDisplayPosition = -1000;
+						this.xPos = -1000;
+						this.yPos = -1000;
 					} else {
-						this.xDisplayPosition = originalX;
-						this.yDisplayPosition = originalY;
+						this.xPos = originalX;
+						this.yPos = originalY;
 					}
 				}
 			}
@@ -550,7 +550,7 @@ public class FairyScreenGui {
 				selectedGroup = -1;
 			} else {
 				ItemStack gael = container.inv.getStackInSlot(slotClicked);
-				this.selectedEmpty = (gael == null);
+				this.selectedEmpty = (gael.isEmpty());
 				if (FairyHolderInventory.slotIsType(FairyGaelType.ATTACK, slotClicked)) {
 					showAttack = true;
 					showLogistics = false;
@@ -572,7 +572,7 @@ public class FairyScreenGui {
 					this.selectedSlot = slotClicked - 9;
 				}
 				
-				if (gael != null) {
+				if (!gael.isEmpty()) {
 					this.selectedName = FairyGael.getStoredName(gael);
 					this.selectedHealth = (float) FairyGael.getStoredHealth(gael);
 					this.selectedEnergy = (float) FairyGael.getStoredEnergy(gael);
@@ -659,7 +659,7 @@ public class FairyScreenGui {
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(sidebarX + (SIDEBAR_ATTACK_WIDTH / 2), sidebarY + 7, 0); 
 				GlStateManager.scale(scale, scale, scale);
-				this.drawCenteredString(this.fontRendererObj,
+				this.drawCenteredString(this.fontRenderer,
 						name,
 						0,
 						0,
@@ -724,7 +724,7 @@ public class FairyScreenGui {
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(sidebarX + (SIDEBAR_LOGISTICS_WIDTH / 2), sidebarY + 7, 0); 
 				GlStateManager.scale(scale, scale, scale);
-				this.drawCenteredString(this.fontRendererObj,
+				this.drawCenteredString(this.fontRenderer,
 						name,
 						0,
 						0,
@@ -796,7 +796,7 @@ public class FairyScreenGui {
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(sidebarX + (SIDEBAR_CONSTRUCTION_WIDTH / 2), sidebarY + 7, 0); 
 				GlStateManager.scale(scale, scale, scale);
-				this.drawCenteredString(this.fontRendererObj,
+				this.drawCenteredString(this.fontRenderer,
 						name,
 						0,
 						0,
@@ -971,14 +971,14 @@ public class FairyScreenGui {
 					
 					for (int i = 0; i < size; i++) {
 						Slot slot = container.inventorySlots.get(i + (27 + 9 + offset));
-						if (this.isPointInRegion(slot.xDisplayPosition, slot.yDisplayPosition, 16, 16, mouseX, mouseY)) {
+						if (this.isPointInRegion(slot.xPos, slot.yPos, 16, 16, mouseX, mouseY)) {
 							if (mouseButton == 1) {
 								this.setButtonsTo(i + offset);
 								return;
 							} else {
 								// they're picking it up or plopping it down
 								if (slot.getSlotIndex() == this.selectedSlot) {
-									if (NostrumFairies.proxy.getPlayer().inventory.getItemStack() == null) {
+									if (NostrumFairies.proxy.getPlayer().inventory.getItemStack().isEmpty()) {
 										this.selectedEmpty = true;
 									} else if (slot.isItemValid(NostrumFairies.proxy.getPlayer().inventory.getItemStack())) {
 										this.selectedEmpty = false;
@@ -1018,9 +1018,9 @@ public class FairyScreenGui {
 			}
 			
 			@Override
-			public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
 				if (this.visible) {
-					hovered = mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
+					hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 					
 					if (this.hovered) {
 						GlStateManager.color(.8f, .8f, .8f, 1.0F);
@@ -1030,7 +1030,7 @@ public class FairyScreenGui {
 					GlStateManager.disableBlend();
 					GlStateManager.enableBlend();
 					mc.getTextureManager().bindTexture(TEXT);
-					drawScaledCustomSizeModalRect(this.xPosition, this.yPosition,
+					drawScaledCustomSizeModalRect(this.x, this.y,
 							ICON_SLOTHELPER_TEXT_HOFFSET, ICON_SLOTHELPER_TEXT_VOFFSET,
 							ICON_SLOTHELPER_TEXT_WIDTH, ICON_SLOTHELPER_TEXT_HEIGHT,
 							ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, 256, 256);
@@ -1050,7 +1050,7 @@ public class FairyScreenGui {
 						break;
 					}
 					
-					drawScaledCustomSizeModalRect(this.xPosition + 1, this.yPosition + 1,
+					drawScaledCustomSizeModalRect(this.x + 1, this.y + 1,
 							ICON_TARGET_TEXT_HOFFSET + offsetU, ICON_TARGET_TEXT_VOFFSET,
 							ICON_TARGET_TEXT_WIDTH, ICON_TARGET_TEXT_HEIGHT,
 							ICON_TARGET_WIDTH, ICON_TARGET_HEIGHT, 256, 256);
@@ -1069,9 +1069,9 @@ public class FairyScreenGui {
 			}
 			
 			@Override
-			public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
 				if (this.visible) {
-					hovered = mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
+					hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 					
 					if (this.hovered) {
 						GlStateManager.color(.8f, .8f, .8f, 1.0F);
@@ -1081,7 +1081,7 @@ public class FairyScreenGui {
 					GlStateManager.disableBlend();
 					GlStateManager.enableBlend();
 					mc.getTextureManager().bindTexture(TEXT);
-					drawScaledCustomSizeModalRect(this.xPosition, this.yPosition,
+					drawScaledCustomSizeModalRect(this.x, this.y,
 							ICON_SLOTHELPER_TEXT_HOFFSET, ICON_SLOTHELPER_TEXT_VOFFSET,
 							ICON_SLOTHELPER_TEXT_WIDTH, ICON_SLOTHELPER_TEXT_HEIGHT,
 							ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, 256, 256);
@@ -1099,7 +1099,7 @@ public class FairyScreenGui {
 					
 					}
 					
-					drawScaledCustomSizeModalRect(this.xPosition + 1, this.yPosition + 1,
+					drawScaledCustomSizeModalRect(this.x + 1, this.y + 1,
 							ICON_PLACEMENT_TEXT_HOFFSET + offsetU, ICON_PLACEMENT_TEXT_VOFFSET,
 							ICON_PLACEMENT_TEXT_WIDTH, ICON_PLACEMENT_TEXT_HEIGHT,
 							ICON_PLACEMENT_WIDTH, ICON_PLACEMENT_HEIGHT, 256, 256);

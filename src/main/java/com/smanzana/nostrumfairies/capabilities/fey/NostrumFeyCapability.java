@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -49,6 +50,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
@@ -105,8 +107,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	// Transient tick network data
 	private List<LogisticsNetwork> tickNetworks; // Networks we're in this tick
 	private LogisticsNetwork tickNetworkChoice; // Network that was ultimately picked to talk with
-	private List<ItemStack> pullItems;
-	private List<ItemStack> pushItems; // null if pull items were found
+	private NonNullList<ItemStack> pullItems;
+	private NonNullList<ItemStack> pushItems; // null if pull items were found
 	
 	// Task data (transient, too)
 	private BuildTaskPlanner buildPlanner;
@@ -338,7 +340,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						// If player has items to deposit or request, AND there are networks available
 						if (owner instanceof EntityPlayer) {
 							// If there's a configured anchor, use that network.
-							if (fairyInventory.getLogisticsGem() != null) {
+							if (!fairyInventory.getLogisticsGem().isEmpty()) {
 								tickNetworks.clear();
 								BlockPos pos = PositionCrystal.getBlockPosition(fairyInventory.getLogisticsGem());
 								int dim = PositionCrystal.getDimension(fairyInventory.getLogisticsGem());
@@ -430,7 +432,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						i++;
 						
 						ItemStack gael = this.fairyInventory.getGaelByType(type, i);
-						if (gael == null) {
+						if (gael.isEmpty()) {
 							continue;
 						}
 						
@@ -486,7 +488,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				boolean[] deployed = deployedMap.get(type);
 				for (int i = 0; i < fairyInventory.getGaelSize(); i++) {
 					ItemStack gael = fairyInventory.getGaelByType(type, i);
-					if (gael == null || FairyGael.isCracked(gael) || deployed[i]) {
+					if (gael.isEmpty() || FairyGael.isCracked(gael) || deployed[i]) {
 						continue;
 					}
 					
@@ -518,8 +520,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		clearFairies();
 	}
 	
-	public void deployFairy(int index, FairyGaelType type, ItemStack gaelStack, World world, double x, double y, double z) {
-		if (gaelStack != null && gaelStack.getItem() instanceof FairyGael) {
+	public void deployFairy(int index, FairyGaelType type, @Nonnull ItemStack gaelStack, World world, double x, double y, double z) {
+		if (!gaelStack.isEmpty() && gaelStack.getItem() instanceof FairyGael) {
 			EntityPersonalFairy fairy = FairyGael.spawnStoredEntity(gaelStack, world, x, y, z);
 			if (fairy != null) {
 				// TODO have FairyGael return a different type of fairy, like a PlayerFairy or whatever.
@@ -534,7 +536,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				} else if (type == FairyGaelType.ATTACK) {
 					ItemStack scrollStack = this.fairyInventory.getScroll(index);
 					Spell spell = null;
-					if (scrollStack != null) {
+					if (!scrollStack.isEmpty()) {
 						spell = SpellScroll.getSpell(scrollStack);
 					}
 					
@@ -574,7 +576,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		for (FairyGaelType type : FairyGaelType.values()) {
 			for (FairyRecord record : this.deployedFairies.get(type)) {
 				ItemStack gael = this.fairyInventory.getGaelByType(type, record.index);
-				if (gael == null) {
+				if (gael.isEmpty()) {
 					NostrumFairies.logger.warn("Tried to save fairy, but housing slot was gael-less!");
 					continue; // Fairy lost
 				}
@@ -604,7 +606,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			if (record.fairy == fairy) {
 				it.remove();
 				ItemStack gael = fairyInventory.getGaelByType(type, record.index);
-				if (gael != null) {
+				if (!gael.isEmpty()) {
 					if (fairy.getHealth() <= 0 || fairy.isDead) {
 						// Grab a snapshot of the fairy just before it died
 						float health = fairy.getHealth();
@@ -744,25 +746,25 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	 * Looks through logistics templates and returns a list (or null) of all items that we have room for and would like.
 	 * @return
 	 */
-	protected @Nullable List<ItemStack> generatePullRequests() {
+	protected @Nullable NonNullList<ItemStack> generatePullRequests() {
 		if (!this.logisticsFairyUnlocked() || !(owner instanceof EntityPlayer)) { // player required for inventory
 			return null;
 		}
 		
 		InventoryPlayer playerInv = ((EntityPlayer) owner).inventory;
 		
-		List<ItemStack> pullList = new ArrayList<>(fairyInventory.getPullTemplateSize());
+		NonNullList<ItemStack> pullList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPullTemplateSize(); i++) {
 			ItemStack template = fairyInventory.getPullTemplate(i);
-			if (template != null) {
+			if (!template.isEmpty()) {
 				pullList.add(template.copy());
 			}
 		}
 		
-		List<ItemStack> pushList = new ArrayList<>(fairyInventory.getPullTemplateSize());
+		NonNullList<ItemStack> pushList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPushTemplateSize(); i++) {
 			ItemStack template = fairyInventory.getPushTemplate(i);
-			if (template != null) {
+			if (!template.isEmpty()) {
 				pushList.add(template.copy());
 			}
 		}
@@ -827,7 +829,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		boolean canFit =  false;
 		while (stackIt.hasNext()) {
 			ItemStack request = stackIt.next();
-			if (Inventories.canFit(playerInv, request)) {
+			if (!request.isEmpty() && Inventories.canFit(playerInv, request)) {
 				canFit = true;
 				break;
 			}
@@ -844,24 +846,24 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	 * Looks through logistics templates and returns a list (or null) of all items that we have but don't want
 	 * @return
 	 */
-	protected @Nullable List<ItemStack> generatePushRequests() {
+	protected @Nullable NonNullList<ItemStack> generatePushRequests() {
 		if (!this.logisticsFairyUnlocked() || !(owner instanceof EntityPlayer)) { // player required for inventory
 			return null;
 		}
 		
 		InventoryPlayer playerInv = ((EntityPlayer) owner).inventory;
 		
-		List<ItemStack> templateList = new ArrayList<>(fairyInventory.getPushTemplateSize());
+		NonNullList<ItemStack> templateList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPushTemplateSize(); i++) {
 			ItemStack template = fairyInventory.getPushTemplate(i);
-			if (template != null) {
+			if (!template.isEmpty()) {
 				templateList.add(template.copy());
 			}
 		}
 		
 		List<ItemDeepStack> allowed = ItemDeepStack.toDeepList(templateList);
 		List<ItemDeepStack> owned = ItemDeepStack.toDeepList(playerInv);
-		List<ItemStack> pushList = new ArrayList<>(allowed.size());
+		NonNullList<ItemStack> pushList = NonNullList.create();
 		
 		// Remove items that we have over the limit
 		Iterator<ItemDeepStack> it = allowed.iterator();

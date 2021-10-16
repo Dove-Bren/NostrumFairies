@@ -5,27 +5,26 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Map.Entry;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.smanzana.nostrumaetheria.api.aether.IAetherFlowHandler.AetherFlowConnection;
 import com.smanzana.nostrumaetheria.api.aether.IAetherHandler;
 import com.smanzana.nostrumaetheria.api.aether.IAetherHandlerProvider;
-import com.smanzana.nostrumaetheria.api.aether.IAetherFlowHandler.AetherFlowConnection;
 import com.smanzana.nostrumaetheria.api.blocks.IAetherCapableBlock;
 import com.smanzana.nostrumaetheria.api.component.IAetherComponentListener;
+import com.smanzana.nostrumaetheria.component.AetherHandlerComponent;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity.FeyAwayRecord;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity.HomeBlockSlotInventory;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.HomeBlockTileEntity.HomeBlockUpgradeInventory;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfCrafter;
@@ -41,9 +40,9 @@ import com.smanzana.nostrumfairies.entity.fey.IFeyWorker.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.inventory.IFeySlotted;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
+import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
-import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.Block;
@@ -58,8 +57,8 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -105,8 +104,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			return SoulStoneType.GEM;
 		}
 		
-		protected boolean isValidSoulStone(@Nullable ItemStack stack) {
-			if (stack != null && stack.getItem() instanceof FeySoulStone) {
+		protected boolean isValidSoulStone(@Nonnull ItemStack stack) {
+			if (!stack.isEmpty() && stack.getItem() instanceof FeySoulStone) {
 				if (!FeySoulStone.getTypeOf(stack).canHold(owner.type)) {
 					return false;
 				}
@@ -122,8 +121,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			return false;
 		}
 		
-		protected boolean isValidSpecialization(@Nullable ItemStack stack) {
-			if (stack != null && stack.getItem() instanceof IFeySlotted) {
+		protected boolean isValidSpecialization(@Nonnull ItemStack stack) {
+			if (!stack.isEmpty() && stack.getItem() instanceof IFeySlotted) {
 				IFeySlotted stone = (IFeySlotted) stack.getItem();
 				if (stone.getFeySlot(stack) == FeySlotType.SPECIALIZATION) {
 					FeyStoneMaterial material = stone.getStoneMaterial(stack);
@@ -138,24 +137,24 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			return false;
 		}
 		
-		public @Nullable ItemStack getSoulStone(int index) {
+		public @Nonnull ItemStack getSoulStone(int index) {
 			final int slot = getSoulSlot(index);
 			return this.getStackInSlot(slot);
 		}
 		
 		public boolean hasStone(int index) {
-			@Nullable ItemStack stone = this.getSoulStone(index);
+			@Nonnull ItemStack stone = this.getSoulStone(index);
 			return isValidSoulStone(stone);
 		}
 		
-		public @Nullable ItemStack getSpecialization(int index) {
+		public @Nonnull ItemStack getSpecialization(int index) {
 			final int slot = getSpecializationSlot(index);
 			return this.getStackInSlot(slot);
 		}
 		
 		@Override
-		public boolean isItemValidForSlot(int slot, ItemStack stack) {
-			if (stack == null) {
+		public boolean isItemValidForSlot(int slot, @Nonnull ItemStack stack) {
+			if (stack.isEmpty()) {
 				return true;
 			}
 			
@@ -172,8 +171,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			owner.dirtyAndUpdate();
 		}
 		
-		public boolean setSoulStone(int index, ItemStack soulStone) {
-			if (soulStone != null && !isValidSoulStone(soulStone)) {
+		public boolean setSoulStone(int index, @Nonnull ItemStack soulStone) {
+			if (!soulStone.isEmpty() && !isValidSoulStone(soulStone)) {
 				return false;
 			}
 			
@@ -183,7 +182,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		}
 		
 		public boolean setSpecialization(int index, ItemStack specialization) {
-			if (specialization != null && !isValidSpecialization(specialization)) {
+			if (!specialization.isEmpty() && !isValidSpecialization(specialization)) {
 				return false;
 			}
 			
@@ -226,8 +225,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			this.owner = owner;
 		}
 		
-		protected boolean isValidUpgrade(@Nullable ItemStack stack) {
-			if (stack != null && stack.getItem() instanceof IFeySlotted) {
+		protected boolean isValidUpgrade(@Nonnull ItemStack stack) {
+			if (!stack.isEmpty() && stack.getItem() instanceof IFeySlotted) {
 				IFeySlotted stone = (IFeySlotted) stack.getItem();
 				return stone.getFeySlot(stack) == FeySlotType.UPGRADE
 						|| stone.getFeySlot(stack) == FeySlotType.DOWNGRADE;
@@ -236,10 +235,9 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			return false;
 		}
 		
-		@Nullable
-		public boolean isItemValidForSlot(int slot, ItemStack stack) {
+		public boolean isItemValidForSlot(int slot, @Nonnull ItemStack stack) {
 			return slot < MAX_UPGRADES &&
-					(stack == null || isValidUpgrade(stack));
+					(stack.isEmpty() || isValidUpgrade(stack));
 		}
 		
 		@Override
@@ -380,7 +378,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	
 	protected EntityFeyBase refreshFey(int idx, EntityFeyBase fey) {
 		// Check specialization
-		ItemStack specialization = this.slotInv.getSpecialization(idx);
+		@Nonnull ItemStack specialization = this.slotInv.getSpecialization(idx);
 		FeyStoneMaterial specMat = FeyStone.instance().getStoneMaterial(specialization);
 		if (fey.getCurrentSpecialization() != specMat) {
 			fey = fey.switchToSpecialization(specMat);
@@ -568,7 +566,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		int count = 0;
 		for (int i = 0; i < upgradeInv.getSizeInventory(); i++) {
 			ItemStack stack = upgradeInv.getStackInSlot(i);
-			if (stack != null && FeyStone.instance().getFeySlot(stack) == slot && FeyStone.instance().getStoneMaterial(stack) == material) {
+			if (!stack.isEmpty() && FeyStone.instance().getFeySlot(stack) == slot && FeyStone.instance().getStoneMaterial(stack) == material) {
 				count++;
 			}
 		}
@@ -836,7 +834,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		if (!world.isRemote && ticksExisted % 100 == 0 && world.isDaytime()) {
 			if (NostrumFairies.random.nextFloat() < .2f) {
 				// Don't scan if too many are nearby
-				if (world.getEntitiesWithinAABB(EntityFeyBase.class, FeyHomeBlock.FULL_BLOCK_AABB.expandXyz(16)).size() < 8) {
+				if (world.getEntitiesWithinAABB(EntityFeyBase.class, FeyHomeBlock.FULL_BLOCK_AABB.grow(16)).size() < 8) {
 					// Scan for nearby flowers and possible spawn extra fey
 					final float happiness = getAverageHappiness();
 					if (happiness > 50f && this.getAether() > 0) {

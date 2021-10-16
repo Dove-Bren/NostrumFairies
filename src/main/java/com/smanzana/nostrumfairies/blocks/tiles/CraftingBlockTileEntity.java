@@ -2,12 +2,11 @@ package com.smanzana.nostrumfairies.blocks.tiles;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
@@ -36,6 +35,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -50,7 +50,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	private static final String NBT_TEMPLATE_ITEM = "item";
 	
 	private String displayName;
-	private ItemStack[] templates;
+	private NonNullList<ItemStack> templates;
 	private float buildPoints; // out of 100
 	private final LogisticsLogicComponent logicComp;
 	private LogisticsItemWithdrawRequester withdrawRequester;
@@ -77,7 +77,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		super();
 		displayName = "Crafting Block";
 		this.TEMPLATE_SLOTS = getCraftGridDim() * getCraftGridDim();
-		templates = new ItemStack[TEMPLATE_SLOTS];
+		templates = NonNullList.withSize(TEMPLATE_SLOTS, ItemStack.EMPTY);
 		recipeDirty = true;
 		ingredientsDirty = true;
 		recipeIssuesCache = new boolean[TEMPLATE_SLOTS];
@@ -145,13 +145,13 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		return LogisticsTileEntity.emptyList;
 	}
 	
-	public void setTemplate(int index, @Nullable ItemStack template) {
+	public void setTemplate(int index, @Nonnull ItemStack template) {
 		if (index < 0 || index >=  TEMPLATE_SLOTS) {
 			return;
 		}
 		
-		ItemStack temp = template == null ? null : template.copy();
-		templates[index] = temp;
+		ItemStack temp = template.isEmpty() ? ItemStack.EMPTY : template.copy();
+		templates.set(index, temp);
 		this.markDirty();
 		this.ingredientsDirty = true;
 		this.recipeDirty = true;
@@ -165,23 +165,23 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		return this.buildPoints;
 	}
 	
-	public @Nullable ItemStack getTemplate(int index) {
+	public @Nonnull ItemStack getTemplate(int index) {
 		if (index < 0 || index >=  TEMPLATE_SLOTS) {
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
-		return templates[index];
+		return templates.get(index);
 	}
 	
-	public @Nullable ItemStack getOutputStack() {
+	public @Nonnull ItemStack getOutputStack() {
 		return this.getStackInSlot(TEMPLATE_SLOTS);
 	}
 	
-	public @Nullable ItemStack getUpgrade() {
+	public @Nonnull ItemStack getUpgrade() {
 		return this.getStackInSlot(TEMPLATE_SLOTS + 2);
 	}
 	
-	public @Nullable ItemStack getCriteriaTemplate() {
+	public @Nonnull ItemStack getCriteriaTemplate() {
 		return this.getStackInSlot(TEMPLATE_SLOTS + 1);
 	}
 	
@@ -222,15 +222,14 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		}, getCraftGridDim(), getCraftGridDim());
 		
 		for (int i = 0; i < TEMPLATE_SLOTS; i++) {
-			if (this.templates[i] != null) {
-				inv.setInventorySlotContents(i, templates[i]);
+			if (!templates.get(i).isEmpty()) {
+				inv.setInventorySlotContents(i, templates.get(i));
 			}
 		}
 		
-		for (IRecipe recipe : CraftingManager.getInstance().getRecipeList()) {
-			if (canCraft(recipe) && recipe.matches(inv, world)) {
-				return recipe;
-			}
+		IRecipe match = CraftingManager.findMatchingRecipe(inv, world);
+		if (match != null && canCraft(match)) {
+			return match;
 		}
 		
 		return null;
@@ -247,7 +246,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			recipeValidCache = (recipeCache != null);
 			recipeBonusCache = 0f;
 			for (int i = 0; i < TEMPLATE_SLOTS; i++) {
-				ItemStack template = templates[i];
+				ItemStack template = templates.get(i);
 				if (template == null) {
 					recipeIssuesCache[i] = false; // no issue
 					recipeBonusesCache[i] = false; // no bonus
@@ -299,13 +298,13 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			// Check whether all templates have items underneath them
 			ingredientsValidCache = true;
 			for (int i = 0; i < TEMPLATE_SLOTS; i++) {
-				ItemStack template = templates[i];
-				if (template == null) {
+				ItemStack template = templates.get(i);
+				if (template.isEmpty()) {
 					continue;
 				}
 				
 				ItemStack inSlot = this.getStackInSlot(i);
-				if (inSlot == null) {
+				if (inSlot.isEmpty()) {
 					ingredientsValidCache = false;
 					break;
 				}
@@ -340,7 +339,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		} else if (index == TEMPLATE_SLOTS + 1) {
 			return true; // Anything can go in criteria filter
 		} else if (index == TEMPLATE_SLOTS + 2) {
-			if (stack == null) {
+			if (stack.isEmpty()) {
 				return true;
 			}
 			if (!(stack.getItem() instanceof FeyStone)) {
@@ -353,7 +352,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		}
 		
 		ItemStack template = getTemplate(index);
-		if (template != null) {
+		if (!template.isEmpty()) {
 			return ItemStacks.stacksMatch(template, stack);
 		}
 		
@@ -369,7 +368,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		NBTTagList templates = new NBTTagList();
 		for (int i = 0; i < TEMPLATE_SLOTS; i++) {
 			ItemStack stack = this.getTemplate(i);
-			if (stack == null) {
+			if (stack.isEmpty()) {
 				continue;
 			}
 			
@@ -391,7 +390,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
-		templates = new ItemStack[TEMPLATE_SLOTS];
+		templates = NonNullList.withSize(TEMPLATE_SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
 		NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
@@ -404,9 +403,9 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 				continue;
 			}
 			
-			ItemStack stack = ItemStack.loadItemStackFromNBT(template.getCompoundTag(NBT_TEMPLATE_ITEM));
+			ItemStack stack = new ItemStack(template.getCompoundTag(NBT_TEMPLATE_ITEM));
 			
-			templates[index] = stack;
+			templates.set(index, stack);
 		}
 		
 		NBTTagCompound tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
@@ -438,8 +437,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public void setWorldObj(World worldIn) {
-		super.setWorldObj(worldIn);
+	public void setWorld(World worldIn) {
+		super.setWorld(worldIn);
 		logicComp.setLocation(worldIn, pos);
 		
 		if (this.networkComponent != null && !worldIn.isRemote) {
@@ -482,19 +481,19 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		logicComp.setNetwork(network);
 	}
 	
-	private List<ItemStack> getItemRequests() {
-		List<ItemStack> requests = new LinkedList<>();
+	private NonNullList<ItemStack> getItemRequests() {
+		NonNullList<ItemStack> requests = NonNullList.create();
 		
-		for (int i = 0; i < templates.length; i++) {
-			if (templates[i] == null) {
+		for (int i = 0; i < templates.size(); i++) {
+			if (templates.get(i).isEmpty()) {
 				continue;
 			}
 			
 			ItemStack inSlot = this.getStackInSlot(i);
-			int desire = templates[i].stackSize - (inSlot == null ? 0 : inSlot.stackSize);
+			int desire = templates.get(i).getCount() - (inSlot.isEmpty() ? 0 : inSlot.getCount());
 			if (desire > 0) {
-				ItemStack req = templates[i].copy();
-				req.stackSize = desire;
+				ItemStack req = templates.get(i).copy();
+				req.setCount(desire);
 				requests.add(req);
 			}
 		}
@@ -502,8 +501,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		return requests;
 	}
 	
-	private List<ItemStack> getPushRequests() {
-		return Lists.newArrayList(getOutputStack());
+	private NonNullList<ItemStack> getPushRequests() {
+		return NonNullList.from(ItemStack.EMPTY, getOutputStack());
 	}
 	
 	@Override
@@ -515,8 +514,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	public void addItem(ItemStack stack) {
 		// Only allow popping items in over templates
 		boolean anyChanges = false;
-		for (int i = 0; i < templates.length; i++) {
-			if (templates[i] == null) {
+		for (int i = 0; i < templates.size(); i++) {
+			if (templates.get(i).isEmpty()) {
 				continue;
 			}
 			
@@ -527,19 +526,19 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			
 			// if template count != stack count, try to add there
 			ItemStack inSlot = this.getStackInSlot(i);
-			int desire = templates[i].stackSize - (inSlot == null ? 0 : inSlot.stackSize);
-			int amt = Math.min(stack.stackSize, desire);
-			if (inSlot == null) {
+			int desire = templates.get(i).getCount() - (inSlot == null ? 0 : inSlot.getCount());
+			int amt = Math.min(stack.getCount(), desire);
+			if (inSlot.isEmpty()) {
 				// take out template desire amount
 				this.setInventorySlotContentsDirty(i, stack.splitStack(amt)); // doesn't set dirty
 				anyChanges = true;
 			} else {
-				stack.stackSize -= amt;
-				inSlot.stackSize += amt;
+				stack.shrink(amt);
+				inSlot.grow(amt);
 				anyChanges = true;
 			}
 			
-			if (stack.stackSize <= 0) {
+			if (stack.isEmpty()) {
 				break;
 			}
 		}
@@ -549,7 +548,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		}
 		
 		// Any leftover?
-		if (stack != null && stack.stackSize > 0) {
+		if (!stack.isEmpty()) {
 			EntityItem ent = new EntityItem(world, pos.getX() + .5, pos.getY() + 1.2, pos.getZ() + .5, stack);
 			world.spawnEntity(ent);
 		}
@@ -617,7 +616,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	protected float getCraftSpeed(float bonus) {
 		float mult = 1f;
-		if (this.getUpgrade() != null) {
+		if (!this.getUpgrade().isEmpty()) {
 			if (FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.RUBY) {
 				FeySlotType type = FeyStone.instance().getFeySlot(this.getUpgrade()); 
 				if (type == FeySlotType.DOWNGRADE) {
@@ -698,8 +697,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		}, getCraftGridDim(), getCraftGridDim());
 		
 		for (int i = 0; i < TEMPLATE_SLOTS; i++) {
-			if (this.templates[i] != null) {
-				inv.setInventorySlotContents(i, templates[i]);
+			if (!this.templates.get(i).isEmpty()) {
+				inv.setInventorySlotContents(i, templates.get(i));
 			}
 		}
 		
@@ -721,7 +720,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			this.setInventorySlotContents(TEMPLATE_SLOTS, output);
 		} else {
 			ItemStack stack = this.getStackInSlot(TEMPLATE_SLOTS);
-			stack.stackSize = Math.min(stack.stackSize + output.stackSize, stack.getMaxStackSize());
+			stack.setCount(Math.min(stack.getCount() + output.getCount(), stack.getMaxStackSize()));
 		}
 	}
 	
@@ -748,7 +747,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 
 	private boolean canOutput() {
 		ItemStack outputStack = this.getOutputStack();
-		if (outputStack == null) {
+		if (outputStack.isEmpty()) {
 			return true;
 		}
 		
@@ -757,7 +756,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			return false;
 		}
 		
-		if (output.stackSize + outputStack.stackSize > output.stackSize) {
+		if (output.getCount() + outputStack.getCount() > output.getCount()) {
 			return false;
 		}
 		

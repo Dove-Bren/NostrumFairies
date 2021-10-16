@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity.LogisticsTileEntityComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositRequester;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
@@ -72,8 +71,8 @@ public class InputChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public void setWorldObj(World worldIn) {
-		super.setWorldObj(worldIn);
+	public void setWorld(World worldIn) {
+		super.setWorld(worldIn);
 		
 		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
 			requester = new LogisticsItemDepositRequester(this.networkComponent.getNetwork(), this.networkComponent);

@@ -1,6 +1,7 @@
-package com.smanzana.nostrumfairies.blocks.tiles;
+package com.smanzana.nostrumfairies.blocks;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.tiles.InputChestTileEntity;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 
 import net.minecraft.block.BlockContainer;

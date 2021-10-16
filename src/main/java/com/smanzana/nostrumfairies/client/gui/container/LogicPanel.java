@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import java.io.IOException;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.tiles.ILogisticsLogicProvider;
@@ -75,7 +75,7 @@ public class LogicPanel {
 		// Slot only shows up in logic mode, so it'll only be in one spot (so we only need one slot).
 		// Margin spacing depends on whether we need to show the mode button or not
 		final int sections = (comp.isLogicOnly() ? 4 : 5);
-		final int minHeight = (comp.isLogicOnly() ? 0 : PANEL_BUTTON_HEIGHT) + PANEL_SLOT_HEIGHT + PANEL_BUTTON_HEIGHT + (Minecraft.getMinecraft().fontRendererObj.FONT_HEIGHT + 6);
+		final int minHeight = (comp.isLogicOnly() ? 0 : PANEL_BUTTON_HEIGHT) + PANEL_SLOT_HEIGHT + PANEL_BUTTON_HEIGHT + (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT + 6);
 		final int leftover = Math.max(0, height - minHeight);
 		this.margin = (leftover / sections);
 		this.upperSpace = (comp.isLogicOnly() ? margin : (margin + PANEL_BUTTON_HEIGHT + margin)); // mode button, but uses BUTTON height
@@ -98,17 +98,17 @@ public class LogicPanel {
 	 */
 	public boolean handleSlotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
 		if (slotId == templateSlot.slotNumber) {
-			if (player.inventory.getItemStack() == null) {
+			if (player.inventory.getItemStack().isEmpty()) {
 				// empty hand. Right-click?
 				if (dragType == 1 && clickTypeIn == ClickType.PICKUP) {
-					setTemplate(null);
+					setTemplate(ItemStack.EMPTY);
 				}
 			} else {
 				// Item in hand. Clicking empty templatable slot?
 				if (clickTypeIn == ClickType.PICKUP) {
 					if (!templateSlot.getHasStack()) {
 						ItemStack template = player.inventory.getItemStack().copy();
-						template.stackSize = 1;
+						template.setCount(1);
 						setTemplate(template);
 					}
 				}
@@ -122,7 +122,7 @@ public class LogicPanel {
 		return false;
 	}
 	
-	protected void setTemplate(@Nullable ItemStack template) {
+	protected void setTemplate(@Nonnull ItemStack template) {
 		NetworkHandler.getSyncChannel().sendToServer(new LogicPanelActionMessage(this.logicProvider, template));
 		invArray[0] = template;
 	}
@@ -145,14 +145,14 @@ public class LogicPanel {
 		protected final int originalX;
 		protected final int originalY;
 		
-		public HideableSlot(IInventory inventoryIn, int index, int xPosition, int yPosition) {
-			super(inventoryIn, index, xPosition, yPosition);
-			this.originalX = xPosition;
-			this.originalY = yPosition;
+		public HideableSlot(IInventory inventoryIn, int index, int x, int y) {
+			super(inventoryIn, index, x, y);
+			this.originalX = x;
+			this.originalY = y;
 		}
 		
 		@Override
-		public boolean canBeHovered() {
+		public boolean isEnabled() {
 			return !hidden;
 		}
 		
@@ -160,11 +160,11 @@ public class LogicPanel {
 			if (hide != hidden) {
 				hidden = hide;
 				if (hide) {
-					this.xDisplayPosition = -1000;
-					this.yDisplayPosition = -1000;
+					this.xPos = -1000;
+					this.yPos = -1000;
 				} else {
-					this.xDisplayPosition = originalX;
-					this.yDisplayPosition = originalY;
+					this.xPos = originalX;
+					this.yPos = originalY;
 				}
 			}
 		}
@@ -253,7 +253,7 @@ public class LogicPanel {
 			// Vertical offset and arrangement of stuff depends on whether we allow logic or not
 			GlStateManager.pushMatrix();
 			//GlStateManager.translate(guiLeft + panel.x - (GUI_INV_CELL_LENGTH / 2) - 1, guiTop + panel.y - 1, 0);
-			GlStateManager.translate(guiLeft + panel.templateSlot.xDisplayPosition - 1, guiTop + panel.templateSlot.yDisplayPosition - 1, 0);
+			GlStateManager.translate(guiLeft + panel.templateSlot.xPos - 1, guiTop + panel.templateSlot.yPos - 1, 0);
 			drawSlot(mc);
 			GlStateManager.popMatrix();
 			
@@ -279,18 +279,18 @@ public class LogicPanel {
 		private void drawInputBar(Minecraft mc) {
 			final int barWidth = Math.min(panel.width - 12, 100);
 			final int centerX = (panel.width / 2);
-			Gui.drawRect(-1 + centerX - (barWidth / 2), -1, 1 + centerX + (barWidth / 2), mc.fontRendererObj.FONT_HEIGHT + 3, 0xFF444444);
-			Gui.drawRect(centerX - (barWidth / 2), 0, centerX + (barWidth / 2), mc.fontRendererObj.FONT_HEIGHT + 2, 0xFF000000);
+			Gui.drawRect(-1 + centerX - (barWidth / 2), -1, 1 + centerX + (barWidth / 2), mc.fontRenderer.FONT_HEIGHT + 3, 0xFF444444);
+			Gui.drawRect(centerX - (barWidth / 2), 0, centerX + (barWidth / 2), mc.fontRenderer.FONT_HEIGHT + 2, 0xFF000000);
 			
-			final int width = mc.fontRendererObj.getStringWidth(criteriaString);
-			mc.fontRendererObj.drawString(criteriaString, (panel.width - width) / 2, 2, 0xFFFFFFFF);
+			final int width = mc.fontRenderer.getStringWidth(criteriaString);
+			mc.fontRenderer.drawString(criteriaString, (panel.width - width) / 2, 2, 0xFFFFFFFF);
 			
 			if (editSelected) {
 				final long period = 600; // .5 seconds
 				if ((System.currentTimeMillis() % (2 * period)) / period == 1) {
 					final int x = ((panel.width + width) / 2) + 1;
-					//Gui.drawRect(x, 1, x + 1, this.fontRendererObj.FONT_HEIGHT, 0xFFFFFFFF);
-					mc.fontRendererObj.drawString("_", x, 2, 0xFFFFFFFF);
+					//Gui.drawRect(x, 1, x + 1, this.fontRenderer.FONT_HEIGHT, 0xFFFFFFFF);
+					mc.fontRenderer.drawString("_", x, 2, 0xFFFFFFFF);
 				}
 			}
 		}
@@ -419,7 +419,7 @@ public class LogicPanel {
 			final int minX = guiLeft + panel.x + xHalf - (barWidth / 2);
 			final int maxX = guiLeft + panel.x + xHalf + (barWidth / 2);
 			final int minY = guiTop + panel.y + barVOffset;
-			final int maxY = guiTop + panel.y + barVOffset + parent.mc.fontRendererObj.FONT_HEIGHT + 2;
+			final int maxY = guiTop + panel.y + barVOffset + parent.mc.fontRenderer.FONT_HEIGHT + 2;
 			
 			if (mouseX >= minX && mouseX <= maxX && mouseY >= minY && mouseY <= maxY) {
 				editSelected = true;
@@ -440,8 +440,8 @@ public class LogicPanel {
 			}
 			
 			@Override
-			public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-				this.hovered = mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
+			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+				this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 				
 				int textX = GUI_BUTTON_TEXT_HOFFSET;
 				if (pressed) {
@@ -454,7 +454,7 @@ public class LogicPanel {
 				mc.getTextureManager().bindTexture(TEXT);
 				GlStateManager.enableBlend();
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(xPosition, yPosition, 0);
+				GlStateManager.translate(x, y, 0);
 				this.drawTexturedModalRect(0, 0,
 						textX, GUI_BUTTON_TEXT_VOFFSET,
 						PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT);
@@ -489,12 +489,12 @@ public class LogicPanel {
 			}
 			
 			@Override
-			public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
 				if (!this.visible) {
 					return;
 				}
 				
-				this.hovered = mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
+				this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 				
 				int textX = GUI_BUTTON_TEXT_HOFFSET;
 				if (pressed) {
@@ -507,13 +507,13 @@ public class LogicPanel {
 				mc.getTextureManager().bindTexture(TEXT);
 				GlStateManager.enableBlend();
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(xPosition, yPosition, 0);
+				GlStateManager.translate(x, y, 0);
 				this.drawTexturedModalRect(0, 0,
 						textX, GUI_BUTTON_TEXT_VOFFSET,
 						PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT);
 				
 				// Then draw mode
-				drawCriteriaOp( mc.fontRendererObj, panel.comp.getLogicOp());
+				drawCriteriaOp( mc.fontRenderer, panel.comp.getLogicOp());
 				GlStateManager.popMatrix();
 			}
 			

@@ -39,7 +39,7 @@ public class CraftingBlockDwarfTileEntity extends CraftingBlockTileEntity {
 
 	@Override
 	protected boolean canCraftWith(ItemStack item) {
-		if (item == null) {
+		if (item.isEmpty()) {
 			return true;
 		}
 		
@@ -77,7 +77,7 @@ public class CraftingBlockDwarfTileEntity extends CraftingBlockTileEntity {
 	
 	@Override
 	protected float getCraftBonus(ItemStack item) {
-		if (item == null) {
+		if (item.isEmpty()) {
 			return 0f;
 		}
 		

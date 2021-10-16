@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.tiles.BuildingBlockTileEntity;
@@ -52,7 +52,7 @@ public class BuildingBlockGui {
 			}
 			
 			this.addSlotToContainer(new Slot(blockInv, 0, GUI_TOP_INV_HOFFSET, GUI_TOP_INV_VOFFSET) {
-				public boolean isItemValid(@Nullable ItemStack stack) {
+				public boolean isItemValid(@Nonnull ItemStack stack) {
 			        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 			    }
 			});
@@ -60,7 +60,7 @@ public class BuildingBlockGui {
 		
 		@Override
 		public ItemStack transferStackInSlot(EntityPlayer playerIn, int fromSlot) {
-			ItemStack prev = null;	
+			ItemStack prev = ItemStack.EMPTY;	
 			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
 			
 			if (slot != null && slot.getHasStack()) {
@@ -70,17 +70,17 @@ public class BuildingBlockGui {
 				if (slot.inventory == this.chest) {
 					// Trying to take one of our items
 					if (playerIn.inventory.addItemStackToInventory(cur)) {
-						slot.putStack(null);
-						slot.onPickupFromSlot(playerIn, cur);
+						slot.putStack(ItemStack.EMPTY);
+						slot.onTake(playerIn, cur);
 					} else {
-						prev = null;
+						prev = ItemStack.EMPTY;
 					}
 				} else {
 					// shift-click in player inventory
 					ItemStack leftover = Inventories.addItem(blockInv, cur);
-					slot.putStack(leftover != null && leftover.stackSize <= 0 ? null : leftover);
-					if (leftover != null && leftover.stackSize == prev.stackSize) {
-						prev = null;
+					slot.putStack(leftover.isEmpty() ? ItemStack.EMPTY : leftover);
+					if (!leftover.isEmpty() && leftover.getCount() == prev.getCount()) {
+						prev = ItemStack.EMPTY;
 					}
 				}
 				

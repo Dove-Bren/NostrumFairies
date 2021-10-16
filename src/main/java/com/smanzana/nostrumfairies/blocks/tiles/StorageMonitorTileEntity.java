@@ -1,10 +1,8 @@
 package com.smanzana.nostrumfairies.blocks.tiles;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity.LogisticsTileEntityComponent;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
@@ -17,6 +15,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -25,11 +24,11 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	private static final String NBT_REQUESTS = "requests";
 	
 	private LogisticsItemWithdrawRequester requester;
-	private List<ItemStack> requests;
+	private NonNullList<ItemStack> requests;
 
 	public StorageMonitorTileEntity() {
 		super();
-		requests = new ArrayList<>();
+		requests = NonNullList.create();
 	}
 	
 	@Override
@@ -63,8 +62,8 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public void setWorldObj(World worldIn) {
-		super.setWorldObj(worldIn);
+	public void setWorld(World worldIn) {
+		super.setWorld(worldIn);
 		
 		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
 			makeRequester();
@@ -91,7 +90,7 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 		super.onJoinNetwork(network);
 	}
 	
-	public List<ItemStack> getItemRequests() {
+	public NonNullList<ItemStack> getItemRequests() {
 		return requests;
 	}
 
@@ -115,16 +114,16 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 			Iterator<ItemStack> it = requests.iterator();
 			while (fetched.getCount() > 0 && it.hasNext()) {
 				ItemStack cur = it.next();
-				if (cur == null) {
+				if (cur.isEmpty()) {
 					continue;
 				}
 				
 				if (fetched.canMerge(cur)) {
-					if (cur.stackSize <= fetched.getCount()) {
+					if (cur.getCount() <= fetched.getCount()) {
 						it.remove();
-						fetched.add(-cur.stackSize);
+						fetched.add(-cur.getCount());
 					} else {
-						cur.stackSize -= fetched.getCount();
+						cur.shrink((int) fetched.getCount());
 						fetched.setCount(0);
 						break;
 					}
@@ -152,7 +151,7 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 		Iterator<ItemStack> it = requests.iterator();
 		while (it.hasNext()) {
 			ItemStack cur = it.next();
-			if (stack.getItem() == cur.getItem() && stack.stackSize == cur.stackSize) {
+			if (stack.getItem() == cur.getItem() && stack.getCount() == cur.getCount()) {
 				it.remove();
 				requester.updateRequestedItems(getItemRequests());
 
@@ -187,8 +186,8 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 		if (list != null && list.tagCount() > 0) {
 			for (int i = 0; i < list.tagCount(); i++) {
 				NBTTagCompound tag = list.getCompoundTagAt(i);
-				ItemStack stack = ItemStack.loadItemStackFromNBT(tag);
-				if (stack != null) {
+				ItemStack stack = new ItemStack(tag);
+				if (!stack.isEmpty()) {
 					requests.add(stack);
 				}
 			}

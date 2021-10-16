@@ -20,11 +20,11 @@ public class CraftingBlockElfTileEntity extends CraftingBlockTileEntity {
 
 	@Override
 	protected boolean canCraftWith(ItemStack item) {
-		if (item == null) {
+		if (item.isEmpty()) {
 			return true;
 		}
 		
-		if (this.getUpgrade() != null) {
+		if (!this.getUpgrade().isEmpty()) {
 			if (FeyStone.instance().getFeySlot(this.getUpgrade()) == FeySlotType.DOWNGRADE
 					&& FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
 				return true;
@@ -45,7 +45,7 @@ public class CraftingBlockElfTileEntity extends CraftingBlockTileEntity {
 	
 	@Override
 	protected float getCraftBonus(ItemStack item) {
-		if (item == null) {
+		if (item.isEmpty()) {
 			return 0f;
 		}
 		

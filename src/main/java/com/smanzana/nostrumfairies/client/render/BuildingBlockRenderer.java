@@ -7,7 +7,7 @@ import com.smanzana.nostrumfairies.blocks.tiles.BuildingBlockTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.init.Blocks;
@@ -48,18 +48,16 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 	}
 	
 	@Override
-	public void renderTileEntityFast(BuildingBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, VertexBuffer buffer) {
+	public void renderTileEntityFast(BuildingBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 		// Use super to render sign icon
-		super.renderTileEntityFast(te, x, y, z, partialTicks, destroyStage, buffer);
+		super.renderTileEntityFast(te, x, y, z, partialTicks, destroyStage, partial, buffer);
 		
 		// Draw template on table, if present
 		ItemStack template = te.getTemplateScroll();
-		if (template != null) {
+		if (!template.isEmpty()) {
 			Minecraft mc = Minecraft.getMinecraft();
 			IBakedModel model = null;
-			if (template != null) {
-				model = mc.getRenderItem().getItemModelMesher().getItemModel(template);
-			}
+			model = mc.getRenderItem().getItemModelMesher().getItemModel(template);
 			
 			if (model == null || model == mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel()) {
 				model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());

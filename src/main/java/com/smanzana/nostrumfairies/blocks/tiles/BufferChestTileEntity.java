@@ -3,10 +3,9 @@ package com.smanzana.nostrumfairies.blocks.tiles;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity.LogisticsTileEntityComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
@@ -15,6 +14,7 @@ import com.smanzana.nostrummagica.utils.ItemStacks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -26,13 +26,13 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	private static final String NBT_TEMPLATE_ITEM = "item";
 	
 	private String displayName;
-	private ItemStack[] templates;
+	private NonNullList<ItemStack> templates;
 	private LogisticsItemWithdrawRequester requester;
 	
 	public BufferChestTileEntity() {
 		super();
 		displayName = "Buffer Chest";
-		templates = new ItemStack[SLOTS];
+		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 	}
 	
 	@Override
@@ -65,22 +65,22 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 		return false; // buffer chests aren't for random storage
 	}
 	
-	public void setTemplate(int index, @Nullable ItemStack template) {
+	public void setTemplate(int index, @Nonnull ItemStack template) {
 		if (index < 0 || index >=  SLOTS) {
 			return;
 		}
 		
-		ItemStack temp = template == null ? null : template.copy();
-		templates[index] = temp;
+		ItemStack temp = template.isEmpty() ? ItemStack.EMPTY : template.copy();
+		templates.set(index, temp);
 		this.markDirty();
 	}
 	
-	public @Nullable ItemStack getTemplate(int index) {
+	public @Nonnull ItemStack getTemplate(int index) {
 		if (index < 0 || index >=  SLOTS) {
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
-		return templates[index];
+		return templates.get(index);
 	}
 	
 	@Override
@@ -90,7 +90,7 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 		}
 		
 		ItemStack template = getTemplate(index);
-		if (template != null) {
+		if (!template.isEmpty()) {
 			return ItemStacks.stacksMatch(template, stack);
 		}
 		
@@ -105,7 +105,7 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 		NBTTagList templates = new NBTTagList();
 		for (int i = 0; i < SLOTS; i++) {
 			ItemStack stack = this.getTemplate(i);
-			if (stack == null) {
+			if (stack.isEmpty()) {
 				continue;
 			}
 			
@@ -123,7 +123,7 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
-		templates = new ItemStack[SLOTS];
+		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
 		NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
@@ -136,9 +136,9 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 				continue;
 			}
 			
-			ItemStack stack = ItemStack.loadItemStackFromNBT(template.getCompoundTag(NBT_TEMPLATE_ITEM));
+			ItemStack stack = new ItemStack(template.getCompoundTag(NBT_TEMPLATE_ITEM));
 			
-			templates[index] = stack;
+			templates.set(index, stack);
 		}
 		
 		// Do super afterwards so taht we ahve templates already
@@ -156,8 +156,8 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public void setWorldObj(World worldIn) {
-		super.setWorldObj(worldIn);
+	public void setWorld(World worldIn) {
+		super.setWorld(worldIn);
 		
 		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
 			requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), false, this.networkComponent);
@@ -188,16 +188,16 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	private List<ItemStack> getItemRequests() {
 		List<ItemStack> requests = new LinkedList<>();
 		
-		for (int i = 0; i < templates.length; i++) {
-			if (templates[i] == null) {
+		for (int i = 0; i < templates.size(); i++) {
+			if (templates.get(i).isEmpty()) {
 				continue;
 			}
 			
 			ItemStack inSlot = this.getStackInSlot(i);
-			int desire = templates[i].stackSize - (inSlot == null ? 0 : inSlot.stackSize);
+			int desire = templates.get(i).getCount() - (inSlot.isEmpty() ? 0 : inSlot.getCount());
 			if (desire > 0) {
-				ItemStack req = templates[i].copy();
-				req.stackSize = desire;
+				ItemStack req = templates.get(i).copy();
+				req.setCount(desire);
 				requests.add(req);
 			}
 		}
@@ -216,8 +216,8 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	public void addItem(ItemStack stack) {
 		// If there's a choice, add to slots that have unfufilled templates first
 		boolean anyChanges = false;
-		for (int i = 0; i < templates.length; i++) {
-			if (templates[i] == null) {
+		for (int i = 0; i < templates.size(); i++) {
+			if (templates.get(i).isEmpty()) {
 				continue;
 			}
 			
@@ -228,19 +228,19 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 			
 			// if template count != stack count, try to add there
 			ItemStack inSlot = this.getStackInSlot(i);
-			int desire = templates[i].stackSize - (inSlot == null ? 0 : inSlot.stackSize);
-			int amt = Math.min(stack.stackSize, desire);
-			if (inSlot == null) {
+			int desire = templates.get(i).getCount() - (inSlot.isEmpty() ? 0 : inSlot.getCount());
+			int amt = Math.min(stack.getCount(), desire);
+			if (inSlot.isEmpty()) {
 				// take out template desire amount
 				this.setInventorySlotContentsDirty(i, stack.splitStack(amt)); // doesn't set dirty
 				anyChanges = true;
 			} else {
-				stack.stackSize -= amt;
-				inSlot.stackSize += amt;
+				stack.shrink(amt);
+				inSlot.grow(amt);
 				anyChanges = true;
 			}
 			
-			if (stack.stackSize <= 0) {
+			if (stack.isEmpty()) {
 				break;
 			}
 		}
@@ -250,7 +250,7 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 		}
 		
 		// Any leftover?
-		if (stack != null && stack.stackSize > 0) {
+		if (!stack.isEmpty()) {
 			super.addItem(stack);
 		}
 	}
