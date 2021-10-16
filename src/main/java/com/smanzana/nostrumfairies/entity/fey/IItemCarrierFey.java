@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.entity.fey;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 
 public interface IItemCarrierFey extends IFeyWorker {
 	
@@ -10,7 +11,7 @@ public interface IItemCarrierFey extends IFeyWorker {
 	 * Return all currently-held items
 	 * @return
 	 */
-	public ItemStack[] getCarriedItems();
+	public NonNullList<ItemStack> getCarriedItems();
 	
 	/**
 	 * Check and return whether this fairy can add the provided stack to what it's carrying

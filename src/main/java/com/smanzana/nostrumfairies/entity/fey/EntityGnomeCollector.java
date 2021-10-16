@@ -29,7 +29,7 @@ public class EntityGnomeCollector extends EntityGnome {
 			}
 			
 			// Check for pathing
-			if (this.getDistanceSqToEntity(pickupTask.getEntityItem()) < .2) {
+			if (this.getDistanceSq(pickupTask.getEntityItem()) < .2) {
 				return true;
 			}
 			

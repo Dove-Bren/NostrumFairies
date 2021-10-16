@@ -73,6 +73,11 @@ public class EntityElfArcher extends EntityElf {
 			public DataParameter<BattleStance> createKey(int id) {
 				return new DataParameter<>(id, this);
 			}
+
+			@Override
+			public BattleStance copyValue(BattleStance value) {
+				return value;
+			}
 		}
 		
 		public static BattleStanceSerializer Serializer = null;
@@ -191,7 +196,7 @@ public class EntityElfArcher extends EntityElf {
 	// only available on server
 	protected boolean shouldUseBow() {
 		EntityLivingBase target = this.getAttackTarget();
-		if (target != null && this.getDistanceSqToEntity(target) < 9) {
+		if (target != null && this.getDistanceSq(target) < 9) {
 			return false;
 		}
 		
@@ -321,8 +326,8 @@ public class EntityElfArcher extends EntityElf {
 		double d0 = target.posX - this.posX;
 		double d1 = target.getEntityBoundingBox().minY + (double)(target.height / 3.0F) - entitytippedarrow.posY;
 		double d2 = target.posZ - this.posZ;
-		double d3 = (double)MathHelper.sqrt_double(d0 * d0 + d2 * d2);
-		entitytippedarrow.setThrowableHeading(d0, d1 + d3 * 0.20000000298023224D, d2, 1.6F, .5f);
+		double d3 = (double)MathHelper.sqrt(d0 * d0 + d2 * d2);
+		entitytippedarrow.shoot(d0, d1 + d3 * 0.20000000298023224D, d2, 1.6F, .5f);
 		int i = EnchantmentHelper.getMaxEnchantmentLevel(Enchantments.POWER, this);
 		int j = EnchantmentHelper.getMaxEnchantmentLevel(Enchantments.PUNCH, this);
 		entitytippedarrow.setDamage((double)(distanceFactor * 2.0F) + this.rand.nextGaussian() * 0.25D + 3);
@@ -347,7 +352,7 @@ public class EntityElfArcher extends EntityElf {
 
 		ItemStack itemstack = this.getHeldItem(EnumHand.OFF_HAND);
 
-		if (itemstack != null && itemstack.getItem() == Items.TIPPED_ARROW)
+		if (!itemstack.isEmpty() && itemstack.getItem() == Items.TIPPED_ARROW)
 		{
 			entitytippedarrow.setPotionEffect(itemstack);
 		}
@@ -357,7 +362,7 @@ public class EntityElfArcher extends EntityElf {
 		}
 
 		//this.playSound(SoundEvents.ENTITY_SKELETON_SHOOT, 1.0F, 1.0F / (this.getRNG().nextFloat() * 0.4F + 0.8F));
-		this.world.spawnEntityInWorld(entitytippedarrow);
+		this.world.spawnEntity(entitytippedarrow);
 	}
 	
 	protected void slashAt(EntityLivingBase target, float distanceFactor) {

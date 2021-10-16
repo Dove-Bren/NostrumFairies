@@ -101,7 +101,7 @@ public class BuildTaskPlanner {
 		work.remove(pos);
 		IBlockState state = TemplateBlock.GetTemplatedState(world, pos);
 		world.setBlockState(pos, state);
-		worker.removeItem(worker.getCarriedItems()[0]);
+		worker.removeItem(worker.getCarriedItems().get(0));
 	}
 	
 	public void cleanList() {

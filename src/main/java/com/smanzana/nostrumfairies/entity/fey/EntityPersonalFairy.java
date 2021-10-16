@@ -10,8 +10,8 @@ import javax.annotation.Nullable;
 import com.google.common.base.Optional;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
-import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.entity.IEntityListener;
 import com.smanzana.nostrumfairies.entity.ITrackableEntity;
@@ -34,6 +34,7 @@ import com.smanzana.nostrummagica.entity.tasks.EntityAIOwnerHurtByTargetGeneric;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIOwnerHurtTargetGeneric;
 import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
 import com.smanzana.nostrummagica.loretag.Lore;
+import com.smanzana.nostrummagica.serializers.PetJobSerializer;
 import com.smanzana.nostrummagica.spells.Spell;
 import com.smanzana.nostrummagica.utils.Inventories;
 
@@ -92,6 +93,11 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			public DataParameter<FairyJob> createKey(int id) {
 				return new DataParameter<>(id, this);
 			}
+
+			@Override
+			public FairyJob copyValue(FairyJob value) {
+				return value;
+			}
 		}
 		
 		public static JobSerializer Serializer = null;
@@ -108,7 +114,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	private static final DataParameter<FairyJob> DATA_JOB = EntityDataManager.<FairyJob>createKey(EntityPersonalFairy.class, FairyJob.Serializer);
 	private static final DataParameter<Float> DATA_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
 	private static final DataParameter<Float> DATA_MAX_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
-	private static final DataParameter<PetAction> DATA_PET_ACTION = EntityDataManager.<PetAction>createKey(EntityPersonalFairy.class, PetAction.Serializer);
+	private static final DataParameter<PetAction> DATA_PET_ACTION = EntityDataManager.<PetAction>createKey(EntityPersonalFairy.class, PetJobSerializer.instance);
 	
 	// Transient data, and only useful for Builders
 	private static final DataParameter<Optional<BlockPos>> DATA_BUILDER_SPOT = EntityDataManager.<Optional<BlockPos>>createKey(EntityPersonalFairy.class, DataSerializers.OPTIONAL_BLOCK_POS);
@@ -294,7 +300,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 //			ILogisticsComponent source = retrieve.getSourceComponent();
 //			if (source == null) {
 //				// entity
-//				if (this.getDistanceSqToEntity(retrieve.getSourceEntity()) < .2) {
+//				if (this.getDistanceSq(retrieve.getSourceEntity()) < .2) {
 //					return true;
 //				}
 //				
@@ -335,7 +341,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 //			ILogisticsComponent source = deposit.getSourceComponent();
 //			if (source == null) {
 //				// entity
-//				if (this.getDistanceSqToEntity(deposit.getSourceEntity()) < .2) {
+//				if (this.getDistanceSq(deposit.getSourceEntity()) < .2) {
 //					return true;
 //				}
 //				
@@ -405,9 +411,9 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		
 		if (currentBuild != null) {
 			// Attempt to progress
-			if (this.getHeldItem() == null) {
+			if (this.getHeldItem().isEmpty()) {
 				// Go pickup item
-				if (this.getDistanceSqToEntity(owner) > 3) {
+				if (this.getDistanceSq(owner) > 3) {
 					if (!this.moveHelper.isUpdating() || this.ticksExisted % 10 == 0) {
 						// Move to pickup
 						moveHelper.setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
@@ -417,7 +423,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 					ItemStack stack = TemplateBlock.GetRequiredItem(TemplateBlock.GetTemplatedState(world, currentBuild));
 					if (owner instanceof EntityPlayer) {
 						EntityPlayer player = (EntityPlayer) owner;
-						if (Inventories.remove(player.inventory, stack) == null) {
+						if (Inventories.remove(player.inventory, stack).isEmpty()) {
 							if (stack.getMetadata() == OreDictionary.WILDCARD_VALUE) {
 								stack.setItemDamage(0);
 							}
@@ -460,7 +466,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			
 		}
 		
-		if (this.getBuildSpot() == null && this.getHeldItem() == null) {
+		if (this.getBuildSpot() == null && this.getHeldItem().isEmpty()) {
 			setBuildSpot(buildPump.claimTask(this)); // Will start next tick
 		}
 	}
@@ -489,7 +495,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		}
 
 		this.setPetAction(PetAction.IDLING);
-		double distOwnerSq = this.getDistanceSqToEntity(owner);
+		double distOwnerSq = this.getDistanceSq(owner);
 		
 		if (distOwnerSq > 1600) {
 			// Teleport. Too far.
@@ -501,7 +507,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		// For now, the only thing we care about is if we're idle but have an item. If so, make
 		// a quick task to go and deposit it
 		ItemStack heldItem = getHeldItem();
-		if (heldItem != null) {
+		if (!heldItem.isEmpty()) {
 			// Move towards owner
 			if (distOwnerSq > 2) {
 				this.moveHelper.setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
@@ -509,11 +515,11 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				if (owner instanceof EntityPlayer) {
 					if (((EntityPlayer) owner).inventory.addItemStackToInventory(heldItem.copy())) {
 						this.removeItem(heldItem);
-						heldItem = null;
+						heldItem = ItemStack.EMPTY;
 					}
 				}
 				
-				if (heldItem != null) {
+				if (!heldItem.isEmpty()) {
 					dropItem();
 				}
 			}
@@ -525,7 +531,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		
 		// See if we're too far away from our owner
 		if (!this.moveHelper.isUpdating()) {
-			if (owner.getDistanceSqToEntity(this) > this.wanderDistanceSq
+			if (owner.getDistanceSq(this) > this.wanderDistanceSq
 					|| (idleTicks % 100 == 0 && rand.nextBoolean() && rand.nextBoolean())) {
 				
 				// Go to a random place around our home
@@ -641,11 +647,11 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 					if (owner instanceof EntityPlayer) {
 						ItemStack held = ((EntityPlayer) owner).getHeldItemMainhand();
 						weaponDrawn = false;
-						if (held != null) {
+						if (!held.isEmpty()) {
 							if (held.getItem() instanceof ItemSword || held.getItem() instanceof ItemBow) {
 								weaponDrawn = true;
 							} else if (held.getAttributeModifiers(EntityEquipmentSlot.MAINHAND).containsKey(
-									SharedMonsterAttributes.ATTACK_DAMAGE.getAttributeUnlocalizedName())) {
+									SharedMonsterAttributes.ATTACK_DAMAGE.getName())) {
 								weaponDrawn = true;
 							}
 						}
@@ -659,7 +665,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			}
 			
 			@Override
-			public boolean continueExecuting() {
+			public boolean shouldContinueExecuting() {
 				EntityLivingBase owner = getOwner();
 				if (owner == null) {
 					return false;
@@ -670,11 +676,11 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 					if (owner instanceof EntityPlayer) {
 						ItemStack held = ((EntityPlayer) owner).getHeldItemMainhand();
 						weaponDrawn = false;
-						if (held != null) {
+						if (!held.isEmpty()) {
 							if (held.getItem() instanceof ItemSword || held.getItem() instanceof ItemBow) {
 								weaponDrawn = true;
 							} else if (held.getAttributeModifiers(EntityEquipmentSlot.MAINHAND).containsKey(
-									SharedMonsterAttributes.ATTACK_DAMAGE.getAttributeUnlocalizedName())) {
+									SharedMonsterAttributes.ATTACK_DAMAGE.getName())) {
 								weaponDrawn = true;
 							}
 						}
@@ -684,7 +690,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 					}
 				}
 				
-				return super.continueExecuting();
+				return super.shouldContinueExecuting();
 			}
 			
 			@Override
@@ -1095,5 +1101,10 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		public @Nullable BlockPos claimTask(EntityPersonalFairy fairy);
 		public void abandonTask(EntityPersonalFairy entityPersonalFairy, BlockPos currentBuild);
 		public void finishTask(EntityPersonalFairy fairy, BlockPos pos);
+	}
+
+	@Override
+	public void setSwingingArms(boolean swingingArms) {
+		;
 	}
 }

@@ -149,7 +149,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 //			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
 //			if (success) {
 //				success = Paths.IsComplete(navigator.getPath(), target, 2);
-//				navigator.clearPathEntity();
+//				navigator.clearPath();
 //			}
 			
 			//if (!success) {
@@ -183,7 +183,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 			if (this.navigator.noPath()) {
 				// First time through?
 				if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
-					|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < 1)) {
+					|| (moveEntity != null && this.getDistance(moveEntity) < 1)) {
 					task.markSubtaskComplete();
 					if (movePos != null) {
 						ClearBuildSpot(world, movePos);

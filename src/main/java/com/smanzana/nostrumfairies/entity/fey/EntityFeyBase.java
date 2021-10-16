@@ -486,7 +486,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	@Override
 	public void swingArm(EnumHand hand) {
 		ItemStack stack = this.getHeldItem(hand);
-		if (stack != null && stack.getItem() != null) {
+		if (!stack.isEmpty()) {
 			if (stack.getItem().onEntitySwing(this, stack)) {
 				return;
 			}
@@ -498,7 +498,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			this.swingingHand = hand;
 
 			if (this.world instanceof WorldServer) {
-				((WorldServer)this.world).getEntityTracker().sendToAllTrackingEntity(this, new SPacketAnimation(this, hand == EnumHand.MAIN_HAND ? 0 : 3));
+				((WorldServer)this.world).getEntityTracker().sendToTracking(this, new SPacketAnimation(this, hand == EnumHand.MAIN_HAND ? 0 : 3));
 			}
 		}
 	}
@@ -506,7 +506,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	protected void teleportHome() {
 		BlockPos target = findEmptySpot(this.getHome(), false);
 		if (this.attemptTeleport(target.getX() + .5, target.getY() + .05, target.getZ() + .5)) {
-			this.navigator.clearPathEntity();
+			this.navigator.clearPath();
 		}
 	}
 	
@@ -1015,9 +1015,9 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			if (entityIn instanceof EntityPlayer) {
 				EntityPlayer entityplayer = (EntityPlayer)entityIn;
 				ItemStack itemstack = this.getHeldItemMainhand();
-				ItemStack itemstack1 = entityplayer.isHandActive() ? entityplayer.getActiveItemStack() : null;
+				ItemStack itemstack1 = entityplayer.isHandActive() ? entityplayer.getActiveItemStack() : ItemStack.EMPTY;
 
-				if (itemstack != null && itemstack1 != null && itemstack.getItem() instanceof ItemAxe && itemstack1.getItem() == Items.SHIELD) {
+				if (!itemstack.isEmpty() && !itemstack1.isEmpty() && itemstack.getItem() instanceof ItemAxe && itemstack1.getItem() == Items.SHIELD) {
 					float f1 = 0.25F + (float)EnchantmentHelper.getEfficiencyModifier(this) * 0.05F;
 
 					if (this.rand.nextFloat() < f1) {
@@ -1254,7 +1254,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 					continue;
 				}
 				
-				double dist = fey.getDistanceSqToEntity(ent);
+				double dist = fey.getDistanceSq(ent);
 				if (target == null || dist < minDist) {
 					target = (EntityLivingBase) ent;
 					minDist = dist;

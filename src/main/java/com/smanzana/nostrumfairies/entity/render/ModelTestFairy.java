@@ -29,8 +29,8 @@ public class ModelTestFairy extends ModelBase {
 		setRotationAngles(time, swingProgress, swing, headAngleY, headAngleX, scale, entity);
 		main.render(scale);
 		
-		ItemStack stack = ((EntityTestFairy) entity).getCarriedItems()[0];
-		if (stack != null) {
+		ItemStack stack = ((EntityTestFairy) entity).getCarriedItems().get(0);
+		if (!stack.isEmpty()) {
 			GlStateManager.pushMatrix();
 			GlStateManager.translate(0, 2, 0);
 			Minecraft.getMinecraft().getRenderItem().renderItem(stack, TransformType.GROUND);

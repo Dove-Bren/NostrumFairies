@@ -2,9 +2,9 @@ package com.smanzana.nostrumfairies.entity.fey;
 
 import java.io.IOException;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.google.common.base.Optional;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
@@ -36,6 +36,8 @@ import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -70,6 +72,11 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 			public DataParameter<ArmPose> createKey(int id) {
 				return new DataParameter<>(id, this);
 			}
+
+			@Override
+			public ArmPose copyValue(ArmPose value) {
+				return value;
+			}
 		}
 		
 		public static PoseSerializer Serializer = null;
@@ -79,7 +86,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityGnome.class, ArmPose.Serializer);
-	private static final DataParameter<Optional<ItemStack>> DATA_HELD_ITEM = EntityDataManager.<Optional<ItemStack>>createKey(EntityGnome.class, DataSerializers.OPTIONAL_ITEM_STACK);
+	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityGnome.class, DataSerializers.ITEM_STACK);
 
 	private static final String NBT_ITEM = "helditem";
 	
@@ -118,20 +125,20 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		return InfoScreenTabs.INFO_ENTITY;
 	}
 	
-	public @Nullable ItemStack getCarriedItem() {
-		return this.dataManager.get(DATA_HELD_ITEM).orNull();
+	public @Nonnull ItemStack getCarriedItem() {
+		return this.dataManager.get(DATA_HELD_ITEM);
 	}
 
 	@Override
-	public ItemStack[] getCarriedItems() {
-		return new ItemStack[]{getCarriedItem()};
+	public NonNullList<ItemStack> getCarriedItems() {
+		return NonNullList.from(null, getCarriedItem());
 	}
 
 	@Override
 	public boolean canAccept(ItemStack stack) {
 		ItemStack heldItem = getCarriedItem();
-		return heldItem == null ||
-				(ItemStacks.stacksMatch(heldItem, stack) && heldItem.stackSize + stack.stackSize < heldItem.getMaxStackSize());
+		return heldItem.isEmpty() ||
+				(ItemStacks.stacksMatch(heldItem, stack) && heldItem.getCount() + stack.getCount() < heldItem.getMaxStackSize());
 	}
 	
 	@Override
@@ -148,31 +155,31 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	public void addItem(ItemStack stack) {
 		ItemStack heldItem = getCarriedItem();
-		if (heldItem == null) {
+		if (heldItem.isEmpty()) {
 			heldItem = stack.copy();
 		} else {
 			// Just assume canAccept was called
-			heldItem.stackSize += stack.stackSize; 
+			heldItem.grow(stack.getCount()); 
 		}
-		this.dataManager.set(DATA_HELD_ITEM, Optional.of(heldItem));
+		this.dataManager.set(DATA_HELD_ITEM, heldItem);
 	}
 	
 	@Override
 	public void removeItem(ItemStack stack) {
 		ItemStack heldItem = getCarriedItem();
-		if (heldItem != null) {
+		if (!heldItem.isEmpty()) {
 			if (ItemStacks.stacksMatch(stack, heldItem)) {
-				heldItem.stackSize -= stack.stackSize;
-				if (heldItem.stackSize <= 0) {
-					heldItem = null;
+				heldItem.shrink(stack.getCount());
+				if (heldItem.isEmpty()) {
+					heldItem = ItemStack.EMPTY;
 				}
 			}
 		}
-		this.dataManager.set(DATA_HELD_ITEM, Optional.fromNullable(heldItem));
+		this.dataManager.set(DATA_HELD_ITEM, heldItem);
 	}
 	
 	protected boolean hasItems() {
-		return getCarriedItem() != null;
+		return !getCarriedItem().isEmpty();
 	}
 
 	@Override
@@ -292,19 +299,19 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
 	private void dropItem() {
 		EntityItem item = new EntityItem(this.world, posX, posY, posZ, getCarriedItem());
-		world.spawnEntityInWorld(item);
-		this.dataManager.set(DATA_HELD_ITEM, Optional.absent());
+		world.spawnEntity(item);
+		this.dataManager.set(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
 
 	@Override
 	protected boolean shouldPerformTask(ILogisticsTask task) {
-		//return this.heldItem == null;
+		//return this.heldItem.isEmpty();
 		return true;
 	}
 
 	@Override
 	protected void onTaskChange(ILogisticsTask oldTask, ILogisticsTask newTask) {
-//		if (oldTask != null && heldItem != null) {
+//		if (oldTask != null && !heldItem().isEmpty()) {
 //			// I guess drop our item
 //			dropItem();
 //		}
@@ -515,7 +522,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 					if (this.navigator.noPath()) {
 						// First time through?
 						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 2)
-							|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < 2)) {
+							|| (moveEntity != null && this.getDistance(moveEntity) < 2)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;
@@ -567,7 +574,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		super.writeEntityToNBT(compound);
 		
 		ItemStack held = getCarriedItem();
-		if (held != null) {
+		if (!held.isEmpty()) {
 			compound.setTag(NBT_ITEM, held.serializeNBT());
 		}
 	}
@@ -577,7 +584,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		super.readEntityFromNBT(compound);
 		
 		if (compound.hasKey(NBT_ITEM, NBT.TAG_COMPOUND)) {
-			dataManager.set(DATA_HELD_ITEM, Optional.fromNullable(ItemStack.loadItemStackFromNBT(compound.getCompoundTag(NBT_ITEM))));
+			dataManager.set(DATA_HELD_ITEM, new ItemStack(compound.getCompoundTag(NBT_ITEM)));
 		}
 	}
 
@@ -642,7 +649,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	protected void entityInit() {
 		super.entityInit();
 		dataManager.register(POSE, ArmPose.IDLE);
-		dataManager.register(DATA_HELD_ITEM, Optional.absent());
+		dataManager.register(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
 	
 	public ArmPose getPose() {
@@ -743,7 +750,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
 			world.removeEntityDangerously(this);
-			world.spawnEntityInWorld(replacement);
+			world.spawnEntity(replacement);
 		}
 		
 		return replacement == null ? this : replacement;
@@ -755,7 +762,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	protected SoundEvent getHurtSound() {
+	protected SoundEvent getHurtSound(DamageSource source) {
 		return NostrumFairiesSounds.GNOME_HURT.getEvent();
 	}
 	

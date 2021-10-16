@@ -33,6 +33,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -391,9 +392,9 @@ public class HomeBlockGui {
 				// Render inventory
 				if (fey instanceof IItemCarrierFey) {
 					IItemCarrierFey carrier = (IItemCarrierFey) fey;
-					ItemStack items[] = carrier.getCarriedItems();
-					if (items != null && items.length > 0) {
-						int cells = Math.min(5, items.length);
+					NonNullList<ItemStack> items = carrier.getCarriedItems();
+					if (items != null && items.size() > 0) {
+						int cells = Math.min(5, items.size());
 						int offsetX = (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH * cells)) / 2;
 						RenderHelper.enableGUIStandardItemLighting();
 						GlStateManager.color(1f, 1f, 1f, 1f);
@@ -405,8 +406,8 @@ public class HomeBlockGui {
 									GUI_TEXT_LIST_ITEM_HOFFSET, GUI_TEXT_LIST_ITEM_vOFFSET + GUI_LIST_ITEM_HEIGHT,
 									GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH, 256, 256);
 							GlStateManager.enableDepth();
-				            this.itemRender.renderItemAndEffectIntoGUI(this.mc.player, items[i], cellX + 1, cellY + 1);
-				            this.itemRender.renderItemOverlayIntoGUI(this.fontRenderer, items[i], cellX + 1, cellY + 1, null);
+				            this.itemRender.renderItemAndEffectIntoGUI(this.mc.player, items.get(i), cellX + 1, cellY + 1);
+				            this.itemRender.renderItemOverlayIntoGUI(this.fontRenderer, items.get(i), cellX + 1, cellY + 1, null);
 						}
 					}
 				}

@@ -1,8 +1,8 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.google.common.base.Optional;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
@@ -31,6 +31,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -42,7 +44,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	private static final String NBT_ITEM = "helditem";
-	private static final DataParameter<Optional<ItemStack>> DATA_HELD_ITEM = EntityDataManager.<Optional<ItemStack>>createKey(EntityFairy.class, DataSerializers.OPTIONAL_ITEM_STACK);
+	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityFairy.class, DataSerializers.ITEM_STACK);
 	
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
@@ -82,20 +84,20 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		return InfoScreenTabs.INFO_ENTITY;
 	}
 	
-	protected @Nullable ItemStack getHeldItem() {
-		return this.dataManager.get(DATA_HELD_ITEM).orNull();
+	protected @Nonnull ItemStack getHeldItem() {
+		return this.dataManager.get(DATA_HELD_ITEM);
 	}
 
 	@Override
-	public ItemStack[] getCarriedItems() {
-		return new ItemStack[]{getHeldItem()};
+	public NonNullList<ItemStack> getCarriedItems() {
+		return NonNullList.from(null, getHeldItem());
 	}
 
 	@Override
 	public boolean canAccept(ItemStack stack) {
 		ItemStack heldItem = getHeldItem();
-		return heldItem == null ||
-				(ItemStacks.stacksMatch(heldItem, stack) && heldItem.stackSize + stack.stackSize < heldItem.getMaxStackSize());
+		return heldItem.isEmpty() ||
+				(ItemStacks.stacksMatch(heldItem, stack) && heldItem.getCount() + stack.getCount() < heldItem.getMaxStackSize());
 	}
 	
 	@Override
@@ -112,27 +114,27 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	public void addItem(ItemStack stack) {
 		ItemStack heldItem = getHeldItem();
-		if (heldItem == null) {
+		if (heldItem.isEmpty()) {
 			heldItem = stack.copy();
 		} else {
 			// Just assume canAccept was called
-			heldItem.stackSize += stack.stackSize; 
+			heldItem.grow(stack.getCount()); 
 		}
-		this.dataManager.set(DATA_HELD_ITEM, Optional.of(heldItem));
+		this.dataManager.set(DATA_HELD_ITEM, heldItem);
 	}
 	
 	@Override
 	public void removeItem(ItemStack stack) {
 		ItemStack heldItem = getHeldItem();
-		if (heldItem != null) {
+		if (!heldItem.isEmpty()) {
 			if (ItemStacks.stacksMatch(stack, heldItem)) {
-				heldItem.stackSize -= stack.stackSize;
-				if (heldItem.stackSize <= 0) {
-					heldItem = null;
+				heldItem.shrink(stack.getCount());
+				if (heldItem.isEmpty()) {
+					heldItem = ItemStack.EMPTY;
 				}
 			}
 		}
-		this.dataManager.set(DATA_HELD_ITEM, Optional.fromNullable(heldItem));
+		this.dataManager.set(DATA_HELD_ITEM, heldItem);
 	}
 
 	@Override
@@ -177,7 +179,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 			ILogisticsComponent source = retrieve.getSourceComponent();
 			if (source == null) {
 				// entity
-				if (this.getDistanceSqToEntity(retrieve.getSourceEntity()) < .2) {
+				if (this.getDistanceSq(retrieve.getSourceEntity()) < .2) {
 					return true;
 				}
 				
@@ -218,7 +220,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 			ILogisticsComponent source = deposit.getSourceComponent();
 			if (source == null) {
 				// entity
-				if (this.getDistanceSqToEntity(deposit.getSourceEntity()) < .2) {
+				if (this.getDistanceSq(deposit.getSourceEntity()) < .2) {
 					return true;
 				}
 				
@@ -257,7 +259,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 //			}
 //			
 //			// Check for pathing
-//			if (this.getDistanceSqToEntity(pickupTask.getEntityItem()) < .2) {
+//			if (this.getDistanceSq(pickupTask.getEntityItem()) < .2) {
 //				return true;
 //			}
 //			
@@ -269,19 +271,19 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	
 	protected void dropItem() {
 		EntityItem item = new EntityItem(this.world, posX, posY, posZ, getHeldItem());
-		world.spawnEntityInWorld(item);
-		this.dataManager.set(DATA_HELD_ITEM, Optional.absent());
+		world.spawnEntity(item);
+		this.dataManager.set(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
 
 	@Override
 	protected boolean shouldPerformTask(ILogisticsTask task) {
-		//return this.heldItem == null;
+		//return this.heldItem.isEmpty();
 		return true;
 	}
 
 	@Override
 	protected void onTaskChange(ILogisticsTask oldTask, ILogisticsTask newTask) {
-//		if (oldTask != null && heldItem != null) {
+//		if (oldTask != null && !heldItem().isEmpty()) {
 //			// I guess drop our item
 //			dropItem();
 //		}
@@ -305,7 +307,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		// For now, the only thing we care about is if we're idle but have an item. If so, make
 		// a quick task to go and deposit it
 		ItemStack heldItem = getHeldItem();
-		if (heldItem != null) {
+		if (!heldItem.isEmpty()) {
 			LogisticsNetwork network = this.getLogisticsNetwork();
 			if (network != null) {
 				@Nullable ILogisticsComponent storage = network.getStorageForItem(world, getPosition(), heldItem);
@@ -452,7 +454,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 					if (movePos == null || !this.moveHelper.isUpdating()) {
 						// First time through?
 						if ((movePos != null && this.getDistanceSqToCenter(movePos) < .5)
-							|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < .5)) {
+							|| (moveEntity != null && this.getDistance(moveEntity) < .5)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;
@@ -490,14 +492,14 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 //						// Check if we're close to where we need to be
 //						double distSq;
 //						if (movePos == null) {
-//							distSq = this.getDistanceSqToEntity(moveEntity);
+//							distSq = this.getDistanceSq(moveEntity);
 //						} else {
 //							distSq = this.getDistanceSq(movePos);
 //						}
 //						
 //						if (distSq < .2) {
 //							task.markSubtaskComplete();
-//							this.navigator.clearPathEntity();
+//							this.navigator.clearPath();
 //						}
 //					}
 					// FIXME this runs every tick. Save pos?
@@ -553,7 +555,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void entityInit() {
 		super.entityInit();
-		this.dataManager.register(DATA_HELD_ITEM, Optional.absent());
+		this.dataManager.register(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
 	
 	@Override
@@ -576,7 +578,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	public void writeEntityToNBT(NBTTagCompound compound) {
 		super.writeEntityToNBT(compound);
 		
-		if (getHeldItem() != null) {
+		if (!getHeldItem().isEmpty()) {
 			compound.setTag(NBT_ITEM, getHeldItem().writeToNBT(new NBTTagCompound()));
 		}
 	}
@@ -586,13 +588,13 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		super.readEntityFromNBT(compound);
 		
 		if (compound.hasKey(NBT_ITEM)) {
-			this.dataManager.set(DATA_HELD_ITEM, Optional.fromNullable(ItemStack.loadItemStackFromNBT(compound.getCompoundTag(NBT_ITEM))));
+			this.dataManager.set(DATA_HELD_ITEM, new ItemStack(compound.getCompoundTag(NBT_ITEM)));
 		}
 	}
 
 	@Override
 	protected boolean canMergeMoreJobs() {
-		return this.getHeldItem() == null;
+		return this.getHeldItem().isEmpty();
 	}
 	
 	static class FairyFlyMoveHelper extends EntityMoveHelper {
@@ -612,7 +614,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 				double d2 = this.posZ - this.parentEntity.posZ;
 				double d3 = d0 * d0 + d1 * d1 + d2 * d2;
 
-				d3 = (double)MathHelper.sqrt_double(d3);
+				d3 = (double)MathHelper.sqrt(d3);
 				
 				if (Math.abs(d3) < .25) {
 					lastDist = 0.0D;
@@ -756,7 +758,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		}
 		replacement.copyFrom(this);
 		world.removeEntityDangerously(this);
-		world.spawnEntityInWorld(replacement);
+		world.spawnEntity(replacement);
 		
 		return replacement;
 	}
@@ -767,7 +769,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	protected SoundEvent getHurtSound() {
+	protected SoundEvent getHurtSound(DamageSource source) {
 		return NostrumFairiesSounds.FAIRY_HURT.getEvent();
 	}
 	

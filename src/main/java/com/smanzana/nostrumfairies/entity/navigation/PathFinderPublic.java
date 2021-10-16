@@ -45,7 +45,7 @@ public class PathFinderPublic extends PathFinder {
 			double destX, double destY, double destZ,
 			float range) {
 		this.path.clearPath();
-		this.nodeProcessor.initProcessor(worldIn, entity);
+		this.nodeProcessor.init(worldIn, entity);
 		PathPoint pathpoint = this.nodeProcessor.getPathPointToCoords(startX, startY, startZ);
 		PathPoint pathpoint1 = this.nodeProcessor.getPathPointToCoords(destX, destY, destZ);
 		Path path = this.findPath(pathpoint, pathpoint1, range);

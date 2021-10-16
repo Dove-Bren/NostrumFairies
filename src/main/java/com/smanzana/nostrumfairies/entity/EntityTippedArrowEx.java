@@ -55,14 +55,14 @@ public class EntityTippedArrowEx extends EntityTippedArrow {
 	@Override
 	protected Entity findEntityOnPath(Vec3d start, Vec3d end) {
 		Entity entity = null;
-		List<Entity> list = this.world.getEntitiesInAABBexcluding(this, this.getEntityBoundingBox().addCoord(this.motionX, this.motionY, this.motionZ).expandXyz(1.0D), this.filter);
+		List<Entity> list = this.world.getEntitiesInAABBexcluding(this, this.getEntityBoundingBox().expand(this.motionX, this.motionY, this.motionZ).grow(1.0D), this.filter);
 		double d0 = 0.0D;
 
 		for (int i = 0; i < list.size(); ++i) {
 			Entity entity1 = (Entity)list.get(i);
 
 			if (entity1 != this.shootingEntity || this.ticksExisted >= 5) {
-				AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().expandXyz(0.30000001192092896D);
+				AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().grow(0.30000001192092896D);
 				RayTraceResult raytraceresult = axisalignedbb.calculateIntercept(start, end);
 
 				if (raytraceresult != null) {

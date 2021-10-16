@@ -469,8 +469,8 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		IItemCarrierFey worker = fairy; // capture before making changes!
 		// Just instruct the dwarf to drop all that they have :)
 		
-		ItemStack[] heldItems = worker.getCarriedItems();
-		ItemStack[] items = new ItemStack[heldItems.length];
+		NonNullList<ItemStack> heldItems = worker.getCarriedItems();
+		NonNullList<ItemStack> copies = NonNullList.create();
 		double x;
 		double y;
 		double z;
@@ -485,14 +485,14 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			z = pos.getZ() + .5;
 		}
 		
-		for (int i = 0; i < heldItems.length; i++) {
-			if (heldItems[i].isEmpty()) {
+		for (int i = 0; i < heldItems.size(); i++) {
+			if (heldItems.get(i).isEmpty()) {
 				continue;
 			}
-			items[i] = heldItems[i].copy();
+			copies.add(heldItems.get(i).copy());
 		}
 		
-		for (ItemStack stack : items) {
+		for (ItemStack stack : copies) {
 			if (stack.isEmpty()) {
 				continue;
 			}

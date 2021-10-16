@@ -1,6 +1,5 @@
 package com.smanzana.nostrumfairies.logistics.task;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -17,6 +16,7 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 
 /*
@@ -258,10 +258,13 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 	
 	private void giveItems() {
 		IItemCarrierFey worker = fairy; // capture before making changes!
-		ItemStack old[] = worker.getCarriedItems();
-		ItemStack items[] = Arrays.copyOf(old, old.length);
+		NonNullList<ItemStack> old = worker.getCarriedItems();
+		NonNullList<ItemStack> copies = NonNullList.create();
+		for (ItemStack oldStack : old) {
+			copies.add(oldStack);
+		}
 		
-		for (ItemStack stack : items) {
+		for (ItemStack stack : copies) {
 			if (stack.isEmpty()) {
 				continue;
 			}

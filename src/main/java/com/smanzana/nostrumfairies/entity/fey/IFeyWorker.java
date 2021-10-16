@@ -41,6 +41,11 @@ public interface IFeyWorker {
 			public DataParameter<FairyGeneralStatus> createKey(int id) {
 				return new DataParameter<>(id, this);
 			}
+
+			@Override
+			public FairyGeneralStatus copyValue(FairyGeneralStatus value) {
+				return value;
+			}
 		}
 		
 		public static FairyStatusSerializer Serializer = null;

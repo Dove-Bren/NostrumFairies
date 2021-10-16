@@ -124,7 +124,7 @@ public class BufferChestGui {
 		
 		@Override
 		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
-			if (player.inventory.getItemStack()).isEmpty()) {
+			if (player.inventory.getItemStack().isEmpty()) {
 				// empty hand. Right-click?
 				if (slotId >= chestIDStart && dragType == 1 && clickTypeIn == ClickType.PICKUP && chest.getStackInSlot(slotId - chestIDStart).isEmpty()) {
 					chest.setTemplate(slotId - chestIDStart, ItemStack.EMPTY);
@@ -133,7 +133,7 @@ public class BufferChestGui {
 			} else {
 				// Item in hand. Clicking empty output slot?
 				if (slotId >= chestIDStart && clickTypeIn == ClickType.PICKUP && chest.getTemplate(slotId - chestIDStart).isEmpty()) {
-					ItemStack template = player.inventory.getItemStack());
+					ItemStack template = player.inventory.getItemStack();
 					if (dragType == 1) { // right click
 						template = template.copy();
 						template.setCount(1);

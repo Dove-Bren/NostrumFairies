@@ -7,7 +7,7 @@ import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class PathNavigatorGroundFixed extends PathNavigateGround {
 
@@ -16,24 +16,24 @@ public class PathNavigatorGroundFixed extends PathNavigateGround {
 	}
 	
 	protected void clearStuckEntity() {
-		this.clearPathEntity();
+		this.clearPath();
 	}
 
 	@Override
 	protected void checkForStuck(Vec3d positionVec3) {
 		//Field totalTicksField = ReflectionHelper.findField(PathNavigate.class, "totalTicks");
-		final int totalTicks = ReflectionHelper.getPrivateValue(PathNavigate.class, this, "totalTicks", "field_75510_g");
-		Field ticksAtLastPosField = ReflectionHelper.findField(PathNavigate.class, "ticksAtLastPos", "field_75520_h");
-		Field lastPosCheckField = ReflectionHelper.findField(PathNavigate.class, "lastPosCheck", "field_75521_i");
-		Field timeoutCachedNodeField = ReflectionHelper.findField(PathNavigate.class, "timeoutCachedNode", "field_188557_k");
-		Field timeoutLimitField = ReflectionHelper.findField(PathNavigate.class, "timeoutLimit", "field_188560_n");
-		Field timeoutTimerField = ReflectionHelper.findField(PathNavigate.class, "timeoutTimer", "field_188558_l");
-		Field lastTimeoutCheckField = ReflectionHelper.findField(PathNavigate.class, "lastTimeoutCheck", "field_188559_m");
+		final int totalTicks = ObfuscationReflectionHelper.getPrivateValue(PathNavigate.class, this, "totalTicks");
+		Field ticksAtLastPosField = ObfuscationReflectionHelper.findField(PathNavigate.class, "ticksAtLastPos");
+		Field lastPosCheckField = ObfuscationReflectionHelper.findField(PathNavigate.class, "lastPosCheck");
+		Field timeoutCachedNodeField = ObfuscationReflectionHelper.findField(PathNavigate.class, "timeoutCachedNode");
+		Field timeoutLimitField = ObfuscationReflectionHelper.findField(PathNavigate.class, "timeoutLimit");
+		Field timeoutTimerField = ObfuscationReflectionHelper.findField(PathNavigate.class, "timeoutTimer");
+		Field lastTimeoutCheckField = ObfuscationReflectionHelper.findField(PathNavigate.class, "lastTimeoutCheck");
 		
 		try {
 			if (totalTicks - ticksAtLastPosField.getInt(this) > 100) {
 				if (positionVec3.squareDistanceTo((Vec3d) lastPosCheckField.get(this)) < 2.25D) {
-					this.clearPathEntity();
+					this.clearPath();
 				}
 	
 				ticksAtLastPosField.setInt(this, totalTicks);
@@ -49,7 +49,7 @@ public class PathNavigatorGroundFixed extends PathNavigateGround {
 				} else {
 					timeoutCachedNodeField.set(this, vec3d);
 					double d0 = positionVec3.distanceTo((Vec3d) timeoutCachedNodeField.get(this));
-					timeoutLimitField.setDouble(this, this.theEntity.getAIMoveSpeed() > 0.0F ? d0 / (double)this.theEntity.getAIMoveSpeed() * 1000.0D : 0.0D);
+					timeoutLimitField.setDouble(this, this.entity.getAIMoveSpeed() > 0.0F ? d0 / (double)this.entity.getAIMoveSpeed() * 1000.0D : 0.0D);
 					timeoutTimerField.setLong(this, 0);
 				}
 	

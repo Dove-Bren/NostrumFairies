@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.entity.render;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
@@ -41,8 +41,8 @@ public class RenderFairy extends RenderLiving<EntityFairy> {
 		GlStateManager.popMatrix();
 		
 		// Now item time!
-		@Nullable ItemStack item = (entity.getCarriedItems()[0]);
-		if (item != null) {
+		@Nonnull ItemStack item = (entity.getCarriedItems().get(0));
+		if (!item.isEmpty()) {
 			GlStateManager.translate(0, .25, 0);
 			GlStateManager.rotate(-entityYaw, 0, 1, 0);
 			Minecraft.getMinecraft().getRenderItem().renderItem(item, TransformType.GROUND);

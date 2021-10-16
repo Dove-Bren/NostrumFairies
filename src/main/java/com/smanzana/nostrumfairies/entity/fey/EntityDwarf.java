@@ -1,15 +1,16 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.tiles.MiningBlockTileEntity;
-import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.entity.ItemArraySerializer;
 import com.smanzana.nostrumfairies.entity.navigation.PathFinderPublic;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
@@ -60,7 +61,9 @@ import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.WalkNodeProcessor;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -98,6 +101,11 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			@Override
 			public DataParameter<ArmPose> createKey(int id) {
 				return new DataParameter<>(id, this);
+			}
+
+			@Override
+			public ArmPose copyValue(ArmPose value) {
+				return value;
 			}
 		}
 		
@@ -177,7 +185,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 						return pathnodetype;
 					}
 					
-					private PathNodeType getPathNodeTypeRaw(IBlockAccess access, int x, int y, int z) {
+					@Override
+					protected PathNodeType getPathNodeTypeRaw(IBlockAccess access, int x, int y, int z) {
 						BlockPos blockpos = new BlockPos(x, y, z);
 						IBlockState iblockstate = access.getBlockState(blockpos);
 						Block block = iblockstate.getBlock();
@@ -218,20 +227,24 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	public InfoScreenTabs getTab() {
 		return InfoScreenTabs.INFO_ENTITY;
 	}
-
-	@Override
-	public ItemStack[] getCarriedItems() {
+	
+	protected ItemStack[] getCarriedItemsRaw() {
 		return dataManager.get(ITEMS);
 	}
 
 	@Override
+	public NonNullList<ItemStack> getCarriedItems() {
+		return NonNullList.from(null, getCarriedItemsRaw());
+	}
+
+	@Override
 	public boolean canAccept(ItemStack stack) {
-		return Inventories.canFit(getCarriedItems(), stack);
+		return Inventories.canFit(getCarriedItemsRaw(), stack);
 	}
 	
 	@Override
 	public boolean canAccept(ItemDeepStack stack) {
-		return ItemDeepStacks.canFitAll(getCarriedItems(), Lists.newArrayList(stack));
+		return ItemDeepStacks.canFitAll(getCarriedItemsRaw(), Lists.newArrayList(stack));
 	}
 	
 	protected void updateItems(ItemStack items[]) {
@@ -255,7 +268,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	protected boolean hasItems() {
 		for (int i = 0; i < INV_SIZE; i++) {
-			if (getCarriedItems()[i] != null) {
+			if (!getCarriedItemsRaw()[i].isEmpty()) {
 				return true;
 			}
 		}
@@ -556,11 +569,11 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	private void dropItems() {
 		for (int i = 0; i < INV_SIZE; i++) {
 			ItemStack heldItem = dataManager.get(ITEMS)[i];
-			if (heldItem == null) {
+			if (heldItem.isEmpty()) {
 				continue;
 			}
 			EntityItem item = new EntityItem(this.world, posX, posY, posZ, heldItem);
-			world.spawnEntityInWorld(item);
+			world.spawnEntity(item);
 		}
 		updateItems(new ItemStack[INV_SIZE]);
 	}
@@ -598,16 +611,16 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		// For now, the only thing we care about is if we're idle but have an item. If so, make
 		// a quick task to go and deposit it
 		if (hasItems()) {
-			ItemStack held = null;
+			ItemStack held = ItemStack.EMPTY;
 			
 			for (int i = 0; i < INV_SIZE; i++) {
 				held = dataManager.get(ITEMS)[i];
-				if (held != null) {
+				if (!held.isEmpty()) {
 					break;
 				}
 			}
 			
-			if (held != null) {
+			if (!held.isEmpty()) {
 				LogisticsNetwork network = this.getLogisticsNetwork();
 				if (network != null) {
 					@Nullable ILogisticsComponent storage = network.getStorageForItem(world, getPosition(), held);
@@ -814,7 +827,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 					if (this.navigator.noPath()) {
 						// First time through?
 						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
-							|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < 1)) {
+							|| (moveEntity != null && this.getDistance(moveEntity) < 1)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;
@@ -883,7 +896,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		ItemStack items[] = dataManager.get(ITEMS);
 		for (int i = 0; i < INV_SIZE; i++) {
 			ItemStack stack = items[i];
-			if (stack != null) {
+			if (!stack.isEmpty()) {
 				list.appendTag(stack.serializeNBT());
 			}
 		}
@@ -901,8 +914,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	private void loadInventoryFromNBT(NBTTagList list) {
 		ItemStack items[] = new ItemStack[INV_SIZE];
 		
-		for (int i = 0; i < list.tagCount(); i++) {
-			items[i] = ItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i));
+		for (int i = 0; i < INV_SIZE; i++) {
+			if (i < list.tagCount()) {
+				items[i] = new ItemStack(list.getCompoundTagAt(i));
+			} else {
+				items[i] = ItemStack.EMPTY;
+			}
 		}
 		
 		updateItems(items);
@@ -1003,7 +1020,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	protected void entityInit() {
 		super.entityInit();
 		dataManager.register(POSE, ArmPose.IDLE);
-		dataManager.register(ITEMS, new ItemStack[INV_SIZE]);
+		ItemStack[] arr = new ItemStack[INV_SIZE];
+		Arrays.fill(arr, ItemStack.EMPTY);
+		dataManager.register(ITEMS, arr);
 	}
 	
 	public ArmPose getPose() {
@@ -1168,7 +1187,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
 			world.removeEntityDangerously(this);
-			world.spawnEntityInWorld(replacement);
+			world.spawnEntity(replacement);
 		}
 		
 		return replacement == null ? this : replacement;
@@ -1181,7 +1200,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	protected SoundEvent getHurtSound() {
+	protected SoundEvent getHurtSound(DamageSource source) {
 		return NostrumFairiesSounds.DWARF_HURT.getEvent();
 	}
 	

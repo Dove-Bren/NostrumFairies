@@ -31,6 +31,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.pathfinding.Path;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -81,13 +82,13 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	public ItemStack[] getCarriedItems() {
-		ItemStack[] stacks = new ItemStack[INV_SIZE];
+	public NonNullList<ItemStack> getCarriedItems() {
+		NonNullList<ItemStack> stacks = NonNullList.withSize(INV_SIZE, ItemStack.EMPTY);
 		int idx = 0;
 		for (int i = 0; i < INV_SIZE; i++) {
 			ItemStack stack = inventory.getStackInSlot(i);
-			if (stack != null) {
-				stacks[idx++] = stack;
+			if (!stack.isEmpty()) {
+				stacks.set(idx++, stack);
 			}
 		}
 		return stacks;
@@ -115,7 +116,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	
 	protected boolean hasItems() {
 		for (int i = 0; i < INV_SIZE; i++) {
-			if (inventory.getStackInSlot(i) != null) {
+			if (!inventory.getStackInSlot(i).isEmpty()) {
 				return true;
 			}
 		}
@@ -159,7 +160,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 //				return true;
 //			}
 //			if (this.navigator.tryMoveToXYZ(pickup.getX(), pickup.getY(), pickup.getZ(), 1.0)) {
-//				navigator.clearPathEntity();
+//				navigator.clearPath();
 //				return true;
 //			}
 //		} else if (task instanceof LogisticsTaskMineBlock) {
@@ -296,24 +297,24 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	private void dropItems() {
 		for (int i = 0; i < INV_SIZE; i++) {
 			ItemStack heldItem = inventory.getStackInSlot(i);
-			if (heldItem == null) {
+			if (heldItem.isEmpty()) {
 				continue;
 			}
 			EntityItem item = new EntityItem(this.world, posX, posY, posZ, heldItem);
-			world.spawnEntityInWorld(item);
+			world.spawnEntity(item);
 		}
 		inventory.clear();
 	}
 
 	@Override
 	protected boolean shouldPerformTask(ILogisticsTask task) {
-		//return this.heldItem == null;
+		//return this.heldItem.isEmpty();
 		return true;
 	}
 
 	@Override
 	protected void onTaskChange(ILogisticsTask oldTask, ILogisticsTask newTask) {
-//		if (oldTask != null && heldItem != null) {
+//		if (oldTask != null && !heldItem().isEmpty()) {
 //			// I guess drop our item
 //			dropItem();
 //		}
@@ -329,16 +330,16 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		// For now, the only thing we care about is if we're idle but have an item. If so, make
 		// a quick task to go and deposit it
 		if (hasItems()) {
-			ItemStack held = null;
+			ItemStack held = ItemStack.EMPTY;
 			
 			for (int i = 0; i < INV_SIZE; i++) {
 				held = inventory.getStackInSlot(i);
-				if (held != null) {
+				if (!held.isEmpty()) {
 					break;
 				}
 			}
 			
-			if (held != null) {
+			if (!held.isEmpty()) {
 				LogisticsNetwork network = this.getLogisticsNetwork();
 				if (network != null) {
 					@Nullable ILogisticsComponent storage = network.getStorageForItem(world, getPosition(), held);
@@ -523,7 +524,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 					if (this.navigator.noPath()) {
 						// First time through?
 						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
-							|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < 1)) {
+							|| (moveEntity != null && this.getDistance(moveEntity) < 1)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;
@@ -579,7 +580,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		
 		for (int i = 0; i < INV_SIZE; i++) {
 			ItemStack stack = inventory.getStackInSlot(i);
-			if (stack != null) {
+			if (!stack.isEmpty()) {
 				list.appendTag(stack.serializeNBT());
 			}
 		}
@@ -598,7 +599,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		inventory.clear();
 		
 		for (int i = 0; i < list.tagCount(); i++) {
-			inventory.setInventorySlotContents(i, ItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i)));
+			inventory.setInventorySlotContents(i, new ItemStack(list.getCompoundTagAt(i)));
 		}
 	}
 	

@@ -79,8 +79,8 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			
 			if (subpath != null && start != null && end != null) {
 				LogisticsNetwork network = fey.getLogisticsNetwork();
-				Location startL = new Location(theEntity.world, start);
-				Location endL = new Location(theEntity.world, end);
+				Location startL = new Location(entity.world, start);
+				Location endL = new Location(entity.world, end);
 				network.removeCachedPath(startL, endL, subpath);
 			}
 		}
@@ -88,13 +88,13 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	
 	private boolean shouldAttempt(BlockPos target) {
 		
-		if (!theEntity.getPosition().equals(lastSource)) {
+		if (!entity.getPosition().equals(lastSource)) {
 			lastTargets.clear();
 		}
 		
 		// Only invoke all of the expensive failure stuff if it's been a while or if we're attempting from a new location.
 		if (lastTargets.contains(target)) {
-			if (lastTicks != -1 && (theEntity.ticksExisted - lastTicks) < (20 * 60)) {
+			if (lastTicks != -1 && (entity.ticksExisted - lastTicks) < (20 * 60)) {
 				// hasn't been enough time to try again
 				return false;
 			}
@@ -104,13 +104,13 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	}
 	
 	private void setFailCache(BlockPos target) {
-		lastTicks = theEntity.ticksExisted;
+		lastTicks = entity.ticksExisted;
 		lastTargets.add(target);
-		lastSource = theEntity.getPosition();
+		lastSource = entity.getPosition();
 	}
 
 //	private double getWeightedDistanceSq(BlockPos pos, BlockPos target) {
-//		final int entYDiff = target.getY() - (int) theEntity.posY;
+//		final int entYDiff = target.getY() - (int) entity.posY;
 //		final int yDiff = target.getY() - pos.getY();
 //		final int yImprov = Math.abs(entYDiff) - Math.abs(yDiff);
 //		
@@ -140,7 +140,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	}
 	
 	private @Nullable Path getMinorPathTo(BlockPos src, BlockPos dest, float range) {
-		Path path = pathFinder.findPath(theEntity.world, theEntity,
+		Path path = pathFinder.findPath(entity.world, entity,
 			src.getX() + .5, src.getY() + .5, src.getZ() + .5,
 			dest.getX() + .5, dest.getY() + .5, dest.getZ() + .5,
 			range);
@@ -161,13 +161,13 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 		List<Location> beacons = Lists.newArrayList(network.getAllBeacons());
 		
 		beacons.removeIf((loc) -> {
-			return (loc.getDimension() != theEntity.world.provider.getDimension());
+			return (loc.getDimension() != entity.world.provider.getDimension());
 		});
 		
 		if (!beacons.isEmpty()) {
 			Collections.sort(beacons, (l, r) -> {
-				final double ldist = theEntity.getDistanceSq(l.getPos());
-				final double rdist = theEntity.getDistanceSq(r.getPos());
+				final double ldist = entity.getDistanceSq(l.getPos());
+				final double rdist = entity.getDistanceSq(r.getPos());
 				
 				return (int) (ldist - rdist);
 			});
@@ -175,7 +175,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			for (Location beacon : beacons) {
 				//Path subpath = super.getPathToPos(beacon.getPos());
 				Path subpath = getMinorPathTo(beacon.getPos(), target, range);
-				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), theEntity.world.isAirBlock(beacon.getPos()) ? 0 : 1)) {
+				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), entity.world.isAirBlock(beacon.getPos()) ? 0 : 1)) {
 					LogisticsNode node = new LogisticsNode(beacon.getPos(), null, subpath, 0, getH(target, beacon.getPos()));
 					return node;
 					
@@ -263,7 +263,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			
 			// Now check all of our neighbors. This is the set of all graph neighbors + the set of beacons that
 			// are within range
-			Collection<ILogisticsComponent> components = network.getConnectedComponents(new Location(theEntity.world, node.pos));
+			Collection<ILogisticsComponent> components = network.getConnectedComponents(new Location(entity.world, node.pos));
 			if (components != null) {
 				for (ILogisticsComponent comp : components) {
 					if (seen.contains(comp.getPosition())) {
@@ -274,8 +274,8 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 					// See if we can even path to this node.
 					boolean newPath = false;
 					final Path path;
-					final Location locStart = new Location(theEntity.world, node.pos);
-					final Location locEnd = new Location(theEntity.world, comp.getPosition());
+					final Location locStart = new Location(entity.world, node.pos);
+					final Location locEnd = new Location(entity.world, comp.getPosition());
 					if (network.hasCachedPath(locStart, locEnd)) {
 						path = network.getCachedPathRaw(locStart, locEnd); 
 					} else {
@@ -312,8 +312,8 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 				// See if we can even path to this node.
 				boolean newPath = false;
 				final Path path;
-				final Location locStart = new Location(theEntity.world, node.pos);
-				final Location locEnd = new Location(theEntity.world, beacon.getPos());
+				final Location locStart = new Location(entity.world, node.pos);
+				final Location locEnd = new Location(entity.world, beacon.getPos());
 				if (network.hasCachedPath(locStart, locEnd)) {
 					path = network.getCachedPathRaw(locStart, locEnd); 
 				} else {

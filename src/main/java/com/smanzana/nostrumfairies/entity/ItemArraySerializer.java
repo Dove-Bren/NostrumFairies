@@ -1,6 +1,7 @@
 package com.smanzana.nostrumfairies.entity;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
@@ -24,7 +25,7 @@ public class ItemArraySerializer implements DataSerializer<ItemStack[]> {
 		// write count, then each item
 		buf.writeInt(value.length);
 		for (ItemStack stack : value) {
-			buf.writeItemStackToBuffer(stack);
+			buf.writeItemStack(stack);
 		}
 	}
 
@@ -34,7 +35,7 @@ public class ItemArraySerializer implements DataSerializer<ItemStack[]> {
 		ItemStack array[] = new ItemStack[Math.max(1, count)];
 		
 		for (int i = 0; i < count; i++) {
-			array[i] = buf.readItemStackFromBuffer();
+			array[i] = buf.readItemStack();
 		}
 		
 		return array;
@@ -43,6 +44,11 @@ public class ItemArraySerializer implements DataSerializer<ItemStack[]> {
 	@Override
 	public DataParameter<ItemStack[]> createKey(int id) {
 		return new DataParameter<>(id, this);
+	}
+
+	@Override
+	public ItemStack[] copyValue(ItemStack[] value) {
+		return Arrays.copyOf(value, value.length);
 	}
 	
 }

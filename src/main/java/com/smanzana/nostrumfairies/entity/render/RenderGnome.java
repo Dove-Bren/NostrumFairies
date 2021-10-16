@@ -50,7 +50,7 @@ public class RenderGnome extends RenderLiving<EntityGnome> {
 		
 		if (entity.getPose() == ArmPose.CARRYING) {
 			ItemStack held = entity.getCarriedItem();
-			if (held != null) {
+			if (!held.isEmpty()) {
 				GlStateManager.pushMatrix();
 				GlStateManager.rotate(-entityYaw, 0, 1, 0);
 				GlStateManager.translate(0, 1.1, 0.475);

@@ -40,7 +40,9 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -75,6 +77,11 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			@Override
 			public DataParameter<ArmPose> createKey(int id) {
 				return new DataParameter<>(id, this);
+			}
+
+			@Override
+			public ArmPose copyValue(ArmPose value) {
+				return value;
 			}
 		}
 		
@@ -139,10 +146,10 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		return InfoScreenTabs.INFO_ENTITY;
 	}
 	
-	private static final ItemStack[] EMPTY = new ItemStack[0];
+	private static final NonNullList<ItemStack> EMPTY = NonNullList.create();
 
 	@Override
-	public ItemStack[] getCarriedItems() {
+	public NonNullList<ItemStack> getCarriedItems() {
 		return EMPTY;
 	}
 
@@ -222,7 +229,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 				return true;
 			}
 			if (this.navigator.tryMoveToXYZ(pickup.getX(), pickup.getY(), pickup.getZ(), 1.0)) {
-				navigator.clearPathEntity();
+				navigator.clearPath();
 				return true;
 			}
 		}
@@ -232,13 +239,13 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	
 	@Override
 	protected boolean shouldPerformTask(ILogisticsTask task) {
-		//return this.heldItem == null;
+		//return this.heldItem.isEmpty();
 		return true;
 	}
 
 	@Override
 	protected void onTaskChange(ILogisticsTask oldTask, ILogisticsTask newTask) {
-//		if (oldTask != null && heldItem != null) {
+//		if (oldTask != null && !heldItem().isEmpty()) {
 //			// I guess drop our item
 //			dropItem();
 //		}
@@ -415,7 +422,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 					if (this.navigator.noPath()) {
 						// First time through?
 						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
-							|| (moveEntity != null && this.getDistanceToEntity(moveEntity) < 1)) {
+							|| (moveEntity != null && this.getDistance(moveEntity) < 1)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;
@@ -671,7 +678,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
 			world.removeEntityDangerously(this);
-			world.spawnEntityInWorld(replacement);
+			world.spawnEntity(replacement);
 		}
 		
 		return replacement == null ? this : replacement;
@@ -683,7 +690,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 	
 	@Override
-	protected SoundEvent getHurtSound() {
+	protected SoundEvent getHurtSound(DamageSource source) {
 		return NostrumFairiesSounds.ELF_HURT.getEvent();
 	}
 	
@@ -695,5 +702,10 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	@Override
 	protected @Nullable NostrumFairiesSounds getIdleSound() {
 		return NostrumFairiesSounds.ELF_IDLE;
+	}
+
+	@Override
+	public void setSwingingArms(boolean swingingArms) {
+		;
 	}
 }
