@@ -1,7 +1,5 @@
 package com.smanzana.nostrumfairies.items;
 
-import java.util.List;
-
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
@@ -35,6 +33,7 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -92,6 +91,7 @@ public class FeyResource extends Item implements ILoreTagged {
 	public FeyResource() {
 		super();
 		this.setUnlocalizedName(ID);
+		this.setRegistryName(ID);
 		this.setMaxDamage(0);
 		this.setMaxStackSize(64);
 		this.setCreativeTab(NostrumFairies.creativeTab);
@@ -119,9 +119,11 @@ public class FeyResource extends Item implements ILoreTagged {
      */
     @SideOnly(Side.CLIENT)
     @Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
-    	for (FeyResourceType type: FeyResourceType.values()) {
-    		subItems.add(create(type, 1));
+	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
+    	if (this.isInCreativeTab(tab)) {
+	    	for (FeyResourceType type: FeyResourceType.values()) {
+	    		subItems.add(create(type, 1));
+	    	}
     	}
 	}
     
@@ -190,7 +192,7 @@ public class FeyResource extends Item implements ILoreTagged {
 		fey.setPosition(at.getX() + .5, at.getY(), at.getZ() + .5);
 		fey.onInitialSpawn(worldIn.getDifficultyForLocation(new BlockPos(fey)), (IEntityLivingData)null);
 		
-		worldIn.spawnEntityInWorld(fey);
+		worldIn.spawnEntity(fey);
 		
 		((WorldServer) worldIn).spawnParticle(EnumParticleTypes.END_ROD,
 				at.getX() + .5,
@@ -205,7 +207,8 @@ public class FeyResource extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+		final ItemStack stack = playerIn.getHeldItem(hand);
 		FeyResourceType type = getType(stack);
 		
 		if (type == FeyResourceType.FLOWER) {
@@ -243,7 +246,7 @@ public class FeyResource extends Item implements ILoreTagged {
 				}
 			}
 			
-			stack.stackSize--;
+			stack.shrink(1);
 			return EnumActionResult.SUCCESS;
 		}
 		
@@ -251,7 +254,8 @@ public class FeyResource extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(ItemStack stack, World worldIn, EntityPlayer playerIn, EnumHand hand) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
+		final ItemStack stack = playerIn.getHeldItem(hand);
 		FeyResourceType type = getType(stack);
 		if (type == FeyResourceType.TABLET) {
 			if (!worldIn.isRemote) {
@@ -259,10 +263,10 @@ public class FeyResource extends Item implements ILoreTagged {
 				if (attr != null) {
 					if (!attr.hasLore(FeyFriendLore.instance)) {
 						attr.giveFullLore(FeyFriendLore.instance());
-						stack.stackSize--;
+						stack.shrink(1);
 						return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
 					} else {
-						playerIn.addChatComponentMessage(new TextComponentTranslation("info.tablet.fail"));
+						playerIn.sendMessage(new TextComponentTranslation("info.tablet.fail"));
 						return new ActionResult<ItemStack>(EnumActionResult.FAIL, stack);
 					}
 				}
@@ -271,7 +275,7 @@ public class FeyResource extends Item implements ILoreTagged {
 			}
 		} else if (type == FeyResourceType.BELL) {
 			if (!worldIn.isRemote) {
-				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, Block.FULL_BLOCK_AABB.offset(playerIn.posX, playerIn.posY, playerIn.posZ).expandXyz(30))) {
+				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, Block.FULL_BLOCK_AABB.offset(playerIn.posX, playerIn.posY, playerIn.posZ).grow(30))) {
 					ent.addPotionEffect(new PotionEffect(Potion.getPotionFromResourceLocation("glowing"), 20 * 5));
 					NostrumMagica.playerListener.registerTimer((/*Event*/ eType, /*EntityLivingBase*/ entity, /*Object*/ data) -> {
 						if (eType == Event.TIME) {

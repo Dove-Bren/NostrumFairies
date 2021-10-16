@@ -1,7 +1,6 @@
 package com.smanzana.nostrumfairies.items;
 
-import java.util.List;
-
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
@@ -14,6 +13,7 @@ import com.smanzana.nostrummagica.loretag.Lore;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -36,6 +36,7 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 	public FeyStone() {
 		super();
 		this.setUnlocalizedName(ID);
+		this.setRegistryName(ID);
 		this.setMaxDamage(0);
 		this.setMaxStackSize(1);
 		this.setCreativeTab(NostrumFairies.creativeTab);
@@ -61,12 +62,14 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
      */
     @SideOnly(Side.CLIENT)
     @Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
-    	for (FeySlotType slot : FeySlotType.values())
-    	for (FeyStoneMaterial material : FeyStoneMaterial.values()) {
-    		if (material.existsForSlot(slot)) {
-    			subItems.add(create(slot, material, 1));
-    		}
+	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
+    	if (this.isInCreativeTab(tab)) {
+	    	for (FeySlotType slot : FeySlotType.values())
+	    	for (FeyStoneMaterial material : FeyStoneMaterial.values()) {
+	    		if (material.existsForSlot(slot)) {
+	    			subItems.add(create(slot, material, 1));
+	    		}
+	    	}
     	}
 	}
     
@@ -91,7 +94,7 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 	}
 	
 	@Nullable
-	public FeyStoneMaterial getStoneMaterial(@Nullable ItemStack stack) {
+	public FeyStoneMaterial getStoneMaterial(@Nonnull ItemStack stack) {
 		if (stack.isEmpty()) {
 			return null;
 		}
@@ -133,7 +136,7 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 
 	@Override
 	public FeySlotType getFeySlot(ItemStack stack) {
-		if (stack == null) {
+		if (stack.isEmpty()) {
 			return null;
 		}
 		

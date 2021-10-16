@@ -2,6 +2,8 @@ package com.smanzana.nostrumfairies.items;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.mojang.realmsclient.gui.ChatFormatting;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
@@ -14,6 +16,7 @@ import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -22,6 +25,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
@@ -74,6 +78,7 @@ public class FairyInstrument extends Item implements ILoreTagged {
 	public FairyInstrument() {
 		super();
 		this.setUnlocalizedName(ID);
+		this.setRegistryName(ID);
 		this.setMaxDamage(0);
 		this.setMaxStackSize(1);
 		this.setCreativeTab(NostrumFairies.creativeTab);
@@ -99,9 +104,11 @@ public class FairyInstrument extends Item implements ILoreTagged {
      */
     @SideOnly(Side.CLIENT)
     @Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
-    	for (InstrumentType type: InstrumentType.values()) {
-    		subItems.add(create(type));
+	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
+    	if (this.isInCreativeTab(tab)) {
+	    	for (InstrumentType type: InstrumentType.values()) {
+	    		subItems.add(create(type));
+	    	}
     	}
 	}
     
@@ -148,12 +155,13 @@ public class FairyInstrument extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		return EnumActionResult.PASS;
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(ItemStack stack, World worldIn, EntityPlayer playerIn, EnumHand hand) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
+		final ItemStack stack = playerIn.getHeldItem(hand);
 		InstrumentType type = getType(stack);
 		if (!worldIn.isRemote) {
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
@@ -206,7 +214,7 @@ public class FairyInstrument extends Item implements ILoreTagged {
 					return true;
 				}, 30, 0);
 			} else {
-				playerIn.addChatComponentMessage(new TextComponentTranslation("info.instrument.locked"));
+				playerIn.sendMessage(new TextComponentTranslation("info.instrument.locked"));
 			}
 		}
 		
@@ -215,10 +223,10 @@ public class FairyInstrument extends Item implements ILoreTagged {
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
-		super.addInformation(stack, playerIn, tooltip, advanced);
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+		super.addInformation(stack, worldIn, tooltip, flagIn);
 		
-		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
+		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(NostrumFairies.proxy.getPlayer());
 		if (attr != null && !attr.isEnabled()) {
 			tooltip.add(ChatFormatting.DARK_RED + I18n.format("info.instrument.disabled") + ChatFormatting.RESET);
 		}

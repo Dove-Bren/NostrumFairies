@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.items;
 
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -21,6 +22,7 @@ import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.Inventories;
 
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -81,6 +83,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	public TemplateWand() {
 		super();
 		this.setUnlocalizedName(ID);
+		this.setRegistryName(ID);
 		this.setMaxDamage(0);
 		this.setMaxStackSize(1);
 		this.setHasSubtypes(true);
@@ -105,7 +108,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	public static void SetWandMode(ItemStack stack, WandMode mode) {
-		if (stack == null || !(stack.getItem() instanceof TemplateWand)) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand)) {
 			return;
 		}
 		
@@ -116,7 +119,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	private static final String NBT_TEMPLATE_INV = "templates";
 	
 	public static int GetTemplateIndex(ItemStack stack) {
-		if (stack == null || !(stack.getItem() instanceof TemplateWand) || !stack.hasTagCompound()) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand) || !stack.hasTagCompound()) {
 			return 0;
 		}
 		
@@ -125,7 +128,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	public static void SetTemplateIndex(ItemStack stack, int index) {
-		if (stack == null || !(stack.getItem() instanceof TemplateWand)) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand)) {
 			return;
 		}
 		
@@ -144,7 +147,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			@Override
 			public boolean isItemValidForSlot(int index, ItemStack stack) {
 				return index < this.getSizeInventory()
-						&& (stack == null || stack.getItem() instanceof TemplateScroll);
+						&& (stack.isEmpty() || stack.getItem() instanceof TemplateScroll);
 			}
 			
 			@Override
@@ -157,11 +160,11 @@ public class TemplateWand extends Item implements ILoreTagged {
 			
 		};
 		
-		if (stack != null && stack.getItem() instanceof TemplateWand && stack.hasTagCompound()) {
+		if (!stack.isEmpty() && stack.getItem() instanceof TemplateWand && stack.hasTagCompound()) {
 			NBTTagList list = stack.getTagCompound().getTagList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND);
 			for (int i = 0; i < list.tagCount() && i < MAX_TEMPLATES; i++) {
 				NBTTagCompound tag = list.getCompoundTagAt(i);
-				inv.setInventorySlotContents(i, ItemStack.loadItemStackFromNBT(tag));
+				inv.setInventorySlotContents(i, new ItemStack(tag));
 			}
 		}
 		
@@ -169,7 +172,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	public static void SetTemplateInventory(ItemStack stack, IInventory inv) {
-		if (stack == null || !(stack.getItem() instanceof TemplateWand)) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand)) {
 			return;
 		}
 		
@@ -181,7 +184,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		NBTTagList list = new NBTTagList();
 		for (int i = 0; i < Math.min(inv.getSizeInventory(), MAX_TEMPLATES); i++) {
 			ItemStack inSlot = inv.getStackInSlot(i);
-			if (inSlot == null) {
+			if (inSlot.isEmpty()) {
 				continue;
 			}
 			
@@ -217,7 +220,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		
 		if (list.tagCount() < (MAX_TEMPLATES - 1)) {
 			list.appendTag(scroll.serializeNBT());
-			scroll = null;
+			scroll = ItemStack.EMPTY;
 			tag.setTag(NBT_TEMPLATE_INV, list);
 			wand.setTagCompound(tag);
 		}
@@ -225,19 +228,19 @@ public class TemplateWand extends Item implements ILoreTagged {
 		return scroll;
 	}
 	
-	public static @Nullable ItemStack GetSelectedTemplate(ItemStack wand) {
-		if (wand == null || !(wand.getItem() instanceof TemplateWand) || !wand.hasTagCompound()) {
-			return null;
+	public static @Nonnull ItemStack GetSelectedTemplate(ItemStack wand) {
+		if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand) || !wand.hasTagCompound()) {
+			return ItemStack.EMPTY;
 		}
 		
 		final int index = GetTemplateIndex(wand);
 		NBTTagList list = wand.getTagCompound().getTagList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND);
 		if (list != null && list.tagCount() > index) {
 			NBTTagCompound tag = list.getCompoundTagAt(index);
-			return ItemStack.loadItemStackFromNBT(tag);
+			return new ItemStack(tag);
 		}
 		
-		return null;
+		return ItemStack.EMPTY;
 	}
 	
 	@Override
@@ -273,7 +276,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			return;
 		}
 		
-		if (stack == null || !(stack.getItem() instanceof TemplateWand)) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand)) {
 			return;
 		}
 		
@@ -304,7 +307,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			return;
 		}
 		
-		if (stack == null || !(stack.getItem() instanceof TemplateWand)) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand)) {
 			return;
 		}
 		
@@ -329,7 +332,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		// Check for blank map and create template scroll
 		Pair<BlockPos, BlockPos> selection = attr.getTemplateSelection();
 		if (selection == null || selection.getLeft() == null || selection.getRight() == null) {
-			playerIn.addChatComponentMessage(new TextComponentTranslation("info.templates.capture.nopos"));
+			playerIn.sendMessage(new TextComponentTranslation("info.templates.capture.nopos"));
 			return ActionResult.<ItemStack>newResult(EnumActionResult.FAIL, stack);
 		}
 		
@@ -348,7 +351,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 					* Math.abs(min.getZ() - max.getZ());
 			
 			if (size > MAX_TEMPLATE_BLOCKS) {
-				playerIn.addChatComponentMessage(new TextComponentTranslation("info.templates.capture.toobig"));
+				playerIn.sendMessage(new TextComponentTranslation("info.templates.capture.toobig"));
 				return ActionResult.<ItemStack>newResult(EnumActionResult.FAIL, stack);
 			}
 		}
@@ -358,8 +361,8 @@ public class TemplateWand extends Item implements ILoreTagged {
 			
 			// Find blank map
 			ItemStack map = new ItemStack(Items.MAP);
-			if (null != Inventories.remove(playerIn.inventory, map)) {
-				playerIn.addChatComponentMessage(new TextComponentTranslation("info.templates.capture.nomap"));
+			if (!Inventories.remove(playerIn.inventory, map).isEmpty()) {
+				playerIn.sendMessage(new TextComponentTranslation("info.templates.capture.nomap"));
 				return ActionResult.<ItemStack>newResult(EnumActionResult.FAIL, stack);
 			}
 		}
@@ -378,11 +381,11 @@ public class TemplateWand extends Item implements ILoreTagged {
 			scroll = AddTemplateToInventory(stack, scroll);
 		}
 		
-		if (scroll == null) {
-			playerIn.addChatComponentMessage(new TextComponentTranslation("info.templates.capture.towand"));
+		if (scroll.isEmpty()) {
+			playerIn.sendMessage(new TextComponentTranslation("info.templates.capture.towand"));
 		} else {
 			scroll = Inventories.addItem(playerIn.inventory, scroll); 
-			if (scroll != null) {
+			if (!scroll.isEmpty()) {
 				playerIn.dropItem(scroll, false);
 			}
 		}
@@ -394,7 +397,8 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(ItemStack stack, World worldIn, EntityPlayer playerIn, EnumHand hand) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
+		final ItemStack stack = playerIn.getHeldItem(hand);
 		final WandMode mode = getModeOf(stack);
 		if (mode == WandMode.SPAWN) {
 			if (!playerIn.isSneaking()) {
@@ -430,7 +434,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		if (worldIn.isRemote) {
 			return EnumActionResult.SUCCESS;
 		}
@@ -445,6 +449,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			return EnumActionResult.FAIL;
 		}
 		
+		final ItemStack stack = playerIn.getHeldItem(hand);
 		final WandMode mode = getModeOf(stack);
 		if (mode == WandMode.SELECTION) {
 			if (playerIn.isSneaking()) {
@@ -463,7 +468,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			
 			if (playerIn.isSneaking()) {
 				ItemStack templateScroll = GetSelectedTemplate(stack);
-				if (templateScroll != null && templateScroll.getItem() instanceof TemplateScroll) {
+				if (!templateScroll.isEmpty() && templateScroll.getItem() instanceof TemplateScroll) {
 					TemplateBlueprint blueprint = TemplateScroll.GetTemplate(templateScroll);
 					if (blueprint != null) {
 						EnumFacing rotate = EnumFacing.getFacingFromVector((float) (pos.getX() - playerIn.posX), 0f, (float) (pos.getZ() - playerIn.posZ));
@@ -485,8 +490,8 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
-		super.addInformation(stack, playerIn, tooltip, advanced);
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+		super.addInformation(stack, worldIn, tooltip, flagIn);
 	}
 
 	public String getModelName(WandMode type) {
@@ -509,7 +514,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound nbt) {
+	public ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound nbt) {
 		return new ICapabilityProvider() {
 
 			private TemplateViewerCapability def = new TemplateViewerCapability();

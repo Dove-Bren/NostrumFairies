@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.items;
 
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
@@ -11,6 +12,7 @@ import com.smanzana.nostrummagica.entity.IEntityTameable;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -22,6 +24,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
@@ -53,6 +56,7 @@ public class SoulJar extends Item implements ILoreTagged {
 	public SoulJar() {
 		super();
 		this.setUnlocalizedName(ID);
+		this.setRegistryName(ID);
 		this.setMaxDamage(0);
 		this.setMaxStackSize(1);
 		this.setHasSubtypes(true);
@@ -67,8 +71,8 @@ public class SoulJar extends Item implements ILoreTagged {
 		return filled ? 1 : 0;
 	}
 	
-	public static boolean hasEntity(@Nullable ItemStack stack) {
-		return stack != null && filledFromMeta(stack.getMetadata());
+	public static boolean hasEntity(@Nonnull ItemStack stack) {
+		return !stack.isEmpty() && filledFromMeta(stack.getMetadata());
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -81,9 +85,11 @@ public class SoulJar extends Item implements ILoreTagged {
 	 */
 	@SideOnly(Side.CLIENT)
 	@Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
-		subItems.add(createFake(false));
-		subItems.add(createFake(true));
+	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
+		if (this.isInCreativeTab(tab)) {
+			subItems.add(createFake(false));
+			subItems.add(createFake(true));
+		}
 	}
 	
 	protected static ItemStack createInternal(EntityLivingBase entity) {
@@ -131,8 +137,8 @@ public class SoulJar extends Item implements ILoreTagged {
 		return ent;
 	}
 	
-	public static @Nullable String getStoredEntityName(@Nullable ItemStack stack) {
-		if (stack == null || !stack.hasTagCompound()) {
+	public static @Nullable String getStoredEntityName(@Nonnull ItemStack stack) {
+		if (stack.isEmpty() || !stack.hasTagCompound()) {
 			return null;
 		}
 		
@@ -170,11 +176,12 @@ public class SoulJar extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		if (worldIn.isRemote) {
 			return EnumActionResult.SUCCESS;
 		}
 		
+		ItemStack stack = playerIn.getHeldItem(hand);
 		if (filledFromMeta(stack.getMetadata())) {
 			// Drop entity at the provided spot
 			EntityLivingBase ent = spawnStoredEntity(stack, worldIn, pos.getX() + hitX, pos.getY() + hitY, pos.getZ() + hitZ);
@@ -207,20 +214,20 @@ public class SoulJar extends Item implements ILoreTagged {
 				if (tameable.isTamed()) {
 					filled = create(tameable);
 				} else {
-					filled = null;
+					filled = ItemStack.EMPTY;
 				}
 			} else if (target instanceof IEntityTameable) {
 				IEntityTameable tameable = (IEntityTameable) target;
 				if (tameable.isTamed()) {
 					filled = create(tameable);
 				} else {
-					filled = null;
+					filled = ItemStack.EMPTY;
 				}
 			} else {
-				filled = null;
+				filled = ItemStack.EMPTY;
 			}
 			
-			if (filled != null) {
+			if (!filled.isEmpty()) {
 				playerIn.setHeldItem(hand, filled);
 				playerIn.world.removeEntityDangerously(target);
 				return true;
@@ -230,7 +237,7 @@ public class SoulJar extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
 		if (filledFromMeta(stack.getMetadata()) && stack.hasTagCompound()) {
 			String name = stack.getTagCompound().getString("name");
 			if (name == null || name.isEmpty()) {

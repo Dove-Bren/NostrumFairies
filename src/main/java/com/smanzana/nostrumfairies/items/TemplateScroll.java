@@ -2,6 +2,8 @@ package com.smanzana.nostrumfairies.items;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
@@ -9,6 +11,7 @@ import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint;
 
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -44,6 +47,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	public TemplateScroll() {
 		super();
 		this.setUnlocalizedName(ID);
+		this.setRegistryName(ID);
 		this.setMaxDamage(0);
 		this.setMaxStackSize(1);
 		this.setHasSubtypes(false);
@@ -58,7 +62,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	private static final String NBT_TEMPLATE = "template";
 	
 	public static TemplateBlueprint GetTemplate(ItemStack stack) {
-		if (stack == null || !(stack.getItem() instanceof TemplateScroll) || !stack.hasTagCompound()) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateScroll) || !stack.hasTagCompound()) {
 			return null;
 		}
 		
@@ -93,7 +97,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	protected static void SetTemplate(ItemStack stack, NBTTagCompound blueprintTag) {
-		if (stack == null || !(stack.getItem() instanceof TemplateScroll)) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateScroll)) {
 			return;
 		}
 		
@@ -133,7 +137,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		return EnumActionResult.PASS;
 	}
 	
@@ -143,8 +147,8 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
-		super.addInformation(stack, playerIn, tooltip, advanced);
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+		super.addInformation(stack, worldIn, tooltip, flagIn);
 	}
 	
 }

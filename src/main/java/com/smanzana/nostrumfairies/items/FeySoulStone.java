@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.items;
 
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
@@ -12,6 +13,7 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -22,6 +24,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
@@ -81,6 +84,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	public FeySoulStone() {
 		super();
 		this.setUnlocalizedName(ID);
+		this.setRegistryName(ID);
 		this.setMaxDamage(0);
 		this.setMaxStackSize(1);
 		this.setHasSubtypes(true);
@@ -179,9 +183,11 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	 */
 	@SideOnly(Side.CLIENT)
 	@Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
-		for (SoulStoneType type : SoulStoneType.values()) {
-			subItems.add(create(type));
+	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
+		if (this.isInCreativeTab(tab)) {
+			for (SoulStoneType type : SoulStoneType.values()) {
+				subItems.add(create(type));
+			}
 		}
 	}
 	
@@ -201,14 +207,14 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return create(soulType);
 	}
 	
-	public static @Nullable ItemStack create(SoulStoneType type, EntityFeyBase fey) {
+	public static @Nonnull ItemStack create(SoulStoneType type, EntityFeyBase fey) {
 		NBTTagCompound nbt = null;
 		String name = null;
 		ResidentType feyType = null;
 		if (fey != null) {
 			feyType = fey.getHomeType();
 			if (!type.canHold(feyType)) {
-				return null;
+				return ItemStack.EMPTY;
 			}
 			nbt = fey.serializeNBT();
 			name = fey.getName();
@@ -249,7 +255,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return fey;
 	}
 	
-	public static @Nullable ItemStack storeEntity(ItemStack stack, EntityFeyBase fey) {
+	public static @Nonnull ItemStack storeEntity(ItemStack stack, EntityFeyBase fey) {
 //		ResidentType feyType = fey.getHomeType();
 //		SoulStoneType stoneType = getTypeOf(stack);
 //		if (!stoneType.canHold(feyType)) {
@@ -311,11 +317,12 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		if (worldIn.isRemote) {
 			return EnumActionResult.SUCCESS;
 		}
 		
+		ItemStack stack = playerIn.getHeldItem(hand);
 		if (filledFromMeta(stack.getMetadata())) {
 			// Drop entity at the provided spot
 			EntityFeyBase fey = spawnStoredEntity(stack, worldIn, pos.getX() + hitX, pos.getY() + hitY, pos.getZ() + hitZ);
@@ -347,7 +354,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			}
 			
 			ItemStack newStack = storeEntity(stack, (EntityFeyBase) target);
-			if (newStack != null) {
+			if (!newStack.isEmpty()) {
 				playerIn.setHeldItem(hand, newStack);
 				playerIn.world.removeEntity(target);
 				return true;
@@ -357,7 +364,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
 		if (filledFromMeta(stack.getMetadata()) && stack.hasTagCompound()) {
 			String name = stack.getTagCompound().getString("name");
 			if (name == null || name.isEmpty()) {

@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.items;
 
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
@@ -16,6 +17,7 @@ import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.IEntityLivingData;
@@ -27,6 +29,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
@@ -91,6 +94,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	public FairyGael() {
 		super();
 		this.setUnlocalizedName(ID);
+		this.setRegistryName(ID);
 		this.setMaxDamage(0);
 		this.setMaxStackSize(1);
 		this.setHasSubtypes(true);
@@ -139,21 +143,23 @@ public class FairyGael extends Item implements ILoreTagged {
 	 */
 	@SideOnly(Side.CLIENT)
 	@Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
-		for (FairyGaelType type : FairyGaelType.values()) {
-			subItems.add(create(type, null, false));
-		}
-		
-		for (FairyGaelType type : FairyGaelType.values()) {
-			subItems.add(create(type, null, true));
+	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
+		if (this.isInCreativeTab(tab)) {
+			for (FairyGaelType type : FairyGaelType.values()) {
+				subItems.add(create(type, null, false));
+			}
+			
+			for (FairyGaelType type : FairyGaelType.values()) {
+				subItems.add(create(type, null, true));
+			}
 		}
 	}
 	
-	public static @Nullable ItemStack create(FairyGaelType type, EntityPersonalFairy fey) {
+	public static @Nonnull ItemStack create(FairyGaelType type, EntityPersonalFairy fey) {
 		return create(type, fey, false);
 	}
 	
-	public static @Nullable ItemStack create(FairyGaelType type, EntityPersonalFairy fey, boolean cracked) {
+	public static @Nonnull ItemStack create(FairyGaelType type, EntityPersonalFairy fey, boolean cracked) {
 		ItemStack stack = new ItemStack(instance(), 1, metaFromTypes(cracked, type));
 		setStoredEntity(stack, fey);
 		return stack;
@@ -259,7 +265,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	 * @param potency Relative efficiency. 1f is standard.
 	 */
 	public static void regenFairy(ItemStack gael, float potency) {
-		if (gael == null || isCracked(gael)) {
+		if (gael.isEmpty() || isCracked(gael)) {
 			return;
 		}
 		
@@ -285,8 +291,8 @@ public class FairyGael extends Item implements ILoreTagged {
 	}
 	
 	public static ItemStack upgrade(FairyGaelType type, ItemStack soulStone) {
-		if (soulStone == null || !(soulStone.getItem() instanceof FeySoulStone) || !FeySoulStone.hasStoredFey(soulStone)) {
-			return null;
+		if (soulStone.isEmpty() || !(soulStone.getItem() instanceof FeySoulStone) || !FeySoulStone.hasStoredFey(soulStone)) {
+			return ItemStack.EMPTY;
 		}
 		ItemStack gael = new ItemStack(instance(), 1, metaFromTypes(false, type));
 		NBTTagCompound tag = new NBTTagCompound();
@@ -323,18 +329,18 @@ public class FairyGael extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) { 
+	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) { 
 		return EnumActionResult.PASS;
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(ItemStack stack, World worldIn, EntityPlayer playerIn, EnumHand hand) {
-		return ActionResult.newResult(EnumActionResult.PASS, stack);
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
+		return ActionResult.newResult(EnumActionResult.PASS, playerIn.getHeldItem(hand));
 	}
 	
 	@SideOnly(Side.CLIENT)
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
 		if (isCracked(stack)) {
 			tooltip.add(ChatFormatting.DARK_RED + I18n.format("info.fairy_gael.cracked") + ChatFormatting.RESET);
 		}
