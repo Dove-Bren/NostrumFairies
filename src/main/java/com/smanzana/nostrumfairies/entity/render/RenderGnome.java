@@ -2,9 +2,9 @@ package com.smanzana.nostrumfairies.entity.render;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
-import com.smanzana.nostrumfairies.entity.fey.EntityGnome.ArmPose;
 import com.smanzana.nostrumfairies.entity.render.ModelGnomeHat.Type;
 import com.smanzana.nostrumfairies.entity.render.layers.LayerGnomeHat;
+import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -48,7 +48,7 @@ public class RenderGnome extends RenderLiving<EntityGnome> {
 		super.doRender(entity, 0, 0, 0, entityYaw, partialTicks);
 		
 		
-		if (entity.getPose() == ArmPose.CARRYING) {
+		if (entity.getPose() == ArmPoseGnome.CARRYING) {
 			ItemStack held = entity.getCarriedItem();
 			if (!held.isEmpty()) {
 				GlStateManager.pushMatrix();

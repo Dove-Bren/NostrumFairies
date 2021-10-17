@@ -43,7 +43,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -108,10 +107,6 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	
 	public static String ID(ResidentType type) {
 		return ID + "_" + type.name().toLowerCase();
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(HomeBlockTileEntity.class, "home_block_te");
 	}
 	
 	private final ResidentType type;

@@ -30,7 +30,6 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class BuildingBlock extends BlockContainer {
 
@@ -47,10 +46,6 @@ public class BuildingBlock extends BlockContainer {
 			instance = new BuildingBlock();
 		
 		return instance;
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(BuildingBlockTileEntity.class, "logistics_building_block_te");
 	}
 	
 	public BuildingBlock() {

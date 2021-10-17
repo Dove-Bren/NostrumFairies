@@ -22,7 +22,6 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class LogisticsPylon extends BlockContainer {
 	
@@ -35,15 +34,6 @@ public class LogisticsPylon extends BlockContainer {
 			instance = new LogisticsPylon();
 		
 		return instance;
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(PylonTileEntity.class, "logistics_pylon_te");
-//		GameRegistry.addShapedRecipe(new ItemStack(instance()),
-//				"WPW", "WCW", "WWW",
-//				'W', new ItemStack(Blocks.PLANKS, 1, OreDictionary.WILDCARD_VALUE),
-//				'P', new ItemStack(Items.PAPER, 1, OreDictionary.WILDCARD_VALUE),
-//				'C', NostrumResourceItem.getItem(ResourceType.CRYSTAL_LARGE, 1));
 	}
 	
 	public LogisticsPylon() {

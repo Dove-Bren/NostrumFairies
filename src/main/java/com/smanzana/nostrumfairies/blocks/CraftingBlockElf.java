@@ -25,7 +25,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CraftingBlockElf extends BlockContainer {
 	
@@ -39,10 +38,6 @@ public class CraftingBlockElf extends BlockContainer {
 			instance = new CraftingBlockElf();
 		
 		return instance;
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(CraftingBlockElfTileEntity.class, "logistics_crafting_station_elf_te");
 	}
 	
 	public CraftingBlockElf() {

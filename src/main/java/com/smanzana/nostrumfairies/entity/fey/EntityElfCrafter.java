@@ -4,6 +4,7 @@ import com.smanzana.nostrumfairies.blocks.CraftingBlockElf;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
+import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
 import com.smanzana.nostrumfairies.utils.Paths;
 
 import net.minecraft.block.state.IBlockState;
@@ -109,7 +110,7 @@ public class EntityElfCrafter extends EntityElf {
 	
 	@Override
 	protected void onCientTick() {
-		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPose.WORKING) {
+		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPoseElf.WORKING) {
 			
 			double angle = this.rotationYawHead + ((this.isLeftHanded() ? -1 : 1) * 22.5);
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;

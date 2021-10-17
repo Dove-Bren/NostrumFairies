@@ -202,10 +202,11 @@ public class OverlayRenderer extends Gui {
 					}
 				}
 				
-				if (!templateScroll.isEmpty()) {
+				if (cachedBlueprint != null) {
 					Vec3d center = event.getTarget().hitVec;
 					BlockPos blockPos = event.getTarget().getBlockPos().offset(event.getTarget().sideHit);
 					EnumFacing face = EnumFacing.getFacingFromVector((float) (center.x - player.posX), 0f, (float) (center.z - player.posZ));
+					// apply original template rotation
 					renderBlueprintPreview(blockPos, cachedBlueprint.getPreview(), face, event.getPartialTicks());
 				}
 			}
@@ -429,26 +430,51 @@ public class OverlayRenderer extends Gui {
 		case UP:
 		case DOWN:
 		default:
-			angle = 180;
-			rotX = 1;
-			rotZ = 1;
-			break;
-		case EAST:
-			angle = 90;
-			rotX = 0;
-			rotZ = 1;
-			break;
-		case SOUTH:
 			angle = 0;
 			rotX = 0;
 			rotZ = 0;
 			break;
-		case WEST:
+		case EAST:
 			angle = 270;
 			rotX = 1;
 			rotZ = 0;
 			break;
+		case SOUTH:
+			angle = 180;
+			rotX = 1;
+			rotZ = 1;
+			break;
+		case WEST:
+			angle = 90;
+			rotX = 0;
+			rotZ = 1;
+			break;
 		}
+//		switch (rotation) {
+//		case NORTH:
+//		case UP:
+//		case DOWN:
+//		default:
+//			angle = 180;
+//			rotX = 1;
+//			rotZ = 1;
+//			break;
+//		case EAST:
+//			angle = 90;
+//			rotX = 0;
+//			rotZ = 1;
+//			break;
+//		case SOUTH:
+//			angle = 0;
+//			rotX = 0;
+//			rotZ = 0;
+//			break;
+//		case WEST:
+//			angle = 270;
+//			rotX = 1;
+//			rotZ = 0;
+//			break;
+//		}
 		
 		GlStateManager.pushMatrix();
 		

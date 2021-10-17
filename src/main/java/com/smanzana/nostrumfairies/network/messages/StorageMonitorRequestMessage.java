@@ -70,7 +70,7 @@ public class StorageMonitorRequestMessage implements IMessage {
 	protected NBTTagCompound tag;
 	
 	public StorageMonitorRequestMessage() {
-		this(null, null, false);
+		this(null, ItemStack.EMPTY, false);
 	}
 	
 	public StorageMonitorRequestMessage(StorageMonitorTileEntity monitor, @Nonnull ItemStack template, boolean delete) {

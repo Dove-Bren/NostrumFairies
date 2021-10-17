@@ -1,6 +1,5 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import javax.annotation.Nullable;
@@ -11,7 +10,6 @@ import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.blocks.tiles.MiningBlockTileEntity;
-import com.smanzana.nostrumfairies.entity.ItemArraySerializer;
 import com.smanzana.nostrumfairies.entity.navigation.PathFinderPublic;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
@@ -25,6 +23,9 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
+import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
+import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
+import com.smanzana.nostrumfairies.serializers.ItemArraySerializer;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
@@ -51,10 +52,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
-import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
@@ -77,46 +75,8 @@ import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
-	public static enum ArmPose {
-		IDLE,
-		MINING,
-		ATTACKING;
-		
-		public final static class PoseSerializer implements DataSerializer<ArmPose> {
-			
-			private PoseSerializer() {
-				DataSerializers.registerSerializer(this);
-			}
-			
-			@Override
-			public void write(PacketBuffer buf, ArmPose value) {
-				buf.writeEnumValue(value);
-			}
-
-			@Override
-			public ArmPose read(PacketBuffer buf) throws IOException {
-				return buf.readEnumValue(ArmPose.class);
-			}
-
-			@Override
-			public DataParameter<ArmPose> createKey(int id) {
-				return new DataParameter<>(id, this);
-			}
-
-			@Override
-			public ArmPose copyValue(ArmPose value) {
-				return value;
-			}
-		}
-		
-		public static PoseSerializer Serializer = null;
-		public static void Init() {
-			 Serializer = new PoseSerializer();
-		}
-	}
-	
-	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityDwarf.class, ArmPose.Serializer);
-	protected static final DataParameter<ItemStack[]> ITEMS = EntityDataManager.<ItemStack[]>createKey(EntityDwarf.class, ItemArraySerializer.Serializer);
+	protected static final DataParameter<ArmPoseDwarf> POSE  = EntityDataManager.<ArmPoseDwarf>createKey(EntityDwarf.class, ArmPoseDwarf.instance());
+	protected static final DataParameter<ItemStack[]> ITEMS = EntityDataManager.<ItemStack[]>createKey(EntityDwarf.class, ItemArraySerializer.instance());
 	
 	private static final String NBT_ITEMS = "helditems";
 	private static final int INV_SIZE = 5;
@@ -586,7 +546,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void onTaskChange(ILogisticsTask oldTask, ILogisticsTask newTask) {
 		if (newTask == null) {
-			this.setPose(ArmPose.IDLE);
+			this.setPose(ArmPoseDwarf.IDLE);
 		} else {
 		if (newTask instanceof LogisticsTaskMineBlock) {
 				setActivitySummary("status.dwarf.work.mine");
@@ -606,7 +566,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	protected void onIdleTick() {
-		this.setPose(ArmPose.IDLE);
+		this.setPose(ArmPoseDwarf.IDLE);
 		// We could play some idle animation or something
 		// For now, the only thing we care about is if we're idle but have an item. If so, make
 		// a quick task to go and deposit it
@@ -728,17 +688,17 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		if (sub != null) {
 			switch (sub.getType()) {
 			case ATTACK:
-				this.setPose(ArmPose.ATTACKING);
+				this.setPose(ArmPoseDwarf.ATTACKING);
 				this.faceEntity(sub.getEntity(), 30, 180);
 				break;
 			case BREAK:
 				if (this.isSwingInProgress) {
 					;
 				} else {
-					this.setPose(ArmPose.MINING);
+					this.setPose(ArmPoseDwarf.MINING);
 					task.markSubtaskComplete();
 					if (task.getActiveSubtask() != sub) {
-						this.setPose(ArmPose.IDLE);
+						this.setPose(ArmPoseDwarf.IDLE);
 						break;
 					}
 					this.swingArm(getActiveHand());
@@ -766,7 +726,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 //				}
 				break;
 			case IDLE:
-				this.setPose(ArmPose.IDLE);
+				this.setPose(ArmPoseDwarf.IDLE);
 				if (this.navigator.noPath()) {
 					if (movePos == null) {
 						final BlockPos center = sub.getPos();
@@ -823,7 +783,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				break;
 			case MOVE:
 				{
-					this.setPose(ArmPose.IDLE);
+					this.setPose(ArmPoseDwarf.IDLE);
 					if (this.navigator.noPath()) {
 						// First time through?
 						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
@@ -1019,23 +979,23 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void entityInit() {
 		super.entityInit();
-		dataManager.register(POSE, ArmPose.IDLE);
+		dataManager.register(POSE, ArmPoseDwarf.IDLE);
 		ItemStack[] arr = new ItemStack[INV_SIZE];
 		Arrays.fill(arr, ItemStack.EMPTY);
 		dataManager.register(ITEMS, arr);
 	}
 	
-	public ArmPose getPose() {
+	public ArmPoseDwarf getPose() {
 		return dataManager.get(POSE);
 	}
 	
-	public void setPose(ArmPose pose) {
+	public void setPose(ArmPoseDwarf pose) {
 		this.dataManager.set(POSE, pose);
 	}
 
 	@Override
 	protected void onCombatTick() {
-		this.setPose(ArmPose.ATTACKING);
+		this.setPose(ArmPoseDwarf.ATTACKING);
 	}
 	
 	@Override
@@ -1057,7 +1017,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		super.onUpdate();
 		
 		if (world.isRemote && isSwingInProgress) {
-			if (this.getPose() == ArmPose.MINING) {
+			if (this.getPose() == ArmPoseDwarf.MINING) {
 				// 20% into animation is the hit
 				if (this.swingProgressInt == Math.floor(this.getArmSwingAnimationEnd() * .2)) {
 					playWorkSound();
@@ -1125,7 +1085,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		}
 
 		if (this.getAttackTarget() == null) {
-			this.setPose(ArmPose.IDLE);
+			this.setPose(ArmPoseDwarf.IDLE);
 		}
 	}
 

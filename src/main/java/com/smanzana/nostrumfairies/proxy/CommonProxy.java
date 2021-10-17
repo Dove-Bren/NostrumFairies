@@ -1,6 +1,5 @@
 package com.smanzana.nostrumfairies.proxy;
 
-import com.google.common.base.Predicate;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BufferLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.BuildingBlock;
@@ -24,6 +23,27 @@ import com.smanzana.nostrumfairies.blocks.StorageLogisticsChest;
 import com.smanzana.nostrumfairies.blocks.StorageMonitor;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrumfairies.blocks.WoodcuttingBlock;
+import com.smanzana.nostrumfairies.blocks.tiles.BufferChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.BuildingBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockDwarfTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockElfTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockGnomeTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.FarmingBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.GatheringBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.InputChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.LogisticsSensorTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.MiningBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.OutputChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.OutputPanelTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.PylonTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedDiamondChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedGoldChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedIronChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.StorageChestTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.StorageMonitorTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.TemplateBlockTileEntity;
+import com.smanzana.nostrumfairies.blocks.tiles.WoodcuttingBlockTileEntity;
 import com.smanzana.nostrumfairies.capabilities.CapabilityHandler;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.capabilities.fey.NostrumFeyCapability;
@@ -32,7 +52,6 @@ import com.smanzana.nostrumfairies.capabilities.templates.ITemplateViewerCapabil
 import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapability;
 import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapabilityStorage;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
-import com.smanzana.nostrumfairies.entity.ItemArraySerializer;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfCrafter;
@@ -46,7 +65,6 @@ import com.smanzana.nostrumfairies.entity.fey.EntityGnomeCrafter;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
-import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FairyGael;
 import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
@@ -66,6 +84,14 @@ import com.smanzana.nostrumfairies.network.messages.CapabilitySyncMessage;
 import com.smanzana.nostrumfairies.potion.FeyPotionTypes;
 import com.smanzana.nostrumfairies.potion.FeyVisibilityPotion;
 import com.smanzana.nostrumfairies.rituals.outcomes.OutcomeConstructGael;
+import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
+import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
+import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
+import com.smanzana.nostrumfairies.serializers.BattleStanceElfArcher;
+import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
+import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
+import com.smanzana.nostrumfairies.serializers.FairyJob;
+import com.smanzana.nostrumfairies.serializers.ItemArraySerializer;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.blocks.MimicBlock;
@@ -88,6 +114,7 @@ import com.smanzana.nostrummagica.rituals.outcomes.OutcomeSpawnItem;
 import com.smanzana.nostrummagica.rituals.requirements.RRequirementResearch;
 import com.smanzana.nostrummagica.spells.EMagicElement;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.player.EntityPlayer;
@@ -95,145 +122,42 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.PotionTypes;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionHelper;
+import net.minecraft.potion.PotionType;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.BiomeDictionary;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraftforge.fml.common.registry.EntityEntry;
+import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.registries.DataSerializerEntry;
+import net.minecraftforge.registries.IForgeRegistry;
 
 public class CommonProxy {
 	
-	public CapabilityHandler capabilityHandler;	
+	public CapabilityHandler capabilityHandler;
+	
+	public CommonProxy() {
+		MinecraftForge.EVENT_BUS.register(this);
+	}
 	
 	public void preinit() {
-		CapabilityManager.INSTANCE.register(INostrumFeyCapability.class, new NostrumFeyCapabilityStorage(), NostrumFeyCapability.class);
-		CapabilityManager.INSTANCE.register(ITemplateViewerCapability.class, new TemplateViewerCapabilityStorage(), TemplateViewerCapability.class);
+		CapabilityManager.INSTANCE.register(INostrumFeyCapability.class, new NostrumFeyCapabilityStorage(), NostrumFeyCapability::new);
+		CapabilityManager.INSTANCE.register(ITemplateViewerCapability.class, new TemplateViewerCapabilityStorage(), TemplateViewerCapability::new);
 		capabilityHandler = new CapabilityHandler();
 		NetworkHandler.getInstance();
-		NostrumFairiesSounds.registerSounds();
-		
-		IFeyWorker.FairyGeneralStatus.Init();
-		EntityDwarf.ArmPose.Init();
-		EntityElf.ArmPose.Init();
-		EntityElfArcher.BattleStance.Init();
-		EntityShadowFey.BattleStance.Init();
-		EntityGnome.ArmPose.Init();
-		ItemArraySerializer.Init();
-		EntityPersonalFairy.FairyJob.Init();
-		
-    	
-    	int entityID = 0;
-    	EntityRegistry.registerModEntity(EntityTestFairy.class, "test_fairy",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityFairy.class, "fairy",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityDwarf.class, "dwarf",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityElf.class, "elf",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityGnome.class, "gnome",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityElfArcher.class, "elf_archer",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-
-    	EntityRegistry.registerModEntity(EntityShadowFey.class, "shadow_fey",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityPersonalFairy.class, "personal_fairy",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityElfCrafter.class, "elf_crafter",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityDwarfCrafter.class, "dwarf_crafter",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityDwarfBuilder.class, "dwarf_builder",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityGnomeCrafter.class, "gnome_crafter",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	EntityRegistry.registerModEntity(EntityGnomeCollector.class, "gnome_collector",
-    			entityID++,
-    			NostrumFairies.instance,
-    			128,
-    			1,
-    			false
-    			);
-    	
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 35, 1, 2, EnumCreatureType.MONSTER, 
-    			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.MAGICAL));
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 25, 1, 3, EnumCreatureType.MONSTER, 
-    			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.FOREST));
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 18, 2, 2, EnumCreatureType.MONSTER, 
-    			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.SPOOKY));
-    	EntityRegistry.addSpawn(EntityShadowFey.class, 20, 1, 2, EnumCreatureType.MONSTER, 
-    			BiomeDictionary.getBiomesForType(BiomeDictionary.Type.DENSE));
-
-    	registerItems();
-    	registerBlocks();
-    	registerRituals();
     	
     	NostrumMagica.instance.registerResearchReloadHook((i) -> {
     		registerResearch();
@@ -243,8 +167,8 @@ public class CommonProxy {
 	
 	public void init() {
     	NetworkRegistry.INSTANCE.registerGuiHandler(NostrumFairies.instance, new NostrumFairyGui());
-    	
-    	registerPotions();
+
+    	registerRituals();
     	registerLore();
     	registerResearch();
     	
@@ -254,186 +178,221 @@ public class CommonProxy {
 	public void postinit() {
 		TemplateBlock.RegisterBaseOverrides();
 	}
+
+	@SubscribeEvent
+	public void registerEntities(RegistryEvent.Register<EntityEntry> event) {
+		final IForgeRegistry<EntityEntry> registry = event.getRegistry();
+		int entityID = 0;
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityTestFairy.class)
+				.id("test_fairy", entityID++)
+				.name(NostrumFairies.MODID + ".test_fairy")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityFairy.class)
+				.id("fairy", entityID++)
+				.name(NostrumFairies.MODID + ".fairy")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityDwarf.class)
+				.id("dwarf", entityID++)
+				.name(NostrumFairies.MODID + ".dwarf")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityElf.class)
+				.id("elf", entityID++)
+				.name(NostrumFairies.MODID + ".elf")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityGnome.class)
+				.id("gnome", entityID++)
+				.name(NostrumFairies.MODID + ".gnome")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityElfArcher.class)
+				.id("elf_archer", entityID++)
+				.name(NostrumFairies.MODID + ".elf_archer")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityShadowFey.class)
+				.id("shadow_fey", entityID++)
+				.name(NostrumFairies.MODID + ".shadow_fey")
+				.tracker(128, 1, false)
+				.spawn(EnumCreatureType.MONSTER, 35, 1, 2, BiomeDictionary.getBiomes(BiomeDictionary.Type.MAGICAL))
+				.spawn(EnumCreatureType.MONSTER, 25, 1, 3, BiomeDictionary.getBiomes(BiomeDictionary.Type.FOREST))
+				.spawn(EnumCreatureType.MONSTER, 18, 2, 2, BiomeDictionary.getBiomes(BiomeDictionary.Type.SPOOKY))
+				.spawn(EnumCreatureType.MONSTER, 20, 1, 2, BiomeDictionary.getBiomes(BiomeDictionary.Type.DENSE))
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityPersonalFairy.class)
+				.id("personal_fairy", entityID++)
+				.name(NostrumFairies.MODID + ".personal_fairy")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityElfCrafter.class)
+				.id("elf_crafter", entityID++)
+				.name(NostrumFairies.MODID + ".elf_crafter")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityDwarfCrafter.class)
+				.id("dwarf_crafter", entityID++)
+				.name(NostrumFairies.MODID + ".dwarf_crafter")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityDwarfBuilder.class)
+				.id("dwarf_builder", entityID++)
+				.name(NostrumFairies.MODID + ".dwarf_builder")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityGnomeCrafter.class)
+				.id("gnome_crafter", entityID++)
+				.name(NostrumFairies.MODID + ".gnome_crafter")
+				.tracker(128, 1, false)
+			.build());
+		registry.register(EntityEntryBuilder.create()
+				.entity(EntityGnomeCollector.class)
+				.id("gnome_collector", entityID++)
+				.name(NostrumFairies.MODID + ".gnome_collector")
+				.tracker(128, 1, false)
+			.build());
+	}
+	
+	private static void registerBlockItem(Block block, String registryName, IForgeRegistry<Item> registry) {
+		ItemBlock item = new ItemBlock(block);
+    	item.setRegistryName(registryName);
+    	item.setUnlocalizedName(registryName);
+    	item.setCreativeTab(NostrumFairies.creativeTab);
+    	registry.register(item);
+	}
     
-    private void registerItems() {
-    	GameRegistry.register(
-    			FeyStone.instance().setRegistryName(FeyStone.ID));
-    	FeyStone.init();
+	@SubscribeEvent
+	public void registerItems(RegistryEvent.Register<Item> event) {
+		final IForgeRegistry<Item> registry = event.getRegistry();
     	
-    	GameRegistry.register(
-    			FeyResource.instance().setRegistryName(FeyResource.ID));
-    	FeyResource.init();
-    	
-    	GameRegistry.register(
-    			FeySoulStone.instance().setRegistryName(FeySoulStone.ID));
-    	FeySoulStone.init();
-    	
-    	GameRegistry.register(
-    			FairyGael.instance().setRegistryName(FairyGael.ID));
-    	FairyGael.init();
-    	
-    	GameRegistry.register(
-    			FairyInstrument.instance().setRegistryName(FairyInstrument.ID));
-    	FairyInstrument.init();
-    	
-    	GameRegistry.register(
-    			TemplateWand.instance().setRegistryName(TemplateWand.ID));
-    	TemplateWand.init();
-    	
-    	GameRegistry.register(
-    			TemplateScroll.instance().setRegistryName(TemplateScroll.ID));
-    	TemplateScroll.init();
-    	
-    	GameRegistry.register(
-    			SoulJar.instance().setRegistryName(SoulJar.ID));
-    	SoulJar.init();
-    }
-    
-    private void registerBlocks() {
-    	GameRegistry.register(StorageLogisticsChest.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, StorageLogisticsChest.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(StorageLogisticsChest.instance())).setRegistryName(StorageLogisticsChest.ID));
-    	StorageLogisticsChest.init();
-    	
-    	GameRegistry.register(BufferLogisticsChest.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, BufferLogisticsChest.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(BufferLogisticsChest.instance())).setRegistryName(BufferLogisticsChest.ID));
-    	BufferLogisticsChest.init();
-    	
-    	GameRegistry.register(OutputLogisticsChest.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, OutputLogisticsChest.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(OutputLogisticsChest.instance())).setRegistryName(OutputLogisticsChest.ID));
-    	OutputLogisticsChest.init();
-    	
-    	GameRegistry.register(StorageMonitor.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, StorageMonitor.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(StorageMonitor.instance())).setRegistryName(StorageMonitor.ID));
-    	StorageMonitor.init();
-    	
-    	GameRegistry.register(InputLogisticsChest.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, InputLogisticsChest.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(InputLogisticsChest.instance())).setRegistryName(InputLogisticsChest.ID));
-    	InputLogisticsChest.init();
-    	
-    	GameRegistry.register(GatheringBlock.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, GatheringBlock.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(GatheringBlock.instance())).setRegistryName(GatheringBlock.ID));
-    	GatheringBlock.init();
-    	
-    	GameRegistry.register(LogisticsPylon.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, LogisticsPylon.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(LogisticsPylon.instance())).setRegistryName(LogisticsPylon.ID));
-    	LogisticsPylon.init();
-    	
-    	GameRegistry.register(WoodcuttingBlock.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, WoodcuttingBlock.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(WoodcuttingBlock.instance())).setRegistryName(WoodcuttingBlock.ID));
-    	WoodcuttingBlock.init();
-    	
-    	GameRegistry.register(MiningBlock.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, MiningBlock.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(MiningBlock.instance())).setRegistryName(MiningBlock.ID));
-    	MiningBlock.init();
-    	
-    	GameRegistry.register(MagicLight.Bright(),
-    			new ResourceLocation(NostrumFairies.MODID, MagicLight.BrightID));
-    	GameRegistry.register(MagicLight.Medium(),
-    			new ResourceLocation(NostrumFairies.MODID, MagicLight.MediumID));
-    	GameRegistry.register(MagicLight.Dim(),
-    			new ResourceLocation(NostrumFairies.MODID, MagicLight.DimID));
-    	GameRegistry.register(MagicLight.Unlit(),
-    			new ResourceLocation(NostrumFairies.MODID, MagicLight.UnlitID));
-    	
-    	GameRegistry.register(FarmingBlock.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, FarmingBlock.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(FarmingBlock.instance())).setRegistryName(FarmingBlock.ID));
-    	FarmingBlock.init();
+		registry.register(FeyStone.instance());
+		registry.register(FeyResource.instance());
+		registry.register(FeySoulStone.instance());
+		registry.register(FairyGael.instance());
+		registry.register(FairyInstrument.instance());
+		registry.register(TemplateWand.instance());
+		registry.register(TemplateScroll.instance());
+		registry.register(SoulJar.instance());
+		
+		registerBlockItem(StorageLogisticsChest.instance(), StorageLogisticsChest.ID, registry);
+		registerBlockItem(BufferLogisticsChest.instance(), BufferLogisticsChest.ID, registry);
+		registerBlockItem(OutputLogisticsChest.instance(), OutputLogisticsChest.ID, registry);
+		registerBlockItem(StorageMonitor.instance(), StorageMonitor.ID, registry);
+		registerBlockItem(InputLogisticsChest.instance(), InputLogisticsChest.ID, registry);
+		registerBlockItem(GatheringBlock.instance(), GatheringBlock.ID, registry);
+		registerBlockItem(LogisticsPylon.instance(), LogisticsPylon.ID, registry);
+		registerBlockItem(WoodcuttingBlock.instance(), WoodcuttingBlock.ID, registry);
+		registerBlockItem(MiningBlock.instance(), MiningBlock.ID, registry);
+		registerBlockItem(FarmingBlock.instance(), FarmingBlock.ID, registry);
+		registerBlockItem(BuildingBlock.instance(), BuildingBlock.ID, registry);
+		registerBlockItem(CraftingBlockDwarf.instance(), CraftingBlockDwarf.ID, registry);
+		registerBlockItem(CraftingBlockElf.instance(), CraftingBlockElf.ID, registry);
+		registerBlockItem(CraftingBlockGnome.instance(), CraftingBlockGnome.ID, registry);
+		registerBlockItem(LogisticsSensorBlock.instance(), LogisticsSensorBlock.ID, registry);
+		registerBlockItem(OutputLogisticsPanel.instance(), OutputLogisticsPanel.ID, registry);
+		registerBlockItem(ReinforcedStorageLogisticsChest.Iron(), ReinforcedStorageLogisticsChest.Iron().getID(), registry);
+		registerBlockItem(ReinforcedStorageLogisticsChest.Gold(), ReinforcedStorageLogisticsChest.Gold().getID(), registry);
+		registerBlockItem(ReinforcedStorageLogisticsChest.Diamond(), ReinforcedStorageLogisticsChest.Diamond().getID(), registry);
     	
     	for (ResidentType type : ResidentType.values()) {
-	    	GameRegistry.register(FeyHomeBlock.instance(type),
-	    			new ResourceLocation(NostrumFairies.MODID, FeyHomeBlock.ID(type)));
-	    	GameRegistry.register(
-	    			(new ItemBlock(FeyHomeBlock.instance(type))).setRegistryName(FeyHomeBlock.ID(type)));
+    		registerBlockItem(FeyHomeBlock.instance(type), FeyHomeBlock.ID(type), registry);
     	}
-    	FeyHomeBlock.init();
     	
-    	GameRegistry.register(FeyBush.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, FeyBush.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(FeyBush.instance()) {
-    				@Override
-    				public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer playerIn, EntityLivingBase target, EnumHand hand) {
-    					return ((FeyBush) this.block).getEntityInteraction(stack, playerIn, target, hand);
-    				}
-    			}).setRegistryName(FeyBush.ID));
-    	FeyBush.init();
+    	// Custom item interaction so do it manually
+    	{
+    		ItemBlock item = new ItemBlock(FeyBush.instance()) {
+    			@Override
+				public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer playerIn, EntityLivingBase target, EnumHand hand) {
+					return ((FeyBush) this.block).getEntityInteraction(stack, playerIn, target, hand);
+				}
+    		};
+        	item.setRegistryName(FeyBush.ID);
+        	item.setUnlocalizedName(FeyBush.ID);
+        	item.setCreativeTab(NostrumFairies.creativeTab);
+        	registry.register(item);
+    	}
+	}
+	
+	private static final void registerBlock(Block block, String registryName, IForgeRegistry<Block> registry) {
+		block.setRegistryName(registryName);
+		registry.register(block);
+	}
+
+	@SubscribeEvent
+    public void registerBlocks(RegistryEvent.Register<Block> event) {
+		final IForgeRegistry<Block> registry = event.getRegistry();
+		
+		registerBlock(StorageLogisticsChest.instance(), StorageLogisticsChest.ID, registry);
+		registerBlock(BufferLogisticsChest.instance(), BufferLogisticsChest.ID, registry);
+		registerBlock(OutputLogisticsChest.instance(), OutputLogisticsChest.ID, registry);
+		registerBlock(StorageMonitor.instance(), StorageMonitor.ID, registry);
+		registerBlock(InputLogisticsChest.instance(), InputLogisticsChest.ID, registry);
+		registerBlock(GatheringBlock.instance(), GatheringBlock.ID, registry);
+		registerBlock(LogisticsPylon.instance(), LogisticsPylon.ID, registry);
+		registerBlock(WoodcuttingBlock.instance(), WoodcuttingBlock.ID, registry);
+		registerBlock(MiningBlock.instance(), MiningBlock.ID, registry);
+		registerBlock(MagicLight.Bright(), MagicLight.BrightID, registry);
+		registerBlock(MagicLight.Medium(), MagicLight.MediumID, registry);
+		registerBlock(MagicLight.Dim(), MagicLight.DimID, registry);
+		registerBlock(MagicLight.Unlit(), MagicLight.UnlitID, registry);
+		registerBlock(FarmingBlock.instance(), FarmingBlock.ID, registry);
+		
+    	for (ResidentType type : ResidentType.values()) {
+    		registerBlock(FeyHomeBlock.instance(type), FeyHomeBlock.ID(type), registry);
+    	}
     	
-    	GameRegistry.register(TemplateBlock.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, TemplateBlock.ID));
-    	TemplateBlock.init();
-    	
-    	GameRegistry.register(BuildingBlock.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, BuildingBlock.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(BuildingBlock.instance())).setRegistryName(BuildingBlock.ID));
-    	BuildingBlock.init();
-    	
-    	GameRegistry.register(CraftingBlockDwarf.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, CraftingBlockDwarf.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(CraftingBlockDwarf.instance())).setRegistryName(CraftingBlockDwarf.ID));
-    	CraftingBlockDwarf.init();
-    	
-    	GameRegistry.register(CraftingBlockElf.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, CraftingBlockElf.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(CraftingBlockElf.instance())).setRegistryName(CraftingBlockElf.ID));
-    	CraftingBlockElf.init();
-    	
-    	GameRegistry.register(CraftingBlockGnome.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, CraftingBlockGnome.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(CraftingBlockGnome.instance())).setRegistryName(CraftingBlockGnome.ID));
-    	CraftingBlockGnome.init();
-    	
-    	GameRegistry.register(LogisticsSensorBlock.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, LogisticsSensorBlock.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(LogisticsSensorBlock.instance())).setRegistryName(LogisticsSensorBlock.ID));
-    	LogisticsSensorBlock.init();
-    	
-    	GameRegistry.register(OutputLogisticsPanel.instance(),
-    			new ResourceLocation(NostrumFairies.MODID, OutputLogisticsPanel.ID));
-    	GameRegistry.register(
-    			(new ItemBlock(OutputLogisticsPanel.instance())).setRegistryName(OutputLogisticsPanel.ID));
-    	OutputLogisticsPanel.init();
-    	
-    	GameRegistry.register(ReinforcedStorageLogisticsChest.Iron(),
-    			new ResourceLocation(NostrumFairies.MODID, ReinforcedStorageLogisticsChest.Iron().getID()));
-    	GameRegistry.register(
-    			(new ItemBlock(ReinforcedStorageLogisticsChest.Iron())).setRegistryName(ReinforcedStorageLogisticsChest.Iron().getID()));
-    	
-    	GameRegistry.register(ReinforcedStorageLogisticsChest.Gold(),
-    			new ResourceLocation(NostrumFairies.MODID, ReinforcedStorageLogisticsChest.Gold().getID()));
-    	GameRegistry.register(
-    			(new ItemBlock(ReinforcedStorageLogisticsChest.Gold())).setRegistryName(ReinforcedStorageLogisticsChest.Gold().getID()));
-    	
-    	GameRegistry.register(ReinforcedStorageLogisticsChest.Diamond(),
-    			new ResourceLocation(NostrumFairies.MODID, ReinforcedStorageLogisticsChest.Diamond().getID()));
-    	GameRegistry.register(
-    			(new ItemBlock(ReinforcedStorageLogisticsChest.Diamond())).setRegistryName(ReinforcedStorageLogisticsChest.Diamond().getID()));
-    	ReinforcedStorageLogisticsChest.init();
+		registerBlock(FeyBush.instance(), FeyBush.ID, registry);
+		registerBlock(TemplateBlock.instance(), TemplateBlock.ID, registry);
+		registerBlock(BuildingBlock.instance(), BuildingBlock.ID, registry);
+		registerBlock(CraftingBlockDwarf.instance(), CraftingBlockDwarf.ID, registry);
+		registerBlock(CraftingBlockElf.instance(), CraftingBlockElf.ID, registry);
+		registerBlock(CraftingBlockGnome.instance(), CraftingBlockGnome.ID, registry);
+		registerBlock(LogisticsSensorBlock.instance(), LogisticsSensorBlock.ID, registry);
+		registerBlock(OutputLogisticsPanel.instance(), OutputLogisticsPanel.ID, registry);
+		registerBlock(ReinforcedStorageLogisticsChest.Iron(), ReinforcedStorageLogisticsChest.Iron().getID(), registry);
+		registerBlock(ReinforcedStorageLogisticsChest.Gold(), ReinforcedStorageLogisticsChest.Gold().getID(), registry);
+		registerBlock(ReinforcedStorageLogisticsChest.Diamond(), ReinforcedStorageLogisticsChest.Diamond().getID(), registry);
+		
+		registerTileEntities();
     }
+	
+	private void registerTileEntities() {
+		GameRegistry.registerTileEntity(StorageChestTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_storage_chest_te"));
+		GameRegistry.registerTileEntity(BufferChestTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_buffer_chest_te"));
+		GameRegistry.registerTileEntity(OutputChestTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_output_chest_te"));
+		GameRegistry.registerTileEntity(StorageMonitorTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_storage_monitor_te"));
+		GameRegistry.registerTileEntity(InputChestTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_input_chest_te"));
+		GameRegistry.registerTileEntity(GatheringBlockTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_gathering_block_te"));
+		GameRegistry.registerTileEntity(PylonTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_pylon_te"));
+		GameRegistry.registerTileEntity(WoodcuttingBlockTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_woodcutting_block_te"));
+		GameRegistry.registerTileEntity(MiningBlockTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_mining_block_te"));
+		GameRegistry.registerTileEntity(FarmingBlockTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_farming_block_te"));
+		GameRegistry.registerTileEntity(HomeBlockTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "home_block_te"));
+		GameRegistry.registerTileEntity(TemplateBlockTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "template_block_te"));
+		GameRegistry.registerTileEntity(BuildingBlockTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_building_block_te"));
+		GameRegistry.registerTileEntity(CraftingBlockDwarfTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_crafting_station_dwarf_te"));
+		GameRegistry.registerTileEntity(CraftingBlockElfTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_crafting_station_elf_te"));
+		GameRegistry.registerTileEntity(CraftingBlockGnomeTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_crafting_station_gnome_te"));
+		GameRegistry.registerTileEntity(LogisticsSensorTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_sensor_te"));
+		GameRegistry.registerTileEntity(OutputPanelTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_output_panel_te"));
+		GameRegistry.registerTileEntity(ReinforcedIronChestTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_reinforced_chest_iron_te"));
+		GameRegistry.registerTileEntity(ReinforcedGoldChestTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_reinforced_chest_gold_te"));
+		GameRegistry.registerTileEntity(ReinforcedDiamondChestTileEntity.class, new ResourceLocation(NostrumFairies.MODID, "logistics_reinforced_chest_diamond_te"));
+	}
     
     private void registerLore() {
     	LoreRegistry.instance().register(FeyResource.instance());
@@ -721,7 +680,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
 				new ItemStack(Blocks.CHEST),
-				new ItemStack[] {null, new ItemStack(Items.DYE, 1, 4), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), null},
+				new ItemStack[] {ItemStack.EMPTY, new ItemStack(Items.DYE, 1, 4), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), ItemStack.EMPTY},
 				new RRequirementResearch("logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(StorageLogisticsChest.instance())))
 			);
@@ -732,7 +691,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
 				new ItemStack(Blocks.CHEST),
-				new ItemStack[] {null, new ItemStack(Items.DYE, 1, 11), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), null},
+				new ItemStack[] {ItemStack.EMPTY, new ItemStack(Items.DYE, 1, 11), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), ItemStack.EMPTY},
 				new RRequirementResearch("adv_logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(BufferLogisticsChest.instance())))
 			);
@@ -743,7 +702,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
 				new ItemStack(Blocks.CHEST),
-				new ItemStack[] {null, new ItemStack(Items.DYE, 1, 1), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), null},
+				new ItemStack[] {ItemStack.EMPTY, new ItemStack(Items.DYE, 1, 1), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), ItemStack.EMPTY},
 				new RRequirementResearch("adv_logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(OutputLogisticsChest.instance())))
 			);
@@ -754,7 +713,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
 				new ItemStack(Blocks.CHEST),
-				new ItemStack[] {null, new ItemStack(Items.DYE, 1, 2), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), null},
+				new ItemStack[] {ItemStack.EMPTY, new ItemStack(Items.DYE, 1, 2), FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), ItemStack.EMPTY},
 				new RRequirementResearch("adv_logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(InputLogisticsChest.instance())))
 			);
@@ -765,7 +724,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.GINSENG, ReagentType.SKY_ASH, ReagentType.BLACK_PEARL, ReagentType.MANI_DUST},
 				new ItemStack(OutputLogisticsChest.instance()),
-				new ItemStack[] {null, FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), null, null},
+				new ItemStack[] {ItemStack.EMPTY, FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), ItemStack.EMPTY, ItemStack.EMPTY},
 				new RRequirementResearch("adv_logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(OutputLogisticsPanel.instance(), 4)))
 			);
@@ -776,7 +735,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.CRYSTABLOOM, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
 				new ItemStack(Items.EMERALD),
-				new ItemStack[] {null, FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), new ItemStack(Blocks.STONE, 1, OreDictionary.WILDCARD_VALUE), null},
+				new ItemStack[] {ItemStack.EMPTY, FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), new ItemStack(Blocks.STONE, 1, OreDictionary.WILDCARD_VALUE), ItemStack.EMPTY},
 				new RRequirementResearch("logistics_relays"),
 				new OutcomeSpawnItem(new ItemStack(LogisticsPylon.instance(), 2)))
 			);
@@ -787,7 +746,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.GINSENG, ReagentType.MANDRAKE_ROOT, ReagentType.SPIDER_SILK},
 				new ItemStack(MirrorItem.instance()),
-				new ItemStack[] {null, FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), new ItemStack(Blocks.CHEST), null},
+				new ItemStack[] {ItemStack.EMPTY, FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1), new ItemStack(Blocks.CHEST), ItemStack.EMPTY},
 				new RRequirementResearch("logistics_sensors"),
 				new OutcomeSpawnItem(new ItemStack(StorageMonitor.instance())))
 			);
@@ -798,7 +757,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.BLACK_PEARL, ReagentType.MANDRAKE_ROOT, ReagentType.GINSENG},
 				new ItemStack(StorageMonitor.instance()),
-				new ItemStack[] {null, new ItemStack(Blocks.REDSTONE_BLOCK), new ItemStack(Items.REDSTONE), null},
+				new ItemStack[] {ItemStack.EMPTY, new ItemStack(Blocks.REDSTONE_BLOCK), new ItemStack(Items.REDSTONE), ItemStack.EMPTY},
 				new RRequirementResearch("logistics_sensors"),
 				new OutcomeSpawnItem(new ItemStack(LogisticsSensorBlock.instance())))
 			);
@@ -897,7 +856,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.GINSENG, ReagentType.SKY_ASH},
 				FeySoulStone.create(SoulStoneType.GEM),
-				new ItemStack[] {new ItemStack(Items.GHAST_TEAR), null, null, new ItemStack(Items.ENDER_PEARL)},
+				new ItemStack[] {new ItemStack(Items.GHAST_TEAR), ItemStack.EMPTY, ItemStack.EMPTY, new ItemStack(Items.ENDER_PEARL)},
 				new RRequirementResearch("soul_jars"),
 				new OutcomeSpawnItem(SoulJar.createFake(false)))
 			);
@@ -908,7 +867,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
 				new ItemStack(StorageLogisticsChest.instance()),
-				new ItemStack[] {null, new ItemStack(Blocks.CHEST), new ItemStack(Blocks.IRON_BLOCK), null},
+				new ItemStack[] {ItemStack.EMPTY, new ItemStack(Blocks.CHEST), new ItemStack(Blocks.IRON_BLOCK), ItemStack.EMPTY},
 				new RRequirementResearch("adv_logistics_storage"),
 				new OutcomeSpawnItem(new ItemStack(ReinforcedStorageLogisticsChest.Iron())))
 			);
@@ -931,7 +890,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
 				new ItemStack(ReinforcedStorageLogisticsChest.Iron()),
-				new ItemStack[] {null, new ItemStack(Blocks.CHEST), new ItemStack(Blocks.GOLD_BLOCK), null},
+				new ItemStack[] {ItemStack.EMPTY, new ItemStack(Blocks.CHEST), new ItemStack(Blocks.GOLD_BLOCK), ItemStack.EMPTY},
 				new RRequirementResearch("adv_logistics_storage"),
 				new OutcomeSpawnItem(new ItemStack(ReinforcedStorageLogisticsChest.Gold())))
 			);
@@ -942,7 +901,7 @@ public class CommonProxy {
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
 				new ItemStack(ReinforcedStorageLogisticsChest.Gold()),
-				new ItemStack[] {null, new ItemStack(Blocks.CHEST), new ItemStack(Blocks.DIAMOND_BLOCK), null},
+				new ItemStack[] {ItemStack.EMPTY, new ItemStack(Blocks.CHEST), new ItemStack(Blocks.DIAMOND_BLOCK), ItemStack.EMPTY},
 				new RRequirementResearch("adv_logistics_storage"),
 				new OutcomeSpawnItem(new ItemStack(ReinforcedStorageLogisticsChest.Diamond())))
 			);
@@ -1138,15 +1097,47 @@ public class CommonProxy {
 			.reference("ritual::soul_jar", "ritual.soul_jar.name")
 		.build("soul_jars", NostrumFairies.researchTab, Size.NORMAL, 0, 2, true, new ItemStack(SoulJar.instance()));
     }
-    
-    private void registerPotions() {
-    	FeyVisibilityPotion.instance();
+
+	@SubscribeEvent
+    public void registerPotions(RegistryEvent.Register<Potion> event) {
+    	final IForgeRegistry<Potion> registry = event.getRegistry();
+    	registry.register(FeyVisibilityPotion.instance());
+	}
+	
+	@SubscribeEvent
+	public void registerPotionTypes(RegistryEvent.Register<PotionType> event) {
+    	final IForgeRegistry<PotionType> registry = event.getRegistry();
+		
+    	FeyPotionTypes.register(registry);
     	
-    	FeyPotionTypes.register();
-    	
+    	// Is this the right time to register brewing recipes?
+    	registerPotionMixes();
+    }
+	
+	private void registerPotionMixes() {
     	ItemStack ingredStack = FeyResource.create(FeyResourceType.TEARS, 1);
-		Predicate<ItemStack> ingred = new PotionHelper.ItemPredicateInstance(ingredStack.getItem(), ingredStack.getMetadata());
-		PotionHelper.registerPotionTypeConversion(PotionTypes.THICK, ingred, FeyPotionTypes.FEY_VISIBILITY.getType());
+    	PotionHelper.addMix(PotionTypes.THICK, Ingredient.fromStacks(ingredStack), FeyPotionTypes.FEY_VISIBILITY.getType());
+    	ingredStack = new ItemStack(Items.REDSTONE);
+    	PotionHelper.addMix(FeyPotionTypes.FEY_VISIBILITY.getType(), Ingredient.fromStacks(ingredStack), FeyPotionTypes.FEY_VISIBILITY_EXTENDED.getType());
+	}
+    
+    @SubscribeEvent
+    public void registerSounds(RegistryEvent.Register<SoundEvent> event) {
+    	NostrumFairiesSounds.registerSounds(event.getRegistry());
+    }
+
+	@SubscribeEvent
+    public void registerDataSerializers(RegistryEvent.Register<DataSerializerEntry> event) {
+    	final IForgeRegistry<DataSerializerEntry> registry = event.getRegistry();
+    	
+    	registry.register(new DataSerializerEntry(FairyGeneralStatus.instance()).setRegistryName("nostrum.serial.fairy_status"));
+    	registry.register(new DataSerializerEntry(ArmPoseDwarf.instance()).setRegistryName("nostrum.serial.dwarf_arm"));
+    	registry.register(new DataSerializerEntry(ArmPoseElf.instance()).setRegistryName("nostrum.serial.elf_arm"));
+    	registry.register(new DataSerializerEntry(BattleStanceElfArcher.instance()).setRegistryName("nostrum.serial.elf_archer_stance"));
+    	registry.register(new DataSerializerEntry(BattleStanceShadowFey.instance()).setRegistryName("nostrum.serial.shadow_fey_stance"));
+    	registry.register(new DataSerializerEntry(ArmPoseGnome.instance()).setRegistryName("nostrum.serial.gnome_arm"));
+    	registry.register(new DataSerializerEntry(ItemArraySerializer.instance()).setRegistryName("nostrum.serial.itemarray"));
+    	registry.register(new DataSerializerEntry(FairyJob.instance()).setRegistryName("nostrum.serial.fairy_job"));
     }
 
 	public EntityPlayer getPlayer() {

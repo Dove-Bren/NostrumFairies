@@ -15,12 +15,12 @@ import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.FairyGuiActionMessage;
 import com.smanzana.nostrumfairies.network.messages.FairyGuiActionMessage.GuiAction;
+import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ClickType;
@@ -28,6 +28,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -455,7 +456,7 @@ public class FairyScreenGui {
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class FairyScreenGuiContainer extends GuiContainer {
+	public static class FairyScreenGuiContainer extends AutoGuiContainer {
 
 		private FairyScreenContainer container;
 		protected TargetButton[] targetButtons;
@@ -954,6 +955,11 @@ public class FairyScreenGui {
 							ICON_CURSOR_MINOR_WIDTH, ICON_CURSOR_MINOR_HEIGHT, 256, 256);
 				}
 			}
+			
+			// Let buttons draw foregrounds
+			for (GuiButton button : this.buttonList) {
+				button.drawButtonForegroundLayer(mouseX - this.guiLeft, mouseY - this.guiTop);
+			}
 		}
 		
 		@Override
@@ -1057,6 +1063,19 @@ public class FairyScreenGui {
 				}
 			}
 			
+			@Override
+			public void drawButtonForegroundLayer(int mouseX, int mouseY) {
+				super.drawButtonForegroundLayer(mouseX, mouseY);
+				
+				if (this.hovered) {
+					final FairyCastTarget target = container.inv.getFairyCastTarget(this.slot);
+					
+					GuiUtils.drawHoveringText(target.getDescription(), mouseX, mouseY,
+							FairyScreenGuiContainer.this.width, FairyScreenGuiContainer.this.height, 200,
+							FairyScreenGuiContainer.this.fontRenderer);
+				}
+			}
+			
 		}
 		
 		private final class PlacementButton extends GuiButton {
@@ -1103,6 +1122,19 @@ public class FairyScreenGui {
 							ICON_PLACEMENT_TEXT_HOFFSET + offsetU, ICON_PLACEMENT_TEXT_VOFFSET,
 							ICON_PLACEMENT_TEXT_WIDTH, ICON_PLACEMENT_TEXT_HEIGHT,
 							ICON_PLACEMENT_WIDTH, ICON_PLACEMENT_HEIGHT, 256, 256);
+				}
+			}
+			
+			@Override
+			public void drawButtonForegroundLayer(int mouseX, int mouseY) {
+				super.drawButtonForegroundLayer(mouseX, mouseY);
+				
+				if (this.hovered) {
+					final FairyPlacementTarget placement = container.inv.getFairyPlacementTarget(this.slot);
+					
+					GuiUtils.drawHoveringText(placement.getDescription(), mouseX, mouseY,
+							FairyScreenGuiContainer.this.width, FairyScreenGuiContainer.this.height, 200,
+							FairyScreenGuiContainer.this.fontRenderer);
 				}
 			}
 			

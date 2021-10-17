@@ -11,7 +11,7 @@ import com.smanzana.nostrumaetheria.api.recipes.IAetherRepairerRecipe;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
-import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy.FairyJob;
+import com.smanzana.nostrumfairies.serializers.FairyJob;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
@@ -64,10 +64,6 @@ public class FairyGael extends Item implements ILoreTagged {
 			instance = new FairyGael();
 		
 		return instance;
-	}
-	
-	public static void init() {
-		;
 	}
 	
 	public static void registerRecipes() {

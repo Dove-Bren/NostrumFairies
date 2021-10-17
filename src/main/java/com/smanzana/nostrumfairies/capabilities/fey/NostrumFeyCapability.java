@@ -21,7 +21,6 @@ import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.entity.IEntityListener;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
-import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy.FairyJob;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy.IBuildPump;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyCastTarget;
@@ -34,6 +33,7 @@ import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositRequ
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
+import com.smanzana.nostrumfairies.serializers.FairyJob;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;

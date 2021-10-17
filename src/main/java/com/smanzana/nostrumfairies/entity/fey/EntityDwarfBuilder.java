@@ -9,6 +9,7 @@ import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
+import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.util.math.BlockPos;
@@ -179,7 +180,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		// Builder dwarves have special movement options...
 		LogisticsSubTask sub = task.getActiveSubtask();
 		if (sub != null && sub.getType() == LogisticsSubTask.Type.MOVE && task instanceof LogisticsTaskBuildBlock) {
-			this.setPose(ArmPose.IDLE);
+			this.setPose(ArmPoseDwarf.IDLE);
 			if (this.navigator.noPath()) {
 				// First time through?
 				if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)

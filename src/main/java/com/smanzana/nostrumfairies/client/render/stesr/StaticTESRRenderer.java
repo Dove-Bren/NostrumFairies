@@ -13,10 +13,10 @@ import com.smanzana.nostrumfairies.utils.Location;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.tileentity.TileEntity;
@@ -147,6 +147,7 @@ public class StaticTESRRenderer {
 		//GlStateManager.enableLighting();
 		GlStateManager.enableBlend();
 		GlStateManager.enableAlpha();
+		
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(offset.x, offset.y, offset.z);
 		GlStateManager.callList(target.drawlist);

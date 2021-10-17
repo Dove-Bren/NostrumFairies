@@ -28,7 +28,6 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class WoodcuttingBlock extends BlockContainer {
 
@@ -41,15 +40,6 @@ public class WoodcuttingBlock extends BlockContainer {
 			instance = new WoodcuttingBlock();
 		
 		return instance;
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(WoodcuttingBlockTileEntity.class, "logistics_woodcutting_block_te");
-//		GameRegistry.addShapedRecipe(new ItemStack(instance()),
-//				"WPW", "WCW", "WWW",
-//				'W', new ItemStack(Blocks.PLANKS, 1, OreDictionary.WILDCARD_VALUE),
-//				'P', new ItemStack(Items.PAPER, 1, OreDictionary.WILDCARD_VALUE),
-//				'C', NostrumResourceItem.getItem(ResourceType.CRYSTAL_LARGE, 1));
 	}
 	
 	public WoodcuttingBlock() {

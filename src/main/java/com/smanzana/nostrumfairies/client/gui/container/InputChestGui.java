@@ -4,10 +4,10 @@ import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.tiles.InputChestTileEntity;
+import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -109,7 +109,7 @@ public class InputChestGui {
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class InputChestGuiContainer extends GuiContainer {
+	public static class InputChestGuiContainer extends AutoGuiContainer {
 
 		//private TestChestContainer container;
 		
@@ -141,7 +141,7 @@ public class InputChestGui {
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-			;
+			super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 		}
 		
 	}

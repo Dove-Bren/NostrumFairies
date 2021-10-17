@@ -25,7 +25,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CraftingBlockGnome extends BlockContainer {
 	
@@ -40,10 +39,6 @@ public class CraftingBlockGnome extends BlockContainer {
 			instance = new CraftingBlockGnome();
 		
 		return instance;
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(CraftingBlockGnomeTileEntity.class, "logistics_crafting_station_gnome_te");
 	}
 	
 	public CraftingBlockGnome() {

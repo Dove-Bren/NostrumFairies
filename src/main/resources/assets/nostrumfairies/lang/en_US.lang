@@ -1,7 +1,9 @@
 itemGroup.nostrumfairies=Nostrum Fairies
 
+key.nostrumfairies.desc=Nostrum Fairies
+
 key.wandmode.backward.desc=Template Wand Mode (BACKWARD)
-key.wandmode.backward.desc=Template Wand Mode (FORWARD)
+key.wandmode.forward.desc=Template Wand Mode (FORWARD)
 key.wandscroll.desc=Scroll Template Wand
 
 tile.logistics_storage_chest.name=Logistics Chest
@@ -68,6 +70,11 @@ splash_potion.effect.potion.fey-visibility.name=Splash Potion of Feysight
 lingering_potion.effect.potion.fey-visibility.name=Lingering Potion of Feysight
 tipped_arrow.effect.potion.fey-visibility.name=Arrow of Feysight
 
+potion.effect.extended_potion.fey-visibility.name=Potion of Feysight
+splash_potion.effect.extended_potion.fey-visibility.name=Splash Potion of Feysight
+lingering_potion.effect.extended_potion.fey-visibility.name=Lingering Potion of Feysight
+tipped_arrow.effect.extended_potion.fey-visibility.name=Arrow of Feysight
+
 info.mood.fey.great=Great
 info.mood.fey.good=Good
 info.mood.fey.average=Average
@@ -108,6 +115,18 @@ info.templates.capture.nopos=Two points much be selected while in selection mode
 info.templates.capture.toobig=The selected area is too large
 info.templates.capture.nomap=A blank map is required to create capture the template
 info.templates.capture.towand=The template has been added to your wand
+
+fairytarget.self.name=Self
+fairytarget.self.desc=Will cast on self during combat
+fairytarget.target.name=Enemy
+fairytarget.target.desc=Will cast on the target enemy during combat
+fairytarget.owner.name=Owner
+fairytarget.owner.desc=Will cast on you during combat
+
+fairyplacement.melee.name=Melee
+fairyplacement.melee.desc=Will dive in for melee strikes
+fairyplacement.range.name=Range
+fairyplacement.range.desc=Will remain at range
 
 entity.nostrumfairies.shadow_fey.name=Shadow Fey
 

@@ -3,8 +3,9 @@ package com.smanzana.nostrumfairies.entity.render;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
-import com.smanzana.nostrumfairies.entity.fey.EntityElf.ArmPose;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
+import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
+import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
@@ -116,13 +117,13 @@ public class ModelElf extends ModelBase {
 		
 		if (entity instanceof EntityElf) {
 			EntityElf elf = (EntityElf) entity;
-			isWorking = elf.getPose() == ArmPose.WORKING;
-			isIdle = elf.getPose() == ArmPose.IDLE;
+			isWorking = elf.getPose() == ArmPoseElf.WORKING;
+			isIdle = elf.getPose() == ArmPoseElf.IDLE;
 			leftHanded = elf.isLeftHanded();
 		} else if (entity instanceof EntityShadowFey) {
 			EntityShadowFey shadow = (EntityShadowFey) entity;
 			isWorking = false;
-			isIdle = shadow.getStance() == EntityShadowFey.BattleStance.IDLE;
+			isIdle = shadow.getStance() == BattleStanceShadowFey.IDLE;
 			leftHanded = shadow.isLeftHanded();
 		} else {
 			isWorking = false;

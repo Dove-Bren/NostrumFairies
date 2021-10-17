@@ -40,10 +40,6 @@ public class TemplateScroll extends Item implements ILoreTagged {
 		return instance;
 	}
 	
-	public static void init() {
-		;
-	}
-	
 	public TemplateScroll() {
 		super();
 		this.setUnlocalizedName(ID);

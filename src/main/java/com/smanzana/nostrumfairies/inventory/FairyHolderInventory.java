@@ -1,13 +1,18 @@
 package com.smanzana.nostrumfairies.inventory;
 
+import java.util.List;
+
 import javax.annotation.Nonnull;
 
+import com.google.common.collect.Lists;
+import com.mojang.realmsclient.gui.ChatFormatting;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.items.FairyGael;
 import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrummagica.items.PositionCrystal;
 import com.smanzana.nostrummagica.items.SpellScroll;
 
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -24,11 +29,67 @@ public class FairyHolderInventory implements IInventory {
 		SELF,
 		TARGET,
 		OWNER;
+		
+		private List<String> desc = null;
+		private String transName = null;
+		
+		private FairyCastTarget() {
+			
+		}
+		
+		public String getUnlocName() {
+			return name().toLowerCase();
+		}
+		
+		public String getName() {
+			if (this.transName == null) {
+				this.transName = I18n.format("fairytarget." + getUnlocName() + ".name");
+			}
+			return transName;
+		}
+		
+		public List<String> getDescription() {
+			if (this.desc == null) {
+				String raw = I18n.format("fairytarget." + getUnlocName() + ".desc", "" + ChatFormatting.DARK_GREEN + ChatFormatting.BOLD, ChatFormatting.RESET);
+				String[] lines = raw.split("\\|");
+				
+				this.desc = Lists.asList("" + ChatFormatting.BLUE + ChatFormatting.BOLD + getName() + ChatFormatting.RESET, lines);
+			}
+			return desc;
+		}
 	}
 	
 	public static enum FairyPlacementTarget {
 		MELEE,
 		RANGE;
+		
+		private List<String> desc = null;
+		private String transName = null;
+		
+		private FairyPlacementTarget() {
+			
+		}
+		
+		public String getUnlocName() {
+			return name().toLowerCase();
+		}
+		
+		public String getName() {
+			if (this.transName == null) {
+				this.transName = I18n.format("fairyplacement." + getUnlocName() + ".name");
+			}
+			return transName;
+		}
+		
+		public List<String> getDescription() {
+			if (this.desc == null) {
+				String raw = I18n.format("fairyplacement." + getUnlocName() + ".desc", "" + ChatFormatting.DARK_GREEN + ChatFormatting.BOLD, ChatFormatting.RESET);
+				String[] lines = raw.split("\\|");
+				
+				this.desc = Lists.asList("" + ChatFormatting.BLUE + ChatFormatting.BOLD + getName() + ChatFormatting.RESET, lines);
+			}
+			return desc;
+		}
 	}
 
 	private static final int INV_SIZE_GAEL = 27;
@@ -49,7 +110,7 @@ public class FairyHolderInventory implements IInventory {
 	// 6 slots for requests, and 6 for deposits
 	private NonNullList<ItemStack> logisticsTemplates;
 	// 1 slot for a security pointer to a network
-	private ItemStack gemSlot;
+	private ItemStack gemSlot = ItemStack.EMPTY;
 	
 	private boolean dirty;
 	private NBTTagCompound nbtCache;

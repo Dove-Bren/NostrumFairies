@@ -12,6 +12,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -44,6 +45,14 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	@Override
 	public boolean canAccept(List<ItemDeepStack> stacks) {
 		return false;
+	}
+	
+	@Override
+	public void addItem(ItemStack stack) {
+		if (!world.isRemote) {
+			EntityItem ent = new EntityItem(world, pos.getX() + .5, pos.getY() + .2, pos.getZ() + .5, stack);
+			world.spawnEntity(ent);
+		}
 	}
 	
 	protected void makeRequester() {

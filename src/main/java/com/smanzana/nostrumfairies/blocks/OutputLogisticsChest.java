@@ -19,7 +19,6 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class OutputLogisticsChest extends BlockContainer {
 	
@@ -31,15 +30,6 @@ public class OutputLogisticsChest extends BlockContainer {
 			instance = new OutputLogisticsChest();
 		
 		return instance;
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(OutputChestTileEntity.class, "logistics_output_chest_te");
-//		GameRegistry.addShapedRecipe(new ItemStack(instance()),
-//				"WPW", "WCW", "WWW",
-//				'W', new ItemStack(Blocks.PLANKS, 1, OreDictionary.WILDCARD_VALUE),
-//				'P', new ItemStack(Items.PAPER, 1, OreDictionary.WILDCARD_VALUE),
-//				'C', NostrumResourceItem.getItem(ResourceType.CRYSTAL_LARGE, 1));
 	}
 	
 	public OutputLogisticsChest() {

@@ -42,7 +42,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 		EntityPlayer player = mc.player;
 		PotionEffect effect = player.getActivePotionEffect(FeyVisibilityPotion.instance());
 		
-		if (player != null && (player.isSpectator() || player.isCreative() || effect != null)) { // REPLACE ME
+		if (player != null && effect != null) { // REPLACE ME
 			LogisticsNetwork network = te.getNetwork();
 			if (network != null) {
 				Collection<ILogisticsComponent> neighbors = network.getConnectedComponents(te.getNetworkComponent());
@@ -55,15 +55,11 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				
 				final int intervals = 60;
 				final float alpha;
-				if (effect == null) {
-					alpha = 1f;
+				final int duration = effect.getDuration();
+				if (duration < 20 * 5) {
+					alpha = (float) duration / (float) (20 * 5);
 				} else {
-					final int duration = effect.getDuration();
-					if (duration < 20 * 5) {
-						alpha = (float) duration / (float) (20 * 5);
-					} else {
-						alpha = 1f;
-					}
+					alpha = 1f;
 				}
 				
 				Vec3d origin = new Vec3d(BlockPos.ORIGIN);

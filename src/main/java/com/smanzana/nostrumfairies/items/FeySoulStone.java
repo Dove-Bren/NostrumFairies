@@ -77,10 +77,6 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return instance;
 	}
 	
-	public static void init() {
-		;
-	}
-	
 	public FeySoulStone() {
 		super();
 		this.setUnlocalizedName(ID);

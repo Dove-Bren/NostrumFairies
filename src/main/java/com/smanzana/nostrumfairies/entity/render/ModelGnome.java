@@ -1,7 +1,7 @@
 package com.smanzana.nostrumfairies.entity.render;
 
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
-import com.smanzana.nostrumfairies.entity.fey.EntityGnome.ArmPose;
+import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
@@ -109,10 +109,10 @@ public class ModelGnome extends ModelBase {
 		legRight.offsetY = (5f / 16f);
 		legRight.offsetZ = 0;
 		
-		if (gnome.isSwingInProgress || gnome.getPose() != ArmPose.IDLE) {
+		if (gnome.isSwingInProgress || gnome.getPose() != ArmPoseGnome.IDLE) {
 			
 			// Either squatting down and trying to pick something up, or carrying something.
-			if (gnome.getPose() == ArmPose.WORKING || gnome.isSwingInProgress) {
+			if (gnome.getPose() == ArmPoseGnome.WORKING || gnome.isSwingInProgress) {
 				float bend = (float) (Math.sin(swingProgress * Math.PI) * (Math.PI * .1));
 				float offsetY = (float) (Math.sin(swingProgress * Math.PI) * (1f / 16f));
 				body.offsetY += offsetY;
@@ -128,7 +128,7 @@ public class ModelGnome extends ModelBase {
 				armLeft.rotateAngleX = (float) -(Math.PI * .3);
 				armRight.rotateAngleY = 0f;
 				armLeft.rotateAngleY = 0f;
-			} else if (gnome.getPose() == ArmPose.CARRYING) {
+			} else if (gnome.getPose() == ArmPoseGnome.CARRYING) {
 				armRight.rotateAngleX = (float) -(Math.PI * .5);
 				armRight.rotateAngleY = (float) -(Math.PI * .1);
 				armLeft.rotateAngleX = (float) -(Math.PI * .5);

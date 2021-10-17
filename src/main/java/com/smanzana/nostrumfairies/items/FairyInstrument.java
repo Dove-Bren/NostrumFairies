@@ -71,10 +71,6 @@ public class FairyInstrument extends Item implements ILoreTagged {
 		return instance;
 	}
 	
-	public static void init() {
-		;
-	}
-	
 	public FairyInstrument() {
 		super();
 		this.setUnlocalizedName(ID);

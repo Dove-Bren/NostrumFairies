@@ -76,10 +76,6 @@ public class TemplateWand extends Item implements ILoreTagged {
 		return instance;
 	}
 	
-	public static void init() {
-		;
-	}
-	
 	public TemplateWand() {
 		super();
 		this.setUnlocalizedName(ID);

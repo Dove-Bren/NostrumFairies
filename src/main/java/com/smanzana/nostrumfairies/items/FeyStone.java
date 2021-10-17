@@ -29,10 +29,6 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 		return instance;
 	}
 	
-	public static void init() {
-		;
-	}
-	
 	public FeyStone() {
 		super();
 		this.setUnlocalizedName(ID);

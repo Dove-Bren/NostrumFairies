@@ -49,10 +49,6 @@ public class SoulJar extends Item implements ILoreTagged {
 		return instance;
 	}
 	
-	public static void init() {
-		;
-	}
-	
 	public SoulJar() {
 		super();
 		this.setUnlocalizedName(ID);

@@ -26,7 +26,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class LogisticsSensorBlock extends BlockContainer
 {
@@ -39,10 +38,6 @@ public class LogisticsSensorBlock extends BlockContainer
 			instance = new LogisticsSensorBlock();
 		
 		return instance;
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(LogisticsSensorTileEntity.class, "logistics_sensor_te");
 	}
 	
 	public LogisticsSensorBlock() {

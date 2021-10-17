@@ -84,10 +84,6 @@ public class FeyResource extends Item implements ILoreTagged {
 		return instance;
 	}
 	
-	public static void init() {
-		;
-	}
-	
 	public FeyResource() {
 		super();
 		this.setUnlocalizedName(ID);

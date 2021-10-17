@@ -1,6 +1,5 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -13,6 +12,8 @@ import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
+import com.smanzana.nostrumfairies.serializers.BattleStanceElfArcher;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
 import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
 import com.smanzana.nostrummagica.spells.EAlteration;
@@ -34,10 +35,7 @@ import net.minecraft.init.Enchantments;
 import net.minecraft.init.Items;
 import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
-import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.EntitySelectors;
@@ -49,44 +47,7 @@ import net.minecraft.world.World;
 
 public class EntityElfArcher extends EntityElf {
 	
-	public static enum BattleStance {
-		RANGED,
-		MELEE;
-		
-		public final static class BattleStanceSerializer implements DataSerializer<BattleStance> {
-			
-			private BattleStanceSerializer() {
-				DataSerializers.registerSerializer(this);
-			}
-			
-			@Override
-			public void write(PacketBuffer buf, BattleStance value) {
-				buf.writeEnumValue(value);
-			}
-
-			@Override
-			public BattleStance read(PacketBuffer buf) throws IOException {
-				return buf.readEnumValue(BattleStance.class);
-			}
-
-			@Override
-			public DataParameter<BattleStance> createKey(int id) {
-				return new DataParameter<>(id, this);
-			}
-
-			@Override
-			public BattleStance copyValue(BattleStance value) {
-				return value;
-			}
-		}
-		
-		public static BattleStanceSerializer Serializer = null;
-		public static void Init() {
-			 Serializer = new BattleStanceSerializer();
-		}
-	}
-	
-	protected static final DataParameter<BattleStance> STANCE  = EntityDataManager.<BattleStance>createKey(EntityElfArcher.class, BattleStance.Serializer);
+	protected static final DataParameter<BattleStanceElfArcher> STANCE  = EntityDataManager.<BattleStanceElfArcher>createKey(EntityElfArcher.class, BattleStanceElfArcher.instance());
 
 	private static Spell SPELL_HASTE = null;
 	
@@ -121,7 +82,7 @@ public class EntityElfArcher extends EntityElf {
 	
 	@Override
 	protected void onIdleTick() {
-		this.setPose(ArmPose.IDLE);
+		this.setPose(ArmPoseElf.IDLE);
 		
 		// Elf archers patrol when idle!
 		idleTicks++;
@@ -203,11 +164,11 @@ public class EntityElfArcher extends EntityElf {
 		return true;
 	}
 	
-	public void setBattleStance(BattleStance stance) {
+	public void setBattleStance(BattleStanceElfArcher stance) {
 		this.dataManager.set(STANCE, stance);
 	}
 	
-	public BattleStance getStance() {
+	public BattleStanceElfArcher getStance() {
 		return this.dataManager.get(STANCE);
 	}
 
@@ -273,18 +234,18 @@ public class EntityElfArcher extends EntityElf {
 	@Override
 	protected void entityInit() {
 		super.entityInit();
-		dataManager.register(STANCE, BattleStance.RANGED);
+		dataManager.register(STANCE, BattleStanceElfArcher.RANGED);
 	}
 	
 	@Override
 	protected void onCombatTick() {
-		setPose(ArmPose.ATTACKING);
+		setPose(ArmPoseElf.ATTACKING);
 		
 		if (!world.isRemote) {
 			if (this.shouldUseBow()) {
-				setBattleStance(BattleStance.RANGED);
+				setBattleStance(BattleStanceElfArcher.RANGED);
 			} else {
-				setBattleStance(BattleStance.MELEE);
+				setBattleStance(BattleStanceElfArcher.MELEE);
 			}
 		}
 	}
@@ -301,7 +262,7 @@ public class EntityElfArcher extends EntityElf {
 	
 	@Override
 	protected void onCientTick() {
-		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPose.WORKING) {
+		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPoseElf.WORKING) {
 			
 			double angle = this.rotationYawHead + ((this.isLeftHanded() ? -1 : 1) * 22.5);
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;

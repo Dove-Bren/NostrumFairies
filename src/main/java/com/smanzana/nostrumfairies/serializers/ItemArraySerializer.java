@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.entity;
+package com.smanzana.nostrumfairies.serializers;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -7,17 +7,19 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializer;
-import net.minecraft.network.datasync.DataSerializers;
 
 public class ItemArraySerializer implements DataSerializer<ItemStack[]> {
 
-	public static ItemArraySerializer Serializer = null;
-	public static void Init() {
-		Serializer = new ItemArraySerializer();
+	private static ItemArraySerializer Serializer = null;
+	public static ItemArraySerializer instance() {
+		if (Serializer == null) {
+			Serializer = new ItemArraySerializer();
+		}
+		return Serializer;
 	}
 	
 	private ItemArraySerializer() {
-		DataSerializers.registerSerializer(this);
+		;
 	}
 	
 	@Override

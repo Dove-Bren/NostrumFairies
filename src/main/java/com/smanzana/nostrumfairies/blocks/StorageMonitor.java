@@ -27,7 +27,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class StorageMonitor extends BlockContainer {
 	
@@ -46,15 +45,6 @@ public class StorageMonitor extends BlockContainer {
 			instance = new StorageMonitor();
 		
 		return instance;
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(StorageMonitorTileEntity.class, "logistics_storage_monitor_te");
-//		GameRegistry.addShapedRecipe(new ItemStack(instance()),
-//				"WPW", "WCW", "WWW",
-//				'W', new ItemStack(Blocks.PLANKS, 1, OreDictionary.WILDCARD_VALUE),
-//				'P', new ItemStack(Items.PAPER, 1, OreDictionary.WILDCARD_VALUE),
-//				'C', NostrumResourceItem.getItem(ResourceType.CRYSTAL_LARGE, 1));
 	}
 	
 	public StorageMonitor() {

@@ -247,7 +247,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			recipeBonusCache = 0f;
 			for (int i = 0; i < TEMPLATE_SLOTS; i++) {
 				ItemStack template = templates.get(i);
-				if (template == null) {
+				if (template.isEmpty()) {
 					recipeIssuesCache[i] = false; // no issue
 					recipeBonusesCache[i] = false; // no bonus
 				} else if (!this.canCraftWith(template)) {
@@ -526,7 +526,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			
 			// if template count != stack count, try to add there
 			ItemStack inSlot = this.getStackInSlot(i);
-			int desire = templates.get(i).getCount() - (inSlot == null ? 0 : inSlot.getCount());
+			int desire = templates.get(i).getCount() - (inSlot.isEmpty() ? 0 : inSlot.getCount());
 			int amt = Math.min(stack.getCount(), desire);
 			if (inSlot.isEmpty()) {
 				// take out template desire amount
@@ -716,7 +716,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		this.tasks.clear();
 		
 		ItemStack output = generateOutput();
-		if (this.getOutputStack() == null) {
+		if (this.getOutputStack().isEmpty()) {
 			this.setInventorySlotContents(TEMPLATE_SLOTS, output);
 		} else {
 			ItemStack stack = this.getStackInSlot(TEMPLATE_SLOTS);

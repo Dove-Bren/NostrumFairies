@@ -1,7 +1,5 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -11,6 +9,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.EntityTippedArrowEx;
 import com.smanzana.nostrumfairies.items.FeyResource;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
+import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.attributes.AttributeMagicResist;
@@ -50,9 +49,7 @@ import net.minecraft.init.Enchantments;
 import net.minecraft.init.Items;
 import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SPacketAnimation;
@@ -69,45 +66,7 @@ import net.minecraft.world.WorldServer;
 
 public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	
-	public static enum BattleStance {
-		RANGED,
-		MELEE,
-		IDLE;
-		
-		public final static class BattleStanceSerializer implements DataSerializer<BattleStance> {
-			
-			private BattleStanceSerializer() {
-				DataSerializers.registerSerializer(this);
-			}
-			
-			@Override
-			public void write(PacketBuffer buf, BattleStance value) {
-				buf.writeEnumValue(value);
-			}
-
-			@Override
-			public BattleStance read(PacketBuffer buf) throws IOException {
-				return buf.readEnumValue(BattleStance.class);
-			}
-
-			@Override
-			public DataParameter<BattleStance> createKey(int id) {
-				return new DataParameter<>(id, this);
-			}
-
-			@Override
-			public BattleStance copyValue(BattleStance value) {
-				return value;
-			}
-		}
-		
-		public static BattleStanceSerializer Serializer = null;
-		public static void Init() {
-			 Serializer = new BattleStanceSerializer();
-		}
-	}
-	
-	protected static final DataParameter<BattleStance> STANCE  = EntityDataManager.<BattleStance>createKey(EntityShadowFey.class, BattleStance.Serializer);
+	protected static final DataParameter<BattleStanceShadowFey> STANCE  = EntityDataManager.<BattleStanceShadowFey>createKey(EntityShadowFey.class, BattleStanceShadowFey.instance());
 	protected static final DataParameter<Boolean> MORPHING = EntityDataManager.<Boolean>createKey(EntityShadowFey.class, DataSerializers.BOOLEAN);
 
 	private static Spell SPELL_SLOW = null;
@@ -158,11 +117,11 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		return true;
 	}
 	
-	public void setBattleStance(BattleStance stance) {
+	public void setBattleStance(BattleStanceShadowFey stance) {
 		this.dataManager.set(STANCE, stance);
 	}
 	
-	public BattleStance getStance() {
+	public BattleStanceShadowFey getStance() {
 		return this.dataManager.get(STANCE);
 	}
 	
@@ -249,7 +208,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	@Override
 	protected void entityInit() {
 		super.entityInit();
-		dataManager.register(STANCE, BattleStance.IDLE);
+		dataManager.register(STANCE, BattleStanceShadowFey.IDLE);
 		dataManager.register(MORPHING, false);
 	}
 	
@@ -263,17 +222,17 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		
 		if (!world.isRemote) {
 			if (this.getAttackTarget() == null || this.getMorphing()) {
-				setBattleStance(BattleStance.IDLE);
+				setBattleStance(BattleStanceShadowFey.IDLE);
 			} else {
 				if (this.shouldUseBow()) {
-					setBattleStance(BattleStance.RANGED);
+					setBattleStance(BattleStanceShadowFey.RANGED);
 				} else {
-					setBattleStance(BattleStance.MELEE);
+					setBattleStance(BattleStanceShadowFey.MELEE);
 				}
 			}
 		}
 		
-		if (this.getStance() == BattleStance.IDLE) {
+		if (this.getStance() == BattleStanceShadowFey.IDLE) {
 			this.idleTicks++;
 			if (world.isRemote) {
 				if (idleChatTicks == 0) {

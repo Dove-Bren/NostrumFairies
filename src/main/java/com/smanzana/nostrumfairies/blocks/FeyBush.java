@@ -7,9 +7,9 @@ import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
-import com.smanzana.nostrumfairies.entity.fey.IFeyWorker.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.items.FeyResource;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
+import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrummagica.sound.NostrumMagicaSounds;
 
 import net.minecraft.block.BlockBush;
@@ -45,12 +45,6 @@ public class FeyBush extends BlockBush implements IShearable {
 		
 		return instance;
 	};
-	
-	public static void init() {
-//    	GameRegistry.register(
-//    			(new ItemBlock(instance)).setRegistryName(instance.getID())
-//    		.setCreativeTab(NostrumMagica.creativeTab).setUnlocalizedName(instance.getID()));
-	}
 	
 	public static final String ID = "fey_bush";
 	

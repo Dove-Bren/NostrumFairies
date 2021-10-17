@@ -1,7 +1,5 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -17,6 +15,8 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskHarvest;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
+import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
+import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.Paths;
@@ -30,9 +30,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
@@ -47,45 +45,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
-	public static enum ArmPose {
-		IDLE,
-		WORKING,
-		CARRYING;
-		
-		public final static class PoseSerializer implements DataSerializer<ArmPose> {
-			
-			private PoseSerializer() {
-				DataSerializers.registerSerializer(this);
-			}
-			
-			@Override
-			public void write(PacketBuffer buf, ArmPose value) {
-				buf.writeEnumValue(value);
-			}
-
-			@Override
-			public ArmPose read(PacketBuffer buf) throws IOException {
-				return buf.readEnumValue(ArmPose.class);
-			}
-
-			@Override
-			public DataParameter<ArmPose> createKey(int id) {
-				return new DataParameter<>(id, this);
-			}
-
-			@Override
-			public ArmPose copyValue(ArmPose value) {
-				return value;
-			}
-		}
-		
-		public static PoseSerializer Serializer = null;
-		public static void Init() {
-			Serializer = new PoseSerializer();
-		}
-	}
-	
-	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityGnome.class, ArmPose.Serializer);
+	protected static final DataParameter<ArmPoseGnome> POSE  = EntityDataManager.<ArmPoseGnome>createKey(EntityGnome.class, ArmPoseGnome.instance());
 	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityGnome.class, DataSerializers.ITEM_STACK);
 
 	private static final String NBT_ITEM = "helditem";
@@ -337,7 +297,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	protected void onIdleTick() {
-		this.setPose(ArmPose.IDLE);
+		this.setPose(ArmPoseGnome.IDLE);
 		
 		// We could play some idle animation or something
 		// For now, the only thing we care about is if we're idle but have an item. If so, make
@@ -430,7 +390,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		        double d2 = pos.getZ() - this.posZ;
 				float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 				
-				this.setPose(ArmPose.WORKING);
+				this.setPose(ArmPoseGnome.WORKING);
 				this.rotationYaw = desiredYaw;
 				if (this.isSwingInProgress) {
 					// On the client, spawn some particles if we're using our wand
@@ -444,7 +404,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 				} else {
 					task.markSubtaskComplete();
 					if (task.getActiveSubtask() != sub) {
-						setPose(ArmPose.IDLE);
+						setPose(ArmPoseGnome.IDLE);
 						break;
 					}
 					this.swingArm(this.getActiveHand());
@@ -454,9 +414,9 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 			}
 			case IDLE:
 				if (this.hasItems()) {
-					this.setPose(ArmPose.CARRYING);
+					this.setPose(ArmPoseGnome.CARRYING);
 				} else {
-					this.setPose(ArmPose.IDLE);
+					this.setPose(ArmPoseGnome.IDLE);
 				}
 				if (this.navigator.noPath()) {
 					if (movePos == null) {
@@ -515,9 +475,9 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 			case MOVE:
 				{
 					if (this.hasItems()) {
-						this.setPose(ArmPose.CARRYING);
+						this.setPose(ArmPoseGnome.CARRYING);
 					} else {
-						this.setPose(ArmPose.IDLE);
+						this.setPose(ArmPoseGnome.IDLE);
 					}
 					if (this.navigator.noPath()) {
 						// First time through?
@@ -648,15 +608,15 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void entityInit() {
 		super.entityInit();
-		dataManager.register(POSE, ArmPose.IDLE);
+		dataManager.register(POSE, ArmPoseGnome.IDLE);
 		dataManager.register(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
 	
-	public ArmPose getPose() {
+	public ArmPoseGnome getPose() {
 		return dataManager.get(POSE);
 	}
 	
-	public void setPose(ArmPose pose) {
+	public void setPose(ArmPoseGnome pose) {
 		this.dataManager.set(POSE, pose);
 	}
 

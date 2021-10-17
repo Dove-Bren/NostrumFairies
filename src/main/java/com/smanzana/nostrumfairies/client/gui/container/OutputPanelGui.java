@@ -239,7 +239,7 @@ public class OutputPanelGui {
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-			;
+			super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 		}
 		
 		@Override

@@ -7,7 +7,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -30,8 +29,6 @@ public class FeyVisibilityPotion extends Potion {
 		this.setPotionName("potion.fey-visibility.name");
 		this.setRegistryName(Resource);
 		this.setBeneficial();
-		
-		GameRegistry.register(this);
 	}
 	
 	public boolean isReady(int duration, int amp) {

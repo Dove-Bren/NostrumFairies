@@ -1,7 +1,6 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -12,6 +11,7 @@ import org.apache.commons.lang3.Validate;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
+import com.smanzana.nostrummagica.utils.NonNullHashMap;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.block.Block;
@@ -42,7 +42,6 @@ import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
@@ -67,7 +66,10 @@ public class TemplateBlock extends BlockContainer {
 			return StateItemOverrides.get(templatedState);
 		}
 		
-		ItemStack required = StateItemCache.get(templatedState);
+		ItemStack required = ItemStack.EMPTY;
+		if (StateItemCache.containsKey(templatedState)) {
+			StateItemCache.get(templatedState);
+		}
 		Block block = templatedState.getBlock();
 		
 		// Try reflection
@@ -105,8 +107,8 @@ public class TemplateBlock extends BlockContainer {
 		return required;
 	}
 	
-	private static Map<IBlockState, ItemStack> StateItemOverrides = new HashMap<>();
-	private static Map<IBlockState, ItemStack> StateItemCache = new HashMap<>();
+	private static Map<IBlockState, ItemStack> StateItemOverrides = new NonNullHashMap<>();
+	private static Map<IBlockState, ItemStack> StateItemCache = new NonNullHashMap<>();
 	
 	public static final void RegisterItemForBlock(IBlockState state, @Nonnull ItemStack stack) {
 		Validate.notNull(stack);
@@ -159,10 +161,6 @@ public class TemplateBlock extends BlockContainer {
 		}
 		
 		return instance;
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(TemplateBlockTileEntity.class, "template_block_te");;
 	}
 	
 	public TemplateBlock() {

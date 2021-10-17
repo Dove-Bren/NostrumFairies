@@ -10,6 +10,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.registries.IForgeRegistry;
 
 public enum NostrumFairiesSounds {
 	
@@ -47,6 +48,7 @@ public enum NostrumFairiesSounds {
 		this.resource = new ResourceLocation(NostrumFairies.MODID, suffix);
 		this.category = category;
 		this.event = new SoundEvent(resource);
+		event.setRegistryName(resource);
 		this.volume = volume;
 	}
 	
@@ -76,13 +78,10 @@ public enum NostrumFairiesSounds {
 				volume, 0.8f + (NostrumMagica.rand.nextFloat() * 0.4f));
 	}
 	
-	public static void registerSounds() {
-		int idOffset = SoundEvent.REGISTRY.getKeys().size();
-		
+	public static void registerSounds(IForgeRegistry<SoundEvent> registry) {
 		for (NostrumFairiesSounds sound : values()) {
-			SoundEvent.REGISTRY.register(idOffset++, sound.resource, sound.event);
+			registry.register(sound.event);
 		}
-		
 	}
 
 	public SoundEvent getEvent() {

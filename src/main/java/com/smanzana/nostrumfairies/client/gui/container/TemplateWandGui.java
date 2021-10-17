@@ -5,10 +5,10 @@ import java.io.IOException;
 import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -244,7 +244,7 @@ public class TemplateWandGui {
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class BagGui extends GuiContainer {
+	public static class BagGui extends AutoGuiContainer {
 
 		//private BagContainer bag;
 		

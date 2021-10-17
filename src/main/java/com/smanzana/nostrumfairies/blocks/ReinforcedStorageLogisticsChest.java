@@ -20,7 +20,6 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class ReinforcedStorageLogisticsChest extends BlockContainer {
 	
@@ -61,12 +60,6 @@ public class ReinforcedStorageLogisticsChest extends BlockContainer {
 			Diamond = new ReinforcedStorageLogisticsChest(Type.DIAMOND);
 		
 		return Diamond;
-	}
-	
-	public static void init() {
-		GameRegistry.registerTileEntity(ReinforcedIronChestTileEntity.class, "logistics_reinforced_chest_iron_te");
-		GameRegistry.registerTileEntity(ReinforcedGoldChestTileEntity.class, "logistics_reinforced_chest_gold_te");
-		GameRegistry.registerTileEntity(ReinforcedDiamondChestTileEntity.class, "logistics_reinforced_chest_diamond_te");
 	}
 	
 	private final Type type;

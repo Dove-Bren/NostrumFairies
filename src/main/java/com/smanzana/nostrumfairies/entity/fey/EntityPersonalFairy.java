@@ -1,6 +1,5 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +18,8 @@ import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyCastTarge
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyPlacementTarget;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
+import com.smanzana.nostrumfairies.serializers.FairyJob;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles;
@@ -52,9 +53,7 @@ import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
@@ -68,50 +67,12 @@ import net.minecraftforge.oredict.OreDictionary;
 
 public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITrackableEntity<EntityPersonalFairy>, IRangedAttackMob {
 	
-	public static enum FairyJob {
-		WARRIOR,
-		BUILDER,
-		LOGISTICS;
-		
-		public final static class JobSerializer implements DataSerializer<FairyJob> {
-			
-			private JobSerializer() {
-				DataSerializers.registerSerializer(this);
-			}
-			
-			@Override
-			public void write(PacketBuffer buf, FairyJob value) {
-				buf.writeEnumValue(value);
-			}
-
-			@Override
-			public FairyJob read(PacketBuffer buf) throws IOException {
-				return buf.readEnumValue(FairyJob.class);
-			}
-
-			@Override
-			public DataParameter<FairyJob> createKey(int id) {
-				return new DataParameter<>(id, this);
-			}
-
-			@Override
-			public FairyJob copyValue(FairyJob value) {
-				return value;
-			}
-		}
-		
-		public static JobSerializer Serializer = null;
-		public static void Init() {
-			Serializer = new JobSerializer();
-		}
-	}
-
 	private static final String NBT_OWNER_ID = "owner_uuid";
 	private static final String NBT_JOB = "job";
 	private static final String NBT_ENERGY = "energy";
 	private static final String NBT_MAX_ENERGY = "max_energy";
 	private static final DataParameter<Optional<UUID>> DATA_OWNER = EntityDataManager.<Optional<UUID>>createKey(EntityPersonalFairy.class, DataSerializers.OPTIONAL_UNIQUE_ID);
-	private static final DataParameter<FairyJob> DATA_JOB = EntityDataManager.<FairyJob>createKey(EntityPersonalFairy.class, FairyJob.Serializer);
+	private static final DataParameter<FairyJob> DATA_JOB = EntityDataManager.<FairyJob>createKey(EntityPersonalFairy.class, FairyJob.instance());
 	private static final DataParameter<Float> DATA_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
 	private static final DataParameter<Float> DATA_MAX_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
 	private static final DataParameter<PetAction> DATA_PET_ACTION = EntityDataManager.<PetAction>createKey(EntityPersonalFairy.class, PetJobSerializer.instance);
@@ -723,6 +684,16 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			public Spell pickSpell(Spell[] spells, EntityPersonalFairy fairy) {
 				// Ignore empty array and use spell from the fairy
 				return castSpell;
+			}
+			
+			@Override
+			public @Nullable EntityLivingBase getTarget() {
+				if (castTarget == FairyCastTarget.OWNER) {
+					return entity.getOwner();
+				} else if (castTarget == FairyCastTarget.SELF) {
+					return entity;
+				}
+				return super.getTarget();
 			}
 		});
 		

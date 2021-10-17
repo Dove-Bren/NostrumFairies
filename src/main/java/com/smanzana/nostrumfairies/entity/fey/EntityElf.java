@@ -1,7 +1,5 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
-import java.io.IOException;
-
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
@@ -12,6 +10,8 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
+import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
+import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
@@ -35,10 +35,7 @@ import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
-import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
@@ -53,44 +50,6 @@ import net.minecraft.world.World;
 
 public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRangedAttackMob {
 
-	public static enum ArmPose {
-		IDLE,
-		WORKING,
-		ATTACKING;
-		
-		public final static class PoseSerializer implements DataSerializer<ArmPose> {
-			
-			private PoseSerializer() {
-				DataSerializers.registerSerializer(this);
-			}
-			
-			@Override
-			public void write(PacketBuffer buf, ArmPose value) {
-				buf.writeEnumValue(value);
-			}
-
-			@Override
-			public ArmPose read(PacketBuffer buf) throws IOException {
-				return buf.readEnumValue(ArmPose.class);
-			}
-
-			@Override
-			public DataParameter<ArmPose> createKey(int id) {
-				return new DataParameter<>(id, this);
-			}
-
-			@Override
-			public ArmPose copyValue(ArmPose value) {
-				return value;
-			}
-		}
-		
-		public static PoseSerializer Serializer = null;
-		public static void Init() {
-			 Serializer = new PoseSerializer();
-		}
-	}
-	
 	private static Spell SPELL_VINES = null;
 	private static Spell SPELL_POISON_WIND = null;
 	
@@ -108,7 +67,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		}
 	}
 	
-	protected static final DataParameter<ArmPose> POSE  = EntityDataManager.<ArmPose>createKey(EntityElf.class, ArmPose.Serializer);
+	protected static final DataParameter<ArmPoseElf> POSE  = EntityDataManager.<ArmPoseElf>createKey(EntityElf.class, ArmPoseElf.instance());
 	
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
@@ -261,13 +220,13 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		} else if (newTask instanceof LogisticsTaskDepositItem) {
 			setActivitySummary("status.generic.return");
 		} else {
-			setActivitySummary("status.generic.work");
+			setActivitySummary("status.generic.working");
 		}
 	}
 	
 	@Override
 	protected void onIdleTick() {
-		this.setPose(ArmPose.IDLE);
+		this.setPose(ArmPoseElf.IDLE);
 		
 		// See if we're too far away from our home block
 		if (this.navigator.noPath()) {
@@ -328,11 +287,11 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		if (sub != null) {
 			switch (sub.getType()) {
 			case ATTACK:
-				setPose(ArmPose.ATTACKING);
+				setPose(ArmPoseElf.ATTACKING);
 				this.faceEntity(sub.getEntity(), 30, 180);
 				break;
 			case BREAK:
-				setPose(ArmPose.WORKING);
+				setPose(ArmPoseElf.WORKING);
 				BlockPos pos = sub.getPos();
 				double d0 = pos.getX() - this.posX;
 		        double d2 = pos.getZ() - this.posZ;
@@ -342,26 +301,26 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 				//this.rotationPitch = 1;
 				if (this.isSwingInProgress) {
 					// On the client, spawn some particles if we're using our wand
-					if (ticksExisted % 5 == 0 && getPose() == ArmPose.WORKING) {
+					if (ticksExisted % 5 == 0 && getPose() == ArmPoseElf.WORKING) {
 						world.spawnParticle(EnumParticleTypes.DRAGON_BREATH,
 								posX, posY, posZ,
 								0, 0.3, 0,
 								new int[0]);
 					}
-					if (taskTickCount % 15 == 0 && getPose() == ArmPose.WORKING && rand.nextBoolean()) {
-						world.playSound(null, posX, posY, posZ, SoundEvents.BLOCK_GRAVEL_STEP, SoundCategory.NEUTRAL, 1f, 1.6f);
+					if (taskTickCount % 15 == 0 && getPose() == ArmPoseElf.WORKING && rand.nextBoolean()) {
+						world.playSound(null, posX, posY, posZ, SoundEvents.BLOCK_WOOD_HIT, SoundCategory.NEUTRAL, 1f, 1.6f);
 					}
 				} else {
 					task.markSubtaskComplete();
 					if (task.getActiveSubtask() != sub) {
-						setPose(ArmPose.IDLE);
+						setPose(ArmPoseElf.IDLE);
 						break;
 					}
 					this.swingArm(this.getActiveHand());
 				}
 				break;
 			case IDLE:
-				setPose(ArmPose.IDLE);
+				setPose(ArmPoseElf.IDLE);
 				if (this.navigator.noPath()) {
 					if (movePos == null) {
 						final BlockPos center = sub.getPos();
@@ -418,7 +377,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 				break;
 			case MOVE:
 				{
-					setPose(ArmPose.IDLE);
+					setPose(ArmPoseElf.IDLE);
 					if (this.navigator.noPath()) {
 						// First time through?
 						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
@@ -550,13 +509,13 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 
 	@Override
 	protected void onCombatTick() {
-		setPose(ArmPose.ATTACKING);
+		setPose(ArmPoseElf.ATTACKING);
 	}
 	
 	@Override
 	protected void entityInit() {
 		super.entityInit();
-		dataManager.register(POSE, ArmPose.IDLE);
+		dataManager.register(POSE, ArmPoseElf.IDLE);
 	}
 	
 	@Override
@@ -571,11 +530,11 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		return livingdata;
 	}
 	
-	public ArmPose getPose() {
+	public ArmPoseElf getPose() {
 		return dataManager.get(POSE);
 	}
 	
-	public void setPose(ArmPose pose) {
+	public void setPose(ArmPoseElf pose) {
 		this.dataManager.set(POSE, pose);
 	}
 	
@@ -586,7 +545,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	
 	@Override
 	protected void onCientTick() {
-		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPose.WORKING) {
+		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPoseElf.WORKING) {
 			
 			double angle = this.rotationYawHead + ((this.isLeftHanded() ? -1 : 1) * 22.5);
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;
@@ -633,7 +592,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		}
 		
 		if (this.getAttackTarget() == null) {
-			this.setPose(ArmPose.IDLE);
+			this.setPose(ArmPoseElf.IDLE);
 		}
 	}
 

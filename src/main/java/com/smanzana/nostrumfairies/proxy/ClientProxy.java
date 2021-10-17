@@ -1,6 +1,5 @@
 package com.smanzana.nostrumfairies.proxy;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.lwjgl.input.Keyboard;
@@ -96,9 +95,12 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -146,7 +148,146 @@ public class ClientProxy extends CommonProxy {
 		CraftingBlockElfRenderer.init();
 		CraftingBlockGnomeRenderer.init();
 		LogisticsSensorRenderer.init();
+	}
+	
+	@Override
+	public void init() {
+		super.init();
+	}
+	
+	@Override
+	public void postinit() {
+		super.postinit();
 		
+		this.overlayRenderer = new OverlayRenderer();
+	}
+	
+	public static void registerModel(Item item, int meta, String modelName) {
+		ModelLoader.setCustomModelResourceLocation(item, meta, new ModelResourceLocation(NostrumFairies.MODID + ":" + modelName, "inventory"));
+	}
+	
+	@SubscribeEvent
+	public void registerAllModels(ModelRegistryEvent event) {
+		
+		registerItemVariants(event);
+		
+		//registerModel(SpellTome.instance(), 0, SpellTome.id);
+		registerModel(Item.getItemFromBlock(StorageLogisticsChest.instance()),
+				0,
+				StorageLogisticsChest.ID);
+		registerModel(Item.getItemFromBlock(BufferLogisticsChest.instance()),
+				0,
+				BufferLogisticsChest.ID);
+		registerModel(Item.getItemFromBlock(OutputLogisticsChest.instance()),
+				0,
+				OutputLogisticsChest.ID);
+		registerModel(Item.getItemFromBlock(StorageMonitor.instance()),
+				0,
+				StorageMonitor.ID);
+		registerModel(Item.getItemFromBlock(InputLogisticsChest.instance()),
+				0,
+				InputLogisticsChest.ID);
+		registerModel(Item.getItemFromBlock(GatheringBlock.instance()),
+				0,
+				GatheringBlock.ID);
+		registerModel(Item.getItemFromBlock(LogisticsPylon.instance()),
+				0,
+				LogisticsPylon.ID);
+		registerModel(Item.getItemFromBlock(WoodcuttingBlock.instance()),
+				0,
+				WoodcuttingBlock.ID);
+		registerModel(Item.getItemFromBlock(MiningBlock.instance()),
+				0,
+				MiningBlock.ID);
+		registerModel(Item.getItemFromBlock(FarmingBlock.instance()),
+				0,
+				FarmingBlock.ID);
+		registerModel(Item.getItemFromBlock(BuildingBlock.instance()),
+				0,
+				BuildingBlock.ID);
+		for (ResidentType type : ResidentType.values()) {
+			registerModel(Item.getItemFromBlock(FeyHomeBlock.instance(type)),
+					0,
+					FeyHomeBlock.ID(type));
+		}
+		
+		
+		NonNullList<ItemStack> stones = NonNullList.create();
+		FeyStone.instance().getSubItems(FeyStone.instance().getCreativeTab(), stones);
+		for (ItemStack stone : stones) {
+			registerModel(FeyStone.instance(), stone.getMetadata(), FeyStone.instance().getModelName(stone));
+		}
+		
+		for (FeyResourceType type : FeyResourceType.values()) {
+			registerModel(FeyResource.instance(), FeyResource.create(type, 1).getMetadata(), FeyResource.instance().getModelName(type));
+		}
+		
+		registerModel(Item.getItemFromBlock(FeyBush.instance()),
+				0,
+				FeyBush.ID);
+		
+		for (FairyInstrument.InstrumentType type : FairyInstrument.InstrumentType.values()) {
+			registerModel(FairyInstrument.instance(), FairyInstrument.create(type).getMetadata(), FairyInstrument.instance().getModelName(type));
+		}
+		
+		List<ResidentType> soulTypes = Lists.newArrayList(ResidentType.values());
+		soulTypes.add(null);
+		for (ResidentType type : soulTypes) {
+			registerModel(FeySoulStone.instance(), FeySoulStone.createEmpty(type).getMetadata(), FeySoulStone.instance().getModelName(type));
+			registerModel(FeySoulStone.instance(), FeySoulStone.createFake(type).getMetadata(), FeySoulStone.instance().getModelName(type) + "_filled");
+		}
+		
+		for (FairyGael.FairyGaelType type : FairyGael.FairyGaelType.values()) {
+			registerModel(FairyGael.instance(), type.ordinal() << 1, FairyGael.instance().getModelName(type, false));
+			registerModel(FairyGael.instance(), type.ordinal() << 1 | 1, FairyGael.instance().getModelName(type, true));
+		}
+		
+		for (WandMode mode : WandMode.values()) {
+			registerModel(TemplateWand.instance(), TemplateWand.metaFromMode(mode), TemplateWand.instance().getModelName(mode));
+		}
+		
+		registerModel(TemplateScroll.instance(), 0, TemplateScroll.ID);
+		
+		registerModel(Item.getItemFromBlock(CraftingBlockDwarf.instance()),
+				0,
+				CraftingBlockDwarf.ID);
+		registerModel(Item.getItemFromBlock(CraftingBlockElf.instance()),
+				0,
+				CraftingBlockElf.ID);
+		registerModel(Item.getItemFromBlock(CraftingBlockGnome.instance()),
+				0,
+				CraftingBlockGnome.ID);
+		registerModel(Item.getItemFromBlock(LogisticsSensorBlock.instance()),
+				0,
+				LogisticsSensorBlock.ID);
+		
+		ItemStack stack = SoulJar.createFake(false);
+		registerModel(SoulJar.instance(),
+				stack.getMetadata(),
+				SoulJar.instance().getModelName(stack));
+		stack = SoulJar.createFake(true);
+		registerModel(SoulJar.instance(),
+				stack.getMetadata(),
+				SoulJar.instance().getModelName(stack));
+		
+		registerModel(Item.getItemFromBlock(OutputLogisticsPanel.instance()),
+				0,
+				OutputLogisticsPanel.ID);
+		
+		registerModel(Item.getItemFromBlock(ReinforcedStorageLogisticsChest.Iron()),
+				0,
+				ReinforcedStorageLogisticsChest.Iron().getID());
+		registerModel(Item.getItemFromBlock(ReinforcedStorageLogisticsChest.Gold()),
+				0,
+				ReinforcedStorageLogisticsChest.Gold().getID());
+		registerModel(Item.getItemFromBlock(ReinforcedStorageLogisticsChest.Diamond()),
+				0,
+				ReinforcedStorageLogisticsChest.Diamond().getID());
+		
+		registerEntityRenderers();
+	}
+	
+	private void registerEntityRenderers() {
 		RenderingRegistry.registerEntityRenderingHandler(EntityTestFairy.class, new IRenderFactory<EntityTestFairy>() {
 			@Override
 			public Render<? super EntityTestFairy> createRenderFor(RenderManager manager) {
@@ -226,9 +367,11 @@ public class ClientProxy extends CommonProxy {
 				return new RenderGnome(manager, 1.0f);
 			}
 		});
-		
-		List<ItemStack> stones = new LinkedList<>();
-		FeyStone.instance().getSubItems(FeyStone.instance(), null, stones);
+	}
+	
+	private void registerItemVariants(ModelRegistryEvent event) {
+		NonNullList<ItemStack> stones = NonNullList.create();
+		FeyStone.instance().getSubItems(FeyStone.instance().getCreativeTab(), stones);
 		ResourceLocation variants[] = new ResourceLocation[stones.size()];
 		int i = 0;
 		for (ItemStack stone : stones) {
@@ -296,137 +439,6 @@ public class ClientProxy extends CommonProxy {
 		ModelBakery.registerItemVariants(SoulJar.instance(), variants);
 	}
 	
-	@Override
-	public void init() {
-		super.init();
-		
-		//registerModel(SpellTome.instance(), 0, SpellTome.id);
-		registerModel(Item.getItemFromBlock(StorageLogisticsChest.instance()),
-				0,
-				StorageLogisticsChest.ID);
-		registerModel(Item.getItemFromBlock(BufferLogisticsChest.instance()),
-				0,
-				BufferLogisticsChest.ID);
-		registerModel(Item.getItemFromBlock(OutputLogisticsChest.instance()),
-				0,
-				OutputLogisticsChest.ID);
-		registerModel(Item.getItemFromBlock(StorageMonitor.instance()),
-				0,
-				StorageMonitor.ID);
-		registerModel(Item.getItemFromBlock(InputLogisticsChest.instance()),
-				0,
-				InputLogisticsChest.ID);
-		registerModel(Item.getItemFromBlock(GatheringBlock.instance()),
-				0,
-				GatheringBlock.ID);
-		registerModel(Item.getItemFromBlock(LogisticsPylon.instance()),
-				0,
-				LogisticsPylon.ID);
-		registerModel(Item.getItemFromBlock(WoodcuttingBlock.instance()),
-				0,
-				WoodcuttingBlock.ID);
-		registerModel(Item.getItemFromBlock(MiningBlock.instance()),
-				0,
-				MiningBlock.ID);
-		registerModel(Item.getItemFromBlock(FarmingBlock.instance()),
-				0,
-				FarmingBlock.ID);
-		registerModel(Item.getItemFromBlock(BuildingBlock.instance()),
-				0,
-				BuildingBlock.ID);
-		for (ResidentType type : ResidentType.values()) {
-			registerModel(Item.getItemFromBlock(FeyHomeBlock.instance(type)),
-					0,
-					FeyHomeBlock.ID(type));
-		}
-		
-		
-		List<ItemStack> stones = new LinkedList<>();
-		FeyStone.instance().getSubItems(FeyStone.instance(), null, stones);
-		for (ItemStack stone : stones) {
-			registerModel(FeyStone.instance(), stone.getMetadata(), FeyStone.instance().getModelName(stone));
-		}
-		
-		for (FeyResourceType type : FeyResourceType.values()) {
-			registerModel(FeyResource.instance(), FeyResource.create(type, 1).getMetadata(), FeyResource.instance().getModelName(type));
-		}
-		
-		registerModel(Item.getItemFromBlock(FeyBush.instance()),
-				0,
-				FeyBush.ID);
-		
-		for (FairyInstrument.InstrumentType type : FairyInstrument.InstrumentType.values()) {
-			registerModel(FairyInstrument.instance(), FairyInstrument.create(type).getMetadata(), FairyInstrument.instance().getModelName(type));
-		}
-		
-		List<ResidentType> soulTypes = Lists.newArrayList(ResidentType.values());
-		soulTypes.add(null);
-		for (ResidentType type : soulTypes) {
-			registerModel(FeySoulStone.instance(), FeySoulStone.createEmpty(type).getMetadata(), FeySoulStone.instance().getModelName(type));
-			registerModel(FeySoulStone.instance(), FeySoulStone.createFake(type).getMetadata(), FeySoulStone.instance().getModelName(type) + "_filled");
-		}
-		
-		for (FairyGael.FairyGaelType type : FairyGael.FairyGaelType.values()) {
-			registerModel(FairyGael.instance(), type.ordinal() << 1, FairyGael.instance().getModelName(type, false));
-			registerModel(FairyGael.instance(), type.ordinal() << 1 | 1, FairyGael.instance().getModelName(type, true));
-		}
-		
-		for (WandMode mode : WandMode.values()) {
-			registerModel(TemplateWand.instance(), TemplateWand.metaFromMode(mode), TemplateWand.instance().getModelName(mode));
-		}
-		
-		registerModel(TemplateScroll.instance(), 0, TemplateScroll.ID);
-		
-		registerModel(Item.getItemFromBlock(CraftingBlockDwarf.instance()),
-				0,
-				CraftingBlockDwarf.ID);
-		registerModel(Item.getItemFromBlock(CraftingBlockElf.instance()),
-				0,
-				CraftingBlockElf.ID);
-		registerModel(Item.getItemFromBlock(CraftingBlockGnome.instance()),
-				0,
-				CraftingBlockGnome.ID);
-		registerModel(Item.getItemFromBlock(LogisticsSensorBlock.instance()),
-				0,
-				LogisticsSensorBlock.ID);
-		
-		ItemStack stack = SoulJar.createFake(false);
-		registerModel(SoulJar.instance(),
-				stack.getMetadata(),
-				SoulJar.instance().getModelName(stack));
-		stack = SoulJar.createFake(true);
-		registerModel(SoulJar.instance(),
-				stack.getMetadata(),
-				SoulJar.instance().getModelName(stack));
-		
-		registerModel(Item.getItemFromBlock(OutputLogisticsPanel.instance()),
-				0,
-				OutputLogisticsPanel.ID);
-		
-		registerModel(Item.getItemFromBlock(ReinforcedStorageLogisticsChest.Iron()),
-				0,
-				ReinforcedStorageLogisticsChest.Iron().getID());
-		registerModel(Item.getItemFromBlock(ReinforcedStorageLogisticsChest.Gold()),
-				0,
-				ReinforcedStorageLogisticsChest.Gold().getID());
-		registerModel(Item.getItemFromBlock(ReinforcedStorageLogisticsChest.Diamond()),
-				0,
-				ReinforcedStorageLogisticsChest.Diamond().getID());
-	}
-	
-	@Override
-	public void postinit() {
-		super.postinit();
-		
-		this.overlayRenderer = new OverlayRenderer();
-	}
-	
-	public static void registerModel(Item item, int meta, String modelName) {
-		Minecraft.getMinecraft().getRenderItem().getItemModelMesher()
-    	.register(item, meta,
-    			new ModelResourceLocation(NostrumFairies.MODID + ":" + modelName, "inventory"));
-	}
-	
 
 	@Override
 	public boolean isServer() {
@@ -435,7 +447,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@Override
 	public EntityPlayer getPlayer() {
-		return Minecraft.getMinecraft().thePlayer;
+		return Minecraft.getMinecraft().player;
 	}
 	
 //	@SubscribeEvent
@@ -479,7 +491,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@SubscribeEvent
 	public void onClientConnect(EntityJoinWorldEvent event) {
-		if (event.getEntity() == Minecraft.getMinecraft().thePlayer) {
+		if (event.getEntity() == Minecraft.getMinecraft().player) {
 			// Every time we join a world, request a copy of its networks
 			
 			NostrumFairies.logger.info("Requested automatic logistics network refresh");
@@ -504,7 +516,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@SubscribeEvent
 	public void onMouse(MouseEvent event) {
-		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+		EntityPlayer player = Minecraft.getMinecraft().player;
 		int wheel = event.getDwheel();
 		if (wheel != 0) {
 			if (!NostrumFairies.getFeyWrapper(player)
@@ -514,11 +526,11 @@ public class ClientProxy extends CommonProxy {
 			
 			if (bindingScroll.isKeyDown()) {
 				ItemStack wand = player.getHeldItemMainhand();
-				if (wand == null || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
+				if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand) || TemplateWand.getModeOf(wand) != WandMode.SPAWN) {
 					wand = player.getHeldItemOffhand();
 				}
 				
-				if (wand != null && wand.getItem() instanceof TemplateWand && TemplateWand.getModeOf(wand) == WandMode.SPAWN) {
+				if (!wand.isEmpty() && wand.getItem() instanceof TemplateWand && TemplateWand.getModeOf(wand) == WandMode.SPAWN) {
 					TemplateWand.HandleScroll(player, wand, wheel > 0);
 					event.setCanceled(true);
 					return;
@@ -529,7 +541,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@SubscribeEvent
 	public void onKey(KeyInputEvent event) {
-		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+		EntityPlayer player = Minecraft.getMinecraft().player;
 		final boolean forwardPressed = bindingWandModeForward.isPressed(); 
 		if (forwardPressed || bindingWandModeBackward.isPressed()) {
 			final INostrumMagic magic = NostrumMagica.getMagicWrapper(player);
@@ -538,11 +550,11 @@ public class ClientProxy extends CommonProxy {
 			}
 			
 			ItemStack wand = player.getHeldItemMainhand();
-			if (wand == null || !(wand.getItem() instanceof TemplateWand)) {
+			if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand)) {
 				wand = player.getHeldItemOffhand();
 			}
 			
-			if (wand != null && wand.getItem() instanceof TemplateWand) {
+			if (!wand.isEmpty() && wand.getItem() instanceof TemplateWand) {
 				TemplateWand.HandleModeChange(player, wand, forwardPressed);
 				return;
 			}

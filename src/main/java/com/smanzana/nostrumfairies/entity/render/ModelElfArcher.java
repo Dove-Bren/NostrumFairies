@@ -1,8 +1,9 @@
 package com.smanzana.nostrumfairies.entity.render;
 
-import com.smanzana.nostrumfairies.entity.fey.EntityElf.ArmPose;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
-import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher.BattleStance;
+import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
+import com.smanzana.nostrumfairies.serializers.BattleStanceElfArcher;
+import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 
 import net.minecraft.client.model.ModelRenderer;
@@ -73,12 +74,12 @@ public class ModelElfArcher extends ModelElf {
 		
 		if (entity instanceof EntityElfArcher) {
 			EntityElfArcher elf = (EntityElfArcher) entity;
-			isAttacking = elf.getPose() == ArmPose.ATTACKING;
-			useBow = elf.getStance() == BattleStance.RANGED;
+			isAttacking = elf.getPose() == ArmPoseElf.ATTACKING;
+			useBow = elf.getStance() == BattleStanceElfArcher.RANGED;
 		} else if (entity instanceof EntityShadowFey) {
 			EntityShadowFey shadow = (EntityShadowFey) entity;
-			isAttacking = shadow.getStance() != EntityShadowFey.BattleStance.IDLE;
-			useBow = shadow.getStance() != EntityShadowFey.BattleStance.MELEE;
+			isAttacking = shadow.getStance() != BattleStanceShadowFey.IDLE;
+			useBow = shadow.getStance() != BattleStanceShadowFey.MELEE;
 		} else {
 			isAttacking = (entity instanceof EntityLiving ? ((EntityLiving) entity).getAttackTarget() != null : false);
 			useBow = false;
@@ -207,10 +208,10 @@ public class ModelElfArcher extends ModelElf {
 		
 		if (entity instanceof EntityElfArcher) {
 			EntityElfArcher elf = (EntityElfArcher) entity;
-			useBow = elf.getStance() == BattleStance.RANGED;
+			useBow = elf.getStance() == BattleStanceElfArcher.RANGED;
 		} else if (entity instanceof EntityShadowFey) {
 			EntityShadowFey shadow = (EntityShadowFey) entity;
-			useBow = shadow.getStance() == EntityShadowFey.BattleStance.RANGED;
+			useBow = shadow.getStance() == BattleStanceShadowFey.RANGED;
 		} else {
 			useBow = false;
 		}

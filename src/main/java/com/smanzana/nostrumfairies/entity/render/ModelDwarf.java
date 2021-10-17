@@ -1,7 +1,7 @@
 package com.smanzana.nostrumfairies.entity.render;
 
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
-import com.smanzana.nostrumfairies.entity.fey.EntityDwarf.ArmPose;
+import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
@@ -160,11 +160,11 @@ public class ModelDwarf extends ModelBase {
 		legRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
 		legLeft.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
 		
-		if (dwarf.isSwingInProgress || dwarf.getPose() != ArmPose.IDLE) {
+		if (dwarf.isSwingInProgress || dwarf.getPose() != ArmPoseDwarf.IDLE) {
 			int sign = 1;//(dwarf.isLeftHanded() ? -1 : 1);
 			ModelRenderer hand = (dwarf.isLeftHanded() ? armLeft : armRight);
 			
-			if (dwarf.getPose() == ArmPose.MINING) {
+			if (dwarf.getPose() == ArmPoseDwarf.MINING) {
 				double lowX = -sign * (Math.PI * .75);
 				double diffX = sign * (Math.PI * .4);
 				float periodFirst = .4f;
@@ -179,7 +179,7 @@ public class ModelDwarf extends ModelBase {
 					hand.rotateAngleX = (float) lowX;
 					hand.rotateAngleY = 0;
 				}
-			} else if (dwarf.getPose() == ArmPose.ATTACKING) {
+			} else if (dwarf.getPose() == ArmPoseDwarf.ATTACKING) {
 				// Have pick raised and do full swings
 				double lowX = -sign * (Math.PI * .95);
 				double diffX = sign * (Math.PI * .8);

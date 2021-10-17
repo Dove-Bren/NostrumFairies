@@ -18,10 +18,10 @@ import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
+import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
@@ -182,7 +182,7 @@ public class HomeBlockGui {
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public static class HomeBlockGuiContainer extends GuiContainer {
+	public static class HomeBlockGuiContainer extends AutoGuiContainer {
 
 		private HomeBlockContainer container;
 		protected int selection = -1;
@@ -485,6 +485,8 @@ public class HomeBlockGui {
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+			super.drawGuiContainerForegroundLayer(mouseX, mouseY);
+			
 			setIsItemRender(false);
 			
 			int horizontalMargin = (width - xSize) / 2;
