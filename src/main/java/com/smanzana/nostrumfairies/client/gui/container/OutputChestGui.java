@@ -5,9 +5,9 @@ import java.io.IOException;
 import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.OutputChestTileEntity;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.LogicPanel.LogicPanelGui;
+import com.smanzana.nostrumfairies.tiles.OutputChestTileEntity;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.client.gui.Gui;

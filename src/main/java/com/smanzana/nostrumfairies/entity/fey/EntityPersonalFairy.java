@@ -10,7 +10,6 @@ import com.google.common.base.Optional;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
-import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.entity.IEntityListener;
 import com.smanzana.nostrumfairies.entity.ITrackableEntity;
@@ -21,20 +20,23 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.serializers.FairyJob;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
+import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
+import com.smanzana.nostrummagica.client.gui.petgui.PetGUI.PetContainer;
+import com.smanzana.nostrummagica.client.gui.petgui.PetGUI.PetGUIStatAdapter;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
 import com.smanzana.nostrummagica.entity.IEntityPet;
-import com.smanzana.nostrummagica.entity.PetInfo;
-import com.smanzana.nostrummagica.entity.PetInfo.ManagedPetInfo;
-import com.smanzana.nostrummagica.entity.PetInfo.PetAction;
-import com.smanzana.nostrummagica.entity.PetInfo.SecondaryFlavor;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIFlierDiveTask;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIOrbitEntityGeneric;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIOwnerHurtByTargetGeneric;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIOwnerHurtTargetGeneric;
 import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
 import com.smanzana.nostrummagica.loretag.Lore;
+import com.smanzana.nostrummagica.pet.PetInfo;
+import com.smanzana.nostrummagica.pet.PetInfo.ManagedPetInfo;
+import com.smanzana.nostrummagica.pet.PetInfo.PetAction;
+import com.smanzana.nostrummagica.pet.PetInfo.SecondaryFlavor;
 import com.smanzana.nostrummagica.serializers.PetJobSerializer;
 import com.smanzana.nostrummagica.spells.Spell;
 import com.smanzana.nostrummagica.utils.Inventories;
@@ -167,9 +169,14 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		}
 		return ownerCache;
 	}
+
+	@Override
+	public boolean isEntitySitting() {
+		return false;
+	}
 	
 	@Override
-	public boolean isTamed() {
+	public boolean isEntityTamed() {
 		return getOwnerId() != null;
 	}
 	
@@ -867,7 +874,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		
 		NostrumParticles.GLOW_ORB.spawn(world, new SpawnParams(
 				1, posX, posY + height/2f, posZ, 0, 40, 0,
-				new Vec3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), false
+				new Vec3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), null
 				).color(color));
 	}
 	
@@ -923,11 +930,6 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	@Override
 	protected float getGrowthForTask(ILogisticsTask task) {
 		return 0f;
-	}
-
-	@Override
-	public boolean isSitting() {
-		return false;
 	}
 
 	@Override
@@ -1041,7 +1043,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	
 	@Override
 	public boolean isOnSameTeam(Entity entityIn) {
-		if (this.isTamed()) {
+		if (this.isEntityTamed()) {
 			EntityLivingBase myOwner = this.getOwner();
 
 			if (entityIn == myOwner) {
@@ -1077,5 +1079,15 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	@Override
 	public void setSwingingArms(boolean swingingArms) {
 		;
+	}
+
+	@Override
+	public PetContainer<? extends IEntityPet> getGUIContainer(EntityPlayer player) {
+		return null;
+	}
+
+	@Override
+	public PetGUIStatAdapter<? extends IEntityPet> getGUIAdapter() {
+		return null;
 	}
 }

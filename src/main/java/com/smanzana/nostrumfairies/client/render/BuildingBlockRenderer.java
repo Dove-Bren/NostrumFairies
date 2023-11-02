@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.client.render;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
-import com.smanzana.nostrumfairies.blocks.tiles.BuildingBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.client.Minecraft;

@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.blocks.tiles;
+package com.smanzana.nostrumfairies.tiles;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -211,7 +211,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 			// Try and figure out what the seed would be
 			if (state.getBlock() instanceof BlockCrops) {
 				try {
-					Method getSeed = ObfuscationReflectionHelper.findMethod(BlockCrops.class, "getSeed", Item.class);
+					Method getSeed = ObfuscationReflectionHelper.findMethod(BlockCrops.class, "func_149866_i", Item.class); //getSeed
 					seeds = new ItemStack((Item) getSeed.invoke((BlockCrops) state.getBlock()));
 				} catch (Exception e) {
 					seeds = ItemStack.EMPTY;

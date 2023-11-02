@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.IFeySign;
-import com.smanzana.nostrumfairies.blocks.tiles.MiningBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.IFeySign;
+import com.smanzana.nostrumfairies.tiles.MiningBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.OreDict;
 import com.smanzana.nostrummagica.blocks.EssenceOre;
 import com.smanzana.nostrummagica.blocks.ManiOre;

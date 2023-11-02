@@ -5,13 +5,13 @@ import java.io.IOException;
 import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.ILogisticsLogicProvider;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.LogicMode;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.LogicOp;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogicPanelActionMessage;
+import com.smanzana.nostrumfairies.tiles.ILogisticsLogicProvider;
+import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent;
+import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicMode;
+import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicOp;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.client.Minecraft;

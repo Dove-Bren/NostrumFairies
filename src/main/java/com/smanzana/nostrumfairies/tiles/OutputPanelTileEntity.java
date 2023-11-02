@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.blocks.tiles;
+package com.smanzana.nostrumfairies.tiles;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,10 +12,10 @@ import org.apache.commons.lang3.Validate;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.OutputLogisticsPanel;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
+import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.Inventories;
 

@@ -5,11 +5,11 @@ import java.io.IOException;
 import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockTileEntity;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.LogicPanel.LogicPanelGui;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
+import com.smanzana.nostrumfairies.tiles.CraftingBlockTileEntity;
 
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;

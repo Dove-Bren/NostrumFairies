@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.blocks.tiles;
+package com.smanzana.nostrumfairies.tiles;
 
 public class ReinforcedDiamondChestTileEntity extends ReinforcedChestTileEntity {
 	

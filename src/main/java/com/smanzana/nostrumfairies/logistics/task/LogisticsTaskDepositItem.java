@@ -12,12 +12,12 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.Validate;
 
 import com.google.common.collect.Lists;
-import com.smanzana.nostrumfairies.blocks.tiles.InputChestTileEntity;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.IncomingItemRecord;
+import com.smanzana.nostrumfairies.tiles.InputChestTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.Inventories;
 import com.smanzana.nostrummagica.utils.ItemStacks;

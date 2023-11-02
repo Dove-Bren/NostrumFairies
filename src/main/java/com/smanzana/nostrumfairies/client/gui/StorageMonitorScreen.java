@@ -9,12 +9,12 @@ import javax.annotation.Nullable;
 import org.lwjgl.input.Mouse;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.network.messages.StorageMonitorRequestMessage;
+import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.client.Minecraft;

@@ -17,7 +17,6 @@ import com.google.common.base.Predicate;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
-import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.items.FeyResource;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
@@ -27,6 +26,7 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
+import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
 import net.minecraft.block.state.IBlockState;
@@ -1217,7 +1217,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 					break;
 				}
 			}
-		} while (targ == null && attempts > 0);
+		} while (targ == null && attempts-- > 0);
 		
 		if (targ == null) {
 			targ = center.up();

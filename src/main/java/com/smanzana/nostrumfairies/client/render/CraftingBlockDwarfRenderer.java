@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockDwarfTileEntity;
+import com.smanzana.nostrumfairies.tiles.CraftingBlockDwarfTileEntity;
 
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 

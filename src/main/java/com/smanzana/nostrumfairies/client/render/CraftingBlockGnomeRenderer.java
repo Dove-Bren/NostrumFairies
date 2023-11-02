@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockGnomeTileEntity;
+import com.smanzana.nostrumfairies.tiles.CraftingBlockGnomeTileEntity;
 
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 

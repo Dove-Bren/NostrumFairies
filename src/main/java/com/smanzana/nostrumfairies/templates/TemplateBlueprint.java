@@ -75,7 +75,7 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 
 	public synchronized List<BlockPos> spawn(World world, BlockPos origin, EnumFacing direction) {
 		spawnedBlocks = new ArrayList<>();
-		blueprint.spawn(world, origin, direction);
+		blueprint.spawn(origin, direction);
 		return spawnedBlocks;
 	}
 	

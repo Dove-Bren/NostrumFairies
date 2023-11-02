@@ -1,17 +1,19 @@
-package com.smanzana.nostrumfairies.blocks.tiles;
+package com.smanzana.nostrumfairies.tiles;
 
 import java.util.List;
 
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
-public abstract class ReinforcedChestTileEntity extends LogisticsChestTileEntity {
+public class StorageChestTileEntity extends LogisticsChestTileEntity {
 
+	private static final int SLOTS = 27;
+	
 	private String displayName;
 	
-	public ReinforcedChestTileEntity() {
+	public StorageChestTileEntity() {
 		super();
-		displayName = "Reinforced Storage Chest";
+		displayName = "Storage Chest";
 	}
 	
 	@Override
@@ -22,6 +24,11 @@ public abstract class ReinforcedChestTileEntity extends LogisticsChestTileEntity
 	@Override
 	public boolean hasCustomName() {
 		return false;
+	}
+	
+	@Override
+	public int getSizeInventory() {
+		return SLOTS;
 	}
 	
 	@Override

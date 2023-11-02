@@ -8,8 +8,6 @@ import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
-import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.MiningBlockTileEntity;
 import com.smanzana.nostrumfairies.entity.navigation.PathFinderPublic;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
@@ -27,6 +25,8 @@ import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.serializers.ItemArraySerializer;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
+import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.MiningBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
@@ -47,6 +47,7 @@ import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackMelee;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
+import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -822,6 +823,16 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void initEntityAI() {
 		int priority = 1;
+		this.tasks.addTask(priority++, new EntityAISwimming(this) {
+			@Override
+			public boolean shouldExecute() {
+				// Ignore water when working
+				if (EntityDwarf.this.getCurrentTask() != null) {
+					return false;
+				}
+				return super.shouldExecute();
+			}
+		});
 		this.tasks.addTask(priority++, new EntityAIAttackMelee(this, 1.0, true)); // also gated on target, like 'combat tick' on fey mechs
 		
 		priority = 1;

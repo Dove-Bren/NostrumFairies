@@ -1,8 +1,8 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockDwarfTileEntity;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.tiles.CraftingBlockDwarfTileEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;

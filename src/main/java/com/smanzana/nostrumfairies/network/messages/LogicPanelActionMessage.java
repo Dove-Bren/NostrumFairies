@@ -3,10 +3,10 @@ package com.smanzana.nostrumfairies.network.messages;
 import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.ILogisticsLogicProvider;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.LogicMode;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.LogicOp;
+import com.smanzana.nostrumfairies.tiles.ILogisticsLogicProvider;
+import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent;
+import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicMode;
+import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicOp;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;

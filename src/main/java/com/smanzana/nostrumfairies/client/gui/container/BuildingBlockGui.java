@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.BuildingBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
 import com.smanzana.nostrummagica.utils.Inventories;
 

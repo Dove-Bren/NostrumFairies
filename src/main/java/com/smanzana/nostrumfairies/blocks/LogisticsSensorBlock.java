@@ -1,11 +1,11 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsSensorTileEntity;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
+import com.smanzana.nostrumfairies.tiles.LogisticsSensorTileEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;

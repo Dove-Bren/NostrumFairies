@@ -161,11 +161,13 @@ public class FeyBush extends BlockBush implements IShearable {
 							.1,
 							new int[0]);
 					NostrumMagicaSounds.AMBIENT_WOOSH2.play(target);
+					stack.shrink(1);
 				}
 				
 				return true;
 			}
 		}
+		
 		return false;
 	}
 }

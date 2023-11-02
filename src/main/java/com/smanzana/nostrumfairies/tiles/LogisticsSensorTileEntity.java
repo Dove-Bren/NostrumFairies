@@ -1,8 +1,8 @@
-package com.smanzana.nostrumfairies.blocks.tiles;
+package com.smanzana.nostrumfairies.tiles;
 
 import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
+import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;

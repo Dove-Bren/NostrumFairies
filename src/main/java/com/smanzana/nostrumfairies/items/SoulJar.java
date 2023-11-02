@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 import com.mojang.realmsclient.gui.ChatFormatting;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
-import com.smanzana.nostrummagica.entity.IEntityTameable;
+import com.smanzana.nostrummagica.entity.ITameableEntity;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
@@ -98,7 +98,7 @@ public class SoulJar extends Item implements ILoreTagged {
 		return createInternal(entity);
 	}
 	
-	public static ItemStack create(IEntityTameable entity) {
+	public static ItemStack create(ITameableEntity entity) {
 		return createInternal((EntityLivingBase) entity);
 	}
 	
@@ -212,9 +212,9 @@ public class SoulJar extends Item implements ILoreTagged {
 				} else {
 					filled = ItemStack.EMPTY;
 				}
-			} else if (target instanceof IEntityTameable) {
-				IEntityTameable tameable = (IEntityTameable) target;
-				if (tameable.isTamed()) {
+			} else if (target instanceof ITameableEntity) {
+				ITameableEntity tameable = (ITameableEntity) target;
+				if (tameable.isEntityTamed()) {
 					filled = create(tameable);
 				} else {
 					filled = ItemStack.EMPTY;

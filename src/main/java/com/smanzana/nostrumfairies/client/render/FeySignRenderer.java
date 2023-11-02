@@ -3,10 +3,10 @@ package com.smanzana.nostrumfairies.client.render;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
-import com.smanzana.nostrumfairies.blocks.tiles.IFeySign;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESR;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
+import com.smanzana.nostrumfairies.tiles.IFeySign;
+import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.block.state.IBlockState;

@@ -5,9 +5,9 @@ import java.util.Map;
 
 import org.lwjgl.util.vector.Vector3f;
 
-import com.smanzana.nostrumfairies.blocks.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESR;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
+import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.block.state.IBlockState;

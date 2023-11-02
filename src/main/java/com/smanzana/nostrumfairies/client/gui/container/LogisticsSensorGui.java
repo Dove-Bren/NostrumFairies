@@ -3,9 +3,9 @@ package com.smanzana.nostrumfairies.client.gui.container;
 import java.io.IOException;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsSensorTileEntity;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.LogicPanel.LogicPanelGui;
+import com.smanzana.nostrumfairies.tiles.LogisticsSensorTileEntity;
 
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;

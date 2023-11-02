@@ -1,16 +1,6 @@
 package com.smanzana.nostrumfairies.client.gui;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.BufferChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.BuildingBlockTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.InputChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsSensorTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.OutputChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.OutputPanelTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.StorageChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui.BufferChestGuiContainer;
@@ -30,6 +20,16 @@ import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui.StorageC
 import com.smanzana.nostrumfairies.client.gui.container.TemplateWandGui;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
+import com.smanzana.nostrumfairies.tiles.BufferChestTileEntity;
+import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.CraftingBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.InputChestTileEntity;
+import com.smanzana.nostrumfairies.tiles.LogisticsSensorTileEntity;
+import com.smanzana.nostrumfairies.tiles.OutputChestTileEntity;
+import com.smanzana.nostrumfairies.tiles.OutputPanelTileEntity;
+import com.smanzana.nostrumfairies.tiles.StorageChestTileEntity;
+import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;

@@ -26,12 +26,13 @@ import com.smanzana.nostrummagica.spells.EMagicElement;
 import com.smanzana.nostrummagica.spells.Spell;
 import com.smanzana.nostrummagica.spells.Spell.SpellPart;
 import com.smanzana.nostrummagica.spells.components.shapes.SingleShape;
-import com.smanzana.nostrummagica.spells.components.triggers.AITargetTrigger;
+import com.smanzana.nostrummagica.spells.components.triggers.SeekingBulletTrigger;
 
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -74,7 +75,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	private static void initSpells() {
 		if (SPELL_SLOW == null) {
 			SPELL_SLOW = new Spell("Shadow Binds");
-			SPELL_SLOW.addPart(new SpellPart(AITargetTrigger.instance()));
+			SPELL_SLOW.addPart(new SpellPart(SeekingBulletTrigger.instance()));
 			SPELL_SLOW.addPart(new SpellPart(SingleShape.instance(), EMagicElement.LIGHTNING, 1, EAlteration.INFLICT));
 		}
 	}
@@ -486,12 +487,16 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	@Override
 	protected boolean isValidLightLevel() {
 		return super.isValidLightLevel();
-//		BlockPos pos = new BlockPos(this.posX, this.getEntityBoundingBox().minY, this.posZ);
-//		if (this.world.getLightFor(EnumSkyBlock.SKY, pos) < 6) {
-//			return false;
-//		};
-//		
-//		return true;
+	}
+	
+	@Override
+	public boolean getCanSpawnHere() {
+		// Shadow fey amass ar mies in the twilight forest. So let's make sure to only spawn them when other things can spawn.
+		if (this.world.getBiome(this.getPosition()).getSpawnableList(EnumCreatureType.MONSTER).size() <= 2) {
+			return false;
+		}
+		
+		return super.getCanSpawnHere();
 	}
 	
 	@Override

@@ -22,13 +22,13 @@ public class PathNavigatorGroundFixed extends PathNavigateGround {
 	@Override
 	protected void checkForStuck(Vec3d positionVec3) {
 		//Field totalTicksField = ReflectionHelper.findField(PathNavigate.class, "totalTicks");
-		final int totalTicks = ObfuscationReflectionHelper.getPrivateValue(PathNavigate.class, this, "totalTicks");
-		Field ticksAtLastPosField = ObfuscationReflectionHelper.findField(PathNavigate.class, "ticksAtLastPos");
-		Field lastPosCheckField = ObfuscationReflectionHelper.findField(PathNavigate.class, "lastPosCheck");
-		Field timeoutCachedNodeField = ObfuscationReflectionHelper.findField(PathNavigate.class, "timeoutCachedNode");
-		Field timeoutLimitField = ObfuscationReflectionHelper.findField(PathNavigate.class, "timeoutLimit");
-		Field timeoutTimerField = ObfuscationReflectionHelper.findField(PathNavigate.class, "timeoutTimer");
-		Field lastTimeoutCheckField = ObfuscationReflectionHelper.findField(PathNavigate.class, "lastTimeoutCheck");
+		final int totalTicks = ObfuscationReflectionHelper.getPrivateValue(PathNavigate.class, this, "field_75510_g");//"totalTicks");
+		Field ticksAtLastPosField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_75520_h");//"ticksAtLastPos");
+		Field lastPosCheckField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_75521_i");//"lastPosCheck");
+		Field timeoutCachedNodeField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_188557_k");//"timeoutCachedNode");
+		Field timeoutLimitField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_188560_n");//"timeoutLimit");
+		Field timeoutTimerField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_188558_l");//"timeoutTimer");
+		Field lastTimeoutCheckField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_188559_m");//"lastTimeoutCheck");
 		
 		try {
 			if (totalTicks - ticksAtLastPosField.getInt(this) > 100) {

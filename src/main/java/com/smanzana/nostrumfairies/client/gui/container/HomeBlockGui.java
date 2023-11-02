@@ -9,15 +9,15 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity.FeyAwayRecord;
-import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity.HomeBlockSlotInventory;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
 import com.smanzana.nostrumfairies.client.gui.FeySoulIcon;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
+import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity.FeyAwayRecord;
+import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity.HomeBlockSlotInventory;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
 
 import net.minecraft.block.state.IBlockState;

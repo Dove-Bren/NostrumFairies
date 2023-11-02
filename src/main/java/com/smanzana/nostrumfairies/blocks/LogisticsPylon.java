@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.blocks;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.PylonTileEntity;
+import com.smanzana.nostrumfairies.tiles.PylonTileEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;

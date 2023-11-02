@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import com.smanzana.nostrumfairies.blocks.tiles.WoodcuttingBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.WoodcuttingBlockTileEntity;
 
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 

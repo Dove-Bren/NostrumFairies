@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.blocks.tiles;
+package com.smanzana.nostrumfairies.tiles;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -880,6 +880,10 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		float sum = 0f;
 		int count = 0;
 		for (EntityFeyBase fey : getAvailableFeyEntities()) {
+			if (fey == null || fey.isDead) {
+				continue;
+			}
+			
 			count++;
 			sum += fey.getHappiness();
 		}

@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.Validate;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.TemplateBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.utils.NonNullHashMap;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
@@ -75,7 +75,8 @@ public class TemplateBlock extends BlockContainer {
 		// Try reflection
 		if (required.isEmpty()) {
 			try {
-				Method Block_CreateStackedBlock = ObfuscationReflectionHelper.findMethod(Block.class, "getSilkTouchDrop", ItemStack.class,
+				// getSilkTouchDrop
+				Method Block_CreateStackedBlock = ObfuscationReflectionHelper.findMethod(Block.class, "func_180643_i", ItemStack.class,
 						IBlockState.class);
 				if (Block_CreateStackedBlock != null) {
 					required = (ItemStack) Block_CreateStackedBlock.invoke(block, templatedState);

@@ -1,8 +1,8 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.IFeySign;
-import com.smanzana.nostrumfairies.blocks.tiles.WoodcuttingBlockTileEntity;
+import com.smanzana.nostrumfairies.tiles.IFeySign;
+import com.smanzana.nostrumfairies.tiles.WoodcuttingBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.OreDict;
 
 import net.minecraft.block.Block;

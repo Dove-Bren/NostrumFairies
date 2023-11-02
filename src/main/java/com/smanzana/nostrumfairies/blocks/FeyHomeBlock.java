@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.Random;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
+import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;

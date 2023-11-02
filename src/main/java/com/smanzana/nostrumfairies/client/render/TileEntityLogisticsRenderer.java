@@ -5,10 +5,10 @@ import java.util.Collection;
 
 import org.lwjgl.opengl.GL11;
 
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.potion.FeyVisibilityPotion;
+import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.utils.Curves;
 
 import net.minecraft.client.Minecraft;

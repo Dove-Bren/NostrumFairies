@@ -1,10 +1,10 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedDiamondChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedGoldChestTileEntity;
-import com.smanzana.nostrumfairies.blocks.tiles.ReinforcedIronChestTileEntity;
+import com.smanzana.nostrumfairies.tiles.ReinforcedChestTileEntity;
+import com.smanzana.nostrumfairies.tiles.ReinforcedDiamondChestTileEntity;
+import com.smanzana.nostrumfairies.tiles.ReinforcedGoldChestTileEntity;
+import com.smanzana.nostrumfairies.tiles.ReinforcedIronChestTileEntity;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;

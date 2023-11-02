@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import com.smanzana.nostrumfairies.blocks.tiles.PylonTileEntity;
+import com.smanzana.nostrumfairies.tiles.PylonTileEntity;
 
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 

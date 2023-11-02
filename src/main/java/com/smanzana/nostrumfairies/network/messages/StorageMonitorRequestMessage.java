@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.network.messages;
 import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.StorageMonitorTileEntity;
+import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;

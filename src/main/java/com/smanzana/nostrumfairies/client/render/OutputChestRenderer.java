@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import com.smanzana.nostrumfairies.blocks.tiles.OutputChestTileEntity;
+import com.smanzana.nostrumfairies.tiles.OutputChestTileEntity;
 
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 

@@ -1,9 +1,9 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.tiles.CraftingBlockTileEntity;
 import com.smanzana.nostrumfairies.client.gui.container.CraftingStationGui.CraftingStationContainer;
 import com.smanzana.nostrumfairies.client.gui.container.CraftingStationGui.CraftingStationGuiContainer;
+import com.smanzana.nostrumfairies.tiles.CraftingBlockTileEntity;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.util.ResourceLocation;

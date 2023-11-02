@@ -7,7 +7,6 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.smanzana.nostrumfairies.blocks.tiles.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.capabilities.AttributeProvider;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
@@ -16,6 +15,7 @@ import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
 import com.smanzana.nostrumfairies.proxy.CommonProxy;
+import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.research.NostrumResearch.NostrumResearchTab;
 
@@ -31,7 +31,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingSpawnEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -50,7 +50,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class NostrumFairies {
 
 	public static final String MODID = "nostrumfairies";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.12.2-1.2.1";
 	
     public static NostrumFairies instance;
     @SidedProxy(clientSide="com.smanzana.nostrumfairies.proxy.ClientProxy", serverSide="com.smanzana.nostrumfairies.proxy.CommonProxy")
@@ -175,14 +175,14 @@ public class NostrumFairies {
     }
     
     @SubscribeEvent
-    public void onEntitySpawn(LivingSpawnEvent e) {
+    public void onEntitySpawn(EntityJoinWorldEvent e) {
     	if (e.isCanceled()) {
     		return;
     	}
     	
-    	if (e.getEntityLiving() instanceof EntityMob) {
-    		EntityMob mob = (EntityMob) e.getEntityLiving();
-    		if (e.getEntityLiving() instanceof IEntityOwnable) {
+    	if (e.getEntity() instanceof EntityMob) {
+    		EntityMob mob = (EntityMob) e.getEntity();
+    		if (e.getEntity() instanceof IEntityOwnable) {
     			IEntityOwnable owned = (IEntityOwnable) mob;
     			mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, 10, true, false, (target) -> {
     				return target != null && owned.getOwnerId() != null && !target.getUniqueID().equals(owned.getOwnerId());
