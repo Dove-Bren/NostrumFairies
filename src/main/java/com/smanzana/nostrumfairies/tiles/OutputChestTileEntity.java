@@ -140,7 +140,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 			
 			CompoundNBT template = new CompoundNBT();
 			
-			template.setInteger(NBT_TEMPLATE_INDEX, i);
+			template.putInt(NBT_TEMPLATE_INDEX, i);
 			template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
 			
 			templates.appendTag(template);
@@ -159,7 +159,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 		NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
 		for (int i = 0; i < list.tagCount(); i++) {
 			CompoundNBT template = list.getCompoundTagAt(i);
-			int index = template.getInteger(NBT_TEMPLATE_INDEX);
+			int index = template.getInt(NBT_TEMPLATE_INDEX);
 			
 			if (index < 0 || index > SLOTS) {
 				NostrumFairies.logger.error("Found serialized template with invalid index! " + index + " outside of " + SLOTS);

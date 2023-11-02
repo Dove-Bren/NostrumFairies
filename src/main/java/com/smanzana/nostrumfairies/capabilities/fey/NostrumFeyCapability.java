@@ -43,10 +43,10 @@ import com.smanzana.nostrummagica.items.SpellScroll;
 import com.smanzana.nostrummagica.spells.Spell;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
@@ -56,7 +56,7 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
  * Default implementation of the INostrumFeyCapability interface
@@ -185,13 +185,13 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	public CompoundNBT toNBT() {
 		CompoundNBT nbt = new CompoundNBT();
 		
-		nbt.setBoolean(NBT_UNLOCKED, isUnlocked);
-		nbt.setBoolean(/*NBT_ENABLED*/"enabled", !isDisabled);
-		nbt.setInteger(NBT_FAIRY_SLOTS, fairySlots);
-		nbt.setInteger(NBT_FAIRY_XP, fairyXP);
-		nbt.setInteger(NBT_FAIRY_LEVEL, fairyLevel);
+		nbt.putBoolean(NBT_UNLOCKED, isUnlocked);
+		nbt.putBoolean(/*NBT_ENABLED*/"enabled", !isDisabled);
+		nbt.putInt(NBT_FAIRY_SLOTS, fairySlots);
+		nbt.putInt(NBT_FAIRY_XP, fairyXP);
+		nbt.putInt(NBT_FAIRY_LEVEL, fairyLevel);
 		writeFairies();
-		nbt.setTag(NBT_FAIRY_INVENTORY, fairyInventory.toNBT());
+		nbt.put(NBT_FAIRY_INVENTORY, fairyInventory.toNBT());
 		if (templateSelection.left != null) {
 			nbt.setLong(NBT_TEMPLATE_SELECTION + "_1", templateSelection.left.toLong());
 			if (templateSelection.right != null) {
@@ -207,14 +207,14 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		clearFairies();
 		this.isUnlocked = nbt.getBoolean(NBT_UNLOCKED);
 		this.isDisabled = !nbt.getBoolean("enabled");
-		this.fairySlots = nbt.getInteger(NBT_FAIRY_SLOTS);
-		this.fairyXP = nbt.getInteger(NBT_FAIRY_XP);
-		this.fairyLevel = Math.max(1, nbt.getInteger(NBT_FAIRY_LEVEL));
-		this.fairyInventory.readNBT(nbt.getCompoundTag(NBT_FAIRY_INVENTORY));
+		this.fairySlots = nbt.getInt(NBT_FAIRY_SLOTS);
+		this.fairyXP = nbt.getInt(NBT_FAIRY_XP);
+		this.fairyLevel = Math.max(1, nbt.getInt(NBT_FAIRY_LEVEL));
+		this.fairyInventory.readNBT(nbt.getCompound(NBT_FAIRY_INVENTORY));
 		
-		if (nbt.hasKey(NBT_TEMPLATE_SELECTION + "_1")) {
+		if (nbt.contains(NBT_TEMPLATE_SELECTION + "_1")) {
 			templateSelection.left = BlockPos.fromLong(nbt.getLong(NBT_TEMPLATE_SELECTION + "_1"));
-			if (nbt.hasKey(NBT_TEMPLATE_SELECTION + "_2")) {
+			if (nbt.contains(NBT_TEMPLATE_SELECTION + "_2")) {
 				templateSelection.right = BlockPos.fromLong(nbt.getLong(NBT_TEMPLATE_SELECTION + "_2"));
 			} else {
 				templateSelection.right = null;
@@ -251,7 +251,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	protected void scanForBuilds() {
 		Set<BlockPos> builds = new HashSet<>();
 		
-		if (owner != null && !owner.isDead) {
+		if (owner != null && owner.isAlive()) {
 			MutableBlockPos cursor = new MutableBlockPos();
 			for (int x = -BUILD_SCAN_RADIUS; x <= BUILD_SCAN_RADIUS; x++)
 			for (int z = -BUILD_SCAN_RADIUS; z <= BUILD_SCAN_RADIUS; z++)
@@ -278,7 +278,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			return;
 		}
 		
-		if (owner.isDead) {
+		if (!owner.isAlive()) {
 			retractFairies();
 			MinecraftForge.EVENT_BUS.unregister(this);
 			this.owner = null;
@@ -751,7 +751,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			return null;
 		}
 		
-		InventoryPlayer playerInv = ((PlayerEntity) owner).inventory;
+		PlayerInventory playerInv = ((PlayerEntity) owner).inventory;
 		
 		NonNullList<ItemStack> pullList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPullTemplateSize(); i++) {
@@ -851,7 +851,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			return null;
 		}
 		
-		InventoryPlayer playerInv = ((PlayerEntity) owner).inventory;
+		PlayerInventory playerInv = ((PlayerEntity) owner).inventory;
 		
 		NonNullList<ItemStack> templateList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPushTemplateSize(); i++) {

@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
-import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
@@ -109,7 +109,7 @@ public class ItemDeepStack {
 		return toDeepList(out, items);
 	}
 	
-	public static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, InventoryPlayer inventory) {
+	public static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, PlayerInventory inventory) {
 		out = toDeepList(out, (IInventory) inventory);
 		
 		final @Nonnull ItemStack heldStack = inventory.getItemStack();
@@ -132,7 +132,7 @@ public class ItemDeepStack {
 		return out;
 	}
 	
-	public static List<ItemDeepStack> toDeepList(InventoryPlayer inventory) {
+	public static List<ItemDeepStack> toDeepList(PlayerInventory inventory) {
 		return toDeepList(new ArrayList<>(inventory.getSizeInventory()), inventory);
 	}
 	

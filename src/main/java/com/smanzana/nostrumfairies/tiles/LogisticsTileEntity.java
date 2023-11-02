@@ -318,7 +318,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 			
 			tag.setUniqueId(NBT_UUID, componentID);
 			tag.setLong(NBT_POS, this.pos.toLong());
-			tag.setInteger(NBT_DIM, this.world.provider.getDimension());
+			tag.putInt(NBT_DIM, this.world.provider.getDimension());
 			tag.setDouble(NBT_LINK_RANGE, linkRange);
 			tag.setDouble(NBT_LOG_RANGE, logisticsRange);
 			
@@ -327,14 +327,14 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		
 		protected static LogisticsTileEntityComponent loadFromNBT(CompoundNBT nbt, LogisticsNetwork network) {
 			BlockPos pos = BlockPos.fromLong(nbt.getLong(NBT_POS));
-			World world = NostrumFairies.getWorld(nbt.getInteger(NBT_DIM));
+			World world = NostrumFairies.getWorld(nbt.getInt(NBT_DIM));
 			UUID compID = nbt.getUniqueId(NBT_UUID);
 			double linkRange = nbt.getDouble(NBT_LINK_RANGE);
 			double logisticsRange = nbt.getDouble(NBT_LOG_RANGE);
 			
 			if (world == null) {
 				throw new RuntimeException("Failed to find world for persisted TileEntity logistics component: "
-						+ nbt.getInteger(NBT_DIM));
+						+ nbt.getInt(NBT_DIM));
 			}
 			
 			LogisticsTileEntityComponent comp = new LogisticsTileEntityComponent();

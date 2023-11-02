@@ -208,7 +208,7 @@ public class LogisticsLogicComponent {
 	
 	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		nbt.setString(NBT_LOGIC_MODE, mode.name());
-		nbt.setInteger(NBT_LOGIC_COUNT, count);
+		nbt.putInt(NBT_LOGIC_COUNT, count);
 		nbt.setString(NBT_LOGIC_OP, op.name());
 		if (!template.isEmpty()) {
 			nbt.setTag(NBT_LOGIC_ITEM, template.serializeNBT());
@@ -231,7 +231,7 @@ public class LogisticsLogicComponent {
 		}
 		
 		this.template = new ItemStack(nbt.getCompoundTag(NBT_LOGIC_ITEM));
-		this.count = nbt.getInteger(NBT_LOGIC_COUNT);
+		this.count = nbt.getInt(NBT_LOGIC_COUNT);
 		
 		this.logicCacheID = null;
 		

@@ -60,7 +60,7 @@ public class TemplateBlockTileEntity extends TileEntity {
 		super.writeToNBT(compound);
 		
 		if (state != null) {
-			compound.setInteger(NBT_STATE, Block.getStateId(state));
+			compound.putInt(NBT_STATE, Block.getStateId(state));
 		}
 		
 		return compound;
@@ -74,7 +74,7 @@ public class TemplateBlockTileEntity extends TileEntity {
 		}
 		
 		if (compound.hasKey(NBT_STATE, NBT.TAG_INT)) {
-			this.state = Block.getStateById(compound.getInteger(NBT_STATE));
+			this.state = Block.getStateById(compound.getInt(NBT_STATE));
 			if (this.world != null && this.world.isRemote) {
 				StaticTESRRenderer.instance.update(world, pos, this);
 			}

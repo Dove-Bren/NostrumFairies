@@ -16,7 +16,7 @@ import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
@@ -112,7 +112,7 @@ public class BuildTaskPlanner {
 			BlockPos pos = entry.getKey();
 			
 			if (!NostrumMagica.isBlockLoaded(world, pos)) {
-				if (worker != null && !worker.isDead) {
+				if (worker != null && worker.isAlive()) {
 					worker.cancelBuildTask();
 				}
 				
@@ -122,7 +122,7 @@ public class BuildTaskPlanner {
 			
 			BlockState state = world.getBlockState(pos);
 			if (state == null || !(state.getBlock() instanceof TemplateBlock)) {
-				if (worker != null && !worker.isDead) {
+				if (worker != null && worker.isAlive()) {
 					worker.cancelBuildTask();
 				}
 				
@@ -132,7 +132,7 @@ public class BuildTaskPlanner {
 			
 			BlockState template = TemplateBlock.GetTemplatedState(world, pos);
 			if (template == null) {
-				if (worker != null && !worker.isDead) {
+				if (worker != null && worker.isAlive()) {
 					worker.cancelBuildTask();
 				}
 				
@@ -140,7 +140,7 @@ public class BuildTaskPlanner {
 				continue;
 			}
 			
-			if (worker != null && worker.isDead) {
+			if (worker != null && !worker.isAlive()) {
 				entry.setValue(null);
 				continue;
 			}

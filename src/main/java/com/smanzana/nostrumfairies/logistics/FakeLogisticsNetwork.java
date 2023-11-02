@@ -213,7 +213,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			tag.setDouble(NBT_COMP_LOG_RANGE, logisticsRange);
 			tag.setDouble(NBT_COMP_LINK_RANGE, linkRange);
 			if (world != null) {
-				tag.setInteger(NBT_COMP_DIM, world.provider.getDimension());
+				tag.putInt(NBT_COMP_DIM, world.provider.getDimension());
 			}
 			tag.setLong(NBT_COMP_POS, pos.toLong());
 			
@@ -236,7 +236,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		public static FakeLogisticsComponent fromNBT(CompoundNBT tag) {
 			double logisticsRange = tag.getDouble(NBT_COMP_LOG_RANGE);
 			double linkRange = tag.getDouble(NBT_COMP_LINK_RANGE);
-			int dim = tag.getInteger(NBT_COMP_DIM);
+			int dim = tag.getInt(NBT_COMP_DIM);
 			long pos = tag.getLong(NBT_COMP_POS);
 			World world = null;
 			
@@ -254,7 +254,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		public void overrideFromNBT(CompoundNBT tag) {
 			double logisticsRange = tag.getDouble(NBT_COMP_LOG_RANGE);
 			double linkRange = tag.getDouble(NBT_COMP_LINK_RANGE);
-			int dim = tag.getInteger(NBT_COMP_DIM);
+			int dim = tag.getInt(NBT_COMP_DIM);
 			long pos = tag.getLong(NBT_COMP_POS);
 			World world = null;
 			

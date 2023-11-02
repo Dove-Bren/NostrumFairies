@@ -723,7 +723,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		
 		nbt.setString(NBT_TYPE, type.name());
 		nbt.setString(NBT_NAME, getName());
-		nbt.setInteger(NBT_SLOT_COUNT, slots);
+		nbt.putInt(NBT_SLOT_COUNT, slots);
 		nbt.setFloat(NBT_SLOT_GROWTH, growth);
 		
 		NBTTagList list = new NBTTagList();
@@ -754,7 +754,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		this.type = ResidentType.valueOf(ResidentType.class, type.toUpperCase());
 		this.name = nbt.getString(NBT_NAME);
 		if (nbt.hasKey(NBT_SLOT_COUNT, NBT.TAG_INT)) {
-			this.slots = Math.max(1, Math.min(MAX_NATURAL_SLOTS, nbt.getInteger(NBT_SLOT_COUNT)));
+			this.slots = Math.max(1, Math.min(MAX_NATURAL_SLOTS, nbt.getInt(NBT_SLOT_COUNT)));
 		} else {
 			this.slots = DEFAULT_SLOTS; 
 		}

@@ -4,13 +4,14 @@ import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.util.LazyOptional;
 
-public class AttributeProvider implements ICapabilitySerializable<NBTBase> {
+public class AttributeProvider implements ICapabilitySerializable<INBT> {
 
 	@CapabilityInject(INostrumFeyCapability.class)
 	public static Capability<INostrumFeyCapability> CAPABILITY = null;
@@ -23,29 +24,23 @@ public class AttributeProvider implements ICapabilitySerializable<NBTBase> {
 	}
 
 	@Override
-	public boolean hasCapability(Capability<?> capability, Direction facing) {
-		return capability == CAPABILITY;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T getCapability(Capability<T> capability, Direction facing) {
+	public <T> LazyOptional<T> getCapability(Capability<T> capability, Direction facing) {
 		if (capability == CAPABILITY) {
 			if (entity instanceof LivingEntity)
 				this.instance.provideEntity((LivingEntity) entity);
-			return (T) this.instance;
+			return LazyOptional.of(() -> this.instance).cast();
 		}
 		
 		return null;
 	}
 
 	@Override
-	public NBTBase serializeNBT() {
+	public INBT serializeNBT() {
 		return CAPABILITY.getStorage().writeNBT(CAPABILITY, instance, null);
 	}
 
 	@Override
-	public void deserializeNBT(NBTBase nbt) {
+	public void deserializeNBT(INBT nbt) {
 		CAPABILITY.getStorage().readNBT(CAPABILITY, instance, null, nbt);
 	}
 

@@ -21,7 +21,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -144,7 +144,7 @@ public class FeyBush extends BlockBush implements IShearable {
 		return Lists.newArrayList(new ItemStack(this));
 	}
 
-	public boolean getEntityInteraction(ItemStack stack, PlayerEntity playerIn, LivingEntity target, EnumHand hand) {
+	public boolean getEntityInteraction(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
 		if (target instanceof EntityFeyBase && !(target instanceof EntityPersonalFairy)) {
 			EntityFeyBase fey = (EntityFeyBase) target;
 			if (fey.getStatus() == FairyGeneralStatus.WANDERING) {

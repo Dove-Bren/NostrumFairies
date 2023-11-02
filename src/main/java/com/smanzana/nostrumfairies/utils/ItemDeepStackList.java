@@ -25,14 +25,10 @@ public class ItemDeepStackList implements Collection<ItemDeepStack> {
 	public ItemDeepStackList() {
 		storage = new TreeMap<>((stack1, stack2) -> {
 			if (stack1.getItem() == stack2.getItem()) {
-				if (stack1.getItem().getHasSubtypes()) {
-					return stack1.getMetadata() - stack2.getMetadata();
-				} else {
-					return 0;
-				}
+				return 0;
 			}
 			
-			return stack1.getUnlocalizedName().compareTo(stack2.getUnlocalizedName());
+			return stack1.getItem().getRegistryName().compareTo(stack2.getItem().getRegistryName());
 		});
 	}
 	

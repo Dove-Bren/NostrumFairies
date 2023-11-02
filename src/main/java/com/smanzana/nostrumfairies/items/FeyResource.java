@@ -31,7 +31,7 @@ import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -73,8 +73,6 @@ public class FeyResource extends Item implements ILoreTagged {
 			return model;
 		}
 	}
-	
-	public static final String ID = "fey_resource";
 	
 	private static FeyResource instance = null;
 	public static FeyResource instance() {
@@ -203,7 +201,7 @@ public class FeyResource extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, EnumHand hand, Direction facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand, Direction facing, float hitX, float hitY, float hitZ) {
 		final ItemStack stack = playerIn.getHeldItem(hand);
 		FeyResourceType type = getType(stack);
 		
@@ -250,7 +248,7 @@ public class FeyResource extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, EnumHand hand) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand hand) {
 		final ItemStack stack = playerIn.getHeldItem(hand);
 		FeyResourceType type = getType(stack);
 		if (type == FeyResourceType.TABLET) {

@@ -9,7 +9,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class CapabilityHandler {
 
@@ -38,8 +38,8 @@ public class CapabilityHandler {
 	public void onClone(PlayerEvent.Clone event) {
 		//if (event.isWasDeath()) {
 			INostrumFeyCapability cap = NostrumFairies.getFeyWrapper(event.getOriginal());
-			event.getPlayerEntity().getCapability(AttributeProvider.CAPABILITY, null)
-				.readNBT(cap.toNBT());
+			event.getPlayer().getCapability(AttributeProvider.CAPABILITY, null)
+				.orElse(null).readNBT(cap.toNBT());
 		//}
 		//if (!event.getPlayerEntity().world.isRemote)
 		//	NostrumMagica.proxy.syncPlayer((ServerPlayerEntity) event.getPlayerEntity());

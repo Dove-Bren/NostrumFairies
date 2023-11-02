@@ -29,27 +29,27 @@ import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.monster.EntityGolem;
+import net.minecraft.entity.passive.GolemEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.Items;
 import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.IDataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.datasync.IDataSerializers;
 import net.minecraft.network.play.server.SPacketAnimation;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -57,11 +57,11 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, ILoreTagged {
+public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, ILoreTagged {
 
 	protected static final DataParameter<Optional<BlockPos>> HOME  = EntityDataManager.<Optional<BlockPos>>createKey(EntityFeyBase.class, IDataSerializers.OPTIONAL_BLOCK_POS);
 	protected static final DataParameter<String> NAME = EntityDataManager.<String>createKey(EntityFeyBase.class, IDataSerializers.STRING);
@@ -485,7 +485,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	}
 
 	@Override
-	public void swingArm(EnumHand hand) {
+	public void swingArm(Hand hand) {
 		ItemStack stack = this.getHeldItem(hand);
 		if (!stack.isEmpty()) {
 			if (stack.getItem().onEntitySwing(this, stack)) {
@@ -499,7 +499,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			this.swingingHand = hand;
 
 			if (this.world instanceof WorldServer) {
-				((WorldServer)this.world).getEntityTracker().sendToTracking(this, new SPacketAnimation(this, hand == EnumHand.MAIN_HAND ? 0 : 3));
+				((WorldServer)this.world).getEntityTracker().sendToTracking(this, new SPacketAnimation(this, hand == Hand.MAIN_HAND ? 0 : 3));
 			}
 		}
 	}

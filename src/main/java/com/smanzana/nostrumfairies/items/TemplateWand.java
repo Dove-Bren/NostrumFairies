@@ -35,7 +35,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
@@ -120,7 +120,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		}
 		
 		CompoundNBT nbt = stack.getTagCompound();
-		return nbt.getInteger(NBT_TEMPLATE_INDEX);
+		return nbt.getInt(NBT_TEMPLATE_INDEX);
 	}
 	
 	public static void SetTemplateIndex(ItemStack stack, int index) {
@@ -133,7 +133,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			nbt = new CompoundNBT();
 		}
 		
-		nbt.setInteger(NBT_TEMPLATE_INDEX, index);
+		nbt.putInt(NBT_TEMPLATE_INDEX, index);
 		stack.setTagCompound(nbt);
 	}
 	
@@ -191,7 +191,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		nbt.setTag(NBT_TEMPLATE_INV, list);
 		
 		// also reset selection index
-		nbt.setInteger(NBT_TEMPLATE_INDEX, 0);
+		nbt.putInt(NBT_TEMPLATE_INDEX, 0);
 		stack.setTagCompound(nbt);
 	}
 	
@@ -282,7 +282,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			nbt = new CompoundNBT();
 		}
 		
-		int index = nbt.getInteger(NBT_TEMPLATE_INDEX);
+		int index = nbt.getInt(NBT_TEMPLATE_INDEX);
 		int templateSize = Math.max(1, nbt.getTagList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND).tagCount());
 		if (forward) {
 			index = (index + 1) % templateSize;
@@ -293,7 +293,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			}
 		}
 		
-		nbt.setInteger(NBT_TEMPLATE_INDEX, index);
+		nbt.putInt(NBT_TEMPLATE_INDEX, index);
 		stack.setTagCompound(nbt);
 	}
 	
@@ -393,7 +393,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, EnumHand hand) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand hand) {
 		final ItemStack stack = playerIn.getHeldItem(hand);
 		final WandMode mode = getModeOf(stack);
 		if (mode == WandMode.SPAWN) {
@@ -430,7 +430,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, EnumHand hand, Direction facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand, Direction facing, float hitX, float hitY, float hitZ) {
 		if (worldIn.isRemote) {
 			return EnumActionResult.SUCCESS;
 		}
@@ -481,7 +481,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, EnumHand hand) {
+	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
 		return super.itemInteractionForEntity(stack, playerIn, target, hand);
 	}
 	

@@ -39,7 +39,7 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.EntitySelectors;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -188,7 +188,7 @@ public class EntityElfArcher extends EntityElf {
 			
 			@Override
 			protected void startAttackAnimation(EntityElfArcher elf) {
-				elf.swingArm(EnumHand.OFF_HAND);
+				elf.swingArm(Hand.OFF_HAND);
 			}
 		});
 		
@@ -205,7 +205,7 @@ public class EntityElfArcher extends EntityElf {
 			
 			@Override
 			protected void startAttackAnimation(EntityElfArcher elf) {
-				elf.swingArm(EnumHand.MAIN_HAND);
+				elf.swingArm(Hand.MAIN_HAND);
 			}
 		});
 		
@@ -311,7 +311,7 @@ public class EntityElfArcher extends EntityElf {
 			entitytippedarrow.setFire(100);
 		}
 
-		ItemStack itemstack = this.getHeldItem(EnumHand.OFF_HAND);
+		ItemStack itemstack = this.getHeldItem(Hand.OFF_HAND);
 
 		if (!itemstack.isEmpty() && itemstack.getItem() == Items.TIPPED_ARROW)
 		{

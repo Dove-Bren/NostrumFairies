@@ -57,7 +57,7 @@ import net.minecraft.network.play.server.SPacketAnimation;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntitySelectors;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -156,7 +156,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			
 			@Override
 			protected void startAttackAnimation(EntityShadowFey elf) {
-				elf.swingArm(EnumHand.OFF_HAND);
+				elf.swingArm(Hand.OFF_HAND);
 			}
 		});
 		
@@ -173,7 +173,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			
 			@Override
 			protected void startAttackAnimation(EntityShadowFey elf) {
-				elf.swingArm(EnumHand.MAIN_HAND);
+				elf.swingArm(Hand.MAIN_HAND);
 			}
 		});
 		
@@ -299,7 +299,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			entitytippedarrow.setFire(100);
 		}
 
-		ItemStack itemstack = this.getHeldItem(EnumHand.OFF_HAND);
+		ItemStack itemstack = this.getHeldItem(Hand.OFF_HAND);
 
 		if (!itemstack.isEmpty() && itemstack.getItem() == Items.TIPPED_ARROW)
 		{
@@ -343,7 +343,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	}
 
 	@Override
-	public void swingArm(EnumHand hand) {
+	public void swingArm(Hand hand) {
 		ItemStack stack = this.getHeldItem(hand);
 		if (!stack.isEmpty()) {
 			if (stack.getItem().onEntitySwing(this, stack)) {
@@ -357,7 +357,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			this.swingingHand = hand;
 
 			if (this.world instanceof WorldServer) {
-				((WorldServer)this.world).getEntityTracker().sendToTracking(this, new SPacketAnimation(this, hand == EnumHand.MAIN_HAND ? 0 : 3));
+				((WorldServer)this.world).getEntityTracker().sendToTracking(this, new SPacketAnimation(this, hand == Hand.MAIN_HAND ? 0 : 3));
 			}
 		}
 	}

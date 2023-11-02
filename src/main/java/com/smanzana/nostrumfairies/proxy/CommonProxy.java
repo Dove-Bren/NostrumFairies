@@ -129,7 +129,7 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionHelper;
 import net.minecraft.potion.PotionType;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.BiomeDictionary;
@@ -316,7 +316,7 @@ public class CommonProxy {
     	{
     		ItemBlock item = new ItemBlock(FeyBush.instance()) {
     			@Override
-				public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, EnumHand hand) {
+				public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
 					return ((FeyBush) this.block).getEntityInteraction(stack, playerIn, target, hand);
 				}
     		};

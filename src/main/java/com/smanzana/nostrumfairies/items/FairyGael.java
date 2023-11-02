@@ -12,13 +12,13 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrumfairies.serializers.FairyJob;
+import com.smanzana.nostrumfairies.utils.EntitySpawning;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.IMobEntityData;
 import net.minecraft.entity.player.PlayerEntity;
@@ -26,16 +26,16 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.storage.AnvilChunkLoader;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**
  * Like SoulStone#Gael's, carry fairies. However, these are solidified and cannot be emptied.
@@ -56,15 +56,12 @@ public class FairyGael extends Item implements ILoreTagged {
 		}
 	}
 	
-	public static final String ID = "fairy_gael";
+	protected static final String ID_BASE = "fairy_gael_";
+	public static final String ID_ATTACK = ID_BASE + "attack";
+	public static final String ID_LOGISTICS = ID_BASE + "logistics";
+	public static final String ID_BUILD = ID_BASE + "build";
 	
-	private static FairyGael instance = null;
-	public static FairyGael instance() {
-		if (instance == null)
-			instance = new FairyGael();
-		
-		return instance;
-	}
+	private static final String NBT_CRACKED = "cracked";
 	
 	public static void registerRecipes() {
 		APIProxy.addRepairerRecipe(new IAetherRepairerRecipe() {
@@ -87,68 +84,47 @@ public class FairyGael extends Item implements ILoreTagged {
 		});
 	}
 	
-	public FairyGael() {
-		super();
-		this.setUnlocalizedName(ID);
-		this.setRegistryName(ID);
-		this.setMaxDamage(0);
-		this.setMaxStackSize(1);
-		this.setHasSubtypes(true);
-		this.setCreativeTab(NostrumFairies.creativeTab);
+	private final FairyGaelType type;
+	
+	public FairyGael(FairyGaelType type) {
+		super(FairyItems.PropUnstackable());
+		this.type = type;
 	}
 	
-	protected static final int metaFromTypes(boolean cracked, FairyGaelType type) {
-		return (type.ordinal() << 1) | (cracked ? 1 : 0);
+	public boolean isCracked(ItemStack stack) {
+		return !stack.isEmpty() && stack.hasTag()
+				&& stack.getTag().getBoolean(NBT_CRACKED);
 	}
 	
-	protected static final FairyGaelType typeFromMeta(int meta) {
-		int raw = meta >> 1;
-		return FairyGaelType.values()[raw % FairyGaelType.values().length];
-	}
-	
-	protected static final boolean crackedFromMeta(int meta) {
-		return (meta & 1) == 1;
+	public void setCracked(ItemStack stack, boolean cracked) {
+		CompoundNBT tag = stack.getTag();
+		if (tag == null) {
+			tag = new CompoundNBT();
+		}
+		
+		tag.putBoolean(NBT_CRACKED, cracked);
+		stack.setTag(tag);
 	}
 	
 	public static final FairyGaelType getTypeOf(ItemStack stack) {
-		return typeFromMeta(stack.getMetadata());
+		return ((FairyGael) stack.getItem()).type;
 	}
 	
 	public static final boolean isCracked(ItemStack stack) {
-		return crackedFromMeta(stack.getMetadata());
+		return ((FairyGael) stack.getItem()).isCracked(stack);
 	}
 	
-	@Override
-	public String getUnlocalizedName(ItemStack stack) {
-		FairyGaelType type = getTypeOf(stack);
-		return this.getUnlocalizedName() + "." + type.suffix;
-	}
-	
-	@OnlyIn(Dist.CLIENT)
-	public String getModelName(ItemStack stack) {
-		return getModelName(getTypeOf(stack), isCracked(stack));
-	}
-	
-	@OnlyIn(Dist.CLIENT)
-	public String getModelName(FairyGaelType type, boolean cracked) {
-		return ID + "_" + type.suffix + (cracked ? "_cracked" : "");
-	}
-	
-	/**
-	 * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
-	 */
-	@OnlyIn(Dist.CLIENT)
-	@Override
-	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
-		if (this.isInCreativeTab(tab)) {
-			for (FairyGaelType type : FairyGaelType.values()) {
-				subItems.add(create(type, null, false));
-			}
-			
-			for (FairyGaelType type : FairyGaelType.values()) {
-				subItems.add(create(type, null, true));
-			}
+	public static FairyGael getItem(FairyGaelType type) {
+		switch (type) {
+		case ATTACK:
+			return FairyItems.attackGael;
+		case BUILD:
+			return FairyItems.buildGael;
+		case LOGISTICS:
+			return FairyItems.logisticsGael;
 		}
+		
+		return null;
 	}
 	
 	public static @Nonnull ItemStack create(FairyGaelType type, EntityPersonalFairy fey) {
@@ -156,14 +132,16 @@ public class FairyGael extends Item implements ILoreTagged {
 	}
 	
 	public static @Nonnull ItemStack create(FairyGaelType type, EntityPersonalFairy fey, boolean cracked) {
-		ItemStack stack = new ItemStack(instance(), 1, metaFromTypes(cracked, type));
+		FairyGael item = getItem(type);
+		ItemStack stack = new ItemStack(item);
+		item.setCracked(stack, cracked);
 		setStoredEntity(stack, fey);
 		return stack;
 	}
 	
 	public static void initGael(ItemStack stack, World world) {
 		// For some easy creative intergration
-		if (!stack.hasTagCompound()) {
+		if (!stack.hasTag()) {
 			FairyGaelType type = getTypeOf(stack);
 			EntityPersonalFairy fairy = new EntityPersonalFairy(world);
 			switch (type) {
@@ -180,7 +158,7 @@ public class FairyGael extends Item implements ILoreTagged {
 			}
 			
 			if (world == null) {
-				world = DimensionManager.getWorld(0);
+				world = DimensionManager.getWorld(DimensionType.OVERWORLD);
 			}
 			
 			fairy.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(0, 10, 0)), (IMobEntityData)null);
@@ -193,9 +171,11 @@ public class FairyGael extends Item implements ILoreTagged {
 		
 		initGael(stack, world);
 		
-		CompoundNBT nbt = stack.getTagCompound();
-		Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompoundTag("data"), world, x, y, z, true);
+		CompoundNBT nbt = stack.getTag();
+		Entity entity = EntitySpawning.readEntity(world, nbt, new Vec3d(x, y, z));
 		if (entity != null) {
+			world.addEntity(entity);
+			
 			if (entity instanceof EntityFairy && !(entity instanceof EntityPersonalFairy)) {
 				// Upgrade!
 				entity = ((EntityFairy) entity).promotoToPersonal();
@@ -211,8 +191,8 @@ public class FairyGael extends Item implements ILoreTagged {
 				fey.setEnergy(fey.getMaxEnergy() * energyPerc);
 			} else {
 				// WAnt to error, but this will probably spam
-				entity.isDead = true;
-				world.removeEntity(entity);
+				entity.remove();
+				//world.removeEntity(entity);
 			}
 		}
 		return fey;
@@ -221,35 +201,35 @@ public class FairyGael extends Item implements ILoreTagged {
 	public static void setStoredEntity(ItemStack stack, EntityPersonalFairy fey) {
 		if (fey != null) {
 			CompoundNBT tag = new CompoundNBT();
-			tag.setString("name", fey.getName());
-			tag.setDouble("healthD", (double) fey.getHealth() / Math.max(1, (double) fey.getMaxHealth()));
-			tag.setDouble("energyD", (double) fey.getEnergy() / Math.max(1, (double) fey.getMaxEnergy()));
-			tag.setTag("data", fey.serializeNBT());
-			stack.setTagCompound(tag);
+			tag.putString("name", fey.getName());
+			tag.putDouble("healthD", (double) fey.getHealth() / Math.max(1, (double) fey.getMaxHealth()));
+			tag.putDouble("energyD", (double) fey.getEnergy() / Math.max(1, (double) fey.getMaxEnergy()));
+			tag.put("data", fey.serializeNBT());
+			stack.setTag(tag);
 		} else {
-			stack.setTagCompound(null);
+			stack.setTag(null);
 		}
 	}
 	
 	public static String getStoredName(ItemStack stack) {
-		if (stack.hasTagCompound()) {
-			return stack.getTagCompound().getString("name");
+		if (stack.hasTag()) {
+			return stack.getTag().getString("name");
 		}
 		
 		return null;
 	}
 	
 	public static double getStoredHealth(ItemStack stack) {
-		if (stack.hasTagCompound()) {
-			return stack.getTagCompound().getDouble("healthD");
+		if (stack.hasTag()) {
+			return stack.getTag().getDouble("healthD");
 		}
 		
 		return 0f;
 	}
 	
 	public static double getStoredEnergy(ItemStack stack) {
-		if (stack.hasTagCompound()) {
-			return stack.getTagCompound().getDouble("energyD");
+		if (stack.hasTag()) {
+			return stack.getTag().getDouble("energyD");
 		}
 		
 		return 0f;
@@ -261,40 +241,38 @@ public class FairyGael extends Item implements ILoreTagged {
 	 * @param potency Relative efficiency. 1f is standard.
 	 */
 	public static void regenFairy(ItemStack gael, float potency) {
-		if (gael.isEmpty() || isCracked(gael)) {
+		if (gael.isEmpty() || ((FairyGael) gael.getItem()).isCracked(gael)) {
 			return;
 		}
 		
 		double energy = getStoredEnergy(gael) + (NostrumFairies.random.nextDouble() * .00085 * potency);
 		double health = getStoredHealth(gael) + (NostrumFairies.random.nextDouble() * .0002 * potency);
-		CompoundNBT tag = gael.getTagCompound();
+		CompoundNBT tag = gael.getTag();
 		if (tag == null) {
 			initGael(gael, null);
-			tag = gael.getTagCompound();
+			tag = gael.getTag();
 		}
-		tag.setDouble("energyD", Math.min(1, energy));
-		tag.setDouble("healthD", Math.min(1, health));
+		tag.putDouble("energyD", Math.min(1, energy));
+		tag.putDouble("healthD", Math.min(1, health));
 	}
 	
 	public static void crack(ItemStack stack) {
-		FairyGaelType type = getTypeOf(stack);
-		stack.setItemDamage(metaFromTypes(true, type));
+		((FairyGael) stack.getItem()).setCracked(stack, true);
 	}
 	
 	public static void uncrack(ItemStack stack) {
-		FairyGaelType type = getTypeOf(stack);
-		stack.setItemDamage(metaFromTypes(false, type));
+		((FairyGael) stack.getItem()).setCracked(stack, false);
 	}
 	
 	public static ItemStack upgrade(FairyGaelType type, ItemStack soulStone) {
 		if (soulStone.isEmpty() || !(soulStone.getItem() instanceof FeySoulStone) || !FeySoulStone.hasStoredFey(soulStone)) {
 			return ItemStack.EMPTY;
 		}
-		ItemStack gael = new ItemStack(instance(), 1, metaFromTypes(false, type));
+		ItemStack gael = new ItemStack(getItem(type));
 		CompoundNBT tag = new CompoundNBT();
-		tag.setTag("data", FeySoulStone.getStoredEntityTag(soulStone));
-		tag.setString("name", FeySoulStone.getStoredEntityName(soulStone));
-		gael.setTagCompound(tag);
+		tag.put("data", FeySoulStone.getStoredEntityTag(soulStone));
+		tag.putString("name", FeySoulStone.getStoredEntityName(soulStone));
+		gael.setTag(tag);
 		return gael;
 	}
 	
@@ -325,12 +303,12 @@ public class FairyGael extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, EnumHand hand, Direction facing, float hitX, float hitY, float hitZ) { 
+	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand, Direction facing, float hitX, float hitY, float hitZ) { 
 		return EnumActionResult.PASS;
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, EnumHand hand) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand hand) {
 		return ActionResult.newResult(EnumActionResult.PASS, playerIn.getHeldItem(hand));
 	}
 	
@@ -340,7 +318,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		if (isCracked(stack)) {
 			tooltip.add(ChatFormatting.DARK_RED + I18n.format("info.fairy_gael.cracked") + ChatFormatting.RESET);
 		}
-		if (stack.hasTagCompound()) {
+		if (stack.hasTag()) {
 			String name = getStoredName(stack);
 			if (name == null || name.isEmpty()) {
 				name = "An unknown entity";

@@ -34,7 +34,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagLong;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -289,7 +289,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 						ItemBlock itemBlock = (ItemBlock) buildingMaterial.getItem();
 						try {
 							int meta = itemBlock.getMetadata(buildingMaterial.getMetadata());
-							state = itemBlock.getBlock().getStateForPlacement(world, pos, Direction.UP, 0, 0, 0, meta, null, EnumHand.MAIN_HAND);
+							state = itemBlock.getBlock().getStateForPlacement(world, pos, Direction.UP, 0, 0, 0, meta, null, Hand.MAIN_HAND);
 						} catch (Exception e) {
 							// fall back to default state
 							state = itemBlock.getBlock().getDefaultState(); 

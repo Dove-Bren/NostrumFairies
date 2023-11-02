@@ -11,7 +11,7 @@ import com.smanzana.nostrummagica.utils.Inventories;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
@@ -137,7 +137,7 @@ public class TemplateWandGui {
 			}
 			
 			ItemStack itemstack = ItemStack.EMPTY;
-			InventoryPlayer inventoryplayer = player.inventory;
+			PlayerInventory inventoryplayer = player.inventory;
 
 			if (clickTypeIn == ClickType.PICKUP && (dragType == 0 || dragType == 1)
 					&& slotId >= 0 && !inventoryplayer.getItemStack().isEmpty()) {
