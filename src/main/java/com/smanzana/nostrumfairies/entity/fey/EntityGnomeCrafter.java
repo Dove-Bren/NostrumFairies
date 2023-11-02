@@ -6,7 +6,7 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
@@ -36,7 +36,7 @@ public class EntityGnomeCrafter extends EntityGnome {
 				return false;
 			}
 			
-			IBlockState block = world.getBlockState(target);
+			BlockState block = world.getBlockState(target);
 			if (block == null || !(block.getBlock() instanceof CraftingBlockGnome)) {
 				return false;
 			}

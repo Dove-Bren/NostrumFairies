@@ -13,8 +13,8 @@ import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
@@ -117,7 +117,7 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 		return owningComponent;
 	}
 	
-	public @Nullable EntityLivingBase getSourceEntity() {
+	public @Nullable LivingEntity getSourceEntity() {
 		return null;
 	}
 
@@ -215,7 +215,7 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 		
 		while (WoodcuttingBlock.isTrunkMaterial(world, pos)) {
 			count++;
-			pos.move(EnumFacing.UP);
+			pos.move(Direction.UP);
 		}
 		
 		return count;

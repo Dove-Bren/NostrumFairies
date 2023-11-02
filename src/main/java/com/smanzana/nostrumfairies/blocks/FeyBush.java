@@ -15,10 +15,10 @@ import com.smanzana.nostrummagica.sound.NostrumMagicaSounds;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
@@ -62,7 +62,7 @@ public class FeyBush extends BlockBush implements IShearable {
     }
 	
 	@Override
-	public boolean isOpaqueCube(IBlockState state) {
+	public boolean isOpaqueCube(BlockState state) {
 		return false;
 	}
 	
@@ -76,12 +76,12 @@ public class FeyBush extends BlockBush implements IShearable {
 //		return new BlockStateContainer(this, TYPE);
 //	}
 //	
-//	public IBlockState getState(Type type) {
+//	public BlockState getState(Type type) {
 //		return getDefaultState().withProperty(TYPE, type);
 //	}
 	
 //	@Override
-//	public IBlockState getStateFromMeta(int meta) {
+//	public BlockState getStateFromMeta(int meta) {
 //		
 //		if (meta == 0)
 //			return getDefaultState().withProperty(TYPE, Type.MIDNIGHT_IRIS);
@@ -92,43 +92,43 @@ public class FeyBush extends BlockBush implements IShearable {
 //	}
 	
 	@Override
-	public Item getItemDropped(IBlockState state, Random rand, int fortune) {
+	public Item getItemDropped(BlockState state, Random rand, int fortune) {
 		return null;
        //return super.getItemDropped(state, rand, fortune);
     }
 	
 	@Override
-	public int quantityDropped(IBlockState state, int fortune, Random random) {
+	public int quantityDropped(BlockState state, int fortune, Random random) {
 		return super.quantityDropped(state, fortune, random);
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
     public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> list) {
 		super.getSubBlocks(tab, list);
 	}
 	
 	@Override
-	public int damageDropped(IBlockState state) {
+	public int damageDropped(BlockState state) {
 		return super.damageDropped(state);
 	}
 	
 //	@Override
-//	public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player) {
+//	public ItemStack getPickBlock(BlockState state, RayTraceResult target, World world, BlockPos pos, PlayerEntity player) {
 //		return new ItemStack(Item.getItemFromBlock(this), 1, getMetaFromState(state));
 //	}
 	
 	@Override
-	public boolean canSilkHarvest(World world, BlockPos pos, IBlockState state, EntityPlayer player) {
+	public boolean canSilkHarvest(World world, BlockPos pos, BlockState state, PlayerEntity player) {
 		return true;
 	}
 	
 	@Override
-	public void randomTick(World worldIn, BlockPos pos, IBlockState state, Random random) {
+	public void randomTick(World worldIn, BlockPos pos, BlockState state, Random random) {
 		super.randomTick(worldIn, pos, state, random);
 	}
 	
 	@Override
-	protected boolean canSustainBush(IBlockState state) {
+	protected boolean canSustainBush(BlockState state) {
 		boolean ret = super.canSustainBush(state);
 		
 		return ret;
@@ -144,7 +144,7 @@ public class FeyBush extends BlockBush implements IShearable {
 		return Lists.newArrayList(new ItemStack(this));
 	}
 
-	public boolean getEntityInteraction(ItemStack stack, EntityPlayer playerIn, EntityLivingBase target, EnumHand hand) {
+	public boolean getEntityInteraction(ItemStack stack, PlayerEntity playerIn, LivingEntity target, EnumHand hand) {
 		if (target instanceof EntityFeyBase && !(target instanceof EntityPersonalFairy)) {
 			EntityFeyBase fey = (EntityFeyBase) target;
 			if (fey.getStatus() == FairyGeneralStatus.WANDERING) {

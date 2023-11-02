@@ -48,7 +48,7 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 		return this.getUnlocalizedName() + "." + suffix;
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public String getModelName(ItemStack stack) {
 		return getNameFromMeta(stack.getMetadata());
 	}
@@ -56,7 +56,7 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 	/**
      * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
      */
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
 	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
     	if (this.isInCreativeTab(tab)) {

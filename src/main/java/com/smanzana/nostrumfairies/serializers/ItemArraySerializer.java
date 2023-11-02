@@ -1,14 +1,13 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
+import net.minecraft.network.datasync.IDataSerializer;
 
-public class ItemArraySerializer implements DataSerializer<ItemStack[]> {
+public class ItemArraySerializer implements IDataSerializer<ItemStack[]> {
 
 	private static ItemArraySerializer Serializer = null;
 	public static ItemArraySerializer instance() {
@@ -32,7 +31,7 @@ public class ItemArraySerializer implements DataSerializer<ItemStack[]> {
 	}
 
 	@Override
-	public ItemStack[] read(PacketBuffer buf) throws IOException {
+	public ItemStack[] read(PacketBuffer buf) {
 		int count = buf.readInt();
 		ItemStack array[] = new ItemStack[Math.max(1, count)];
 		

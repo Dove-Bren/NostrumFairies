@@ -17,7 +17,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.utils.Location;
 import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathPoint;
@@ -45,7 +45,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	// stupid encapsulation breaking things
 	protected PathFinderPublic pathFinder;
 	
-	public PathNavigatorLogistics(EntityLiving entitylivingIn, World worldIn) {
+	public PathNavigatorLogistics(MobEntity entitylivingIn, World worldIn) {
 		super(entitylivingIn, worldIn);
 		this.fey = (IFeyWorker) entitylivingIn; // CAST! Fail if not a fey! Need a network!
 		lastTicks = -1;

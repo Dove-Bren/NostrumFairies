@@ -10,7 +10,7 @@ import com.smanzana.nostrumfairies.tiles.LogisticsSensorTileEntity;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
@@ -63,7 +63,7 @@ public class LogisticsSensorGui {
 		}
 		
 		@Override
-		public ItemStack transferStackInSlot(EntityPlayer playerIn, int fromSlot) {
+		public ItemStack transferStackInSlot(PlayerEntity playerIn, int fromSlot) {
 //			ItemStack prev = ItemStack.EMPTY;	
 //			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
 //			
@@ -84,12 +84,12 @@ public class LogisticsSensorGui {
 		}
 		
 		@Override
-		public boolean canInteractWith(EntityPlayer playerIn) {
+		public boolean canInteractWith(PlayerEntity playerIn) {
 			return true;
 		}
 		
 		@Override
-		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
+		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player) {
 			if (panel.handleSlotClick(slotId, dragType, clickTypeIn, player)) {
 				return ItemStack.EMPTY;
 			}
@@ -105,7 +105,7 @@ public class LogisticsSensorGui {
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public static class LogisticsSensorGuiContainer extends LogicGuiContainer {
 
 		//private LogisticsSensorContainer container;

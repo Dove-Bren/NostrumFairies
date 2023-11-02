@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEntity> {
@@ -43,7 +43,7 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 	};
 	
 	@Override
-	protected Vector3f getOffset(BuildingBlockTileEntity te, EnumFacing facing) {
+	protected Vector3f getOffset(BuildingBlockTileEntity te, Direction facing) {
 		return ICON_OFFSETS[facing.getHorizontalIndex()];
 	}
 	
@@ -66,7 +66,7 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 			mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
 			
 			final int color = 0xFFFFFFFF;
-			final EnumFacing facing = te.getSignFacing(te);
+			final Direction facing = te.getSignFacing(te);
 			final Vector3f offset = SCROLL_OFFSETS[facing.getHorizontalIndex()];
 			final Matrix4f transform = new Matrix4f(getTransform(te, facing))
 					.scale(new Vector3f(.5f, .5f, .5f));

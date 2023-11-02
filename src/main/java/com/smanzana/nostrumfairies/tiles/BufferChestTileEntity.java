@@ -12,7 +12,7 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
@@ -98,7 +98,7 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		nbt = super.writeToNBT(nbt);
 		
 		// Save templates
@@ -109,10 +109,10 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 				continue;
 			}
 			
-			NBTTagCompound template = new NBTTagCompound();
+			CompoundNBT template = new CompoundNBT();
 			
 			template.setInteger(NBT_TEMPLATE_INDEX, i);
-			template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new NBTTagCompound()));
+			template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
 			
 			templates.appendTag(template);
 		}
@@ -122,13 +122,13 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
 		NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
 		for (int i = 0; i < list.tagCount(); i++) {
-			NBTTagCompound template = list.getCompoundTagAt(i);
+			CompoundNBT template = list.getCompoundTagAt(i);
 			int index = template.getInteger(NBT_TEMPLATE_INDEX);
 			
 			if (index < 0 || index > SLOTS) {

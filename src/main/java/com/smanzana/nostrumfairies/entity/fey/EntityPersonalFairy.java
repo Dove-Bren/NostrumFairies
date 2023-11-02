@@ -41,22 +41,22 @@ import com.smanzana.nostrummagica.serializers.PetJobSerializer;
 import com.smanzana.nostrummagica.spells.Spell;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.IEntityOwnable;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.IDataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
@@ -73,21 +73,21 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	private static final String NBT_JOB = "job";
 	private static final String NBT_ENERGY = "energy";
 	private static final String NBT_MAX_ENERGY = "max_energy";
-	private static final DataParameter<Optional<UUID>> DATA_OWNER = EntityDataManager.<Optional<UUID>>createKey(EntityPersonalFairy.class, DataSerializers.OPTIONAL_UNIQUE_ID);
+	private static final DataParameter<Optional<UUID>> DATA_OWNER = EntityDataManager.<Optional<UUID>>createKey(EntityPersonalFairy.class, IDataSerializers.OPTIONAL_UNIQUE_ID);
 	private static final DataParameter<FairyJob> DATA_JOB = EntityDataManager.<FairyJob>createKey(EntityPersonalFairy.class, FairyJob.instance());
-	private static final DataParameter<Float> DATA_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
-	private static final DataParameter<Float> DATA_MAX_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
+	private static final DataParameter<Float> DATA_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, IDataSerializers.FLOAT);
+	private static final DataParameter<Float> DATA_MAX_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, IDataSerializers.FLOAT);
 	private static final DataParameter<PetAction> DATA_PET_ACTION = EntityDataManager.<PetAction>createKey(EntityPersonalFairy.class, PetJobSerializer.instance);
 	
 	// Transient data, and only useful for Builders
-	private static final DataParameter<Optional<BlockPos>> DATA_BUILDER_SPOT = EntityDataManager.<Optional<BlockPos>>createKey(EntityPersonalFairy.class, DataSerializers.OPTIONAL_BLOCK_POS);
+	private static final DataParameter<Optional<BlockPos>> DATA_BUILDER_SPOT = EntityDataManager.<Optional<BlockPos>>createKey(EntityPersonalFairy.class, IDataSerializers.OPTIONAL_BLOCK_POS);
 	
 	
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	private List<IEntityListener<EntityPersonalFairy>> listeners;
 	
-	private EntityLivingBase ownerCache;
+	private LivingEntity ownerCache;
 	private LogisticsNetwork networkOverride;
 	private int idleTicks;
 	private ManagedPetInfo infoInst;
@@ -138,7 +138,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		this.buildTicks = 0;
 	}
 	
-	public void setOwner(EntityLivingBase owner) {
+	public void setOwner(LivingEntity owner) {
 		setOwner(owner.getUniqueID());
 	}
 	
@@ -152,15 +152,15 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 	
 	@Override
-	public @Nullable EntityLivingBase getOwner() {
+	public @Nullable LivingEntity getOwner() {
 		if (ownerCache == null || ownerCache.isDead) {
 			ownerCache = null;
 			UUID id = getOwnerId();
 			if (id != null) {
 				for (World world : DimensionManager.getWorlds()) {
 					for (Entity e : world.loadedEntityList) {
-						if (e instanceof EntityLivingBase && e.getUniqueID().equals(id)) {
-							ownerCache = (EntityLivingBase) e;
+						if (e instanceof LivingEntity && e.getUniqueID().equals(id)) {
+							ownerCache = (LivingEntity) e;
 							break;
 						}
 					}
@@ -249,7 +249,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 
 	@Override
 	protected boolean canPerformTask(ILogisticsTask task) {
-		EntityLivingBase owner = this.getOwner();
+		LivingEntity owner = this.getOwner();
 		if (task.getSourceEntity() != owner) { // can be null, but then this will work great
 			return false;
 		}
@@ -349,7 +349,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		}
 		super.finishTask();
 		
-		EntityLivingBase owner = getOwner();
+		LivingEntity owner = getOwner();
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(owner);
 		if (attr != null) {
 			attr.addFairyXP(3);
@@ -361,7 +361,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		this.setEnergy(this.getEnergy() - 3.5f);
 		setBuildSpot(null);
 		
-		EntityLivingBase owner = getOwner();
+		LivingEntity owner = getOwner();
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(owner);
 		if (attr != null) {
 			attr.addFairyXP(2);
@@ -374,7 +374,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			return;
 		}
 		
-		EntityLivingBase owner = this.getOwner();
+		LivingEntity owner = this.getOwner();
 		BlockPos currentBuild = this.getBuildSpot();
 		
 		if (currentBuild != null) {
@@ -389,8 +389,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				} else {
 					// At owner. Pickup item for delivery!
 					ItemStack stack = TemplateBlock.GetRequiredItem(TemplateBlock.GetTemplatedState(world, currentBuild));
-					if (owner instanceof EntityPlayer) {
-						EntityPlayer player = (EntityPlayer) owner;
+					if (owner instanceof PlayerEntity) {
+						PlayerEntity player = (PlayerEntity) owner;
 						if (Inventories.remove(player.inventory, stack).isEmpty()) {
 							if (stack.getMetadata() == OreDictionary.WILDCARD_VALUE) {
 								stack.setItemDamage(0);
@@ -441,7 +441,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	
 	@Override
 	protected void onIdleTick() {
-		EntityLivingBase owner = this.getOwner();
+		LivingEntity owner = this.getOwner();
 		
 		if (owner == null || owner.isDead) {
 			this.setPetAction(PetAction.IDLING);
@@ -480,8 +480,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			if (distOwnerSq > 2) {
 				this.moveHelper.setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
 			} else {
-				if (owner instanceof EntityPlayer) {
-					if (((EntityPlayer) owner).inventory.addItemStackToInventory(heldItem.copy())) {
+				if (owner instanceof PlayerEntity) {
+					if (((PlayerEntity) owner).inventory.addItemStackToInventory(heldItem.copy())) {
 						this.removeItem(heldItem);
 						heldItem = ItemStack.EMPTY;
 					}
@@ -561,7 +561,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 	
 	protected INostrumFeyCapability getOwnerAttr() {
-		EntityLivingBase owner = this.getOwner();
+		LivingEntity owner = this.getOwner();
 		if (owner == null) {
 			return null;
 		}
@@ -587,10 +587,10 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			}
 			
 			@Override
-			public void attackTarget(EntityPersonalFairy entity, EntityLivingBase target) {
+			public void attackTarget(EntityPersonalFairy entity, LivingEntity target) {
 				super.attackTarget(entity, target);
 				
-				EntityLivingBase owner = getOwner();
+				LivingEntity owner = getOwner();
 				INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(owner);
 				if (attr != null) {
 					attr.addFairyXP(2);
@@ -605,15 +605,15 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 					return false;
 				}
 				
-				EntityLivingBase owner = getOwner();
+				LivingEntity owner = getOwner();
 				if (owner == null) {
 					return false;
 				}
 				
 				if (getAttackTarget() == null) {
 					boolean weaponDrawn = true;
-					if (owner instanceof EntityPlayer) {
-						ItemStack held = ((EntityPlayer) owner).getHeldItemMainhand();
+					if (owner instanceof PlayerEntity) {
+						ItemStack held = ((PlayerEntity) owner).getHeldItemMainhand();
 						weaponDrawn = false;
 						if (!held.isEmpty()) {
 							if (held.getItem() instanceof ItemSword || held.getItem() instanceof ItemBow) {
@@ -634,15 +634,15 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			
 			@Override
 			public boolean shouldContinueExecuting() {
-				EntityLivingBase owner = getOwner();
+				LivingEntity owner = getOwner();
 				if (owner == null) {
 					return false;
 				}
 				
 				if (getAttackTarget() == null) {
 					boolean weaponDrawn = true;
-					if (owner instanceof EntityPlayer) {
-						ItemStack held = ((EntityPlayer) owner).getHeldItemMainhand();
+					if (owner instanceof PlayerEntity) {
+						ItemStack held = ((PlayerEntity) owner).getHeldItemMainhand();
 						weaponDrawn = false;
 						if (!held.isEmpty()) {
 							if (held.getItem() instanceof ItemSword || held.getItem() instanceof ItemBow) {
@@ -662,7 +662,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			}
 			
 			@Override
-			protected EntityLivingBase getOrbitTarget() {
+			protected LivingEntity getOrbitTarget() {
 				return getOwner();
 			}
 		});
@@ -694,7 +694,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			}
 			
 			@Override
-			public @Nullable EntityLivingBase getTarget() {
+			public @Nullable LivingEntity getTarget() {
 				if (castTarget == FairyCastTarget.OWNER) {
 					return entity.getOwner();
 				} else if (castTarget == FairyCastTarget.SELF) {
@@ -778,7 +778,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 	
 	@Override
-	public void writeEntityToNBT(NBTTagCompound compound) {
+	public void writeEntityToNBT(CompoundNBT compound) {
 		super.writeEntityToNBT(compound);
 		
 		if (getOwnerId() != null) {
@@ -791,7 +791,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 	
 	@Override
-	public void readEntityFromNBT(NBTTagCompound compound) {
+	public void readEntityFromNBT(CompoundNBT compound) {
 		super.readEntityFromNBT(compound);
 		
 		if (compound.hasKey(NBT_OWNER_ID)) {
@@ -809,7 +809,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 	
 	@Override
-	public boolean writeToNBTOptional(NBTTagCompound compound) {
+	public boolean writeToNBTOptional(CompoundNBT compound) {
 		// Do not save in world
 		return false;
 	}
@@ -889,7 +889,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 	
 	@Override
-	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+	protected boolean shouldJoin(BlockPos pos, BlockState state, HomeBlockTileEntity te) {
 		return false;
 	}
 
@@ -1023,11 +1023,11 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 
 	@Override
-	public void attackEntityWithRangedAttack(EntityLivingBase target, float distanceFactor) {
+	public void attackEntityWithRangedAttack(LivingEntity target, float distanceFactor) {
 		if (castSpell != null) {
 			castSpell.cast(this, 1f);
 			
-			EntityLivingBase owner = getOwner();
+			LivingEntity owner = getOwner();
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(owner);
 			if (attr != null) {
 				attr.addFairyXP(1);
@@ -1044,7 +1044,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	@Override
 	public boolean isOnSameTeam(Entity entityIn) {
 		if (this.isEntityTamed()) {
-			EntityLivingBase myOwner = this.getOwner();
+			LivingEntity myOwner = this.getOwner();
 
 			if (entityIn == myOwner) {
 				return true;
@@ -1082,7 +1082,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 
 	@Override
-	public PetContainer<? extends IEntityPet> getGUIContainer(EntityPlayer player) {
+	public PetContainer<? extends IEntityPet> getGUIContainer(PlayerEntity player) {
 		return null;
 	}
 

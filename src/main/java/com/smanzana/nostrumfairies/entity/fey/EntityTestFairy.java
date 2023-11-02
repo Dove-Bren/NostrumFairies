@@ -23,13 +23,13 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.NonNullList;
@@ -420,7 +420,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			if (!this.world.canBlockSeeSky(this.getPosition())) {
 				// No light from the 'sky' which means we're underground
 				// Refreseh magic lights around. Then see if it's too dark
-				IBlockState state;
+				BlockState state;
 				MutableBlockPos cursor = new MutableBlockPos();
 				for (int x = -1; x <= 1; x++)
 				for (int y = -1; y <= 1; y++)
@@ -537,7 +537,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+							if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
 								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
@@ -590,7 +590,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void writeEntityToNBT(NBTTagCompound compound) {
+	public void writeEntityToNBT(CompoundNBT compound) {
 		super.writeEntityToNBT(compound);
 		
 		compound.setTag(NBT_ITEMS, inventoryToNBT());
@@ -605,7 +605,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void readEntityFromNBT(NBTTagCompound compound) {
+	public void readEntityFromNBT(CompoundNBT compound) {
 		super.readEntityFromNBT(compound);
 		
 		loadInventoryFromNBT(compound.getTagList(NBT_ITEMS, NBT.TAG_COMPOUND));
@@ -660,7 +660,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+	protected boolean shouldJoin(BlockPos pos, BlockState state, HomeBlockTileEntity te) {
 		return rand.nextBoolean() && rand.nextBoolean();
 	}
 

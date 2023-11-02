@@ -46,14 +46,14 @@ import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
@@ -195,8 +195,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		private static final String NBT_CUSTOM = "custom";
 		private static final String NBT_ITEMS = "items";
 		
-		public NBTTagCompound toNBT() {
-			NBTTagCompound nbt = new NBTTagCompound();
+		public CompoundNBT toNBT() {
+			CompoundNBT nbt = new CompoundNBT();
 			
 			nbt.setString(NBT_NAME, this.getName());
 			nbt.setBoolean(NBT_CUSTOM, this.hasCustomName());
@@ -205,7 +205,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			return nbt;
 		}
 		
-		public static HomeBlockTileEntity.HomeBlockSlotInventory fromNBT(HomeBlockTileEntity owner, NBTTagCompound nbt) {
+		public static HomeBlockTileEntity.HomeBlockSlotInventory fromNBT(HomeBlockTileEntity owner, CompoundNBT nbt) {
 			String name = nbt.getString(NBT_NAME);
 			boolean custom = nbt.getBoolean(NBT_CUSTOM);
 			
@@ -250,8 +250,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		private static final String NBT_CUSTOM = "custom";
 		private static final String NBT_ITEMS = "items";
 		
-		public NBTTagCompound toNBT() {
-			NBTTagCompound nbt = new NBTTagCompound();
+		public CompoundNBT toNBT() {
+			CompoundNBT nbt = new CompoundNBT();
 			
 			nbt.setString(NBT_NAME, this.getName());
 			nbt.setBoolean(NBT_CUSTOM, this.hasCustomName());
@@ -260,7 +260,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			return nbt;
 		}
 		
-		public static HomeBlockTileEntity.HomeBlockUpgradeInventory fromNBT(HomeBlockTileEntity owner, NBTTagCompound nbt) {
+		public static HomeBlockTileEntity.HomeBlockUpgradeInventory fromNBT(HomeBlockTileEntity owner, CompoundNBT nbt) {
 			String name = nbt.getString(NBT_NAME);
 			boolean custom = nbt.getBoolean(NBT_CUSTOM);
 			
@@ -718,7 +718,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		nbt = super.writeToNBT(nbt);
 		
 		nbt.setString(NBT_TYPE, type.name());
@@ -729,7 +729,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		NBTTagList list = new NBTTagList();
 		for (int i = 0; i < getEffectiveSlots(); i++) {
 			UUID id = feySlots[i];
-			NBTTagCompound tag = new NBTTagCompound();
+			CompoundNBT tag = new CompoundNBT();
 			if (id != null) {
 				HomeBlockTileEntity.FeyAwayRecord record = this.feyCacheMap.get(id);
 				tag.setString(NBT_FEY_NAME, record.name);
@@ -741,13 +741,13 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		
 		nbt.setTag(NBT_UPGRADES, this.upgradeInv.toNBT());
 		nbt.setTag(NBT_SLOT_INV, slotInv.toNBT());
-		nbt.setTag(NBT_HANDLER, handler.writeToNBT(new NBTTagCompound()));
+		nbt.setTag(NBT_HANDLER, handler.writeToNBT(new CompoundNBT()));
 		
 		return nbt;
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		super.readFromNBT(nbt);
 		
 		String type = nbt.getString(NBT_TYPE);
@@ -766,7 +766,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		feyCacheMap.clear();
 		NBTTagList list = nbt.getTagList(NBT_FEY, NBT.TAG_COMPOUND);
 		for (int i = 0; i < getEffectiveSlots(); i++) {
-			NBTTagCompound tag = list.getCompoundTagAt(i);
+			CompoundNBT tag = list.getCompoundTagAt(i);
 			UUID id = null;
 			if (tag != null && tag.hasKey(NBT_FEY_UUID)) {
 				id = UUID.fromString(tag.getString(NBT_FEY_UUID));
@@ -852,7 +852,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			Iterator<BlockPos> it = boostBlockSpots.iterator();
 			while (it.hasNext()) {
 				BlockPos pos = it.next();
-				IBlockState state = world.getBlockState(pos);
+				BlockState state = world.getBlockState(pos);
 				if (getBlockSpawnBonus(pos, state) <= 0) {
 					it.remove();
 					continue;
@@ -914,7 +914,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 				continue;
 			}
 			
-			IBlockState state = world.getBlockState(cursor);
+			BlockState state = world.getBlockState(cursor);
 			final float boost = getBlockSpawnBonus(cursor, state);
 			bonus += boost;
 			if (boost > 0f) {
@@ -924,7 +924,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		return bonus;
 	}
 	
-	protected float getBlockSpawnBonus(BlockPos pos, IBlockState state) {
+	protected float getBlockSpawnBonus(BlockPos pos, BlockState state) {
 		if (state != null && state.getBlock() instanceof FeyBush) {
 			return .005f;
 		}
@@ -1042,7 +1042,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	
 	@Override
 	public void addConnections(List<AetherFlowConnection> connections) {
-		for (EnumFacing dir : EnumFacing.values()) {
+		for (Direction dir : Direction.values()) {
 			if (!handler.getSideEnabled(dir)) {
 				continue;
 			}
@@ -1061,7 +1061,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			}
 			
 			// See if block boasts being able to get us a handler
-			IBlockState attachedState = world.getBlockState(neighbor);
+			BlockState attachedState = world.getBlockState(neighbor);
 			Block attachedBlock = attachedState.getBlock();
 			if (attachedBlock instanceof IAetherCapableBlock) {
 				connections.add(new AetherFlowConnection(((IAetherCapableBlock) attachedBlock).getAetherHandler(world, attachedState, neighbor, dir), dir.getOpposite()));

@@ -1,10 +1,8 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import java.io.IOException;
-
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
+import net.minecraft.network.datasync.IDataSerializer;
 
 public enum FairyGeneralStatus {
 	WANDERING, // Not attached to a home, and therefore incapable of working
@@ -12,7 +10,7 @@ public enum FairyGeneralStatus {
 	WORKING, // Working
 	REVOLTING; // Refusing to work
 	
-	public final static class FairyStatusSerializer implements DataSerializer<FairyGeneralStatus> {
+	public final static class FairyStatusSerializer implements IDataSerializer<FairyGeneralStatus> {
 		
 		private FairyStatusSerializer() {
 			;
@@ -24,7 +22,7 @@ public enum FairyGeneralStatus {
 		}
 
 		@Override
-		public FairyGeneralStatus read(PacketBuffer buf) throws IOException {
+		public FairyGeneralStatus read(PacketBuffer buf) {
 			return buf.readEnumValue(FairyGeneralStatus.class);
 		}
 

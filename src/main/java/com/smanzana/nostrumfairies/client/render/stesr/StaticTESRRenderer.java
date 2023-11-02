@@ -10,9 +10,9 @@ import org.lwjgl.opengl.GL11;
 import com.google.common.collect.Maps;
 import com.smanzana.nostrumfairies.utils.Location;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
@@ -26,7 +26,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class StaticTESRRenderer {
 
 	public static StaticTESRRenderer instance = new StaticTESRRenderer();
@@ -63,7 +63,7 @@ public class StaticTESRRenderer {
 		return (StaticTESR<T>) renders.get(ent.getClass());
 	}
 	
-	public void render(Minecraft mc, EntityPlayerSP player, float partialTicks) {
+	public void render(Minecraft mc, ClientPlayerEntity player, float partialTicks) {
 		final boolean shouldClear;
 		final Map<Location, RenderTarget> updatesCopy;
 		
@@ -127,7 +127,7 @@ public class StaticTESRRenderer {
 		{
 			BlockPos pos = te.getPos();
 			World world = te.getWorld();
-			IBlockState state = world.getBlockState(pos);
+			BlockState state = world.getBlockState(pos);
 			render.render(te, pos.getX(), pos.getY(), pos.getZ(), state, world, buffer);
 		}
 		tess.draw();
@@ -136,7 +136,7 @@ public class StaticTESRRenderer {
 		return list;
 	}
 	
-	private void drawTarget(RenderTarget target, Minecraft mc, EntityPlayerSP player, float partialTicks) {
+	private void drawTarget(RenderTarget target, Minecraft mc, ClientPlayerEntity player, float partialTicks) {
 		final double eyeY = player.getEyeHeight();
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, eyeY, 0);
 		BlockPos pos = target.te.getPos();

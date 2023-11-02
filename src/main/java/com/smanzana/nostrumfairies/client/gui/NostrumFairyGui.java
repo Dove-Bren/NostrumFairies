@@ -31,7 +31,7 @@ import com.smanzana.nostrumfairies.tiles.OutputPanelTileEntity;
 import com.smanzana.nostrumfairies.tiles.StorageChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -57,7 +57,7 @@ public class NostrumFairyGui implements IGuiHandler {
 	public static final int outputPanelID = 13;
 	
 	@Override
-	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+	public Object getServerGuiElement(int ID, PlayerEntity player, World world, int x, int y, int z) {
 		
 		if (ID == storageChestID) {
 			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));
@@ -180,7 +180,7 @@ public class NostrumFairyGui implements IGuiHandler {
 
 	
 	@Override
-	public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+	public Object getClientGuiElement(int ID, PlayerEntity player, World world, int x, int y, int z) {
 		
 		if (ID == storageChestID) {
 			TileEntity ent = world.getTileEntity(new BlockPos(x, y, z));

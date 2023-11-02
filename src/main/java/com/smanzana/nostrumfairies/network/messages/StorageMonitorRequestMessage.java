@@ -6,9 +6,9 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -47,7 +47,7 @@ public class StorageMonitorRequestMessage implements IMessage {
 					}
 					
 					// Cause an update to be sent back
-					IBlockState state = world.getBlockState(pos);
+					BlockState state = world.getBlockState(pos);
 					world.notifyBlockUpdate(pos, state, state, 2);
 				});
 				
@@ -67,14 +67,14 @@ public class StorageMonitorRequestMessage implements IMessage {
 	private static final String NBT_REQ = "request";
 	private static final String NBT_DEL = "delete";
 	
-	protected NBTTagCompound tag;
+	protected CompoundNBT tag;
 	
 	public StorageMonitorRequestMessage() {
 		this(null, ItemStack.EMPTY, false);
 	}
 	
 	public StorageMonitorRequestMessage(StorageMonitorTileEntity monitor, @Nonnull ItemStack template, boolean delete) {
-		tag = new NBTTagCompound();
+		tag = new CompoundNBT();
 		
 		if (!template.isEmpty()) {
 			tag.setLong(NBT_POS, monitor.getPos().toLong());

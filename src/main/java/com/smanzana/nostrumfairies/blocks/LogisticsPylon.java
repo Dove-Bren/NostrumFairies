@@ -11,13 +11,13 @@ import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.block.state.BlockState;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -25,7 +25,7 @@ import net.minecraft.world.World;
 
 public class LogisticsPylon extends BlockContainer {
 	
-	public static final PropertyDirection FACING = PropertyDirection.create("facing", Lists.newArrayList(EnumFacing.UP, EnumFacing.DOWN));
+	public static final PropertyDirection FACING = PropertyDirection.create("facing", Lists.newArrayList(Direction.UP, Direction.DOWN));
 	public static final String ID = "logistics_pylon";
 	
 	private static LogisticsPylon instance = null;
@@ -52,33 +52,33 @@ public class LogisticsPylon extends BlockContainer {
 		return new BlockStateContainer(this, FACING);
 	}
 	
-	protected static int metaFromFacing(EnumFacing facing) {
-		return facing == EnumFacing.UP ? 0 : 1;
+	protected static int metaFromFacing(Direction facing) {
+		return facing == Direction.UP ? 0 : 1;
 	}
 	
-	protected static EnumFacing facingFromMeta(int meta) {
-		return meta == 0 ? EnumFacing.UP : EnumFacing.DOWN;
+	protected static Direction facingFromMeta(int meta) {
+		return meta == 0 ? Direction.UP : Direction.DOWN;
 	}
 	
 	@Override
-	public IBlockState getStateFromMeta(int meta) {
+	public BlockState getStateFromMeta(int meta) {
 		return getDefaultState()
 				.withProperty(FACING, facingFromMeta(meta));
 	}
 	
 	@Override
-	public int getMetaFromState(IBlockState state) {
+	public int getMetaFromState(BlockState state) {
 		return metaFromFacing(state.getValue(FACING));
 	}
 	
-	public EnumFacing getFacing(IBlockState state) {
+	public Direction getFacing(BlockState state) {
 		return state.getValue(FACING);
 	}
 	
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
+	public BlockState getStateForPlacement(World world, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
 		return this.getDefaultState()
-				.withProperty(FACING, facing == EnumFacing.DOWN ? facing : EnumFacing.UP);
+				.withProperty(FACING, facing == Direction.DOWN ? facing : Direction.UP);
 	}
 	
 	@Override
@@ -87,17 +87,17 @@ public class LogisticsPylon extends BlockContainer {
 	}
 	
 	@Override
-	public boolean isFullBlock(IBlockState state) {
+	public boolean isFullBlock(BlockState state) {
 		return false;
 	}
 	
 	@Override
-	public boolean isFullCube(IBlockState state) {
+	public boolean isFullCube(BlockState state) {
 		return true;
 	}
 	
 	@Override
-	public boolean isOpaqueCube(IBlockState state) {
+	public boolean isOpaqueCube(BlockState state) {
 		return false;
 	}
 	
@@ -108,8 +108,8 @@ public class LogisticsPylon extends BlockContainer {
 	
 	@Override
 	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
-//		IBlockState state = worldIn.getBlockState(pos.up());
-//		if (state == null || !(state.isSideSolid(worldIn, pos.down(), EnumFacing.DOWN))) {
+//		BlockState state = worldIn.getBlockState(pos.up());
+//		if (state == null || !(state.isSideSolid(worldIn, pos.down(), Direction.DOWN))) {
 //			return false;
 //		}
 		
@@ -117,10 +117,10 @@ public class LogisticsPylon extends BlockContainer {
 	}
 	
 	@Override
-	public boolean canPlaceBlockOnSide(World worldIn, BlockPos pos, EnumFacing side) {
-		if (side == EnumFacing.DOWN) {
-			IBlockState state = worldIn.getBlockState(pos.up());
-			if (state == null || !state.isSideSolid(worldIn, pos.up(), EnumFacing.DOWN)) {
+	public boolean canPlaceBlockOnSide(World worldIn, BlockPos pos, Direction side) {
+		if (side == Direction.DOWN) {
+			BlockState state = worldIn.getBlockState(pos.up());
+			if (state == null || !state.isSideSolid(worldIn, pos.up(), Direction.DOWN)) {
 				return false;
 			}
 		}
@@ -130,10 +130,10 @@ public class LogisticsPylon extends BlockContainer {
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
-		if (state.getValue(FACING) == EnumFacing.DOWN) {
-			IBlockState ceilState = worldIn.getBlockState(pos.up());
-			if (ceilState == null || !ceilState.isSideSolid(worldIn, pos.up(), EnumFacing.DOWN)) {
+	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
+		if (state.getValue(FACING) == Direction.DOWN) {
+			BlockState ceilState = worldIn.getBlockState(pos.up());
+			if (ceilState == null || !ceilState.isSideSolid(worldIn, pos.up(), Direction.DOWN)) {
 				this.dropBlockAsItem(worldIn, pos, state, 0);
 				worldIn.setBlockToAir(pos);
 			}
@@ -143,12 +143,12 @@ public class LogisticsPylon extends BlockContainer {
 	}
 	
 	@Override
-	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
 		return true;
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(World worldIn, BlockPos pos, BlockState state, PlayerEntity playerIn, EnumHand hand, Direction side, float hitX, float hitY, float hitZ) {
 		return false; // could do a cool ping animation or something
 	}
 	
@@ -158,17 +158,17 @@ public class LogisticsPylon extends BlockContainer {
 	}
 	
 	@Override
-	public EnumBlockRenderType getRenderType(IBlockState state) {
+	public EnumBlockRenderType getRenderType(BlockState state) {
 		return EnumBlockRenderType.MODEL;
 	}
 	
 	@Override
-	public void breakBlock(World world, BlockPos pos, IBlockState state) {
+	public void breakBlock(World world, BlockPos pos, BlockState state) {
 		destroy(world, pos, state);
 		super.breakBlock(world, pos, state);
 	}
 	
-	private void destroy(World world, BlockPos pos, IBlockState state) {
+	private void destroy(World world, BlockPos pos, BlockState state) {
 		TileEntity ent = world.getTileEntity(pos);
 		if (ent == null || !(ent instanceof PylonTileEntity))
 			return;

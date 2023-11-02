@@ -25,15 +25,15 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.block.BlockTorch;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagLong;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.NonNullList;
@@ -282,14 +282,14 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				
 				// Request block placement
 				LogisticsTaskPlaceBlock task;
-				IBlockState state = Blocks.COBBLESTONE.getDefaultState();
+				BlockState state = Blocks.COBBLESTONE.getDefaultState();
 				if (!buildingMaterial.isEmpty()) {
 					if (buildingMaterial.getItem() instanceof ItemBlock) {
 						// I don't trust the null entity in there...
 						ItemBlock itemBlock = (ItemBlock) buildingMaterial.getItem();
 						try {
 							int meta = itemBlock.getMetadata(buildingMaterial.getMetadata());
-							state = itemBlock.getBlock().getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, meta, null, EnumHand.MAIN_HAND);
+							state = itemBlock.getBlock().getStateForPlacement(world, pos, Direction.UP, 0, 0, 0, meta, null, EnumHand.MAIN_HAND);
 						} catch (Exception e) {
 							// fall back to default state
 							state = itemBlock.getBlock().getDefaultState(); 
@@ -393,7 +393,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		private boolean isIgnorableBlock(BlockPos pos) {
-			IBlockState state = world.getBlockState(pos);
+			BlockState state = world.getBlockState(pos);
 			// We care if it's something that doesn't block movement and isn't a liquid source block
 			if (state.getMaterial().blocksMovement()) {
 				return false;
@@ -425,7 +425,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			boolean tasked = false;
 			
 			// check underneath
-			if (!world.isSideSolid(base.down(), EnumFacing.UP)) {
+			if (!world.isSideSolid(base.down(), Direction.UP)) {
 				makeRepairTask(base.down(), lastPos);
 				tasked = true;
 			}
@@ -563,7 +563,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				while (cursor.getX() != effX) {
 					clearBlock(cursor, false, last);
 					last.setPos(cursor);
-					cursor.move(effX > cursor.getX() ? EnumFacing.EAST : EnumFacing.WEST);
+					cursor.move(effX > cursor.getX() ? Direction.EAST : Direction.WEST);
 					
 					if (spaces++ % 16 == 0) {
 						// Set a new beacon every once in a while
@@ -575,7 +575,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				while (cursor.getZ() != pos.getZ()) {
 					clearBlock(cursor, false, last);
 					last.setPos(cursor);
-					cursor.move(pos.getZ() > cursor.getZ() ? EnumFacing.SOUTH : EnumFacing.NORTH);
+					cursor.move(pos.getZ() > cursor.getZ() ? Direction.SOUTH : Direction.NORTH);
 					
 					if (spaces++ % 16 == 0) {
 						// Set a new beacon every once in a while
@@ -709,31 +709,31 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			final int endIdx = (upper ? MiningBlock.MAJOR_LEVEL_DIFF / 2 : MiningBlock.MAJOR_LEVEL_DIFF);
 			cursor.setPos(pos.getX(), getYFromLevel(level), pos.getZ() + (upper ? -startOffset : startOffset));
 			for (int i = startIdx; i < endIdx; i++) {
-				EnumFacing side = i < startOffset ? EnumFacing.NORTH
-						: (i < startOffset + edgeLength ? EnumFacing.EAST 
-						: (i < startOffset + edgeLength + edgeLength ? EnumFacing.SOUTH
-						: (i < startOffset + edgeLength + edgeLength + edgeLength ? EnumFacing.WEST
-						: EnumFacing.NORTH)));
+				Direction side = i < startOffset ? Direction.NORTH
+						: (i < startOffset + edgeLength ? Direction.EAST 
+						: (i < startOffset + edgeLength + edgeLength ? Direction.SOUTH
+						: (i < startOffset + edgeLength + edgeLength + edgeLength ? Direction.WEST
+						: Direction.NORTH)));
 				
 				last.setPos(cursor);
 				switch (side) {
 				case NORTH:
-					cursor.move(EnumFacing.EAST);
+					cursor.move(Direction.EAST);
 					break;
 				case EAST:
-					cursor.move(EnumFacing.SOUTH);
+					cursor.move(Direction.SOUTH);
 					break;
 				case SOUTH:
-					cursor.move(EnumFacing.WEST);
+					cursor.move(Direction.WEST);
 					break;
 				case WEST:
 				case UP:
 				case DOWN:
 				default:
-					cursor.move(EnumFacing.NORTH);
+					cursor.move(Direction.NORTH);
 					break;
 				}
-				cursor.move(EnumFacing.DOWN);
+				cursor.move(Direction.DOWN);
 				
 				if (clearBlock(cursor, true, last)) {
 					clear = false;
@@ -743,13 +743,13 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			// Finally, the door and beacon
 			this.addBeacon(cursor.toImmutable());
 			last.setPos(cursor);
-			cursor.move(upper ? EnumFacing.SOUTH : EnumFacing.NORTH);
+			cursor.move(upper ? Direction.SOUTH : Direction.NORTH);
 			if (clearBlock(cursor, false, last)) {
 				clear = false;
 			}
 			
 			last.setPos(cursor);
-			cursor.move(upper ? EnumFacing.SOUTH : EnumFacing.NORTH);
+			cursor.move(upper ? Direction.SOUTH : Direction.NORTH);
 			if (clearBlock(cursor, false, last)) {
 				clear = false;
 			}
@@ -829,7 +829,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 					y -= MiningBlock.MAJOR_LEVEL_DIFF;
 					// Check this layer for unbreakables/bedrock
 					if (forEachOnLayer(y, (pos) -> {
-						IBlockState state = world.getBlockState(pos);
+						BlockState state = world.getBlockState(pos);
 						return state.getBlockHardness(world, pos) >= 0;
 					})) {
 						lowestLevel += MiningBlock.MAJOR_LEVEL_DIFF;
@@ -1005,7 +1005,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		public static final String NBT_TORCHES = "torches";
 		
 		@Override
-		public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+		public CompoundNBT writeToNBT(CompoundNBT nbt) {
 			// We STORE the UUID of our network... but only so we can communicate it to the client.
 			// We hook things back up on the server when we load by position.
 			nbt = super.writeToNBT(nbt);
@@ -1045,7 +1045,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		@Override
-		public void readFromNBT(NBTTagCompound nbt) {
+		public void readFromNBT(CompoundNBT nbt) {
 			super.readFromNBT(nbt);
 			
 			this.oreLocations.clear();
@@ -1209,8 +1209,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		@Override
-		public EnumFacing getSignFacing(IFeySign sign) {
-			IBlockState state = world.getBlockState(pos);
+		public Direction getSignFacing(IFeySign sign) {
+			BlockState state = world.getBlockState(pos);
 			return state.getValue(MiningBlock.FACING);
 		}
 		

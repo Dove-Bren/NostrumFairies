@@ -16,13 +16,13 @@ import com.smanzana.nostrummagica.loretag.Lore;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -125,7 +125,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return this.getUnlocalizedName() + "." + type.suffix;
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public String getModelName(ItemStack stack) {
 		SoulStoneType type = getTypeOf(stack);
 		return type.modelName;
@@ -161,7 +161,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return "soul_" + material;
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public String getModelName(ResidentType type) {
 		SoulStoneType soulType = SoulStoneType.GEM;
 		for (SoulStoneType t : SoulStoneType.values()) {
@@ -177,7 +177,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	/**
 	 * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
 	 */
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	@Override
 	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
 		if (this.isInCreativeTab(tab)) {
@@ -204,7 +204,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	public static @Nonnull ItemStack create(SoulStoneType type, EntityFeyBase fey) {
-		NBTTagCompound nbt = null;
+		CompoundNBT nbt = null;
 		String name = null;
 		ResidentType feyType = null;
 		if (fey != null) {
@@ -219,10 +219,10 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return create(type, name, feyType, nbt);
 	}
 	
-	protected static ItemStack create(SoulStoneType type, String name, ResidentType residentType, NBTTagCompound nbt) {
+	protected static ItemStack create(SoulStoneType type, String name, ResidentType residentType, CompoundNBT nbt) {
 		ItemStack stack = new ItemStack(instance(), 1, metaFromTypes(nbt != null, type, residentType));
 		if (nbt != null) {
-			NBTTagCompound tag = new NBTTagCompound();
+			CompoundNBT tag = new CompoundNBT();
 			tag.setString("name", name);
 			tag.setTag("data", nbt);
 			stack.setTagCompound(tag);
@@ -236,7 +236,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	
 	public static @Nullable EntityFeyBase spawnStoredEntity(ItemStack stack, World world, double x, double y, double z) {
 		EntityFeyBase fey = null;
-		NBTTagCompound nbt = stack.getTagCompound();
+		CompoundNBT nbt = stack.getTagCompound();
 		if (nbt != null && nbt.hasKey("data", NBT.TAG_COMPOUND)) {
 			Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompoundTag("data"), world, x, y, z, true);
 			if (entity == null) {
@@ -258,7 +258,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 //			return null;
 //		}
 //		
-//		stack.setTagCompound(fey.writeToNBT(new NBTTagCompound()));
+//		stack.setTagCompound(fey.writeToNBT(new CompoundNBT()));
 //		return stack;
 		SoulStoneType type = getTypeOf(stack);
 		return create(type, fey);
@@ -278,7 +278,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return stack;
 	}
 	
-	public static NBTTagCompound getStoredEntityTag(ItemStack stack) {
+	public static CompoundNBT getStoredEntityTag(ItemStack stack) {
 		return stack.hasTagCompound() ? stack.getTagCompound().getCompoundTag("data") : null; 
 	}
 	
@@ -313,7 +313,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, EnumHand hand, Direction facing, float hitX, float hitY, float hitZ) {
 		if (worldIn.isRemote) {
 			return EnumActionResult.SUCCESS;
 		}
@@ -334,7 +334,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer playerIn, EntityLivingBase target, EnumHand hand) {
+	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, EnumHand hand) {
 		if (playerIn.world.isRemote) {
 			return true;
 		}

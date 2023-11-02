@@ -7,11 +7,11 @@ import org.apache.commons.lang3.Validate;
 
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.block.state.BlockState;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
@@ -23,7 +23,7 @@ public class LogisticsTaskPlantItem extends LogisticsTaskPlaceBlock {
 	
 	private @Nonnull ItemStack seed;
 	
-	protected LogisticsTaskPlantItem(@Nullable ILogisticsComponent owningComponent, @Nullable EntityLivingBase entity,
+	protected LogisticsTaskPlantItem(@Nullable ILogisticsComponent owningComponent, @Nullable LivingEntity entity,
 			String displayName, ItemStack plantable, World world, BlockPos pos, BlockPos placeAt) {
 		super(owningComponent, entity, displayName, plantable, getPlantable(plantable).getPlant(world, pos.down()), world, pos, placeAt);
 		this.seed = plantable;
@@ -41,12 +41,12 @@ public class LogisticsTaskPlantItem extends LogisticsTaskPlaceBlock {
 		this(owningComponent, null, displayName, plantable, world, pos, placeAt);
 	}
 	
-	public LogisticsTaskPlantItem(EntityLivingBase entity, String displayName,
+	public LogisticsTaskPlantItem(LivingEntity entity, String displayName,
 			ItemStack plantable, World world, BlockPos pos) {
 		this(entity, displayName, plantable, world, pos, pos);
 	}
 	
-	public LogisticsTaskPlantItem(EntityLivingBase entity, String displayName,
+	public LogisticsTaskPlantItem(LivingEntity entity, String displayName,
 			ItemStack plantable, World world, BlockPos pos, BlockPos placeAt) {
 		this(null, entity, displayName, plantable, world, pos, placeAt);
 	}
@@ -68,8 +68,8 @@ public class LogisticsTaskPlantItem extends LogisticsTaskPlaceBlock {
 			return false;
 		}
 		
-		IBlockState soil = world.getBlockState(pos.down());
-		if (!soil.getBlock().canSustainPlant(soil, world, pos.down(), EnumFacing.UP, getPlantable(seed))) {
+		BlockState soil = world.getBlockState(pos.down());
+		if (!soil.getBlock().canSustainPlant(soil, world, pos.down(), Direction.UP, getPlantable(seed))) {
 			return false;
 		}
 		

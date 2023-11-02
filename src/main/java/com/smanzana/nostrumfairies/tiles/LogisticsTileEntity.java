@@ -17,7 +17,7 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -41,8 +41,8 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	}
 
 	@Override
-	public NBTTagCompound getUpdateTag() {
-		return this.writeToNBT(new NBTTagCompound());
+	public CompoundNBT getUpdateTag() {
+		return this.writeToNBT(new CompoundNBT());
 	}
 	
 	@Override
@@ -52,7 +52,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	}
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		// We STORE the UUID of our network... but only so we can communicate it to the client.
 		// We hook things back up on the server when we load by position.
 		nbt = super.writeToNBT(nbt);
@@ -65,7 +65,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		super.readFromNBT(nbt);
 		// Load in network UUID, so clients can hook things back up to fake network devices
 		if (nbt.hasUniqueId(NBT_NETWORK_COMP_UUID)) {
@@ -313,8 +313,8 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		}
 
 		@Override
-		public NBTTagCompound toNBT() {
-			NBTTagCompound tag = new NBTTagCompound();
+		public CompoundNBT toNBT() {
+			CompoundNBT tag = new CompoundNBT();
 			
 			tag.setUniqueId(NBT_UUID, componentID);
 			tag.setLong(NBT_POS, this.pos.toLong());
@@ -325,7 +325,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 			return tag;
 		}
 		
-		protected static LogisticsTileEntityComponent loadFromNBT(NBTTagCompound nbt, LogisticsNetwork network) {
+		protected static LogisticsTileEntityComponent loadFromNBT(CompoundNBT nbt, LogisticsNetwork network) {
 			BlockPos pos = BlockPos.fromLong(nbt.getLong(NBT_POS));
 			World world = NostrumFairies.getWorld(nbt.getInteger(NBT_DIM));
 			UUID compID = nbt.getUniqueId(NBT_UUID);
@@ -352,7 +352,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		
 		public static class ComponentFactory implements ILogisticsComponentFactory<LogisticsTileEntityComponent> {
 			@Override
-			public LogisticsTileEntityComponent construct(NBTTagCompound nbt, LogisticsNetwork network) {
+			public LogisticsTileEntityComponent construct(CompoundNBT nbt, LogisticsNetwork network) {
 				return loadFromNBT(nbt, network);
 			}
 		}

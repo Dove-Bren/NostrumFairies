@@ -14,7 +14,7 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 
@@ -71,7 +71,7 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 		super.render(te, x, y, z, partialTicks, destroyStage, alphaIn);
 		
 		Minecraft mc = Minecraft.getMinecraft();
-		EntityPlayer player = mc.player;
+		PlayerEntity player = mc.player;
 		
 		// TODO make a capability and see if they can see logistics stuff / its turned on
 		if (player != null && player.isSpectator() || player.isCreative()) { // REPLACE ME

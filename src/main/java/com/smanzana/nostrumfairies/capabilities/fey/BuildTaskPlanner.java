@@ -16,7 +16,7 @@ import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
@@ -99,7 +99,7 @@ public class BuildTaskPlanner {
 		}
 		
 		work.remove(pos);
-		IBlockState state = TemplateBlock.GetTemplatedState(world, pos);
+		BlockState state = TemplateBlock.GetTemplatedState(world, pos);
 		world.setBlockState(pos, state);
 		worker.removeItem(worker.getCarriedItems().get(0));
 	}
@@ -120,7 +120,7 @@ public class BuildTaskPlanner {
 				continue;
 			}
 			
-			IBlockState state = world.getBlockState(pos);
+			BlockState state = world.getBlockState(pos);
 			if (state == null || !(state.getBlock() instanceof TemplateBlock)) {
 				if (worker != null && !worker.isDead) {
 					worker.cancelBuildTask();
@@ -130,7 +130,7 @@ public class BuildTaskPlanner {
 				continue;
 			}
 			
-			IBlockState template = TemplateBlock.GetTemplatedState(world, pos);
+			BlockState template = TemplateBlock.GetTemplatedState(world, pos);
 			if (template == null) {
 				if (worker != null && !worker.isDead) {
 					worker.cancelBuildTask();

@@ -12,13 +12,13 @@ import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint;
 
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -62,8 +62,8 @@ public class TemplateScroll extends Item implements ILoreTagged {
 			return null;
 		}
 		
-		NBTTagCompound nbt = stack.getTagCompound();
-		NBTTagCompound blueprintTag = nbt.getCompoundTag(NBT_TEMPLATE);
+		CompoundNBT nbt = stack.getTagCompound();
+		CompoundNBT blueprintTag = nbt.getCompoundTag(NBT_TEMPLATE);
 		return TemplateBlueprint.fromNBT(blueprintTag);
 	}
 	
@@ -72,7 +72,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 		return Create(blueprint);
 	}
 	
-	public static ItemStack Capture(World world, BlockPos pos1, BlockPos pos2, BlockPos origin, EnumFacing facing) {
+	public static ItemStack Capture(World world, BlockPos pos1, BlockPos pos2, BlockPos origin, Direction facing) {
 		RoomBlueprint blueprint = new RoomBlueprint(world, pos1, pos2, false, origin, facing);
 		return Create(blueprint);
 	}
@@ -92,14 +92,14 @@ public class TemplateScroll extends Item implements ILoreTagged {
 		SetTemplate(stack, blueprint.toNBT());
 	}
 	
-	protected static void SetTemplate(ItemStack stack, NBTTagCompound blueprintTag) {
+	protected static void SetTemplate(ItemStack stack, CompoundNBT blueprintTag) {
 		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateScroll)) {
 			return;
 		}
 		
-		NBTTagCompound nbt = stack.getTagCompound();
+		CompoundNBT nbt = stack.getTagCompound();
 		if (nbt == null) {
-			nbt = new NBTTagCompound();
+			nbt = new CompoundNBT();
 		}
 		
 		nbt.setTag(NBT_TEMPLATE, blueprintTag);
@@ -133,12 +133,12 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, EnumHand hand, Direction facing, float hitX, float hitY, float hitZ) {
 		return EnumActionResult.PASS;
 	}
 	
 	@Override
-	public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer playerIn, EntityLivingBase target, EnumHand hand) {
+	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, EnumHand hand) {
 		return super.itemInteractionForEntity(stack, playerIn, target, hand);
 	}
 	

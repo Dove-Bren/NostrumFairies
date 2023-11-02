@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -42,18 +42,18 @@ public class LogisticsRegistry extends WorldSavedData {
 	}
 
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		NBTTagList list = nbt.getTagList(NBT_NETWORKS, NBT.TAG_COMPOUND);
 		for (int i = list.tagCount() - 1; i >= 0; i--) {
-			NBTTagCompound compound = list.getCompoundTagAt(i);
+			CompoundNBT compound = list.getCompoundTagAt(i);
 			this.networks.add(LogisticsNetwork.fromNBT(compound));
 		}
 	}
 
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+	public CompoundNBT writeToNBT(CompoundNBT compound) {
 		if (compound == null) {
-			compound = new NBTTagCompound();
+			compound = new CompoundNBT();
 		}
 		
 		if (!this.networks.isEmpty()) {
@@ -165,7 +165,7 @@ public class LogisticsRegistry extends WorldSavedData {
 		firstNetwork.addComponent(component);
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public void injectNetwork(LogisticsNetwork network) {
 		LogisticsNetwork existing = this.findNetwork(network.getUUID());
 		if (existing != null) {
@@ -176,7 +176,7 @@ public class LogisticsRegistry extends WorldSavedData {
 		this.networks.add(network);
 	}
 
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public void clear() {
 		for (LogisticsNetwork network : networks) {
 			network.dissolveNetwork();

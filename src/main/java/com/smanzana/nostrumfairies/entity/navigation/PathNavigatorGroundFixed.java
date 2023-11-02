@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.entity.navigation;
 
 import java.lang.reflect.Field;
 
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.math.Vec3d;
@@ -11,7 +11,7 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class PathNavigatorGroundFixed extends PathNavigateGround {
 
-	public PathNavigatorGroundFixed(EntityLiving entitylivingIn, World worldIn) {
+	public PathNavigatorGroundFixed(MobEntity entitylivingIn, World worldIn) {
 		super(entitylivingIn, worldIn);
 	}
 	

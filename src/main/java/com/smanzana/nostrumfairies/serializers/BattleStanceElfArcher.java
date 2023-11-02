@@ -1,16 +1,14 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import java.io.IOException;
-
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
+import net.minecraft.network.datasync.IDataSerializer;
 
 public enum BattleStanceElfArcher {
 	RANGED,
 	MELEE;
 	
-	public final static class BattleStanceSerializer implements DataSerializer<BattleStanceElfArcher> {
+	public final static class BattleStanceSerializer implements IDataSerializer<BattleStanceElfArcher> {
 		
 		private BattleStanceSerializer() {
 			;
@@ -22,7 +20,7 @@ public enum BattleStanceElfArcher {
 		}
 
 		@Override
-		public BattleStanceElfArcher read(PacketBuffer buf) throws IOException {
+		public BattleStanceElfArcher read(PacketBuffer buf) {
 			return buf.readEnumValue(BattleStanceElfArcher.class);
 		}
 

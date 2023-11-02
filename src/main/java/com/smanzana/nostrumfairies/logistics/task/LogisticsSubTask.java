@@ -1,7 +1,7 @@
 package com.smanzana.nostrumfairies.logistics.task;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 
 public final class LogisticsSubTask {
@@ -35,7 +35,7 @@ public final class LogisticsSubTask {
 		return new LogisticsSubTask(Type.BREAK, pos, null);
 	}
 	
-	public static LogisticsSubTask Attack(EntityLivingBase entity) {
+	public static LogisticsSubTask Attack(LivingEntity entity) {
 		return new LogisticsSubTask(Type.ATTACK, null, entity);
 	}
 	

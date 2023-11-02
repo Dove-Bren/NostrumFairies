@@ -23,9 +23,9 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
 import net.minecraft.block.SoundType;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.block.state.BlockState;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
@@ -50,9 +50,9 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	private BlockPos block;
 	private BlockPos placeAt;
 	private @Nonnull ItemStack item = ItemStack.EMPTY; // Item to pickup
-	private IBlockState state; // blockstate to put down
+	private BlockState state; // blockstate to put down
 	private @Nullable ILogisticsComponent component;
-	private @Nullable EntityLivingBase entity;
+	private @Nullable LivingEntity entity;
 	
 	private IItemCarrierFey fairy;
 	protected Phase phase;
@@ -67,12 +67,12 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	private @Nullable RequestedItemRecord requestRecord;
 	private @Nullable UUID networkCacheKey;
 	private boolean networkCacheResult;
-	private @Nullable EntityLivingBase pickupEntity;
+	private @Nullable LivingEntity pickupEntity;
 	
 	protected int animCount = 0;
 	
-	protected LogisticsTaskPlaceBlock(@Nullable ILogisticsComponent owningComponent, @Nullable EntityLivingBase entity,
-			String displayName, @Nonnull ItemStack item, IBlockState state, World world, BlockPos pos, BlockPos placeAt) {
+	protected LogisticsTaskPlaceBlock(@Nullable ILogisticsComponent owningComponent, @Nullable LivingEntity entity,
+			String displayName, @Nonnull ItemStack item, BlockState state, World world, BlockPos pos, BlockPos placeAt) {
 		Validate.notNull(item);
 		this.displayName = displayName;
 		this.block = pos;
@@ -86,22 +86,22 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	}
 
 	public LogisticsTaskPlaceBlock(ILogisticsComponent owningComponent, String displayName,
-			ItemStack item, IBlockState state,World world, BlockPos pos) {
+			ItemStack item, BlockState state,World world, BlockPos pos) {
 		this(owningComponent, displayName, item, state, world, pos, pos);
 	}
 	
 	public LogisticsTaskPlaceBlock(ILogisticsComponent owningComponent, String displayName,
-			ItemStack item, IBlockState state, World world, BlockPos pos, BlockPos placeAt) {
+			ItemStack item, BlockState state, World world, BlockPos pos, BlockPos placeAt) {
 		this(owningComponent, null, displayName, item, state, world, pos, placeAt);
 	}
 	
-	public LogisticsTaskPlaceBlock(EntityLivingBase entity, String displayName,
-			ItemStack item, IBlockState state, World world, BlockPos pos) {
+	public LogisticsTaskPlaceBlock(LivingEntity entity, String displayName,
+			ItemStack item, BlockState state, World world, BlockPos pos) {
 		this(entity, displayName, item, state, world, pos, pos);
 	}
 	
-	public LogisticsTaskPlaceBlock(EntityLivingBase entity, String displayName,
-			ItemStack item, IBlockState state, World world, BlockPos pos, BlockPos placeAt) {
+	public LogisticsTaskPlaceBlock(LivingEntity entity, String displayName,
+			ItemStack item, BlockState state, World world, BlockPos pos, BlockPos placeAt) {
 		this(null, entity, displayName, item, state, world, pos, placeAt);
 	}
 	
@@ -214,7 +214,7 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 		return component;
 	}
 	
-	public @Nullable EntityLivingBase getSourceEntity() {
+	public @Nullable LivingEntity getSourceEntity() {
 		return entity;
 	}
 
@@ -261,8 +261,8 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 			if (network != null) {
 				// Entity tasks can pull from the entity's inventory
 				if (entity != null) {
-					if (entity instanceof EntityPlayer) {
-						EntityPlayer player = (EntityPlayer) entity;
+					if (entity instanceof PlayerEntity) {
+						PlayerEntity player = (PlayerEntity) entity;
 						if (player.inventory.hasItemStack(item)) {
 							pickupTask = LogisticsSubTask.Move(player);
 						}

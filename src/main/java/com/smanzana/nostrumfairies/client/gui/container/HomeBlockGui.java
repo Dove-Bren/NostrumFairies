@@ -20,19 +20,19 @@ import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity.FeyAwayRecord;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity.HomeBlockSlotInventory;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -133,12 +133,12 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
+		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player) {
 			return super.slotClick(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
-		public ItemStack transferStackInSlot(EntityPlayer playerIn, int fromSlot) {
+		public ItemStack transferStackInSlot(PlayerEntity playerIn, int fromSlot) {
 			return super.transferStackInSlot(playerIn, fromSlot);
 //			ItemStack prev = ItemStack.EMPTY;	
 //			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
@@ -170,7 +170,7 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		public boolean canInteractWith(EntityPlayer playerIn) {
+		public boolean canInteractWith(PlayerEntity playerIn) {
 			return true;
 		}
 		
@@ -181,7 +181,7 @@ public class HomeBlockGui {
 		
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public static class HomeBlockGuiContainer extends AutoGuiContainer {
 
 		private HomeBlockContainer container;
@@ -621,13 +621,13 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		@SideOnly(Side.CLIENT)
+		@OnlyIn(Dist.CLIENT)
 		public boolean isEnabled() {
 			return isActive();
 		}
 		
 		@Override
-		public boolean canTakeStack(EntityPlayer playerIn) {
+		public boolean canTakeStack(PlayerEntity playerIn) {
 			return false;
 		}
 		
@@ -652,7 +652,7 @@ public class HomeBlockGui {
 					BlockPos spot = null;
 					BlockPos center = te.getPos();
 					for (BlockPos pos : new BlockPos[] {center.north(), center.south(), center.west(), center.east()}) {
-						IBlockState state = world.getBlockState(pos);
+						BlockState state = world.getBlockState(pos);
 						if (!state.getMaterial().blocksMovement()) {
 							spot = pos;
 							break;
@@ -660,7 +660,7 @@ public class HomeBlockGui {
 					}
 					
 					if (spot == null) {
-						spot = center.offset(EnumFacing.UP, 6);
+						spot = center.offset(Direction.UP, 6);
 					}
 					spawned = FeySoulStone.spawnStoredEntity(stack, te.getWorld(), spot.getX() + .5, spot.getY(), spot.getZ() + .5);
 					stack = FeySoulStone.clearEntity(stack);
@@ -714,13 +714,13 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		@SideOnly(Side.CLIENT)
+		@OnlyIn(Dist.CLIENT)
 		public boolean isEnabled() {
 			return isActive();
 		}
 		
 		@Override
-		public boolean canTakeStack(EntityPlayer playerIn) {
+		public boolean canTakeStack(PlayerEntity playerIn) {
 			return true;
 		}
 		

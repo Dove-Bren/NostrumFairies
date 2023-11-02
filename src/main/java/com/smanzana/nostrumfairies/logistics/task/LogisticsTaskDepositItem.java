@@ -22,8 +22,8 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.Inventories;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
@@ -42,7 +42,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 	private String displayName;
 	private @Nonnull ItemStack item = ItemStack.EMPTY; // stacksize used for quantity and merge status
 	private @Nullable ILogisticsComponent component;
-	private @Nullable EntityLivingBase entity;
+	private @Nullable LivingEntity entity;
 	
 	private @Nullable List<ILogisticsTask> mergedTasks;
 	private LogisticsTaskDepositItem compositeTask;
@@ -77,7 +77,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 		this.component = owningComponent;
 	}
 	
-	public LogisticsTaskDepositItem(EntityLivingBase requester, String displayName, ItemStack item) {
+	public LogisticsTaskDepositItem(LivingEntity requester, String displayName, ItemStack item) {
 		this(displayName, item);
 		this.entity = requester;
 	}
@@ -233,7 +233,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 		return component;
 	}
 	
-	public @Nullable EntityLivingBase getSourceEntity() {
+	public @Nullable LivingEntity getSourceEntity() {
 		return entity;
 	}
 
@@ -383,8 +383,8 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 				component.takeItem(stack);
 			} else {
 				// take items from the entity
-				if (entity instanceof EntityPlayer) {
-					EntityPlayer player = (EntityPlayer) entity;
+				if (entity instanceof PlayerEntity) {
+					PlayerEntity player = (PlayerEntity) entity;
 					Inventories.remove(player.inventory, stack);
 				} else if (entity instanceof IItemCarrierFey) {
 					IItemCarrierFey carrier = (IItemCarrierFey) entity;

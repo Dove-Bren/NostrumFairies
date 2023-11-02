@@ -24,15 +24,15 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.IDataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.DamageSource;
@@ -47,7 +47,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
 	protected static final DataParameter<ArmPoseGnome> POSE  = EntityDataManager.<ArmPoseGnome>createKey(EntityGnome.class, ArmPoseGnome.instance());
-	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityGnome.class, DataSerializers.ITEM_STACK);
+	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityGnome.class, IDataSerializers.ITEM_STACK);
 
 	private static final String NBT_ITEM = "helditem";
 	
@@ -495,7 +495,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+							if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
 								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
@@ -533,7 +533,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void writeEntityToNBT(NBTTagCompound compound) {
+	public void writeEntityToNBT(CompoundNBT compound) {
 		super.writeEntityToNBT(compound);
 		
 		ItemStack held = getCarriedItem();
@@ -543,7 +543,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void readEntityFromNBT(NBTTagCompound compound) {
+	public void readEntityFromNBT(CompoundNBT compound) {
 		super.readEntityFromNBT(compound);
 		
 		if (compound.hasKey(NBT_ITEM, NBT.TAG_COMPOUND)) {
@@ -649,7 +649,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+	protected boolean shouldJoin(BlockPos pos, BlockState state, HomeBlockTileEntity te) {
 		return rand.nextBoolean() && rand.nextBoolean();
 	}
 

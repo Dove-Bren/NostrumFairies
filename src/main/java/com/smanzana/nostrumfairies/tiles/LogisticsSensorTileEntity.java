@@ -4,8 +4,8 @@ import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.block.state.BlockState;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -26,10 +26,10 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		nbt = super.writeToNBT(nbt);
 		
-		NBTTagCompound tag = new NBTTagCompound();
+		CompoundNBT tag = new CompoundNBT();
 		logicComp.writeToNBT(tag);
 		nbt.setTag(NBT_LOGIC_COMP, tag);
 		
@@ -37,10 +37,10 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		super.readFromNBT(nbt);
 		
-		NBTTagCompound sub = nbt.getCompoundTag(NBT_LOGIC_COMP);
+		CompoundNBT sub = nbt.getCompoundTag(NBT_LOGIC_COMP);
 		if (sub != null) {
 			logicComp.readFromNBT(sub);
 		}
@@ -115,7 +115,7 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
+	public boolean shouldRefresh(World world, BlockPos pos, BlockState oldState, BlockState newState) {
 		return !(oldState.getBlock().equals(newState.getBlock()));
 	}
 

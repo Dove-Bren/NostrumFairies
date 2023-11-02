@@ -11,10 +11,10 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
@@ -140,7 +140,7 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 			}
 		}
 
-		IBlockState state = world.getBlockState(pos);
+		BlockState state = world.getBlockState(pos);
 		world.notifyBlockUpdate(pos, state, state, 2);
 		
 		this.markDirty();
@@ -150,7 +150,7 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 		requests.add(stack);
 		requester.updateRequestedItems(getItemRequests());
 
-		IBlockState state = world.getBlockState(pos);
+		BlockState state = world.getBlockState(pos);
 		world.notifyBlockUpdate(pos, state, state, 2);
 		
 		this.markDirty();
@@ -164,7 +164,7 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 				it.remove();
 				requester.updateRequestedItems(getItemRequests());
 
-				IBlockState state = world.getBlockState(pos);
+				BlockState state = world.getBlockState(pos);
 				world.notifyBlockUpdate(pos, state, state, 2);
 				
 				this.markDirty();
@@ -174,7 +174,7 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		super.writeToNBT(nbt);
 		
 		NBTTagList list = new NBTTagList();
@@ -187,14 +187,14 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		super.readFromNBT(nbt);
 		
 		requests.clear();
 		NBTTagList list = nbt.getTagList(NBT_REQUESTS, NBT.TAG_COMPOUND);
 		if (list != null && list.tagCount() > 0) {
 			for (int i = 0; i < list.tagCount(); i++) {
-				NBTTagCompound tag = list.getCompoundTagAt(i);
+				CompoundNBT tag = list.getCompoundTagAt(i);
 				ItemStack stack = new ItemStack(tag);
 				if (!stack.isEmpty()) {
 					requests.add(stack);

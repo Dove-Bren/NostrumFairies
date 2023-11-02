@@ -18,7 +18,7 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 
 /**
@@ -31,7 +31,7 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 	protected List<T> currentTasks;
 	protected @Nullable LogisticsNetwork network;
 	private @Nullable ILogisticsComponent component;
-	private @Nullable EntityLivingBase entity;
+	private @Nullable LivingEntity entity;
 	private @Nullable ILogisticsTaskListener chainListener;
 	
 	private LogisticsItemTaskRequester(LogisticsNetwork network) {
@@ -44,7 +44,7 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 		this.component = component;
 	}
 	
-	public LogisticsItemTaskRequester(LogisticsNetwork network, EntityLivingBase entityRequester) {
+	public LogisticsItemTaskRequester(LogisticsNetwork network, LivingEntity entityRequester) {
 		this(network);
 		this.entity = entityRequester;
 	}
@@ -53,7 +53,7 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 		return component;
 	}
 	
-	public @Nullable EntityLivingBase getEntityRequester() {
+	public @Nullable LivingEntity getEntityRequester() {
 		return entity;
 	}
 	
@@ -115,7 +115,7 @@ public abstract class LogisticsItemTaskRequester<T extends ILogisticsItemTask> i
 	
 	protected abstract T makeTask(ILogisticsComponent component, ItemDeepStack item);
 	
-	protected abstract T makeTask(EntityLivingBase entity, ItemDeepStack item);
+	protected abstract T makeTask(LivingEntity entity, ItemDeepStack item);
 	
 	protected void registerTask(T task) {
 		network.getTaskRegistry().register(task, this);

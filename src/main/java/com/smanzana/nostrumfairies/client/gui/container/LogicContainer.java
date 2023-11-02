@@ -22,7 +22,7 @@ public abstract class LogicContainer extends AutoContainer {
 		return super.addSlotToContainer(slotIn);
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public static abstract class LogicGuiContainer extends AutoGuiContainer {
 
 		public LogicGuiContainer(Container inventorySlotsIn) {

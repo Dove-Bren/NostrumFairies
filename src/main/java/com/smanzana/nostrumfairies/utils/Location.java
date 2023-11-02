@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.utils;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -39,17 +39,17 @@ public class Location {
 	private static final String NBT_DIM = "dim";
 	private static final String NBT_POS = "pos";
 	
-	public NBTTagCompound toNBT() {
-		return toNBT(new NBTTagCompound());
+	public CompoundNBT toNBT() {
+		return toNBT(new CompoundNBT());
 	}
 	
-	public NBTTagCompound toNBT(NBTTagCompound tag) {
+	public CompoundNBT toNBT(CompoundNBT tag) {
 		tag.setInteger(NBT_DIM, dimension);
 		tag.setLong(NBT_POS, pos.toLong());
 		return tag;
 	}
 	
-	public static Location FromNBT(NBTTagCompound tag) {
+	public static Location FromNBT(CompoundNBT tag) {
 		return new Location(
 				BlockPos.fromLong(tag.getLong(NBT_POS)),
 				tag.getInteger(NBT_DIM)

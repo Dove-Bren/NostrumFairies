@@ -8,7 +8,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 
 /**
  * Wraps and manages making requests to have items picked up and put into the network
@@ -21,7 +21,7 @@ public class LogisticsItemDepositRequester extends LogisticsItemTaskRequester<Lo
 		super(network, component);
 	}
 	
-	public LogisticsItemDepositRequester(LogisticsNetwork network, EntityLivingBase entityRequester) {
+	public LogisticsItemDepositRequester(LogisticsNetwork network, LivingEntity entityRequester) {
 		super(network, entityRequester);
 	} 
 
@@ -47,7 +47,7 @@ public class LogisticsItemDepositRequester extends LogisticsItemTaskRequester<Lo
 	}
 
 	@Override
-	protected LogisticsTaskDepositItem makeTask(EntityLivingBase entity, ItemDeepStack item) {
+	protected LogisticsTaskDepositItem makeTask(LivingEntity entity, ItemDeepStack item) {
 		return new LogisticsTaskDepositItem(entity, "Item Deposit Request", item.splitStack(1));
 	}
 	

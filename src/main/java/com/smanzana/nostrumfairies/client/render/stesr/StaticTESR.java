@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render.stesr;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -32,6 +32,6 @@ public interface StaticTESR<T extends TileEntity> {
 	 * @param state
 	 * @param world
 	 */
-	public void render(T tileEntity, double x, double y, double z, IBlockState state, World world, BufferBuilder buffer);
+	public void render(T tileEntity, double x, double y, double z, BlockState state, World world, BufferBuilder buffer);
 	
 }

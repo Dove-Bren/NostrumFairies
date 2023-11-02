@@ -8,7 +8,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -39,7 +39,7 @@ public class LogisticsUpdateResponse implements IMessage {
 				// Inject any network returned to us
 				NBTTagList list = message.tag.getTagList(NBT_LIST, NBT.TAG_COMPOUND);
 				for (int i = list.tagCount() - 1; i >= 0; i--) {
-					NBTTagCompound nbt = list.getCompoundTagAt(i);
+					CompoundNBT nbt = list.getCompoundTagAt(i);
 					LogisticsNetwork network = FakeLogisticsNetwork.fromNBT(nbt);
 					
 					NostrumFairies.instance.getLogisticsRegistry().injectNetwork(network);
@@ -53,10 +53,10 @@ public class LogisticsUpdateResponse implements IMessage {
 
 	private static final String NBT_LIST = "list";
 	
-	protected NBTTagCompound tag;
+	protected CompoundNBT tag;
 	
 	public LogisticsUpdateResponse() {
-		tag = new NBTTagCompound();
+		tag = new CompoundNBT();
 	}
 	
 	public LogisticsUpdateResponse(Collection<LogisticsNetwork> networks) {

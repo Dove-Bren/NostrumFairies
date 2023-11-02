@@ -13,7 +13,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.IncomingItemRecord;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -141,7 +141,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 		return owningComponent;
 	}
 	
-	public @Nullable EntityLivingBase getSourceEntity() {
+	public @Nullable LivingEntity getSourceEntity() {
 		return null;
 	}
 

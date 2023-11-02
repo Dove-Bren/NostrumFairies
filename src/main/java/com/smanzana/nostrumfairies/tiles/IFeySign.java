@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.tiles;
 import javax.annotation.Nonnull;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 
 public interface IFeySign {
@@ -15,6 +15,6 @@ public interface IFeySign {
 
 	public @Nonnull ItemStack getSignIcon(IFeySign sign);
 	
-	public EnumFacing getSignFacing(IFeySign sign);
+	public Direction getSignFacing(IFeySign sign);
 	
 }

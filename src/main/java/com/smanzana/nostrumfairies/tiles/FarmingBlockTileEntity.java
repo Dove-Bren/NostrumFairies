@@ -23,12 +23,12 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -41,7 +41,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	
 	private int tickCount;
 	private final Map<BlockPos, ILogisticsTask> taskMap;
-	private final Map<BlockPos, IBlockState> seenStates;
+	private final Map<BlockPos, BlockState> seenStates;
 	private double radius;
 	
 	public FarmingBlockTileEntity() {
@@ -70,7 +70,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 		return false;
 	}
 	
-	private void rememberState(BlockPos pos, @Nullable IBlockState state) {
+	private void rememberState(BlockPos pos, @Nullable BlockState state) {
 		if (state == null) {
 			seenStates.remove(pos);
 		} else {
@@ -197,7 +197,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 		}
 	}
 	
-	protected static @Nonnull ItemStack ResolveSeed(@Nullable IBlockState state) {
+	protected static @Nonnull ItemStack ResolveSeed(@Nullable BlockState state) {
 		ItemStack seeds = ItemStack.EMPTY;
 		if (state != null) {
 			seeds = SeedMap.get(Block.getStateId(state));
@@ -227,7 +227,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	
 	// TODO make configurable!
 	public @Nonnull ItemStack getSeed(World world, BlockPos pos) {
-		@Nullable IBlockState state = seenStates.get(pos);
+		@Nullable BlockState state = seenStates.get(pos);
 		
 		// Try and figure out what the seed would be
 		@Nonnull ItemStack seeds = ResolveSeed(state);
@@ -288,13 +288,13 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	}
 	
 	@Override
-	public EnumFacing getSignFacing(IFeySign sign) {
-		IBlockState state = world.getBlockState(pos);
+	public Direction getSignFacing(IFeySign sign) {
+		BlockState state = world.getBlockState(pos);
 		return state.getValue(FarmingBlock.FACING);
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound compound) {
+	public void readFromNBT(CompoundNBT compound) {
 		super.readFromNBT(compound);
 		
 		if (this.world != null && this.world.isRemote) {

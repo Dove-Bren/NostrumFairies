@@ -29,26 +29,26 @@ import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.EntityGolem;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Items;
 import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.IDataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.network.play.server.SPacketAnimation;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -63,12 +63,12 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, ILoreTagged {
 
-	protected static final DataParameter<Optional<BlockPos>> HOME  = EntityDataManager.<Optional<BlockPos>>createKey(EntityFeyBase.class, DataSerializers.OPTIONAL_BLOCK_POS);
-	protected static final DataParameter<String> NAME = EntityDataManager.<String>createKey(EntityFeyBase.class, DataSerializers.STRING);
+	protected static final DataParameter<Optional<BlockPos>> HOME  = EntityDataManager.<Optional<BlockPos>>createKey(EntityFeyBase.class, IDataSerializers.OPTIONAL_BLOCK_POS);
+	protected static final DataParameter<String> NAME = EntityDataManager.<String>createKey(EntityFeyBase.class, IDataSerializers.STRING);
 	protected static final DataParameter<FairyGeneralStatus> STATUS  = EntityDataManager.<FairyGeneralStatus>createKey(EntityFeyBase.class, FairyGeneralStatus.instance());
-	protected static final DataParameter<String> ACTIVITY = EntityDataManager.<String>createKey(EntityFeyBase.class, DataSerializers.STRING);
-	protected static final DataParameter<Float> HAPPINESS = EntityDataManager.<Float>createKey(EntityFeyBase.class, DataSerializers.FLOAT);
-	protected static final DataParameter<Boolean> CURSED = EntityDataManager.<Boolean>createKey(EntityFeyBase.class, DataSerializers.BOOLEAN);
+	protected static final DataParameter<String> ACTIVITY = EntityDataManager.<String>createKey(EntityFeyBase.class, IDataSerializers.STRING);
+	protected static final DataParameter<Float> HAPPINESS = EntityDataManager.<Float>createKey(EntityFeyBase.class, IDataSerializers.FLOAT);
+	protected static final DataParameter<Boolean> CURSED = EntityDataManager.<Boolean>createKey(EntityFeyBase.class, IDataSerializers.BOOLEAN);
 	
 	/**
 	 * Maximum amount of distance (squared) a fairy will freely wander away from its home.
@@ -202,7 +202,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 			return null;
 		}
 		
-		IBlockState state = world.getBlockState(pos);
+		BlockState state = world.getBlockState(pos);
 		if (state == null || !(state.getBlock() instanceof FeyHomeBlock)) {
 			return null;
 		}
@@ -433,7 +433,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	 * @param te
 	 * @return
 	 */
-	protected abstract boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te);
+	protected abstract boolean shouldJoin(BlockPos pos, BlockState state, HomeBlockTileEntity te);
 	
 	/**
 	 * Called every tick that a task is active.
@@ -449,7 +449,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	protected abstract void onRevoltTick();
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	protected abstract void onCientTick();
 	
 	/**
@@ -683,7 +683,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 						continue;
 					}
 					
-					IBlockState state = world.getBlockState(cursor);
+					BlockState state = world.getBlockState(cursor);
 					if (state.getBlock() instanceof FeyHomeBlock) {
 						FeyHomeBlock block = (FeyHomeBlock) state.getBlock();
 						if (!block.isCenter(state)) {
@@ -906,12 +906,12 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	private static final String NBT_CURSED = "cursed";
 	
 	@Override
-	public boolean writeToNBTOptional(NBTTagCompound compound) {
+	public boolean writeToNBTOptional(CompoundNBT compound) {
 		return super.writeToNBTOptional(compound);
 	}
 	
 	@Override
-	public void writeEntityToNBT(NBTTagCompound compound) {
+	public void writeEntityToNBT(CompoundNBT compound) {
 		super.writeEntityToNBT(compound);
 		
 		BlockPos home = this.getHome();
@@ -927,7 +927,7 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	}
 	
 	@Override
-	public void readEntityFromNBT(NBTTagCompound compound) {
+	public void readEntityFromNBT(CompoundNBT compound) {
 		super.readEntityFromNBT(compound);
 		
 		boolean hasHome = false;
@@ -988,21 +988,21 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	@Override
 	public boolean attackEntityAsMob(Entity entityIn) {
-		// Copied from EntityMob
+		// Copied from MonsterEntity
 		
 		float f = (float)this.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getAttributeValue();
 		int i = 0;
 
-		if (entityIn instanceof EntityLivingBase) {
-			f += EnchantmentHelper.getModifierForCreature(this.getHeldItemMainhand(), ((EntityLivingBase)entityIn).getCreatureAttribute());
+		if (entityIn instanceof LivingEntity) {
+			f += EnchantmentHelper.getModifierForCreature(this.getHeldItemMainhand(), ((LivingEntity)entityIn).getCreatureAttribute());
 			i += EnchantmentHelper.getKnockbackModifier(this);
 		}
 
 		boolean flag = entityIn.attackEntityFrom(DamageSource.causeMobDamage(this), f);
 
 		if (flag) {
-			if (i > 0 && entityIn instanceof EntityLivingBase) {
-				((EntityLivingBase)entityIn).knockBack(this, (float)i * 0.5F, (double)MathHelper.sin(this.rotationYaw * 0.017453292F), (double)(-MathHelper.cos(this.rotationYaw * 0.017453292F)));
+			if (i > 0 && entityIn instanceof LivingEntity) {
+				((LivingEntity)entityIn).knockBack(this, (float)i * 0.5F, (double)MathHelper.sin(this.rotationYaw * 0.017453292F), (double)(-MathHelper.cos(this.rotationYaw * 0.017453292F)));
 				this.motionX *= 0.6D;
 				this.motionZ *= 0.6D;
 			}
@@ -1013,8 +1013,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				entityIn.setFire(j * 4);
 			}
 
-			if (entityIn instanceof EntityPlayer) {
-				EntityPlayer entityplayer = (EntityPlayer)entityIn;
+			if (entityIn instanceof PlayerEntity) {
+				PlayerEntity entityplayer = (PlayerEntity)entityIn;
 				ItemStack itemstack = this.getHeldItemMainhand();
 				ItemStack itemstack1 = entityplayer.isHandActive() ? entityplayer.getActiveItemStack() : ItemStack.EMPTY;
 
@@ -1038,15 +1038,15 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 	
 	public abstract FeyHomeBlock.ResidentType getHomeType();
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public abstract String getSpecializationName();
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	protected String getMoodPrefix() {
 		return "fey"; // could be getUnlocPrefix
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public  String getMoodSummary() {
 		final float happiness = this.getHappiness();
 		final String prefix = this.getMoodPrefix();
@@ -1078,46 +1078,46 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		if (!world.isAirBlock(targetPos)) {
 			do {
 				if (world.isAirBlock(targetPos.north())) {
-					if (world.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
+					if (world.isSideSolid(targetPos.north().down(), Direction.UP)) {
 						targetPos = targetPos.north();
 						break;
-					} else if (world.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
+					} else if (world.isSideSolid(targetPos.north().down().down(), Direction.UP)) {
 						targetPos = targetPos.north().down();
 						break;
 					}
 				}
 				if (world.isAirBlock(targetPos.south())) {
-					if (world.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
+					if (world.isSideSolid(targetPos.south().down(), Direction.UP)) {
 						targetPos = targetPos.south();
 						break;
-					} else if (world.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
+					} else if (world.isSideSolid(targetPos.south().down().down(), Direction.UP)) {
 						targetPos = targetPos.south().down();
 						break;
 					}
 				}
 				if (world.isAirBlock(targetPos.east())) {
-					if (world.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
+					if (world.isSideSolid(targetPos.east().down(), Direction.UP)) {
 						targetPos = targetPos.east();
 						break;
-					} else if (world.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
+					} else if (world.isSideSolid(targetPos.east().down().down(), Direction.UP)) {
 						targetPos = targetPos.east().down();
 						break;
 					}
 				}
 				if (world.isAirBlock(targetPos.west())) {
-					if (world.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
+					if (world.isSideSolid(targetPos.west().down(), Direction.UP)) {
 						targetPos = targetPos.west();
 						break;
-					} else if (world.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
+					} else if (world.isSideSolid(targetPos.west().down().down(), Direction.UP)) {
 						targetPos = targetPos.west().down();
 						break;
 					}
 				}
-				if (world.isAirBlock(targetPos.up()) && world.isSideSolid(targetPos, EnumFacing.UP)) {
+				if (world.isAirBlock(targetPos.up()) && world.isSideSolid(targetPos, Direction.UP)) {
 					targetPos = targetPos.up();
 					break;
 				}
-				if (world.isAirBlock(targetPos.down()) && world.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
+				if (world.isAirBlock(targetPos.down()) && world.isSideSolid(targetPos.down().down(), Direction.UP)) {
 					targetPos = targetPos.down();
 					break;
 				}
@@ -1233,11 +1233,11 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 		return FeyWander(fey, center, maxDist * .4, maxDist);
 	}
 	
-	protected static boolean FeyFollow(EntityFeyBase fey, EntityLivingBase target, double minDist, double maxDist) {
+	protected static boolean FeyFollow(EntityFeyBase fey, LivingEntity target, double minDist, double maxDist) {
 		return FeyWander(fey, target.getPosition(), minDist, maxDist);
 	}
 	
-	protected static boolean FeyFollow(EntityFeyBase fey, EntityLivingBase target, double maxDist) {
+	protected static boolean FeyFollow(EntityFeyBase fey, LivingEntity target, double maxDist) {
 		return FeyFollow(fey, target, maxDist * .4, maxDist);
 	}
 	
@@ -1246,18 +1246,18 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				new AxisAlignedBB(fey.posX - maxSightDist, fey.posY - maxSightDist, fey.posZ - maxSightDist, fey.posX + maxSightDist, fey.posY + maxSightDist, fey.posZ + maxSightDist),
 				filter);
 		
-		EntityLivingBase target = null;
+		LivingEntity target = null;
 		double minDist = 0;
 		if (ents != null && !ents.isEmpty()) {
 			// pick the closest
 			for (Entity ent : ents) {
-				if (!(ent instanceof EntityLivingBase)) {
+				if (!(ent instanceof LivingEntity)) {
 					continue;
 				}
 				
 				double dist = fey.getDistanceSq(ent);
 				if (target == null || dist < minDist) {
-					target = (EntityLivingBase) ent;
+					target = (LivingEntity) ent;
 					minDist = dist;
 				}
 			}
@@ -1305,8 +1305,8 @@ public abstract class EntityFeyBase extends EntityGolem implements IFeyWorker, I
 				return fey.getStatus() == FairyGeneralStatus.IDLE || fey.getStatus() == FairyGeneralStatus.WORKING;
 			}
 			
-			if (input instanceof EntityPlayer) {
-				return !((EntityPlayer) input).isSpectator();
+			if (input instanceof PlayerEntity) {
+				return !((PlayerEntity) input).isSpectator();
 			}
 			
 			return false;

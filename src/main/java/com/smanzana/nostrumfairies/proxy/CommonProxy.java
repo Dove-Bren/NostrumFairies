@@ -115,10 +115,10 @@ import com.smanzana.nostrummagica.rituals.requirements.RRequirementResearch;
 import com.smanzana.nostrummagica.spells.EMagicElement;
 
 import net.minecraft.block.Block;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.PotionTypes;
@@ -142,7 +142,7 @@ import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.registries.DataSerializerEntry;
+import net.minecraftforge.registries.IDataSerializerEntry;
 import net.minecraftforge.registries.IForgeRegistry;
 
 public class CommonProxy {
@@ -316,7 +316,7 @@ public class CommonProxy {
     	{
     		ItemBlock item = new ItemBlock(FeyBush.instance()) {
     			@Override
-				public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer playerIn, EntityLivingBase target, EnumHand hand) {
+				public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, EnumHand hand) {
 					return ((FeyBush) this.block).getEntityInteraction(stack, playerIn, target, hand);
 				}
     		};
@@ -1127,20 +1127,20 @@ public class CommonProxy {
     }
 
 	@SubscribeEvent
-    public void registerDataSerializers(RegistryEvent.Register<DataSerializerEntry> event) {
-    	final IForgeRegistry<DataSerializerEntry> registry = event.getRegistry();
+    public void registerIDataSerializers(RegistryEvent.Register<IDataSerializerEntry> event) {
+    	final IForgeRegistry<IDataSerializerEntry> registry = event.getRegistry();
     	
-    	registry.register(new DataSerializerEntry(FairyGeneralStatus.instance()).setRegistryName("nostrum.serial.fairy_status"));
-    	registry.register(new DataSerializerEntry(ArmPoseDwarf.instance()).setRegistryName("nostrum.serial.dwarf_arm"));
-    	registry.register(new DataSerializerEntry(ArmPoseElf.instance()).setRegistryName("nostrum.serial.elf_arm"));
-    	registry.register(new DataSerializerEntry(BattleStanceElfArcher.instance()).setRegistryName("nostrum.serial.elf_archer_stance"));
-    	registry.register(new DataSerializerEntry(BattleStanceShadowFey.instance()).setRegistryName("nostrum.serial.shadow_fey_stance"));
-    	registry.register(new DataSerializerEntry(ArmPoseGnome.instance()).setRegistryName("nostrum.serial.gnome_arm"));
-    	registry.register(new DataSerializerEntry(ItemArraySerializer.instance()).setRegistryName("nostrum.serial.itemarray"));
-    	registry.register(new DataSerializerEntry(FairyJob.instance()).setRegistryName("nostrum.serial.fairy_job"));
+    	registry.register(new IDataSerializerEntry(FairyGeneralStatus.instance()).setRegistryName("nostrum.serial.fairy_status"));
+    	registry.register(new IDataSerializerEntry(ArmPoseDwarf.instance()).setRegistryName("nostrum.serial.dwarf_arm"));
+    	registry.register(new IDataSerializerEntry(ArmPoseElf.instance()).setRegistryName("nostrum.serial.elf_arm"));
+    	registry.register(new IDataSerializerEntry(BattleStanceElfArcher.instance()).setRegistryName("nostrum.serial.elf_archer_stance"));
+    	registry.register(new IDataSerializerEntry(BattleStanceShadowFey.instance()).setRegistryName("nostrum.serial.shadow_fey_stance"));
+    	registry.register(new IDataSerializerEntry(ArmPoseGnome.instance()).setRegistryName("nostrum.serial.gnome_arm"));
+    	registry.register(new IDataSerializerEntry(ItemArraySerializer.instance()).setRegistryName("nostrum.serial.itemarray"));
+    	registry.register(new IDataSerializerEntry(FairyJob.instance()).setRegistryName("nostrum.serial.fairy_job"));
     }
 
-	public EntityPlayer getPlayer() {
+	public PlayerEntity getPlayer() {
 		return null; // Doesn't mean anything on the server
 	}
 	
@@ -1152,10 +1152,10 @@ public class CommonProxy {
 		; // Nothing on server
 	}
 	
-	public void pushCapabilityRefresh(EntityPlayer player) {
+	public void pushCapabilityRefresh(PlayerEntity player) {
 		INostrumFeyCapability feyAttr = NostrumFairies.getFeyWrapper(player);
 		if (feyAttr != null) {
-			NetworkHandler.getSyncChannel().sendTo(new CapabilitySyncMessage(feyAttr), (EntityPlayerMP) player);
+			NetworkHandler.getSyncChannel().sendTo(new CapabilitySyncMessage(feyAttr), (ServerPlayerEntity) player);
 		}
 	}
 }

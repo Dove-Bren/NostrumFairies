@@ -26,13 +26,13 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.NonNullList;
@@ -211,7 +211,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		InventoryCrafting inv = new InventoryCrafting(new Container() {
 
 			@Override
-			public boolean canInteractWith(EntityPlayer playerIn) {
+			public boolean canInteractWith(PlayerEntity playerIn) {
 				return true;
 			}
 			
@@ -361,7 +361,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		nbt = super.writeToNBT(nbt);
 		
 		// Save templates
@@ -372,16 +372,16 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 				continue;
 			}
 			
-			NBTTagCompound template = new NBTTagCompound();
+			CompoundNBT template = new CompoundNBT();
 			
 			template.setInteger(NBT_TEMPLATE_INDEX, i);
-			template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new NBTTagCompound()));
+			template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
 			
 			templates.appendTag(template);
 		}
 		nbt.setTag(NBT_TEMPLATES, templates);
 		
-		nbt.setTag(NBT_LOGIC_COMP, logicComp.writeToNBT(new NBTTagCompound()));
+		nbt.setTag(NBT_LOGIC_COMP, logicComp.writeToNBT(new CompoundNBT()));
 		
 		nbt.setFloat(NBT_BUILD_POINTS, buildPoints);
 		
@@ -389,13 +389,13 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		templates = NonNullList.withSize(TEMPLATE_SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
 		NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
 		for (int i = 0; i < list.tagCount(); i++) {
-			NBTTagCompound template = list.getCompoundTagAt(i);
+			CompoundNBT template = list.getCompoundTagAt(i);
 			int index = template.getInteger(NBT_TEMPLATE_INDEX);
 			
 			if (index < 0 || index > TEMPLATE_SLOTS) {
@@ -408,7 +408,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			templates.set(index, stack);
 		}
 		
-		NBTTagCompound tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
+		CompoundNBT tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
 		if (tag != null) {
 			this.logicComp.readFromNBT(tag);
 		}
@@ -686,7 +686,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		InventoryCrafting inv = new InventoryCrafting(new Container() {
 
 			@Override
-			public boolean canInteractWith(EntityPlayer playerIn) {
+			public boolean canInteractWith(PlayerEntity playerIn) {
 				return true;
 			}
 			

@@ -9,19 +9,19 @@ import com.smanzana.nostrumfairies.tiles.IFeySign;
 import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> extends TileEntityLogisticsRenderer<T> implements StaticTESR<T> {
 
 	public static <T extends LogisticsTileEntity & IFeySign> void init(Class<T> clazz, FeySignRenderer<T> renderer) {
@@ -48,11 +48,11 @@ public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> 
 		
 	}
 	
-	protected Vector3f getOffset(T te, EnumFacing facing) {
+	protected Vector3f getOffset(T te, Direction facing) {
 		return OFFSETS[facing.getHorizontalIndex()];
 	}
 	
-	protected Matrix4f getTransform(T te, EnumFacing facing) {
+	protected Matrix4f getTransform(T te, Direction facing) {
 		return TRANSFORMS[facing.getHorizontalIndex()];
 	}
 	
@@ -73,7 +73,7 @@ public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> 
 		mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
 		
 		final int color = 0xFFFFFFFF;
-		final EnumFacing facing = te.getSignFacing(te);
+		final Direction facing = te.getSignFacing(te);
 		final Vector3f offset = getOffset(te, facing);
 		final Matrix4f transform = getTransform(te, facing);
 		
@@ -81,7 +81,7 @@ public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> 
 	}
 
 	@Override
-	public void render(T tileEntity, double x, double y, double z, IBlockState state, World world,
+	public void render(T tileEntity, double x, double y, double z, BlockState state, World world,
 			BufferBuilder buffer) {
 		renderTileEntityFast(tileEntity, x, y, z, 0, 0, 0, buffer);
 	}

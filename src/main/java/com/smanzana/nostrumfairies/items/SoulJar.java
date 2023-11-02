@@ -15,14 +15,14 @@ import com.smanzana.nostrummagica.loretag.Lore;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.EntityTameable;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -71,7 +71,7 @@ public class SoulJar extends Item implements ILoreTagged {
 		return !stack.isEmpty() && filledFromMeta(stack.getMetadata());
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public String getModelName(ItemStack stack) {
 		return ID + (hasEntity(stack) ? "_filled" : "");
 	}
@@ -79,7 +79,7 @@ public class SoulJar extends Item implements ILoreTagged {
 	/**
 	 * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
 	 */
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	@Override
 	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
 		if (this.isInCreativeTab(tab)) {
@@ -88,7 +88,7 @@ public class SoulJar extends Item implements ILoreTagged {
 		}
 	}
 	
-	protected static ItemStack createInternal(EntityLivingBase entity) {
+	protected static ItemStack createInternal(LivingEntity entity) {
 		ItemStack stack = createFake(true);
 		setStoredEntity(stack, entity);
 		return stack;
@@ -99,32 +99,32 @@ public class SoulJar extends Item implements ILoreTagged {
 	}
 	
 	public static ItemStack create(ITameableEntity entity) {
-		return createInternal((EntityLivingBase) entity);
+		return createInternal((LivingEntity) entity);
 	}
 	
 	public static ItemStack createFake(boolean filled) {
 		return new ItemStack(instance(), 1, metaFromFilled(filled));
 	}
 	
-	protected static void setStoredEntity(ItemStack stack, @Nullable EntityLivingBase entity) {
-		NBTTagCompound tag = null; // create a new one to discard old entity if passed in null
+	protected static void setStoredEntity(ItemStack stack, @Nullable LivingEntity entity) {
+		CompoundNBT tag = null; // create a new one to discard old entity if passed in null
 		if (entity != null) {
-			tag = new NBTTagCompound();
+			tag = new CompoundNBT();
 			tag.setTag("entity", entity.serializeNBT());
 			tag.setString("name", entity.getName());
 		}
 		stack.setTagCompound(tag);
 	}
 	
-	protected static @Nullable EntityLivingBase spawnStoredEntity(ItemStack stack, World world, double x, double y, double z) {
-		EntityLivingBase ent = null;
-		NBTTagCompound nbt = stack.getTagCompound();
+	protected static @Nullable LivingEntity spawnStoredEntity(ItemStack stack, World world, double x, double y, double z) {
+		LivingEntity ent = null;
+		CompoundNBT nbt = stack.getTagCompound();
 		if (nbt != null && nbt.hasKey("entity", NBT.TAG_COMPOUND)) {
 			Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompoundTag("entity"), world, x, y, z, true);
 			if (entity == null) {
 				;
-			} else if (entity instanceof EntityLivingBase) {
-				ent = (EntityLivingBase) entity;
+			} else if (entity instanceof LivingEntity) {
+				ent = (LivingEntity) entity;
 			} else {
 				entity.isDead = true;
 				world.removeEntity(entity);
@@ -172,7 +172,7 @@ public class SoulJar extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, EnumHand hand, Direction facing, float hitX, float hitY, float hitZ) {
 		if (worldIn.isRemote) {
 			return EnumActionResult.SUCCESS;
 		}
@@ -180,7 +180,7 @@ public class SoulJar extends Item implements ILoreTagged {
 		ItemStack stack = playerIn.getHeldItem(hand);
 		if (filledFromMeta(stack.getMetadata())) {
 			// Drop entity at the provided spot
-			EntityLivingBase ent = spawnStoredEntity(stack, worldIn, pos.getX() + hitX, pos.getY() + hitY, pos.getZ() + hitZ);
+			LivingEntity ent = spawnStoredEntity(stack, worldIn, pos.getX() + hitX, pos.getY() + hitY, pos.getZ() + hitZ);
 			if (ent != null) {
 				stack = clearEntity(stack);
 				playerIn.setHeldItem(hand, stack);
@@ -193,14 +193,14 @@ public class SoulJar extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer playerIn, EntityLivingBase target, EnumHand hand) {
+	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, EnumHand hand) {
 		if (playerIn.world.isRemote) {
 			return true;
 		}
 		
 		if (!filledFromMeta(stack.getMetadata())) {
 			// Pick up fey, if it is one
-			if (!(target instanceof EntityLivingBase)) {
+			if (!(target instanceof LivingEntity)) {
 				return false;
 			}
 			

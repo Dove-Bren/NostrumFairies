@@ -1,17 +1,15 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import java.io.IOException;
-
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
+import net.minecraft.network.datasync.IDataSerializer;
 
 public enum ArmPoseDwarf {
 	IDLE,
 	MINING,
 	ATTACKING;
 	
-	public final static class PoseSerializer implements DataSerializer<ArmPoseDwarf> {
+	public final static class PoseSerializer implements IDataSerializer<ArmPoseDwarf> {
 		
 		private PoseSerializer() {
 			;
@@ -23,7 +21,7 @@ public enum ArmPoseDwarf {
 		}
 
 		@Override
-		public ArmPoseDwarf read(PacketBuffer buf) throws IOException {
+		public ArmPoseDwarf read(PacketBuffer buf) {
 			return buf.readEnumValue(ArmPoseDwarf.class);
 		}
 

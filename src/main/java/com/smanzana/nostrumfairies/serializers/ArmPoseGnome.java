@@ -1,17 +1,15 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import java.io.IOException;
-
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
+import net.minecraft.network.datasync.IDataSerializer;
 
 public enum ArmPoseGnome {
 	IDLE,
 	WORKING,
 	CARRYING;
 	
-	public final static class PoseSerializer implements DataSerializer<ArmPoseGnome> {
+	public final static class PoseSerializer implements IDataSerializer<ArmPoseGnome> {
 		
 		private PoseSerializer() {
 			;
@@ -23,7 +21,7 @@ public enum ArmPoseGnome {
 		}
 
 		@Override
-		public ArmPoseGnome read(PacketBuffer buf) throws IOException {
+		public ArmPoseGnome read(PacketBuffer buf) {
 			return buf.readEnumValue(ArmPoseGnome.class);
 		}
 

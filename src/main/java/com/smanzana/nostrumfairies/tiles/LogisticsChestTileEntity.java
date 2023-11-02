@@ -11,10 +11,10 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -102,7 +102,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	}
 
 	@Override
-	public boolean isUsableByPlayer(EntityPlayer player) {
+	public boolean isUsableByPlayer(PlayerEntity player) {
 		return true;
 	}
 	
@@ -117,11 +117,11 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	}
 
 	@Override
-	public void openInventory(EntityPlayer player) {
+	public void openInventory(PlayerEntity player) {
 	}
 
 	@Override
-	public void closeInventory(EntityPlayer player) {
+	public void closeInventory(PlayerEntity player) {
 	}
 
 	@Override
@@ -156,32 +156,32 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		nbt = super.writeToNBT(nbt);
-		NBTTagCompound compound = new NBTTagCompound();
+		CompoundNBT compound = new CompoundNBT();
 		
 		for (int i = 0; i < getSizeInventory(); i++) {
 			if (getStackInSlot(i).isEmpty())
 				continue;
 			
-			NBTTagCompound tag = new NBTTagCompound();
+			CompoundNBT tag = new CompoundNBT();
 			compound.setTag(i + "", getStackInSlot(i).writeToNBT(tag));
 		}
 		
 		if (nbt == null)
-			nbt = new NBTTagCompound();
+			nbt = new CompoundNBT();
 		
 		nbt.setTag(NBT_INV, compound);
 		return nbt;
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		if (nbt == null || !nbt.hasKey(NBT_INV, NBT.TAG_COMPOUND))
 			return;
 		
 		this.clear();
-		NBTTagCompound items = nbt.getCompoundTag(NBT_INV);
+		CompoundNBT items = nbt.getCompoundTag(NBT_INV);
 		for (String key : items.getKeySet()) {
 			int id;
 			try {

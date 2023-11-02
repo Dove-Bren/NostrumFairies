@@ -13,11 +13,11 @@ import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 import net.minecraft.block.BlockFalling;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.block.state.BlockState;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -237,7 +237,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		return owningComponent;
 	}
 	
-	public @Nullable EntityLivingBase getSourceEntity() {
+	public @Nullable LivingEntity getSourceEntity() {
 		return null;
 	}
 
@@ -288,7 +288,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 			
 			// Figure out hardness for anim count
 			// TODO different tools for dwarves?
-			IBlockState state = world.getBlockState(block);
+			BlockState state = world.getBlockState(block);
 			float secs = (state.getBlockHardness(world, block)) * 5;
 			
 			if (state.getMaterial().isLiquid()) {
@@ -436,7 +436,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 	}
 	
 	private void mineBlock() {
-		IBlockState state = world.getBlockState(block);
+		BlockState state = world.getBlockState(block);
 		
 		NonNullList<ItemStack> drops = NonNullList.create();
 		if (state.getBlock() instanceof BlockFalling) {
@@ -446,7 +446,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 				state.getBlock().getDrops(drops, world, cursor, state, 0); // Fortune?
 				world.destroyBlock(cursor, false);
 				
-				cursor.move(EnumFacing.UP);
+				cursor.move(Direction.UP);
 				state = world.getBlockState(cursor);
 			} while (cursor.getY() < 256 && state.getBlock() instanceof BlockFalling);
 		} else {
@@ -474,10 +474,10 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		double x;
 		double y;
 		double z;
-		if (fairy instanceof EntityLivingBase) {
-			x = ((EntityLivingBase) fairy).posX;
-			y = ((EntityLivingBase) fairy).posY;
-			z = ((EntityLivingBase) fairy).posZ;
+		if (fairy instanceof LivingEntity) {
+			x = ((LivingEntity) fairy).posX;
+			y = ((LivingEntity) fairy).posY;
+			z = ((LivingEntity) fairy).posZ;
 		} else {
 			BlockPos pos = owningComponent.getPosition();
 			x = pos.getX() + .5;

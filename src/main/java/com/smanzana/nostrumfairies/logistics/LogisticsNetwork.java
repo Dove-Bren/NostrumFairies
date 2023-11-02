@@ -30,7 +30,7 @@ import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
@@ -186,14 +186,14 @@ public class LogisticsNetwork {
 		}
 	}
 	
-	public NBTTagCompound toNBT() {
-		NBTTagCompound tag = new NBTTagCompound();
+	public CompoundNBT toNBT() {
+		CompoundNBT tag = new CompoundNBT();
 		tag.setUniqueId(NBT_UUID, uuid);
 		
 		NBTTagList list = new NBTTagList();
 		
 		for (ILogisticsComponent component : this.components) {
-			NBTTagCompound subtag = new NBTTagCompound();
+			CompoundNBT subtag = new CompoundNBT();
 			subtag.setString(NBT_COMPONENT_KEY, component.getSerializationTag());
 			subtag.setTag(NBT_COMPONENT_VALUE, component.toNBT());
 			list.appendTag(subtag);
@@ -213,7 +213,7 @@ public class LogisticsNetwork {
 		return tag;
 	}
 	
-	public static LogisticsNetwork fromNBT(NBTTagCompound tag) {
+	public static LogisticsNetwork fromNBT(CompoundNBT tag) {
 		if (!tag.hasUniqueId(NBT_UUID)) {
 			throw new RuntimeException("Missing UUID in LogisticsNetwork tag");
 		}
@@ -223,7 +223,7 @@ public class LogisticsNetwork {
 		
 		NBTTagList list = tag.getTagList(NBT_COMPONENTS, NBT.TAG_COMPOUND);
 		for (int i = list.tagCount() - 1; i >= 0; i--) {
-			NBTTagCompound wrapper = list.getCompoundTagAt(i);
+			CompoundNBT wrapper = list.getCompoundTagAt(i);
 			String key = wrapper.getString(NBT_COMPONENT_KEY);
 			ILogisticsComponentFactory<?> factory = NostrumFairies.logisticsComponentRegistry.lookupFactory(key);
 			
@@ -237,7 +237,7 @@ public class LogisticsNetwork {
 		
 		list = tag.getTagList(NBT_BEACONS, NBT.TAG_COMPOUND);
 		for (int i = list.tagCount() - 1; i >= 0; i--) {
-			NBTTagCompound wrapper = list.getCompoundTagAt(i);
+			CompoundNBT wrapper = list.getCompoundTagAt(i);
 			network.addBeacon(Location.FromNBT(wrapper));
 		}
 		

@@ -1,17 +1,15 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import java.io.IOException;
-
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
+import net.minecraft.network.datasync.IDataSerializer;
 
 public enum FairyJob {
 	WARRIOR,
 	BUILDER,
 	LOGISTICS;
 	
-	public final static class JobSerializer implements DataSerializer<FairyJob> {
+	public final static class JobSerializer implements IDataSerializer<FairyJob> {
 		
 		private JobSerializer() {
 			;
@@ -23,7 +21,7 @@ public enum FairyJob {
 		}
 
 		@Override
-		public FairyJob read(PacketBuffer buf) throws IOException {
+		public FairyJob read(PacketBuffer buf) {
 			return buf.readEnumValue(FairyJob.class);
 		}
 

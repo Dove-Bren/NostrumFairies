@@ -36,7 +36,7 @@ public class CraftingStationSmallGui {
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public static class CraftingStationSmallGuiContainer extends CraftingStationGuiContainer {
 
 		public CraftingStationSmallGuiContainer(CraftingStationContainer container) {

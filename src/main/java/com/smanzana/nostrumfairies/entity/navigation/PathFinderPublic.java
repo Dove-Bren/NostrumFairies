@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
 
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.pathfinding.NodeProcessor;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
@@ -40,7 +40,7 @@ public class PathFinderPublic extends PathFinder {
 	private final NodeProcessor nodeProcessor;
 
 	@Nullable
-	public Path findPath(IBlockAccess worldIn, EntityLiving entity,
+	public Path findPath(IBlockAccess worldIn, MobEntity entity,
 			double startX, double startY, double startZ,
 			double destX, double destY, double destZ,
 			float range) {

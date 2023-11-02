@@ -23,18 +23,18 @@ import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -119,7 +119,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			return 0;
 		}
 		
-		NBTTagCompound nbt = stack.getTagCompound();
+		CompoundNBT nbt = stack.getTagCompound();
 		return nbt.getInteger(NBT_TEMPLATE_INDEX);
 	}
 	
@@ -128,9 +128,9 @@ public class TemplateWand extends Item implements ILoreTagged {
 			return;
 		}
 		
-		NBTTagCompound nbt = stack.getTagCompound();
+		CompoundNBT nbt = stack.getTagCompound();
 		if (nbt == null) {
-			nbt = new NBTTagCompound();
+			nbt = new CompoundNBT();
 		}
 		
 		nbt.setInteger(NBT_TEMPLATE_INDEX, index);
@@ -159,7 +159,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		if (!stack.isEmpty() && stack.getItem() instanceof TemplateWand && stack.hasTagCompound()) {
 			NBTTagList list = stack.getTagCompound().getTagList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND);
 			for (int i = 0; i < list.tagCount() && i < MAX_TEMPLATES; i++) {
-				NBTTagCompound tag = list.getCompoundTagAt(i);
+				CompoundNBT tag = list.getCompoundTagAt(i);
 				inv.setInventorySlotContents(i, new ItemStack(tag));
 			}
 		}
@@ -172,9 +172,9 @@ public class TemplateWand extends Item implements ILoreTagged {
 			return;
 		}
 		
-		NBTTagCompound nbt = stack.getTagCompound();
+		CompoundNBT nbt = stack.getTagCompound();
 		if (nbt == null) {
-			nbt = new NBTTagCompound();
+			nbt = new CompoundNBT();
 		}
 		
 		NBTTagList list = new NBTTagList();
@@ -184,7 +184,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 				continue;
 			}
 			
-			NBTTagCompound tag = inSlot.serializeNBT();
+			CompoundNBT tag = inSlot.serializeNBT();
 			list.appendTag(tag);
 		}
 		
@@ -204,9 +204,9 @@ public class TemplateWand extends Item implements ILoreTagged {
 	 */
 	public static ItemStack AddTemplateToInventory(ItemStack wand, ItemStack scroll) {
 		// Try and just add an NBT tag instead of parsing the inventory
-		NBTTagCompound tag = wand.getTagCompound();
+		CompoundNBT tag = wand.getTagCompound();
 		if (tag == null) {
-			tag = new NBTTagCompound();
+			tag = new CompoundNBT();
 		}
 		
 		NBTTagList list = tag.getTagList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND);
@@ -232,7 +232,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		final int index = GetTemplateIndex(wand);
 		NBTTagList list = wand.getTagCompound().getTagList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND);
 		if (list != null && list.tagCount() > index) {
-			NBTTagCompound tag = list.getCompoundTagAt(index);
+			CompoundNBT tag = list.getCompoundTagAt(index);
 			return new ItemStack(tag);
 		}
 		
@@ -265,7 +265,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		return InfoScreenTabs.INFO_ITEMS;
 	}
 	
-	public static void HandleScroll(EntityPlayer player, ItemStack stack, boolean forward) {
+	public static void HandleScroll(PlayerEntity player, ItemStack stack, boolean forward) {
 		// On client, just send to server
 		if (player.world.isRemote) {
 			NetworkHandler.getSyncChannel().sendToServer(new TemplateWandUpdate(WandUpdateType.SCROLL, forward));
@@ -277,9 +277,9 @@ public class TemplateWand extends Item implements ILoreTagged {
 		}
 		
 		// could use wrappers but will be efficient
-		NBTTagCompound nbt = stack.getTagCompound();
+		CompoundNBT nbt = stack.getTagCompound();
 		if (nbt == null) {
-			nbt = new NBTTagCompound();
+			nbt = new CompoundNBT();
 		}
 		
 		int index = nbt.getInteger(NBT_TEMPLATE_INDEX);
@@ -297,7 +297,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		stack.setTagCompound(nbt);
 	}
 	
-	public static void HandleModeChange(EntityPlayer player, ItemStack stack, boolean forward) {
+	public static void HandleModeChange(PlayerEntity player, ItemStack stack, boolean forward) {
 		if (player.world.isRemote) {
 			NetworkHandler.getSyncChannel().sendToServer(new TemplateWandUpdate(WandUpdateType.MODE, forward));
 			return;
@@ -322,7 +322,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		SetWandMode(stack, to);
 	}
 	
-	protected ActionResult<ItemStack> capture(ItemStack stack, World worldIn, EntityPlayer playerIn, @Nullable BlockPos clickedPos) {
+	protected ActionResult<ItemStack> capture(ItemStack stack, World worldIn, PlayerEntity playerIn, @Nullable BlockPos clickedPos) {
 		final INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
 		
 		// Check for blank map and create template scroll
@@ -364,10 +364,10 @@ public class TemplateWand extends Item implements ILoreTagged {
 		}
 			
 		// Have taken map and must succeed now
-		EnumFacing face = null;
+		Direction face = null;
 		if (clickedPos != null) {
 			// Figure out facing by looking at clicked pos vs our pos
-			face = EnumFacing.getFacingFromVector((float) (clickedPos.getX() - playerIn.posX), 0f, (float) (clickedPos.getZ() - playerIn.posZ));
+			face = Direction.getFacingFromVector((float) (clickedPos.getX() - playerIn.posX), 0f, (float) (clickedPos.getZ() - playerIn.posZ));
 		}
 		BlockPos offset = (clickedPos == null ? null : clickedPos.subtract(min));
 		ItemStack scroll = TemplateScroll.Capture(worldIn, min, max, offset, face);
@@ -393,7 +393,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, EnumHand hand) {
 		final ItemStack stack = playerIn.getHeldItem(hand);
 		final WandMode mode = getModeOf(stack);
 		if (mode == WandMode.SPAWN) {
@@ -430,7 +430,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, EnumHand hand, Direction facing, float hitX, float hitY, float hitZ) {
 		if (worldIn.isRemote) {
 			return EnumActionResult.SUCCESS;
 		}
@@ -467,7 +467,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 				if (!templateScroll.isEmpty() && templateScroll.getItem() instanceof TemplateScroll) {
 					TemplateBlueprint blueprint = TemplateScroll.GetTemplate(templateScroll);
 					if (blueprint != null) {
-						EnumFacing rotate = EnumFacing.getFacingFromVector((float) (pos.getX() - playerIn.posX), 0f, (float) (pos.getZ() - playerIn.posZ));
+						Direction rotate = Direction.getFacingFromVector((float) (pos.getX() - playerIn.posX), 0f, (float) (pos.getZ() - playerIn.posZ));
 						List<BlockPos> blocks = blueprint.spawn(worldIn, pos.offset(facing), rotate);
 						for (BlockPos buildSpot : blocks) {
 							attr.addBuildSpot(buildSpot);
@@ -481,7 +481,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer playerIn, EntityLivingBase target, EnumHand hand) {
+	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, EnumHand hand) {
 		return super.itemInteractionForEntity(stack, playerIn, target, hand);
 	}
 	
@@ -510,19 +510,19 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound nbt) {
+	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundNBT nbt) {
 		return new ICapabilityProvider() {
 
 			private TemplateViewerCapability def = new TemplateViewerCapability();
 			
 			@Override
-			public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
+			public boolean hasCapability(Capability<?> capability, Direction facing) {
 				return capability == TemplateViewerCapability.CAPABILITY;
 			}
 
 			@SuppressWarnings("unchecked")
 			@Override
-			public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+			public <T> T getCapability(Capability<T> capability, Direction facing) {
 				if (capability == TemplateViewerCapability.CAPABILITY) {
 					return (T) def;
 				}

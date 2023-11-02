@@ -19,12 +19,12 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -85,7 +85,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 		if (!taskMap.containsKey(base) && network.taskDataAdd(WOODCUTTING_POSITION, base)) {
 			// Find spot underneath on ground\
 			BlockPos target = base;
-			while (!world.isSideSolid(target.down(), EnumFacing.UP)) {
+			while (!world.isSideSolid(target.down(), Direction.UP)) {
 				target = target.down();
 			}
 			
@@ -166,7 +166,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 				
 				// climb tree to avoid checking each piece above it
 				do {
-					pos.move(EnumFacing.UP);
+					pos.move(Direction.UP);
 					y++;
 				} while (y < (endY - 1) && WoodcuttingBlock.isTrunkMaterial(world, pos));
 			} else if (WoodcuttingBlock.isBranch(world, pos)) {
@@ -338,13 +338,13 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 	}
 	
 	@Override
-	public EnumFacing getSignFacing(IFeySign sign) {
-		IBlockState state = world.getBlockState(pos);
+	public Direction getSignFacing(IFeySign sign) {
+		BlockState state = world.getBlockState(pos);
 		return state.getValue(WoodcuttingBlock.FACING);
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound compound) {
+	public void readFromNBT(CompoundNBT compound) {
 		super.readFromNBT(compound);
 		
 		if (this.world != null && this.world.isRemote) {

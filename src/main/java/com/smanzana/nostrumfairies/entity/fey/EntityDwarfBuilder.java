@@ -199,7 +199,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 				movePos = sub.getPos();
 				if (movePos == null) {
 					moveEntity = sub.getEntity();
-					if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+					if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
 						this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 					}
 				} else {

@@ -8,7 +8,7 @@ import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -66,14 +66,14 @@ public class TemplateWandUpdate implements IMessage {
 	private static final String NBT_TYPE = "type";
 	private static final String NBT_VAL = "val";
 	
-	protected NBTTagCompound tag;
+	protected CompoundNBT tag;
 	
 	public TemplateWandUpdate() {
 		this(WandUpdateType.MODE, true);
 	}
 	
 	public TemplateWandUpdate(WandUpdateType type, boolean val) {
-		tag = new NBTTagCompound();
+		tag = new CompoundNBT();
 		
 		if (type != null) {
 			tag.setString(NBT_TYPE, type.name());

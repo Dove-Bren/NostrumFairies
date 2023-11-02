@@ -14,10 +14,10 @@ import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.BlueprintBlock;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.IBlueprintSpawner;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.INBTGenerator;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.block.BlockState;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -50,9 +50,9 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 	}
 
 	@Override
-	public synchronized void spawnBlock(World world, BlockPos pos, EnumFacing direction, BlueprintBlock block) {
+	public synchronized void spawnBlock(World world, BlockPos pos, Direction direction, BlueprintBlock block) {
 		// Templating doesn't mess with clearing blocks
-		IBlockState existingState = world.getBlockState(pos);
+		BlockState existingState = world.getBlockState(pos);
 		if (existingState != null && !existingState.getBlock().isReplaceable(world, pos) && !world.isAirBlock(pos)) {
 			return; // Skip!
 		}
@@ -62,7 +62,7 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 			return;
 		}
 		
-		IBlockState placeState = block.getSpawnState(direction);
+		BlockState placeState = block.getSpawnState(direction);
 		if (placeState != null && !(placeState.getBlock() instanceof TemplateBlock)) {
 			TemplateBlock.SetTemplate(world, pos, placeState);
 			spawnedBlocks.add(pos.toImmutable());
@@ -73,14 +73,14 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 	
 	private List<BlockPos> spawnedBlocks = null;
 
-	public synchronized List<BlockPos> spawn(World world, BlockPos origin, EnumFacing direction) {
+	public synchronized List<BlockPos> spawn(World world, BlockPos origin, Direction direction) {
 		spawnedBlocks = new ArrayList<>();
 		blueprint.spawn(origin, direction);
 		return spawnedBlocks;
 	}
 	
-	public NBTTagCompound toNBT() {
-		NBTTagCompound nbt = new NBTTagCompound();
+	public CompoundNBT toNBT() {
+		CompoundNBT nbt = new CompoundNBT();
 		
 		nbt.setUniqueId(NBT_ID, id);
 		
@@ -95,7 +95,7 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 		return nbt;
 	}
 	
-	public static final TemplateBlueprint fromNBT(NBTTagCompound nbt) {
+	public static final TemplateBlueprint fromNBT(CompoundNBT nbt) {
 		UUID id = nbt.getUniqueId(NBT_ID);
 		TemplateBlueprint blueprint = GetRegisteredBlueprint(id);
 		if (blueprint != null) {
@@ -105,7 +105,7 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 		RoomBlueprint roomPrint = null;
 		NBTTagList list = nbt.getTagList(NBT_BLUEPRINT, NBT.TAG_COMPOUND);
 		for (int i = 0; i < list.tagCount(); i++) {
-			NBTTagCompound blueprintTag = list.getCompoundTagAt(i);
+			CompoundNBT blueprintTag = list.getCompoundTagAt(i);
 			RoomBlueprint room = RoomBlueprint.fromNBT(blueprintTag);
 			
 			if (roomPrint == null) {

@@ -8,7 +8,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -59,14 +59,14 @@ public class LogisticsUpdateRequest implements IMessage {
 
 	private static final String NBT_NETWORK_ID = "id";
 	
-	protected NBTTagCompound tag;
+	protected CompoundNBT tag;
 	
 	public LogisticsUpdateRequest() {
 		this(null);
 	}
 	
 	public LogisticsUpdateRequest(@Nullable UUID id) {
-		tag = new NBTTagCompound();
+		tag = new CompoundNBT();
 		
 		if (id != null) {
 			tag.setUniqueId(NBT_NETWORK_ID, id);

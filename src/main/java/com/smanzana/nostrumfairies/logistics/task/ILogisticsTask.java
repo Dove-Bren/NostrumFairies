@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -103,7 +103,7 @@ public interface ILogisticsTask {
 	 * Note, either this or {@link #getSourceComponent()} is expected to return a non-null result.
 	 * @return
 	 */
-	public @Nullable EntityLivingBase getSourceEntity();
+	public @Nullable LivingEntity getSourceEntity();
 	
 	/**
 	 * Get the current subtask this logistics task is on.

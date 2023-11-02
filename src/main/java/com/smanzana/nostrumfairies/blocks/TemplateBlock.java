@@ -19,9 +19,9 @@ import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -29,7 +29,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -55,7 +55,7 @@ public class TemplateBlock extends BlockContainer {
 	 * @param templatedState
 	 * @return
 	 */
-	public static final @Nonnull ItemStack GetRequiredItem(IBlockState templatedState) {
+	public static final @Nonnull ItemStack GetRequiredItem(BlockState templatedState) {
 		if (templatedState == null) {
 			return ItemStack.EMPTY;
 		}
@@ -77,7 +77,7 @@ public class TemplateBlock extends BlockContainer {
 			try {
 				// getSilkTouchDrop
 				Method Block_CreateStackedBlock = ObfuscationReflectionHelper.findMethod(Block.class, "func_180643_i", ItemStack.class,
-						IBlockState.class);
+						BlockState.class);
 				if (Block_CreateStackedBlock != null) {
 					required = (ItemStack) Block_CreateStackedBlock.invoke(block, templatedState);
 				}
@@ -108,10 +108,10 @@ public class TemplateBlock extends BlockContainer {
 		return required;
 	}
 	
-	private static Map<IBlockState, ItemStack> StateItemOverrides = new NonNullHashMap<>();
-	private static Map<IBlockState, ItemStack> StateItemCache = new NonNullHashMap<>();
+	private static Map<BlockState, ItemStack> StateItemOverrides = new NonNullHashMap<>();
+	private static Map<BlockState, ItemStack> StateItemCache = new NonNullHashMap<>();
 	
-	public static final void RegisterItemForBlock(IBlockState state, @Nonnull ItemStack stack) {
+	public static final void RegisterItemForBlock(BlockState state, @Nonnull ItemStack stack) {
 		Validate.notNull(stack);
 		StateItemOverrides.put(state, stack.copy());
 	}
@@ -119,7 +119,7 @@ public class TemplateBlock extends BlockContainer {
 	public static void RegisterBaseOverrides() {
 		// Vanilla
 //		ItemStack stack = new ItemStack(Blocks.LEAVES);
-//		for (IBlockState leafState : Blocks.LEAVES.getBlockState().getValidStates()) {
+//		for (BlockState leafState : Blocks.LEAVES.getBlockState().getValidStates()) {
 //			if (leafState.getBlock() instanceof BlockOldLeaf) {
 //				BlockOldLeaf leaf = (BlockOldLeaf) leafState.getBlock();
 //				BlockPlanks.EnumType type = leafState.getValue(BlockOldLeaf.VARIANT);
@@ -129,7 +129,7 @@ public class TemplateBlock extends BlockContainer {
 //		}
 	}
 	
-	public static IUnlistedProperty<IBlockState> NESTED_STATE = new IUnlistedProperty<IBlockState>() {
+	public static IUnlistedProperty<BlockState> NESTED_STATE = new IUnlistedProperty<BlockState>() {
 
 		@Override
 		public String getName() {
@@ -137,17 +137,17 @@ public class TemplateBlock extends BlockContainer {
 		}
 
 		@Override
-		public boolean isValid(IBlockState value) {
+		public boolean isValid(BlockState value) {
 			return value != null;
 		}
 
 		@Override
-		public Class<IBlockState> getType() {
-			return IBlockState.class;
+		public Class<BlockState> getType() {
+			return BlockState.class;
 		}
 
 		@Override
-		public String valueToString(IBlockState value) {
+		public String valueToString(BlockState value) {
 			return value.toString();
 		}
 		
@@ -186,7 +186,7 @@ public class TemplateBlock extends BlockContainer {
 	}
 	
 	@Override
-	public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
+	public BlockState getExtendedState(BlockState state, IBlockAccess world, BlockPos pos) {
 		IExtendedBlockState ext = (IExtendedBlockState) state;
 		TemplateBlockTileEntity ent = GetEntity(world, pos);
 		if (ent != null) {
@@ -200,22 +200,22 @@ public class TemplateBlock extends BlockContainer {
 	}
 	
 	@Override
-	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
 		return false;
 	}
 	
-	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
+	public AxisAlignedBB getCollisionBoundingBox(BlockState blockState, IBlockAccess worldIn, BlockPos pos) {
 		return Block.NULL_AABB;
 	}
 	
 	@Override
-	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+	public AxisAlignedBB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos) {
 		return Block.FULL_BLOCK_AABB;
 	}
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
+	public BlockState getStateForPlacement(World world, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
 		return super.getStateForPlacement(world, pos, facing, hitX, hitY, hitZ, meta, placer);
 	}
 	
@@ -225,7 +225,7 @@ public class TemplateBlock extends BlockContainer {
     }
 	
 	@Override
-	public boolean isOpaqueCube(IBlockState state) {
+	public boolean isOpaqueCube(BlockState state) {
 		return false;
 	}
 	
@@ -235,19 +235,19 @@ public class TemplateBlock extends BlockContainer {
     }
 	
 	@Override
-	public boolean doesSideBlockRendering(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing face) {
+	public boolean doesSideBlockRendering(BlockState state, IBlockAccess world, BlockPos pos, Direction face) {
 		return false;
 	}
 	
 	@Override
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public BlockRenderLayer getBlockLayer() {
 		return BlockRenderLayer.SOLID;
 	}
 	
 	@Override
-	@SideOnly(Side.CLIENT)
-	public EnumBlockRenderType getRenderType(IBlockState state) {
+	@OnlyIn(Dist.CLIENT)
+	public EnumBlockRenderType getRenderType(BlockState state) {
 		return EnumBlockRenderType.INVISIBLE;
 	}
 	
@@ -260,15 +260,15 @@ public class TemplateBlock extends BlockContainer {
 	}
 	
 	@SubscribeEvent
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public void onBlockHighlight(DrawBlockHighlightEvent event) {
 		if (event.getTarget().typeOfHit == RayTraceResult.Type.BLOCK) {
 			BlockPos pos = event.getTarget().getBlockPos();
-			IBlockState hit = event.getPlayer().world.getBlockState(pos);
+			BlockState hit = event.getPlayer().world.getBlockState(pos);
 			if (hit != null && hit.getBlock() == this) {
 				// Get block from Tile Entity
 				TemplateBlockTileEntity ent = GetEntity(event.getPlayer().world, pos);
-				IBlockState blockState = ent.getTemplateState();
+				BlockState blockState = ent.getTemplateState();
 				if (blockState == null) {
 					blockState = Blocks.STONE.getDefaultState();
 				}
@@ -281,11 +281,11 @@ public class TemplateBlock extends BlockContainer {
 		}
 	}
 	
-	public static void SetTemplate(World world, BlockPos pos, IBlockState templatedState) {
+	public static void SetTemplate(World world, BlockPos pos, BlockState templatedState) {
 		SetTemplate(world, pos, templatedState, false);
 	}
 	
-	public static void SetTemplate(World world, BlockPos pos, IBlockState templatedState, boolean force) {
+	public static void SetTemplate(World world, BlockPos pos, BlockState templatedState, boolean force) {
 		if (templatedState == null) {
 			NostrumFairies.logger.warn("Attempted to set null template at " + pos);
 			return;
@@ -306,7 +306,7 @@ public class TemplateBlock extends BlockContainer {
 		world.setTileEntity(pos, new TemplateBlockTileEntity(templatedState));
 	}
 	
-	public static @Nullable IBlockState GetTemplatedState(World world, BlockPos pos) {
+	public static @Nullable BlockState GetTemplatedState(World world, BlockPos pos) {
 		TemplateBlockTileEntity ent = GetEntity(world, pos);
 		if (ent != null) {
 			return ent.getTemplateState();
@@ -321,7 +321,7 @@ public class TemplateBlock extends BlockContainer {
 	}
 	
 	@Override
-	public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
+	public void breakBlock(World worldIn, BlockPos pos, BlockState state) {
 		super.breakBlock(worldIn, pos, state);
 	}
 	

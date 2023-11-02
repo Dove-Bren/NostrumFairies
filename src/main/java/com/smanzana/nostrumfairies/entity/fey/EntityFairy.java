@@ -21,16 +21,16 @@ import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityMoveHelper;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.IDataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.NonNullList;
@@ -45,7 +45,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	private static final String NBT_ITEM = "helditem";
-	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityFairy.class, DataSerializers.ITEM_STACK);
+	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityFairy.class, IDataSerializers.ITEM_STACK);
 	
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
@@ -467,7 +467,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							//if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+							//if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
 								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							//}
 						} else {
@@ -506,7 +506,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 					// FIXME this runs every tick. Save pos?
 //					BlockPos pos = sub.getPos();
 //					if (pos == null) {
-//						EntityLivingBase entity = sub.getEntity();
+//						LivingEntity entity = sub.getEntity();
 //						
 //					} else {
 //						if (world.isAirBlock(pos.north())) {
@@ -570,22 +570,22 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
     public boolean isInRangeToRenderDist(double distance) {
 		return distance < 6400;
 	}
 	
 	@Override
-	public void writeEntityToNBT(NBTTagCompound compound) {
+	public void writeEntityToNBT(CompoundNBT compound) {
 		super.writeEntityToNBT(compound);
 		
 		if (!getHeldItem().isEmpty()) {
-			compound.setTag(NBT_ITEM, getHeldItem().writeToNBT(new NBTTagCompound()));
+			compound.setTag(NBT_ITEM, getHeldItem().writeToNBT(new CompoundNBT()));
 		}
 	}
 	
 	@Override
-	public void readEntityFromNBT(NBTTagCompound compound) {
+	public void readEntityFromNBT(CompoundNBT compound) {
 		super.readEntityFromNBT(compound);
 		
 		if (compound.hasKey(NBT_ITEM)) {
@@ -599,11 +599,11 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	static class FairyFlyMoveHelper extends EntityMoveHelper {
-		private final EntityLiving parentEntity;
+		private final MobEntity parentEntity;
 		private double lastDist;
 		private int courseChangeCooldown;
 
-		public FairyFlyMoveHelper(EntityLiving entity) {
+		public FairyFlyMoveHelper(MobEntity entity) {
 			super(entity);
 			this.parentEntity = entity;
 		}
@@ -714,7 +714,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+	protected boolean shouldJoin(BlockPos pos, BlockState state, HomeBlockTileEntity te) {
 		return rand.nextBoolean() && rand.nextBoolean();
 	}
 

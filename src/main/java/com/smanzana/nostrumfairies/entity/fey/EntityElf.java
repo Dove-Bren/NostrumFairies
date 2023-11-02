@@ -25,17 +25,17 @@ import com.smanzana.nostrummagica.spells.components.shapes.SingleShape;
 import com.smanzana.nostrummagica.spells.components.triggers.AITargetTrigger;
 import com.smanzana.nostrummagica.spells.components.triggers.MagicCutterTrigger;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.IMobEntityData;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
@@ -394,7 +394,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+							if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
 								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
@@ -453,12 +453,12 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 	
 	@Override
-	public void writeEntityToNBT(NBTTagCompound compound) {
+	public void writeEntityToNBT(CompoundNBT compound) {
 		super.writeEntityToNBT(compound);
 	}
 	
 	@Override
-	public void readEntityFromNBT(NBTTagCompound compound) {
+	public void readEntityFromNBT(CompoundNBT compound) {
 		super.readEntityFromNBT(compound);
 	}
 
@@ -521,7 +521,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 	
 	@Override
-	public IEntityLivingData onInitialSpawn(DifficultyInstance difficulty, @Nullable IEntityLivingData livingdata) {
+	public IMobEntityData onInitialSpawn(DifficultyInstance difficulty, @Nullable IMobEntityData livingdata) {
 		livingdata = super.onInitialSpawn(difficulty, livingdata);
 		
 		// Elves are 70:30 lefthanded
@@ -560,7 +560,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 
 	@Override
-	public void attackEntityWithRangedAttack(EntityLivingBase target, float distanceFactor) {
+	public void attackEntityWithRangedAttack(LivingEntity target, float distanceFactor) {
 		if (rand.nextFloat() < .1) {
 			SPELL_VINES.cast(this, 1.0f);
 		} else {
@@ -579,7 +579,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 	
 	@Override
-	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+	protected boolean shouldJoin(BlockPos pos, BlockState state, HomeBlockTileEntity te) {
 		return rand.nextBoolean() && rand.nextBoolean();
 	}
 

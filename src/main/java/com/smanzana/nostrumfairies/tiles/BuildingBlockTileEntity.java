@@ -23,13 +23,13 @@ import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -74,7 +74,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		return false;
 	}
 	
-	private void makePlaceTask(BlockPos base, IBlockState missingState) {
+	private void makePlaceTask(BlockPos base, BlockState missingState) {
 		LogisticsNetwork network = this.getNetwork();
 		if (network == null) {
 			return;
@@ -117,7 +117,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		
 		final long startTime = System.currentTimeMillis();
 		
-		List<BlockPos> blocks = blueprint.spawn(world, pos, EnumFacing.NORTH);
+		List<BlockPos> blocks = blueprint.spawn(world, pos, Direction.NORTH);
 		if (!blocks.isEmpty()) {
 			for (BlockPos pos : blocks) {
 				this.makePlaceTask(pos, TemplateBlock.GetTemplatedState(world, pos));
@@ -154,7 +154,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 				break; // skip this whole column
 			}
 			
-			IBlockState state = world.getBlockState(cursor);
+			BlockState state = world.getBlockState(cursor);
 			if (state != null && state.getBlock() instanceof TemplateBlock) {
 				templateSpots.add(cursor.toImmutable());
 			}
@@ -225,7 +225,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		}
 		
 		List<BlockPos> positions = new ArrayList<>();
-		List<IBlockState> states = new ArrayList<>();
+		List<BlockState> states = new ArrayList<>();
 		for (BlockPos loc : event.getAffectedBlocks()) {
 			if (loc.equals(pos)) {
 				// We got blown up
@@ -255,7 +255,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		nbt = super.writeToNBT(nbt);
 		
 		if (this.slot != null) {
@@ -266,7 +266,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		super.readFromNBT(nbt);
 		
 		this.slot = new ItemStack(nbt.getCompoundTag(NBT_SLOT));
@@ -289,7 +289,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 				slot = this.getStackInSlot(0);
 				super.markDirty();
 				self.markDirty();
-				IBlockState state = self.world.getBlockState(pos);
+				BlockState state = self.world.getBlockState(pos);
 				self.world.notifyBlockUpdate(pos, state, state, 2);
 			}
 			
@@ -311,8 +311,8 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	@Override
-	public EnumFacing getSignFacing(IFeySign sign) {
-		IBlockState state = world.getBlockState(pos);
+	public Direction getSignFacing(IFeySign sign) {
+		BlockState state = world.getBlockState(pos);
 		return state.getValue(BuildingBlock.FACING);
 	}
 	

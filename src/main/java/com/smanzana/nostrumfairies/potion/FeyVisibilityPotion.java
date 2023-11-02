@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.potion;
 import com.smanzana.nostrumfairies.NostrumFairies;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.ResourceLocation;
@@ -36,17 +36,17 @@ public class FeyVisibilityPotion extends Potion {
 	}
 
 	@Override
-	public void performEffect(EntityLivingBase entity, int amp) {
+	public void performEffect(LivingEntity entity, int amp) {
 		;
     }
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	@Override
     public void renderInventoryEffect(int x, int y, PotionEffect effect, Minecraft mc) {
 		PotionIcon.FEY_VISIBILITY.draw(mc, x + 6, y + 7);
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	@Override
     public void renderHUDEffect(int x, int y, PotionEffect effect, net.minecraft.client.Minecraft mc, float alpha) {
 		PotionIcon.FEY_VISIBILITY.draw(mc, x + 3, y + 3);

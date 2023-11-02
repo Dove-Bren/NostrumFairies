@@ -20,17 +20,17 @@ import com.smanzana.nostrummagica.loretag.Lore;
 
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.IMobEntityData;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityIronGolem;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.NonNullList;
@@ -105,7 +105,7 @@ public class FeyResource extends Item implements ILoreTagged {
 		return this.getUnlocalizedName() + "." + suffix;
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public String getModelName(FeyResourceType type) {
 		return type.getModelName();
 	}
@@ -113,7 +113,7 @@ public class FeyResource extends Item implements ILoreTagged {
 	/**
      * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
      */
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
 	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
     	if (this.isInCreativeTab(tab)) {
@@ -186,7 +186,7 @@ public class FeyResource extends Item implements ILoreTagged {
 			break;
 		}
 		fey.setPosition(at.getX() + .5, at.getY(), at.getZ() + .5);
-		fey.onInitialSpawn(worldIn.getDifficultyForLocation(new BlockPos(fey)), (IEntityLivingData)null);
+		fey.onInitialSpawn(worldIn.getDifficultyForLocation(new BlockPos(fey)), (IMobEntityData)null);
 		
 		worldIn.spawnEntity(fey);
 		
@@ -203,7 +203,7 @@ public class FeyResource extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, EnumHand hand, Direction facing, float hitX, float hitY, float hitZ) {
 		final ItemStack stack = playerIn.getHeldItem(hand);
 		FeyResourceType type = getType(stack);
 		
@@ -214,7 +214,7 @@ public class FeyResource extends Item implements ILoreTagged {
 				int count = NostrumFairies.random.nextInt(3) + 1;
 				MutableBlockPos cursor = new MutableBlockPos();
 				for (int i = 0; i < count; i++) {
-					cursor.setPos(pos.up()).move(EnumFacing.HORIZONTALS[NostrumFairies.random.nextInt(4)], NostrumFairies.random.nextInt(2) + 1);
+					cursor.setPos(pos.up()).move(Direction.HORIZONTALS[NostrumFairies.random.nextInt(4)], NostrumFairies.random.nextInt(2) + 1);
 					for (int j = 0; j < 5; j++) {
 						if (worldIn.isAirBlock(cursor)) {
 							if (FeyBush.instance().canPlaceBlockAt(worldIn, cursor)) {
@@ -232,10 +232,10 @@ public class FeyResource extends Item implements ILoreTagged {
 										new int[0]);
 								break;
 							} else {
-								cursor.move(EnumFacing.DOWN);
+								cursor.move(Direction.DOWN);
 							}
 						} else {
-							cursor.move(EnumFacing.UP);
+							cursor.move(Direction.UP);
 						}
 					}
 					
@@ -250,7 +250,7 @@ public class FeyResource extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, EnumHand hand) {
 		final ItemStack stack = playerIn.getHeldItem(hand);
 		FeyResourceType type = getType(stack);
 		if (type == FeyResourceType.TABLET) {
@@ -273,7 +273,7 @@ public class FeyResource extends Item implements ILoreTagged {
 			if (!worldIn.isRemote) {
 				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, Block.FULL_BLOCK_AABB.offset(playerIn.posX, playerIn.posY, playerIn.posZ).grow(30))) {
 					ent.addPotionEffect(new PotionEffect(Potion.getPotionFromResourceLocation("glowing"), 20 * 5));
-					NostrumMagica.playerListener.registerTimer((/*Event*/ eType, /*EntityLivingBase*/ entity, /*Object*/ data) -> {
+					NostrumMagica.playerListener.registerTimer((/*Event*/ eType, /*LivingEntity*/ entity, /*Object*/ data) -> {
 						if (eType == Event.TIME) {
 							NostrumFairiesSounds.BELL.play(worldIn, ent.posX, ent.posY, ent.posZ);
 						}
@@ -292,9 +292,9 @@ public class FeyResource extends Item implements ILoreTagged {
 	@SubscribeEvent
 	public void onMobDrop(LivingDropsEvent event) {
 		final float chance;
-		if (event.getEntityLiving() instanceof EntityIronGolem) {
+		if (event.getMobEntity() instanceof EntityIronGolem) {
 			chance = .2f;
-		} else if (event.getEntityLiving() instanceof EntityGolem) {
+		} else if (event.getMobEntity() instanceof EntityGolem) {
 			chance = .01f;
 		} else {
 			chance = 0f;

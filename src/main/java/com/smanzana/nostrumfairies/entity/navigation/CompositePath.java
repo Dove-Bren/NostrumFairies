@@ -250,19 +250,19 @@ public class CompositePath extends Path {
 		return true;
 	}
 
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public PathPoint[] getOpenSet() {
 		refreshCache(false);
 		return this.cachedCurrPath.getOpenSet();
 	}
 
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public PathPoint[] getClosedSet() {
 		refreshCache(false);
 		return this.cachedCurrPath.getClosedSet();
 	}
 
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public PathPoint getTarget() {
 		refreshCache(false);
 		return this.cachedCurrPath.getTarget();

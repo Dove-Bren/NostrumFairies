@@ -25,12 +25,12 @@ import com.smanzana.nostrummagica.spells.components.triggers.SelfTrigger;
 
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
-import net.minecraft.entity.monster.EntityMob;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Enchantments;
 import net.minecraft.init.Items;
 import net.minecraft.init.MobEffects;
@@ -156,7 +156,7 @@ public class EntityElfArcher extends EntityElf {
 	
 	// only available on server
 	protected boolean shouldUseBow() {
-		EntityLivingBase target = this.getAttackTarget();
+		LivingEntity target = this.getAttackTarget();
 		if (target != null && this.getDistanceSq(target) < 9) {
 			return false;
 		}
@@ -218,7 +218,7 @@ public class EntityElfArcher extends EntityElf {
 		
 		// Note this means we'll stop doing a logistics ATTACK task to do this. Perhaps I should make a 'logistics target' task here
 		// which you can slot with higher priority so that the following stuff only happens when no task is present?
-		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityMob>(this, EntityMob.class, 5, true, true, EntityMob.VISIBLE_MOB_SELECTOR));
+		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<MonsterEntity>(this, MonsterEntity.class, 5, true, true, MonsterEntity.VISIBLE_MOB_SELECTOR));
 	}
 
 	@Override
@@ -277,11 +277,11 @@ public class EntityElfArcher extends EntityElf {
 	@SuppressWarnings("unchecked")
 	protected static final Predicate<Entity> ELF_ARCHER_ARROW_FILTER = Predicates.and(EntitySelectors.NOT_SPECTATING, EntitySelectors.IS_ALIVE, new Predicate<Entity>() {
 		public boolean apply(@Nullable Entity ent) {
-			return ent.canBeCollidedWith() && !(ent instanceof EntityFeyBase) && !(ent instanceof EntityPlayer);
+			return ent.canBeCollidedWith() && !(ent instanceof EntityFeyBase) && !(ent instanceof PlayerEntity);
 		}
 	});
 	
-	protected void shootArrowAt(EntityLivingBase target, float distanceFactor) {
+	protected void shootArrowAt(LivingEntity target, float distanceFactor) {
 		EntityTippedArrowEx entitytippedarrow = new EntityTippedArrowEx(this.world, this);
 		entitytippedarrow.setFilter(ELF_ARCHER_ARROW_FILTER);
 		double d0 = target.posX - this.posX;
@@ -326,14 +326,14 @@ public class EntityElfArcher extends EntityElf {
 		this.world.spawnEntity(entitytippedarrow);
 	}
 	
-	protected void slashAt(EntityLivingBase target, float distanceFactor) {
+	protected void slashAt(LivingEntity target, float distanceFactor) {
 		if (this.attackEntityAsMob(target)) {
 			this.heal(2f);
 		}
 	}
 
 	@Override
-	public void attackEntityWithRangedAttack(EntityLivingBase target, float distanceFactor) {
+	public void attackEntityWithRangedAttack(LivingEntity target, float distanceFactor) {
 		if (this.shouldUseBow()) {
 			shootArrowAt(target, distanceFactor);
 		} else {

@@ -4,8 +4,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 
 public interface INostrumFeyCapability {
@@ -52,10 +52,10 @@ public interface INostrumFeyCapability {
 	
 	// Operation
 	public void tick();
-	public void provideEntity(EntityLivingBase owner);
+	public void provideEntity(LivingEntity owner);
 	
 	
 	// Serialization
-	public NBTTagCompound toNBT();
-	public void readNBT(NBTTagCompound nbt);
+	public CompoundNBT toNBT();
+	public void readNBT(CompoundNBT nbt);
 }

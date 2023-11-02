@@ -7,7 +7,7 @@ import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -35,14 +35,14 @@ public class CapabilitySyncMessage implements IMessage {
 
 	private static final String NBT_ATTR = "attr";
 	
-	protected NBTTagCompound tag;
+	protected CompoundNBT tag;
 	
 	public CapabilitySyncMessage() {
 		this(null);
 	}
 	
 	public CapabilitySyncMessage(@Nullable INostrumFeyCapability attr) {
-		tag = new NBTTagCompound();
+		tag = new CompoundNBT();
 		
 		if (attr != null) {
 			tag.setTag(NBT_ATTR, attr.toNBT());

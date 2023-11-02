@@ -23,8 +23,8 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.IEntityOwnable;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
-import net.minecraft.entity.monster.EntityMob;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.ResourceLocation;
@@ -80,7 +80,7 @@ public class NostrumFairies {
     	
     	NostrumFairies.creativeTab = new CreativeTabs(MODID){
 	    	@Override
-	        @SideOnly(Side.CLIENT)
+	        @OnlyIn(Dist.CLIENT)
 			public ItemStack getTabIconItem() {
 	    		return FeySoulStone.create(FeySoulStone.SoulStoneType.GEM);
 	        }
@@ -157,7 +157,7 @@ public class NostrumFairies {
     }
     
     public static @Nullable World getWorld(int dimension) {
-    	EntityPlayer p = proxy.getPlayer();
+    	PlayerEntity p = proxy.getPlayer();
     	if (p != null && p.world.isRemote) {
     		if (p.world.provider.getDimension() == dimension) {
 				return p.world;
@@ -180,8 +180,8 @@ public class NostrumFairies {
     		return;
     	}
     	
-    	if (e.getEntity() instanceof EntityMob) {
-    		EntityMob mob = (EntityMob) e.getEntity();
+    	if (e.getEntity() instanceof MonsterEntity) {
+    		MonsterEntity mob = (MonsterEntity) e.getEntity();
     		if (e.getEntity() instanceof IEntityOwnable) {
     			IEntityOwnable owned = (IEntityOwnable) mob;
     			mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, 10, true, false, (target) -> {

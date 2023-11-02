@@ -19,14 +19,14 @@ import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -111,7 +111,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		nbt = super.writeToNBT(nbt);
 		
 		// Save templates
@@ -122,28 +122,28 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 				continue;
 			}
 			
-			NBTTagCompound template = new NBTTagCompound();
+			CompoundNBT template = new CompoundNBT();
 			
 			template.setInteger(NBT_TEMPLATE_INDEX, i);
-			template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new NBTTagCompound()));
+			template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
 			
 			templates.appendTag(template);
 		}
 		nbt.setTag(NBT_TEMPLATES, templates);
 		
-		nbt.setTag(NBT_LOGIC_COMP, this.logicComp.writeToNBT(new NBTTagCompound()));
+		nbt.setTag(NBT_LOGIC_COMP, this.logicComp.writeToNBT(new CompoundNBT()));
 		
 		return nbt;
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
 		NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
 		for (int i = 0; i < list.tagCount(); i++) {
-			NBTTagCompound template = list.getCompoundTagAt(i);
+			CompoundNBT template = list.getCompoundTagAt(i);
 			int index = template.getInteger(NBT_TEMPLATE_INDEX);
 			
 			if (index < 0 || index > SLOTS) {
@@ -156,7 +156,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 			templates.set(index, stack);
 		}
 		
-		NBTTagCompound tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
+		CompoundNBT tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
 		if (tag != null) {
 			this.logicComp.readFromNBT(tag);
 		}
@@ -228,7 +228,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 	
 	private @Nullable IItemHandler getLinkedInventoryHandler() {
-		final EnumFacing direction = getFacing();
+		final Direction direction = getFacing();
 		final BlockPos linkPos = pos.offset(direction);
 		final TileEntity te = world.getTileEntity(linkPos);
 		if (te != null) {
@@ -242,7 +242,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 	
 	private @Nullable IInventory getLinkedInventory() {
-		final EnumFacing direction = getFacing();
+		final Direction direction = getFacing();
 		final BlockPos linkPos = pos.offset(direction);
 		final TileEntity te = world.getTileEntity(linkPos);
 		if (te != null) {
@@ -365,9 +365,9 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 		tickRequester();
 	}
 	
-	public EnumFacing getFacing() {
+	public Direction getFacing() {
 		if (world != null) {
-			IBlockState state = world.getBlockState(pos);
+			BlockState state = world.getBlockState(pos);
 			try {
 				return OutputLogisticsPanel.instance().getFacing(state);
 			} catch (Exception e) {
@@ -375,7 +375,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 			}
 		}
 		
-		return EnumFacing.NORTH;
+		return Direction.NORTH;
 	}
 	
 	protected void tickRequester() {

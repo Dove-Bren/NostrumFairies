@@ -41,9 +41,9 @@ import net.minecraft.block.BlockFenceGate;
 import net.minecraft.block.BlockRailBase;
 import net.minecraft.block.BlockWall;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.IMobEntityData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackMelee;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
@@ -51,7 +51,7 @@ import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -61,7 +61,7 @@ import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.WalkNodeProcessor;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -149,7 +149,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 					@Override
 					protected PathNodeType getPathNodeTypeRaw(IBlockAccess access, int x, int y, int z) {
 						BlockPos blockpos = new BlockPos(x, y, z);
-						IBlockState iblockstate = access.getBlockState(blockpos);
+						BlockState iblockstate = access.getBlockState(blockpos);
 						Block block = iblockstate.getBlock();
 						Material material = iblockstate.getMaterial();
 						return (material == Material.AIR || material == Material.LAVA) ? PathNodeType.OPEN : (block != Blocks.TRAPDOOR && block != Blocks.IRON_TRAPDOOR && block != Blocks.WATERLILY ? (block == Blocks.FIRE ? PathNodeType.DAMAGE_FIRE : (block == Blocks.CACTUS ? PathNodeType.DAMAGE_CACTUS : (block instanceof BlockDoor && material == Material.WOOD && !((Boolean)iblockstate.getValue(BlockDoor.OPEN)).booleanValue() ? PathNodeType.DOOR_WOOD_CLOSED : (block instanceof BlockDoor && material == Material.IRON && !((Boolean)iblockstate.getValue(BlockDoor.OPEN)).booleanValue() ? PathNodeType.DOOR_IRON_CLOSED : (block instanceof BlockDoor && ((Boolean)iblockstate.getValue(BlockDoor.OPEN)).booleanValue() ? PathNodeType.DOOR_OPEN : (block instanceof BlockRailBase ? PathNodeType.RAIL : (!(block instanceof BlockFence) && !(block instanceof BlockWall) && (!(block instanceof BlockFenceGate) || ((Boolean)iblockstate.getValue(BlockFenceGate.OPEN)).booleanValue()) ? (material == Material.WATER ? PathNodeType.WATER : (material == Material.LAVA ? PathNodeType.LAVA : (block.isPassable(access, blockpos) ? PathNodeType.OPEN : PathNodeType.BLOCKED))) : PathNodeType.FENCE))))))) : PathNodeType.TRAPDOOR);
@@ -275,7 +275,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		// for non-repair
 		
 		if (repair || ((!world.isAirBlock(targetPos) && world.getBlockState(targetPos).getMaterial().blocksMovement() && world.getBlockState(targetPos).getMaterial() != Material.LAVA)
-						|| !world.isSideSolid(targetPos.down(), EnumFacing.UP))) {
+						|| !world.isSideSolid(targetPos.down(), Direction.UP))) {
 			// could get enum facing from diffs in dir to start at the side closest!
 			BlockPos[] initOffsets = {targetPos.north(), targetPos.east(), targetPos.south(), targetPos.west()};
 			BlockPos[] offsets;
@@ -308,73 +308,73 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		}
 		
 //		
-//		if ((repair) || (!world.isAirBlock(targetPos) || !world.isSideSolid(targetPos.down(), EnumFacing.UP))) {
+//		if ((repair) || (!world.isAirBlock(targetPos) || !world.isSideSolid(targetPos.down(), Direction.UP))) {
 //			do {
 //				if (world.isAirBlock(targetPos.north())) {
-//					if (world.isSideSolid(targetPos.north().down(), EnumFacing.UP)) {
+//					if (world.isSideSolid(targetPos.north().down(), Direction.UP)) {
 //						targetPos = targetPos.north();
 //						break;
-//					} else if (world.isSideSolid(targetPos.north().down().down(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.north().down().down(), Direction.UP)) {
 //						targetPos = targetPos.north().down();
 //						break;
-//					} else if (world.isSideSolid(targetPos.north(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.north(), Direction.UP)) {
 //						targetPos = targetPos.north().up();
 //						break;
-//					} else if (repair && world.isSideSolid(targetPos.north().up(), EnumFacing.UP)) {
+//					} else if (repair && world.isSideSolid(targetPos.north().up(), Direction.UP)) {
 //						targetPos = targetPos.north().up().up();
 //						break;
 //					}
 //				}
 //				if (world.isAirBlock(targetPos.south())) {
-//					if (world.isSideSolid(targetPos.south().down(), EnumFacing.UP)) {
+//					if (world.isSideSolid(targetPos.south().down(), Direction.UP)) {
 //						targetPos = targetPos.south();
 //						break;
-//					} else if (world.isSideSolid(targetPos.south().down().down(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.south().down().down(), Direction.UP)) {
 //						targetPos = targetPos.south().down();
 //						break;
-//					} else if (world.isSideSolid(targetPos.south(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.south(), Direction.UP)) {
 //						targetPos = targetPos.south().up();
 //						break;
-//					} else if (repair && world.isSideSolid(targetPos.south().up(), EnumFacing.UP)) {
+//					} else if (repair && world.isSideSolid(targetPos.south().up(), Direction.UP)) {
 //						targetPos = targetPos.south().up().up();
 //						break;
 //					}
 //				}
 //				if (world.isAirBlock(targetPos.east())) {
-//					if (world.isSideSolid(targetPos.east().down(), EnumFacing.UP)) {
+//					if (world.isSideSolid(targetPos.east().down(), Direction.UP)) {
 //						targetPos = targetPos.east();
 //						break;
-//					} else if (world.isSideSolid(targetPos.east().down().down(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.east().down().down(), Direction.UP)) {
 //						targetPos = targetPos.east().down();
 //						break;
-//					} else if (world.isSideSolid(targetPos.east(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.east(), Direction.UP)) {
 //						targetPos = targetPos.east().up();
 //						break;
-//					} else if (repair && world.isSideSolid(targetPos.east().up(), EnumFacing.UP)) {
+//					} else if (repair && world.isSideSolid(targetPos.east().up(), Direction.UP)) {
 //						targetPos = targetPos.east().up().up();
 //						break;
 //					}
 //				}
 //				if (world.isAirBlock(targetPos.west())) {
-//					if (world.isSideSolid(targetPos.west().down(), EnumFacing.UP)) {
+//					if (world.isSideSolid(targetPos.west().down(), Direction.UP)) {
 //						targetPos = targetPos.west();
 //						break;
-//					} else if (world.isSideSolid(targetPos.west().down().down(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.west().down().down(), Direction.UP)) {
 //						targetPos = targetPos.west().down();
 //						break;
-//					} else if (world.isSideSolid(targetPos.west(), EnumFacing.UP)) {
+//					} else if (world.isSideSolid(targetPos.west(), Direction.UP)) {
 //						targetPos = targetPos.west().up();
 //						break;
-//					} else if (repair && world.isSideSolid(targetPos.west().up(), EnumFacing.UP)) {
+//					} else if (repair && world.isSideSolid(targetPos.west().up(), Direction.UP)) {
 //						targetPos = targetPos.west().up().up();
 //						break;
 //					}
 //				}
-//				if (!repair && world.isAirBlock(targetPos.up()) && world.isSideSolid(targetPos, EnumFacing.UP)) {
+//				if (!repair && world.isAirBlock(targetPos.up()) && world.isSideSolid(targetPos, Direction.UP)) {
 //					targetPos = targetPos.up();
 //					break;
 //				}
-//				if (world.isAirBlock(targetPos.down()) && world.isSideSolid(targetPos.down().down(), EnumFacing.UP)) {
+//				if (world.isAirBlock(targetPos.down()) && world.isSideSolid(targetPos.down().down(), Direction.UP)) {
 //					targetPos = targetPos.down();
 //					break;
 //				}
@@ -661,7 +661,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			if (!this.world.canBlockSeeSky(this.getPosition())) {
 				// No light from the 'sky' which means we're underground
 				// Refreseh magic lights around. Then see if it's too dark
-				IBlockState state;
+				BlockState state;
 				MutableBlockPos cursor = new MutableBlockPos();
 				for (int x = -3; x <= 3; x++)
 				for (int y = -1; y <= 1; y++)
@@ -800,7 +800,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+							if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
 								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
@@ -839,7 +839,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]));
 		
 		// Could hunt mobs
-//		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityMob>(this, EntityMob.class, 10, true, false, (mob) -> {
+//		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<MonsterEntity>(this, MonsterEntity.class, 10, true, false, (mob) -> {
 //			return (mob instanceof IEntityTameable ? !((IEntityTameable) mob).isTamed()
 //					: true);
 //		}));
@@ -876,7 +876,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void writeEntityToNBT(NBTTagCompound compound) {
+	public void writeEntityToNBT(CompoundNBT compound) {
 		super.writeEntityToNBT(compound);
 		
 		compound.setTag(NBT_ITEMS, inventoryToNBT());
@@ -897,7 +897,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void readEntityFromNBT(NBTTagCompound compound) {
+	public void readEntityFromNBT(CompoundNBT compound) {
 		super.readEntityFromNBT(compound);
 		
 		loadInventoryFromNBT(compound.getTagList(NBT_ITEMS, NBT.TAG_COMPOUND));
@@ -922,7 +922,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public IEntityLivingData onInitialSpawn(DifficultyInstance difficulty, @Nullable IEntityLivingData livingdata) {
+	public IMobEntityData onInitialSpawn(DifficultyInstance difficulty, @Nullable IMobEntityData livingdata) {
 		livingdata = super.onInitialSpawn(difficulty, livingdata);
 		
 		// Dwarves are 40:60 lefthanded
@@ -1081,7 +1081,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	protected boolean shouldJoin(BlockPos pos, IBlockState state, HomeBlockTileEntity te) {
+	protected boolean shouldJoin(BlockPos pos, BlockState state, HomeBlockTileEntity te) {
 		return rand.nextBoolean() && rand.nextBoolean();
 	}
 

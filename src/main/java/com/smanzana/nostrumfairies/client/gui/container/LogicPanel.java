@@ -19,7 +19,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
@@ -96,7 +96,7 @@ public class LogicPanel {
 	 * @param player
 	 * @return
 	 */
-	public boolean handleSlotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
+	public boolean handleSlotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player) {
 		if (slotId == templateSlot.slotNumber) {
 			if (player.inventory.getItemStack().isEmpty()) {
 				// empty hand. Right-click?
@@ -170,7 +170,7 @@ public class LogicPanel {
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public static class LogicPanelGui {
 		
 		private static final ResourceLocation TEXT = new ResourceLocation(NostrumFairies.MODID + ":textures/gui/container/logic_panel.png");

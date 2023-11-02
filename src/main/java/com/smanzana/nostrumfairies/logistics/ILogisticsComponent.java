@@ -6,7 +6,7 @@ import java.util.List;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -72,13 +72,13 @@ public interface ILogisticsComponent {
 	// public float getEnergyProduction(); // and consumption? What drives all of this?
 	
 	/**
-	 * Construct an NBTTagCompound representation of this logistics component.
+	 * Construct an CompoundNBT representation of this logistics component.
 	 * If this component is stored in a block, the block specifics should be omitted.
 	 * Only enough to be deserialized to remain part of the network (and looked up later
 	 * for linking) should be included.
 	 * @return
 	 */
-	public NBTTagCompound toNBT();
+	public CompoundNBT toNBT();
 	
 	public String getSerializationTag();
 	

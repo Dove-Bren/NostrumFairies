@@ -7,7 +7,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 
 /**
  * Wraps requesting a dynamic list of items from the logistics network.
@@ -23,7 +23,7 @@ public class LogisticsItemWithdrawRequester extends LogisticsItemTaskRequester<L
 		this.useBuffers = useBuffers;
 	}
 	
-	public LogisticsItemWithdrawRequester(LogisticsNetwork network, boolean useBuffers, EntityLivingBase entityRequester) {
+	public LogisticsItemWithdrawRequester(LogisticsNetwork network, boolean useBuffers, LivingEntity entityRequester) {
 		super(network, entityRequester);
 		this.useBuffers = useBuffers;
 	}
@@ -34,7 +34,7 @@ public class LogisticsItemWithdrawRequester extends LogisticsItemTaskRequester<L
 	}
 	
 	@Override
-	public LogisticsTaskWithdrawItem makeTask(EntityLivingBase entity, ItemDeepStack item) {
+	public LogisticsTaskWithdrawItem makeTask(LivingEntity entity, ItemDeepStack item) {
 		return new LogisticsTaskWithdrawItem(entity, "Item Request", item, useBuffers);
 	}
 	

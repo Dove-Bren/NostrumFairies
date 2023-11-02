@@ -4,7 +4,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -24,7 +24,7 @@ public class CapabilityHandler {
 		
 		//if player. Or not. Should get config going. For now, if it's a player make it?
 		//also need to catch death, etc
-		if (event.getObject() instanceof EntityPlayer) {
+		if (event.getObject() instanceof PlayerEntity) {
 			//attach that shizz
 			event.addCapability(FEY_CAP_LOC, new AttributeProvider(event.getObject()));
 			
@@ -38,11 +38,11 @@ public class CapabilityHandler {
 	public void onClone(PlayerEvent.Clone event) {
 		//if (event.isWasDeath()) {
 			INostrumFeyCapability cap = NostrumFairies.getFeyWrapper(event.getOriginal());
-			event.getEntityPlayer().getCapability(AttributeProvider.CAPABILITY, null)
+			event.getPlayerEntity().getCapability(AttributeProvider.CAPABILITY, null)
 				.readNBT(cap.toNBT());
 		//}
-		//if (!event.getEntityPlayer().world.isRemote)
-		//	NostrumMagica.proxy.syncPlayer((EntityPlayerMP) event.getEntityPlayer());
+		//if (!event.getPlayerEntity().world.isRemote)
+		//	NostrumMagica.proxy.syncPlayer((ServerPlayerEntity) event.getPlayerEntity());
 	}
 	
 //	@SubscribeEvent

@@ -27,7 +27,7 @@ public enum PotionIcon {
 		this.v = v;
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public void draw(Minecraft mc, int posX, int posY) {
 		mc.renderEngine.bindTexture(text);
 		

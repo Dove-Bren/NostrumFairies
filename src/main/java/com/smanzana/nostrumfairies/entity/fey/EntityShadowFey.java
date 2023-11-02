@@ -29,12 +29,13 @@ import com.smanzana.nostrummagica.spells.components.shapes.SingleShape;
 import com.smanzana.nostrummagica.spells.components.triggers.SeekingBulletTrigger;
 
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.IMobEntityData;
 import net.minecraft.entity.IRangedAttackMob;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
@@ -43,16 +44,15 @@ import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAIWander;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
-import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.IMob;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Enchantments;
-import net.minecraft.init.Items;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.datasync.IDataSerializers;
 import net.minecraft.network.play.server.SPacketAnimation;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
@@ -65,10 +65,10 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
-public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
+public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	
 	protected static final DataParameter<BattleStanceShadowFey> STANCE  = EntityDataManager.<BattleStanceShadowFey>createKey(EntityShadowFey.class, BattleStanceShadowFey.instance());
-	protected static final DataParameter<Boolean> MORPHING = EntityDataManager.<Boolean>createKey(EntityShadowFey.class, DataSerializers.BOOLEAN);
+	protected static final DataParameter<Boolean> MORPHING = EntityDataManager.<Boolean>createKey(EntityShadowFey.class, IDataSerializers.BOOLEAN);
 
 	private static Spell SPELL_SLOW = null;
 	
@@ -110,7 +110,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 
 	// only available on server
 	protected boolean shouldUseBow() {
-		EntityLivingBase target = this.getAttackTarget();
+		LivingEntity target = this.getAttackTarget();
 		if (target != null && this.getDistanceSq(target) < 9) {
 			return false;
 		}
@@ -140,7 +140,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 
 		this.tasks.addTask(priority++, new EntityAISwimming(this));
 		//EntityCreature theEntityIn, Class<T> classToAvoidIn, Predicate <? super T > avoidTargetSelectorIn, float avoidDistanceIn, double farSpeedIn, double nearSpeedIn
-		this.tasks.addTask(priority++, new EntityAIAvoidEntity<EntityPlayer>(this, EntityPlayer.class, (player) -> {
+		this.tasks.addTask(priority++, new EntityAIAvoidEntity<PlayerEntity>(this, PlayerEntity.class, (player) -> {
 				return isDangerItem(player.getHeldItemMainhand()) || isDangerItem(player.getHeldItemOffhand());
 			}, 5, 1, 1.2));
 		this.tasks.addTask(priority++, new EntityAIAttackRanged<EntityShadowFey>(this, 1.0, 0, 25) { // All delay in animation
@@ -181,16 +181,16 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 			return elf.getAttackTarget() != null && !elf.getMorphing();
 		}, new Spell[]{SPELL_SLOW}));
 		this.tasks.addTask(priority++, new EntityAIWander(this, 1.0D));
-		this.tasks.addTask(priority++, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
+		this.tasks.addTask(priority++, new EntityAIWatchClosest(this, PlayerEntity.class, 8.0F));
 		this.tasks.addTask(priority++, new EntityAILookIdle(this));
 		
 		priority = 1;
 		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]));
 		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityFeyBase>(this, EntityFeyBase.class, 5, true, false, (Predicate <EntityFeyBase >)null));
-		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityPlayer>(this, EntityPlayer.class, 10, true, false, (player) -> {
+		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<PlayerEntity>(this, PlayerEntity.class, 10, true, false, (player) -> {
 			return !player.isSneaking();
 		}));
-		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityLiving>(this, EntityLiving.class, 5, true, false, (living) -> {
+		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<MobEntity>(this, MobEntity.class, 5, true, false, (living) -> {
 			return living != null && !living.isDead && !(living instanceof IMob);
 		}));
 	}
@@ -269,7 +269,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		}
 	});
 	
-	protected void shootArrowAt(EntityLivingBase target, float distanceFactor) {
+	protected void shootArrowAt(LivingEntity target, float distanceFactor) {
 		EntityTippedArrowEx entitytippedarrow = new EntityTippedArrowEx(this.world, this);
 		entitytippedarrow.setFilter(SHADOW_FEY_ARROW_FILTER);
 		double d0 = target.posX - this.posX;
@@ -314,14 +314,14 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		this.world.spawnEntity(entitytippedarrow);
 	}
 	
-	protected void slashAt(EntityLivingBase target, float distanceFactor) {
+	protected void slashAt(LivingEntity target, float distanceFactor) {
 		if (this.attackEntityAsMob(target)) {
 			this.heal(1f);
 		}
 	}
 
 	@Override
-	public void attackEntityWithRangedAttack(EntityLivingBase target, float distanceFactor) {
+	public void attackEntityWithRangedAttack(LivingEntity target, float distanceFactor) {
 		if (this.shouldUseBow()) {
 			shootArrowAt(target, distanceFactor);
 		} else {
@@ -401,15 +401,15 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 			break;
 		}
 		fey.copyLocationAndAnglesFrom(this);
-		fey.onInitialSpawn(this.world.getDifficultyForLocation(new BlockPos(fey)), (IEntityLivingData)null);
+		fey.onInitialSpawn(this.world.getDifficultyForLocation(new BlockPos(fey)), (IMobEntityData)null);
 		
 		world.removeEntity(this);
 		world.spawnEntity(fey);
 		fey.setCursed(true);
 		
-		this.world.playEvent((EntityPlayer)null, 1027, new BlockPos((int)this.posX, (int)this.posY, (int)this.posZ), 0);
+		this.world.playEvent((PlayerEntity)null, 1027, new BlockPos((int)this.posX, (int)this.posY, (int)this.posZ), 0);
 		
-		for (EntityPlayer player : world.playerEntities) {
+		for (PlayerEntity player : world.playerEntities) {
 			if (player.getDistanceSq(this) < 36) {
 				INostrumMagic attr = NostrumMagica.getMagicWrapper(player);
 				if (attr != null) {
@@ -428,7 +428,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 		// I'll just go ahead and loop this. Can't be that big.
 		if (!world.isRemote) {
 			boolean morphing = false;
-			for (EntityPlayer player : world.playerEntities) {
+			for (PlayerEntity player : world.playerEntities) {
 				if ((isDangerItem(player.getHeldItemMainhand()) || isDangerItem(player.getHeldItemOffhand()))
 						&& player.getDistanceSq(this) < 36) {
 					morphing = true;
@@ -458,7 +458,7 @@ public class EntityShadowFey extends EntityMob implements IRangedAttackMob {
 	}
 	
 	@Override
-	public IEntityLivingData onInitialSpawn(DifficultyInstance difficulty, @Nullable IEntityLivingData livingdata) {
+	public IMobEntityData onInitialSpawn(DifficultyInstance difficulty, @Nullable IMobEntityData livingdata) {
 		livingdata = super.onInitialSpawn(difficulty, livingdata);
 		
 		this.setLeftHanded(this.rand.nextBoolean());

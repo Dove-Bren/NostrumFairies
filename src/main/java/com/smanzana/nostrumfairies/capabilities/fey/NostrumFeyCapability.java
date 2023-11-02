@@ -43,12 +43,12 @@ import com.smanzana.nostrummagica.items.SpellScroll;
 import com.smanzana.nostrummagica.spells.Spell;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.block.state.BlockState;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -99,7 +99,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	private MutablePair<BlockPos, BlockPos> templateSelection;
 	
 	// Operational transient data
-	private EntityLivingBase owner;
+	private LivingEntity owner;
 	private Map<FairyGaelType, List<FairyRecord>> deployedFairies;
 	private int deactivationTicks;
 	private int ticksExisted;
@@ -182,8 +182,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	}
 
 	@Override
-	public NBTTagCompound toNBT() {
-		NBTTagCompound nbt = new NBTTagCompound();
+	public CompoundNBT toNBT() {
+		CompoundNBT nbt = new CompoundNBT();
 		
 		nbt.setBoolean(NBT_UNLOCKED, isUnlocked);
 		nbt.setBoolean(/*NBT_ENABLED*/"enabled", !isDisabled);
@@ -203,7 +203,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	}
 
 	@Override
-	public void readNBT(NBTTagCompound nbt) {
+	public void readNBT(CompoundNBT nbt) {
 		clearFairies();
 		this.isUnlocked = nbt.getBoolean(NBT_UNLOCKED);
 		this.isDisabled = !nbt.getBoolean("enabled");
@@ -225,7 +225,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	}
 
 	@Override
-	public void provideEntity(EntityLivingBase owner) {
+	public void provideEntity(LivingEntity owner) {
 		if (owner != this.owner) {
 			if (this.owner == null) {
 				MinecraftForge.EVENT_BUS.register(this);
@@ -240,8 +240,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				this.depositRequester = new LogisticsItemDepositRequester(null, owner);
 				this.withdrawRequester = new LogisticsItemWithdrawRequester(null, true, owner);
 				
-				if (owner instanceof EntityPlayer) {
-					this.buildPlanner.setInventory(((EntityPlayer) owner).inventory);
+				if (owner instanceof PlayerEntity) {
+					this.buildPlanner.setInventory(((PlayerEntity) owner).inventory);
 					this.buildPlanner.setWorld(owner.world);
 				}
 			}
@@ -257,7 +257,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			for (int z = -BUILD_SCAN_RADIUS; z <= BUILD_SCAN_RADIUS; z++)
 			for (int y = -BUILD_SCAN_RADIUS; y <= BUILD_SCAN_RADIUS; y++) {
 				cursor.setPos(owner.posX + x, owner.posY + y, owner.posZ + z);
-				IBlockState state = owner.world.getBlockState(cursor);
+				BlockState state = owner.world.getBlockState(cursor);
 				if (state != null && state.getBlock() instanceof TemplateBlock) {
 					builds.add(cursor.toImmutable());
 				}
@@ -291,8 +291,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			this.deactivationTicks--;
 		}
 		
-		if (deactivationTicks == 0 && owner instanceof EntityPlayer) {
-			EntityPlayer player = (EntityPlayer) owner;
+		if (deactivationTicks == 0 && owner instanceof PlayerEntity) {
+			PlayerEntity player = (PlayerEntity) owner;
 			if (player.openContainer instanceof FairyScreenGui.FairyScreenContainer
 					|| player.isSpectator()) {
 				this.retractFairies();
@@ -338,7 +338,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						}
 						
 						// If player has items to deposit or request, AND there are networks available
-						if (owner instanceof EntityPlayer) {
+						if (owner instanceof PlayerEntity) {
 							// If there's a configured anchor, use that network.
 							if (!fairyInventory.getLogisticsGem().isEmpty()) {
 								tickNetworks.clear();
@@ -500,7 +500,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	
 	@SubscribeEvent
 	public void onEntityTick(LivingUpdateEvent event) {
-		if (event.getEntityLiving() == this.owner && !owner.world.isRemote) {
+		if (event.getMobEntity() == this.owner && !owner.world.isRemote) {
 			this.tick();
 		}
 	}
@@ -565,7 +565,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				
 				FairyRecord record = new FairyRecord(fairy, index);
 				this.deployedFairies.get(type).add(record);
-				if (owner instanceof EntityPlayer) {
+				if (owner instanceof PlayerEntity) {
 					NostrumFairiesSounds.APPEAR.play(null, world, x, y, z);
 				}
 			}
@@ -747,11 +747,11 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	 * @return
 	 */
 	protected @Nullable NonNullList<ItemStack> generatePullRequests() {
-		if (!this.logisticsFairyUnlocked() || !(owner instanceof EntityPlayer)) { // player required for inventory
+		if (!this.logisticsFairyUnlocked() || !(owner instanceof PlayerEntity)) { // player required for inventory
 			return null;
 		}
 		
-		InventoryPlayer playerInv = ((EntityPlayer) owner).inventory;
+		InventoryPlayer playerInv = ((PlayerEntity) owner).inventory;
 		
 		NonNullList<ItemStack> pullList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPullTemplateSize(); i++) {
@@ -847,11 +847,11 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	 * @return
 	 */
 	protected @Nullable NonNullList<ItemStack> generatePushRequests() {
-		if (!this.logisticsFairyUnlocked() || !(owner instanceof EntityPlayer)) { // player required for inventory
+		if (!this.logisticsFairyUnlocked() || !(owner instanceof PlayerEntity)) { // player required for inventory
 			return null;
 		}
 		
-		InventoryPlayer playerInv = ((EntityPlayer) owner).inventory;
+		InventoryPlayer playerInv = ((PlayerEntity) owner).inventory;
 		
 		NonNullList<ItemStack> templateList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPushTemplateSize(); i++) {

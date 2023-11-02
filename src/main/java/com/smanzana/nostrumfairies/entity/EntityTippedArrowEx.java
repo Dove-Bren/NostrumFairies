@@ -8,7 +8,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.EntityTippedArrow;
 import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -42,7 +42,7 @@ public class EntityTippedArrowEx extends EntityTippedArrow {
 		filter = ARROW_TARGETS_VANILLA;
 	}
 
-	public EntityTippedArrowEx(World worldIn, EntityLivingBase shooter) {
+	public EntityTippedArrowEx(World worldIn, LivingEntity shooter) {
 		super(worldIn, shooter);
 		filter = ARROW_TARGETS_VANILLA;
 	}

@@ -8,14 +8,14 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrummagica.NostrumMagica;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.property.IExtendedBlockState;
 
@@ -27,10 +27,10 @@ public class TemplateBlockBakedModel implements IBakedModel {
 		particle = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(new ResourceLocation(NostrumMagica.MODID, "blocks/mimic_facade").toString());
 	}
 	
-	protected IBlockState getNestedState(@Nullable IBlockState state) {
+	protected BlockState getNestedState(@Nullable BlockState state) {
 		if (state != null) {
 			IExtendedBlockState ex = (IExtendedBlockState) state;
-			IBlockState nestedState = ex.getValue(TemplateBlock.NESTED_STATE);
+			BlockState nestedState = ex.getValue(TemplateBlock.NESTED_STATE);
 			
 			while (nestedState instanceof IExtendedBlockState && nestedState.getBlock() instanceof TemplateBlock) {
 				nestedState = ((IExtendedBlockState)nestedState).getValue(TemplateBlock.NESTED_STATE);
@@ -44,7 +44,7 @@ public class TemplateBlockBakedModel implements IBakedModel {
 		return null;
 	}
 	
-	protected IBakedModel getModelToRender(@Nullable IBlockState nestedState) {
+	protected IBakedModel getModelToRender(@Nullable BlockState nestedState) {
 		IBakedModel missing = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel();
 		IBakedModel nestedModel = null;
 		
@@ -56,9 +56,9 @@ public class TemplateBlockBakedModel implements IBakedModel {
 	}
 	
 	@Override
-	public List<BakedQuad> getQuads(@Nullable IBlockState state, EnumFacing side, long rand) {
+	public List<BakedQuad> getQuads(@Nullable BlockState state, Direction side, long rand) {
 		return new LinkedList<>();
-//		IBlockState nested = getNestedState(state);
+//		BlockState nested = getNestedState(state);
 //		return getModelToRender(nested).getQuads(nested, side, rand);
 	}
 

@@ -10,7 +10,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -55,10 +55,10 @@ public class LogisticsUpdateSingleResponse implements IMessage {
 	private static final String NBT_DATA = "data";
 	private static final String NBT_UUID = "uuid";
 	
-	protected NBTTagCompound tag;
+	protected CompoundNBT tag;
 	
 	public LogisticsUpdateSingleResponse() {
-		tag = new NBTTagCompound();
+		tag = new CompoundNBT();
 	}
 	
 	public LogisticsUpdateSingleResponse(UUID id, @Nullable LogisticsNetwork network) {

@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -206,7 +206,7 @@ public class LogisticsLogicComponent {
 		this.dirty();
 	}
 	
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		nbt.setString(NBT_LOGIC_MODE, mode.name());
 		nbt.setInteger(NBT_LOGIC_COUNT, count);
 		nbt.setString(NBT_LOGIC_OP, op.name());
@@ -217,7 +217,7 @@ public class LogisticsLogicComponent {
 		return nbt;
 	}
 	
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		try {
 			this.mode = LogicMode.valueOf(nbt.getString(NBT_LOGIC_MODE).toUpperCase());
 		} catch (Exception e) {

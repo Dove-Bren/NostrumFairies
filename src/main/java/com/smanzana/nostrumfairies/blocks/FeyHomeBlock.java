@@ -24,18 +24,18 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.NonNullList;
@@ -137,40 +137,40 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		return (func.ordinal() & 1);
 	}
 	
-	private EnumFacing facingFromMeta(int meta) {
+	private Direction facingFromMeta(int meta) {
 		int raw = (meta >> 1) & 0x3;
-		return EnumFacing.HORIZONTALS[raw];
+		return Direction.HORIZONTALS[raw];
 	}
 	
-	private int metaFromFacing(EnumFacing facing) {
+	private int metaFromFacing(Direction facing) {
 		return facing.getHorizontalIndex() << 1;
 	}
 	
 	@Override
-	public IBlockState getStateFromMeta(int meta) {
+	public BlockState getStateFromMeta(int meta) {
 		return getDefaultState()
 				.withProperty(BLOCKFUNC, functionFromMeta(meta))
 				.withProperty(FACING, facingFromMeta(meta));
 	}
 	
 	@Override
-	public int getMetaFromState(IBlockState state) {
+	public int getMetaFromState(BlockState state) {
 		return metaFromFunc(state.getValue(BLOCKFUNC)) | metaFromFacing(state.getValue(FACING));
 	}
 	
 	@Override
-	public Item getItemDropped(IBlockState state, Random rand, int fortune) {
+	public Item getItemDropped(BlockState state, Random rand, int fortune) {
         return super.getItemDropped(state, rand, fortune);
 		//return null;
     }
 	
 	@Override
-	public boolean isSideSolid(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side) {
+	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
 		return true;
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(World worldIn, BlockPos pos, BlockState state, PlayerEntity playerIn, EnumHand hand, Direction side, float hitX, float hitY, float hitZ) {
 		if (state == null || !(state.getBlock() instanceof FeyHomeBlock)) {
 			return false;
 		}
@@ -189,23 +189,23 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	}
 	
 	@Override
-	public EnumBlockRenderType getRenderType(IBlockState state) {
+	public EnumBlockRenderType getRenderType(BlockState state) {
 		return EnumBlockRenderType.MODEL;
 	}
 	
 	@Override
-	public boolean isFullBlock(IBlockState state) {
+	public boolean isFullBlock(BlockState state) {
 		return true;
 	}
 	
 	@Override
-	public boolean isOpaqueCube(IBlockState state) {
+	public boolean isOpaqueCube(BlockState state) {
 		return true;
 	}
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
+	public AxisAlignedBB getCollisionBoundingBox(BlockState blockState, IBlockAccess worldIn, BlockPos pos) {
 		return super.getCollisionBoundingBox(blockState, worldIn, pos);
 	}
 	
@@ -215,30 +215,30 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
     }
 	
 	@Override
-	public void randomTick(World worldIn, BlockPos pos, IBlockState state, Random random) {
+	public void randomTick(World worldIn, BlockPos pos, BlockState state, Random random) {
 		super.randomTick(worldIn, pos, state, random);
 	}
 	
 	@Override
-	@SideOnly(Side.CLIENT)
-	public void randomDisplayTick(IBlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+	@OnlyIn(Dist.CLIENT)
+	public void randomDisplayTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
 		super.randomDisplayTick(stateIn, worldIn, pos, rand);
 	}
 	
 	@Override
-	public boolean canSustainLeaves(IBlockState state, IBlockAccess world, BlockPos pos) {
+	public boolean canSustainLeaves(BlockState state, IBlockAccess world, BlockPos pos) {
 		return true;
 	}
 	
-	public boolean isCenter(IBlockState state) {
+	public boolean isCenter(BlockState state) {
 		return state.getValue(BLOCKFUNC) == BlockFunction.CENTER;
 	}
 	
-	public ResidentType getType(IBlockState state) {
+	public ResidentType getType(BlockState state) {
 		return type;
 	}
 	
-	private void destroy(World world, BlockPos pos, IBlockState state) {
+	private void destroy(World world, BlockPos pos, BlockState state) {
 		if (state == null)
 			state = world.getBlockState(pos);
 		
@@ -267,12 +267,12 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		world.setBlockToAir(getPaired(state, pos));
 	}
 	
-	private BlockPos getPaired(IBlockState state, BlockPos pos) {
-		return pos.offset(state.getValue(BLOCKFUNC) == BlockFunction.CENTER ? EnumFacing.UP : EnumFacing.DOWN);
+	private BlockPos getPaired(BlockState state, BlockPos pos) {
+		return pos.offset(state.getValue(BLOCKFUNC) == BlockFunction.CENTER ? Direction.UP : Direction.DOWN);
 	}
 	
 	@Override
-	public void breakBlock(World world, BlockPos pos, IBlockState state) {
+	public void breakBlock(World world, BlockPos pos, BlockState state) {
 		this.destroy(world, pos, state);
 		world.removeTileEntity(pos);
 		super.breakBlock(world, pos, state);
@@ -301,7 +301,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	}
 	
 	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
+	public BlockState getStateForPlacement(World world, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
 		return this.getDefaultState()
 				.withProperty(BLOCKFUNC, BlockFunction.CENTER)
 				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
@@ -309,22 +309,22 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	}
 	
 	@Override
-	public int damageDropped(IBlockState state) {
+	public int damageDropped(BlockState state) {
 //		return metaFromType(state.getValue(TYPE));
 		return 0;
 	}
 
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	@Override
 	public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> list) {
 		super.getSubBlocks(tab, list);
 	}
 	
 	@Override
-	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+	public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
 		// This method hopefully is ONLY called when placed manually in the world.
 		// Auto-create slave state
-		EnumFacing facing = state.getValue(FACING);
+		Direction facing = state.getValue(FACING);
 		this.spawn(worldIn, pos, type, facing);
 		
 //		worldIn.setBlockState(pos.up(), this.getDefaultState()
@@ -333,7 +333,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
-		IBlockState state = this.getStateFromMeta(meta);
+		BlockState state = this.getStateFromMeta(meta);
 		if (isCenter(state)) {
 			return new HomeBlockTileEntity(type);
 		}
@@ -341,7 +341,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		return null;
 	}
 	
-	public BlockPos getMasterPos(World world, BlockPos pos, IBlockState state) {
+	public BlockPos getMasterPos(World world, BlockPos pos, BlockState state) {
 		if (state == null) {
 			state = world.getBlockState(pos);
 		}
@@ -358,12 +358,12 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	 * @param base
 	 * @param type
 	 */
-	public void spawn(World world, BlockPos base, ResidentType type, EnumFacing direction) {
+	public void spawn(World world, BlockPos base, ResidentType type, Direction direction) {
 		//world.setBlockState(base, getDefaultState().withProperty(BLOCKFUNC, BlockFunction.CENTER).withProperty(FACING, direction));
 		world.setBlockState(base.up(), getDefaultState().withProperty(BLOCKFUNC, BlockFunction.TOP).withProperty(FACING, direction)); // could be random
 		world.setBlockState(base.up().up(), Blocks.LOG2.getDefaultState().withProperty(BlockNewLog.VARIANT, BlockPlanks.EnumType.DARK_OAK));
 		
-		IBlockState leaves = Blocks.LEAVES2.getDefaultState().withProperty(BlockNewLeaf.VARIANT, BlockPlanks.EnumType.DARK_OAK);
+		BlockState leaves = Blocks.LEAVES2.getDefaultState().withProperty(BlockNewLeaf.VARIANT, BlockPlanks.EnumType.DARK_OAK);
 		BlockPos origin = base.up().up();
 		for (BlockPos cursor : new BlockPos[] {
 				// Layer 1

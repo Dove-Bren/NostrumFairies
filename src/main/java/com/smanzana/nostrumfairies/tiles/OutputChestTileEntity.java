@@ -15,7 +15,7 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
@@ -127,7 +127,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		nbt = super.writeToNBT(nbt);
 		
 		// Save templates
@@ -138,27 +138,27 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 				continue;
 			}
 			
-			NBTTagCompound template = new NBTTagCompound();
+			CompoundNBT template = new CompoundNBT();
 			
 			template.setInteger(NBT_TEMPLATE_INDEX, i);
-			template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new NBTTagCompound()));
+			template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
 			
 			templates.appendTag(template);
 		}
 		nbt.setTag(NBT_TEMPLATES, templates);
-		nbt.setTag(NBT_LOGIC_COMP, this.logicComp.writeToNBT(new NBTTagCompound()));
+		nbt.setTag(NBT_LOGIC_COMP, this.logicComp.writeToNBT(new CompoundNBT()));
 		
 		return nbt;
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
+	public void readFromNBT(CompoundNBT nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
 		NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
 		for (int i = 0; i < list.tagCount(); i++) {
-			NBTTagCompound template = list.getCompoundTagAt(i);
+			CompoundNBT template = list.getCompoundTagAt(i);
 			int index = template.getInteger(NBT_TEMPLATE_INDEX);
 			
 			if (index < 0 || index > SLOTS) {
@@ -171,7 +171,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 			templates.set(index, stack);
 		}
 		
-		NBTTagCompound tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
+		CompoundNBT tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
 		if (tag != null) {
 			this.logicComp.readFromNBT(tag);
 		}

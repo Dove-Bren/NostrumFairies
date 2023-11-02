@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.entity;
 
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.DamageSource;
 
 /**
@@ -8,7 +8,7 @@ import net.minecraft.util.DamageSource;
  * @author Skyler
  *
  */
-public interface IEntityListener<T extends EntityLivingBase> {
+public interface IEntityListener<T extends LivingEntity> {
 
 	public void onDeath(T entity);
 	

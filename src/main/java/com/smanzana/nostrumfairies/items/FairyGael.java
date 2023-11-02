@@ -20,14 +20,14 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.IEntityLivingData;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.IMobEntityData;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -124,12 +124,12 @@ public class FairyGael extends Item implements ILoreTagged {
 		return this.getUnlocalizedName() + "." + type.suffix;
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public String getModelName(ItemStack stack) {
 		return getModelName(getTypeOf(stack), isCracked(stack));
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public String getModelName(FairyGaelType type, boolean cracked) {
 		return ID + "_" + type.suffix + (cracked ? "_cracked" : "");
 	}
@@ -137,7 +137,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	/**
 	 * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
 	 */
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	@Override
 	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
 		if (this.isInCreativeTab(tab)) {
@@ -183,7 +183,7 @@ public class FairyGael extends Item implements ILoreTagged {
 				world = DimensionManager.getWorld(0);
 			}
 			
-			fairy.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(0, 10, 0)), (IEntityLivingData)null);
+			fairy.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(0, 10, 0)), (IMobEntityData)null);
 			setStoredEntity(stack, fairy);
 		}
 	}
@@ -193,7 +193,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		
 		initGael(stack, world);
 		
-		NBTTagCompound nbt = stack.getTagCompound();
+		CompoundNBT nbt = stack.getTagCompound();
 		Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompoundTag("data"), world, x, y, z, true);
 		if (entity != null) {
 			if (entity instanceof EntityFairy && !(entity instanceof EntityPersonalFairy)) {
@@ -220,7 +220,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	
 	public static void setStoredEntity(ItemStack stack, EntityPersonalFairy fey) {
 		if (fey != null) {
-			NBTTagCompound tag = new NBTTagCompound();
+			CompoundNBT tag = new CompoundNBT();
 			tag.setString("name", fey.getName());
 			tag.setDouble("healthD", (double) fey.getHealth() / Math.max(1, (double) fey.getMaxHealth()));
 			tag.setDouble("energyD", (double) fey.getEnergy() / Math.max(1, (double) fey.getMaxEnergy()));
@@ -267,7 +267,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		
 		double energy = getStoredEnergy(gael) + (NostrumFairies.random.nextDouble() * .00085 * potency);
 		double health = getStoredHealth(gael) + (NostrumFairies.random.nextDouble() * .0002 * potency);
-		NBTTagCompound tag = gael.getTagCompound();
+		CompoundNBT tag = gael.getTagCompound();
 		if (tag == null) {
 			initGael(gael, null);
 			tag = gael.getTagCompound();
@@ -291,7 +291,7 @@ public class FairyGael extends Item implements ILoreTagged {
 			return ItemStack.EMPTY;
 		}
 		ItemStack gael = new ItemStack(instance(), 1, metaFromTypes(false, type));
-		NBTTagCompound tag = new NBTTagCompound();
+		CompoundNBT tag = new CompoundNBT();
 		tag.setTag("data", FeySoulStone.getStoredEntityTag(soulStone));
 		tag.setString("name", FeySoulStone.getStoredEntityName(soulStone));
 		gael.setTagCompound(tag);
@@ -325,16 +325,16 @@ public class FairyGael extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) { 
+	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, EnumHand hand, Direction facing, float hitX, float hitY, float hitZ) { 
 		return EnumActionResult.PASS;
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, EnumHand hand) {
 		return ActionResult.newResult(EnumActionResult.PASS, playerIn.getHeldItem(hand));
 	}
 	
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	@Override
 	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
 		if (isCracked(stack)) {

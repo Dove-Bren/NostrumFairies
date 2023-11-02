@@ -7,7 +7,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
 import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.EnumParticleTypes;
@@ -39,7 +39,7 @@ public class EntityElfCrafter extends EntityElf {
 			}
 			
 			// Dwarves only want to work at ones from dwarf blocks
-			IBlockState block = world.getBlockState(target);
+			BlockState block = world.getBlockState(target);
 			if (block == null || !(block.getBlock() instanceof CraftingBlockElf)) {
 				return false;
 			}

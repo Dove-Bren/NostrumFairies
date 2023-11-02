@@ -3,9 +3,9 @@ package com.smanzana.nostrumfairies.capabilities;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NBTBase;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
@@ -23,16 +23,16 @@ public class AttributeProvider implements ICapabilitySerializable<NBTBase> {
 	}
 
 	@Override
-	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
+	public boolean hasCapability(Capability<?> capability, Direction facing) {
 		return capability == CAPABILITY;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+	public <T> T getCapability(Capability<T> capability, Direction facing) {
 		if (capability == CAPABILITY) {
-			if (entity instanceof EntityLivingBase)
-				this.instance.provideEntity((EntityLivingBase) entity);
+			if (entity instanceof LivingEntity)
+				this.instance.provideEntity((LivingEntity) entity);
 			return (T) this.instance;
 		}
 		

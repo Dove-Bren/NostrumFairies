@@ -92,7 +92,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -446,7 +446,7 @@ public class ClientProxy extends CommonProxy {
 	}
 	
 	@Override
-	public EntityPlayer getPlayer() {
+	public PlayerEntity getPlayer() {
 		return Minecraft.getMinecraft().player;
 	}
 	
@@ -507,7 +507,7 @@ public class ClientProxy extends CommonProxy {
 	}
 	
 	@Override
-	public void pushCapabilityRefresh(EntityPlayer player) {
+	public void pushCapabilityRefresh(PlayerEntity player) {
 		if (!player.world.isRemote) {
 			super.pushCapabilityRefresh(player);
 		}
@@ -516,7 +516,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@SubscribeEvent
 	public void onMouse(MouseEvent event) {
-		EntityPlayer player = Minecraft.getMinecraft().player;
+		PlayerEntity player = Minecraft.getMinecraft().player;
 		int wheel = event.getDwheel();
 		if (wheel != 0) {
 			if (!NostrumFairies.getFeyWrapper(player)
@@ -541,7 +541,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@SubscribeEvent
 	public void onKey(KeyInputEvent event) {
-		EntityPlayer player = Minecraft.getMinecraft().player;
+		PlayerEntity player = Minecraft.getMinecraft().player;
 		final boolean forwardPressed = bindingWandModeForward.isPressed(); 
 		if (forwardPressed || bindingWandModeBackward.isPressed()) {
 			final INostrumMagic magic = NostrumMagica.getMagicWrapper(player);

@@ -9,9 +9,9 @@ import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicMode;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicOp;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -56,7 +56,7 @@ public class LogicPanelActionMessage implements IMessage {
 					}
 					
 					// Cause an update to be sent back
-					IBlockState state = world.getBlockState(pos);
+					BlockState state = world.getBlockState(pos);
 					world.notifyBlockUpdate(pos, state, state, 2);
 				});
 				
@@ -84,7 +84,7 @@ public class LogicPanelActionMessage implements IMessage {
 	private static final String NBT_ITEM_VAL = "item";
 	private static final String NBT_POS = "pos";
 	
-	protected NBTTagCompound tag;
+	protected CompoundNBT tag;
 	
 	public LogicPanelActionMessage() {
 		this(null, (String) null, null);
@@ -107,7 +107,7 @@ public class LogicPanelActionMessage implements IMessage {
 	}
 	
 	protected LogicPanelActionMessage(Action type, String val, BlockPos pos) {
-		tag = new NBTTagCompound();
+		tag = new CompoundNBT();
 		
 		if (type != null) {
 			tag.setString(NBT_TYPE, type.name());
@@ -117,7 +117,7 @@ public class LogicPanelActionMessage implements IMessage {
 	}
 	
 	protected LogicPanelActionMessage(Action type, @Nonnull ItemStack template, BlockPos pos) {
-		tag = new NBTTagCompound();
+		tag = new CompoundNBT();
 		
 		if (type != null) {
 			tag.setString(NBT_TYPE, type.name());

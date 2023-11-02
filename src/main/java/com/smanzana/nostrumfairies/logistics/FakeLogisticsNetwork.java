@@ -13,7 +13,7 @@ import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -64,8 +64,8 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 	private static final String NBT_COMPONENTS = "components";
 
 	@Override
-	public NBTTagCompound toNBT() {
-		NBTTagCompound tag = new NBTTagCompound();
+	public CompoundNBT toNBT() {
+		CompoundNBT tag = new CompoundNBT();
 		
 		tag.setUniqueId(NBT_ID, getUUID());
 		NBTTagList list = new NBTTagList();
@@ -77,7 +77,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		return tag;
 	}
 	
-	public static LogisticsNetwork fromNBT(NBTTagCompound tag) {
+	public static LogisticsNetwork fromNBT(CompoundNBT tag) {
 		UUID id = tag.getUniqueId(NBT_ID);
 		FakeLogisticsNetwork network = new FakeLogisticsNetwork(id);
 		
@@ -207,8 +207,8 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		private static final String NBT_COMP_ITEMS = "items";
 
 		@Override
-		public NBTTagCompound toNBT() {
-			NBTTagCompound tag = new NBTTagCompound();
+		public CompoundNBT toNBT() {
+			CompoundNBT tag = new CompoundNBT();
 			
 			tag.setDouble(NBT_COMP_LOG_RANGE, logisticsRange);
 			tag.setDouble(NBT_COMP_LINK_RANGE, linkRange);
@@ -226,14 +226,14 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 				if (stack.isEmpty()) {
 					continue;
 				}
-				list.appendTag(stack.writeToNBT(new NBTTagCompound()));
+				list.appendTag(stack.writeToNBT(new CompoundNBT()));
 			}
 			tag.setTag(NBT_COMP_ITEMS, list);
 			
 			return tag;
 		}
 		
-		public static FakeLogisticsComponent fromNBT(NBTTagCompound tag) {
+		public static FakeLogisticsComponent fromNBT(CompoundNBT tag) {
 			double logisticsRange = tag.getDouble(NBT_COMP_LOG_RANGE);
 			double linkRange = tag.getDouble(NBT_COMP_LINK_RANGE);
 			int dim = tag.getInteger(NBT_COMP_DIM);
@@ -251,7 +251,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			return new FakeLogisticsComponent(logisticsRange, linkRange, world, BlockPos.fromLong(pos), items);
 		}
 		
-		public void overrideFromNBT(NBTTagCompound tag) {
+		public void overrideFromNBT(CompoundNBT tag) {
 			double logisticsRange = tag.getDouble(NBT_COMP_LOG_RANGE);
 			double linkRange = tag.getDouble(NBT_COMP_LINK_RANGE);
 			int dim = tag.getInteger(NBT_COMP_DIM);

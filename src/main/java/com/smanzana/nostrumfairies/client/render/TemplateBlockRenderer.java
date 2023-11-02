@@ -10,7 +10,7 @@ import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -21,7 +21,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class TemplateBlockRenderer extends TileEntitySpecialRenderer<TemplateBlockTileEntity> implements StaticTESR<TemplateBlockTileEntity> {
 
 	protected static final Map<IBakedModel, Integer> RenderListCache = new HashMap<>();
@@ -59,7 +59,7 @@ public class TemplateBlockRenderer extends TileEntitySpecialRenderer<TemplateBlo
 	public void renderTileEntityFast(TemplateBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 		Minecraft mc = Minecraft.getMinecraft();
 		
-		IBlockState state = te.getTemplateState();
+		BlockState state = te.getTemplateState();
 		IBakedModel model = null;
 		if (state != null) {
 			model = mc.getBlockRendererDispatcher().getModelForState(state);
@@ -97,7 +97,7 @@ public class TemplateBlockRenderer extends TileEntitySpecialRenderer<TemplateBlo
 	}
 
 	@Override
-	public void render(TemplateBlockTileEntity tileEntity, double x, double y, double z, IBlockState state, World world,
+	public void render(TemplateBlockTileEntity tileEntity, double x, double y, double z, BlockState state, World world,
 			BufferBuilder buffer) {
 		renderTileEntityFast(tileEntity, x, y, z, 0, 0, 0, buffer);
 	}

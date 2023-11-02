@@ -20,14 +20,14 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity> extends TileEntitySpecialRenderer<T> {
 
 	public TileEntityLogisticsRenderer() {
@@ -39,7 +39,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 		super.render(te, x, y, z, partialTicks, destroyStage, alphaIn);
 		
 		Minecraft mc = Minecraft.getMinecraft();
-		EntityPlayer player = mc.player;
+		PlayerEntity player = mc.player;
 		PotionEffect effect = player.getActivePotionEffect(FeyVisibilityPotion.instance());
 		
 		if (player != null && effect != null) { // REPLACE ME

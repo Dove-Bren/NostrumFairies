@@ -13,10 +13,10 @@ import com.smanzana.nostrummagica.items.PositionCrystal;
 import com.smanzana.nostrummagica.items.SpellScroll;
 
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
@@ -113,7 +113,7 @@ public class FairyHolderInventory implements IInventory {
 	private ItemStack gemSlot = ItemStack.EMPTY;
 	
 	private boolean dirty;
-	private NBTTagCompound nbtCache;
+	private CompoundNBT nbtCache;
 	
 	public FairyHolderInventory() {
 		clear(); // initializes stuff lol
@@ -462,17 +462,17 @@ public class FairyHolderInventory implements IInventory {
 	}
 
 	@Override
-	public boolean isUsableByPlayer(EntityPlayer player) {
+	public boolean isUsableByPlayer(PlayerEntity player) {
 		return true;
 	}
 
 	@Override
-	public void openInventory(EntityPlayer player) {
+	public void openInventory(PlayerEntity player) {
 		;
 	}
 
 	@Override
-	public void closeInventory(EntityPlayer player) {
+	public void closeInventory(PlayerEntity player) {
 		;
 	}
 
@@ -572,14 +572,14 @@ public class FairyHolderInventory implements IInventory {
 		this.markDirty();
 	}
 	
-	public NBTTagCompound toNBT() {
+	public CompoundNBT toNBT() {
 		if (this.dirty || this.nbtCache == null) {
-			this.nbtCache = new NBTTagCompound();
+			this.nbtCache = new CompoundNBT();
 			
 			NBTTagList list = new NBTTagList();
 			for (int i = 0; i < INV_SIZE; i++) {
 				ItemStack inSlot = getStackInSlot(i);
-				NBTTagCompound tag = new NBTTagCompound();
+				CompoundNBT tag = new CompoundNBT();
 				if (!inSlot.isEmpty()) {
 					inSlot.writeToNBT(tag);
 				}
@@ -591,7 +591,7 @@ public class FairyHolderInventory implements IInventory {
 			for (int i = 0; i < INV_SIZE_SCROLL; i++) {
 				FairyCastTarget target = targetSlots[i];
 				FairyPlacementTarget placement = placementSlots[i];
-				NBTTagCompound tag = new NBTTagCompound();
+				CompoundNBT tag = new CompoundNBT();
 				tag.setString("target", target.name());
 				tag.setString("placement", placement.name());
 				list.appendTag(tag);
@@ -601,7 +601,7 @@ public class FairyHolderInventory implements IInventory {
 //			list = new NBTTagList();
 //			for (int i = 0; i < INV_SIZE_TEMPLATES; i++) {
 //				ItemStack inSlot = logisticsTemplates[i];
-//				NBTTagCompound tag = new NBTTagCompound();
+//				CompoundNBT tag = new CompoundNBT();
 //				if (!inSlot.isEmpty()) {
 //					inSlot.writeToNBT(tag);
 //				}
@@ -612,7 +612,7 @@ public class FairyHolderInventory implements IInventory {
 //			list = new NBTTagList();
 //			for (int i = 0; i < INV_SIZE_TEMPLATES; i++) {
 //				ItemStack inSlot = logisticsTemplates[i + INV_SIZE_TEMPLATES];
-//				NBTTagCompound tag = new NBTTagCompound();
+//				CompoundNBT tag = new CompoundNBT();
 //				if (!inSlot.isEmpty()) {
 //					inSlot.writeToNBT(tag);
 //				}
@@ -626,21 +626,21 @@ public class FairyHolderInventory implements IInventory {
 		return nbtCache;
 	}
 	
-	public void readNBT(NBTTagCompound nbt) {
+	public void readNBT(CompoundNBT nbt) {
 		this.dirty = false;
 		this.nbtCache = nbt.copy();
 		
 		this.clear();
 		NBTTagList list = nbt.getTagList("contents", NBT.TAG_COMPOUND);
 		for (int i = 0; i < INV_SIZE && i < list.tagCount(); i++) {
-			NBTTagCompound tag = list.getCompoundTagAt(i);
+			CompoundNBT tag = list.getCompoundTagAt(i);
 			@Nonnull ItemStack stack = new ItemStack(tag);
 			this.setInventorySlotContents(i, stack); // May be empty :)
 		}
 		
 		list = nbt.getTagList("targets", NBT.TAG_COMPOUND);
 		for (int i = 0; i < INV_SIZE_SCROLL && i < list.tagCount(); i++) {
-			NBTTagCompound tag = list.getCompoundTagAt(i);
+			CompoundNBT tag = list.getCompoundTagAt(i);
 			try {
 				targetSlots[i] = FairyCastTarget.valueOf(tag.getString("target"));
 				placementSlots[i] = FairyPlacementTarget.valueOf(tag.getString("placement"));
@@ -653,7 +653,7 @@ public class FairyHolderInventory implements IInventory {
 		
 //		list = nbt.getTagList("pull_templates", NBT.TAG_COMPOUND);
 //		for (int i = 0; i < INV_SIZE && i < list.tagCount(); i++) {
-//			NBTTagCompound tag = list.getCompoundTagAt(i);
+//			CompoundNBT tag = list.getCompoundTagAt(i);
 //			@Nullable ItemStack stack = ItemStack.loadItemStackFromNBT(tag);
 //			this.setInventorySlotContents(i, stack); // May be null :)
 //		}

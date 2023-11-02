@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.utils;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -34,7 +34,7 @@ public final class OreDict {
 		return false;
 	}
 	
-	public static boolean blockMatchesOreDict(@Nullable IBlockState state, String oreDictName, boolean strict) {
+	public static boolean blockMatchesOreDict(@Nullable BlockState state, String oreDictName, boolean strict) {
 		if (state == null) {
 			return false;
 		}
@@ -44,7 +44,7 @@ public final class OreDict {
 		return OreDict.stackMatchesOreDict(stack, oreDictName, strict);
 	}
 	
-	public static boolean blockMatchesAny(@Nullable IBlockState state, String[] oreDictNames, boolean strict) {
+	public static boolean blockMatchesAny(@Nullable BlockState state, String[] oreDictNames, boolean strict) {
 		if (state == null) {
 			return false;
 		}

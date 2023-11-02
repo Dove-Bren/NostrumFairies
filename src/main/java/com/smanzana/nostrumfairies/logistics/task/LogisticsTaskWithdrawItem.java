@@ -22,9 +22,9 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundCategory;
@@ -44,7 +44,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 	private ItemDeepStack item; // stacksize used for quantity and merge status
 	private boolean useBuffers; // can pull from buffer storage?
 	private @Nullable ILogisticsComponent component;
-	private @Nullable EntityLivingBase entity;
+	private @Nullable LivingEntity entity;
 	
 	private @Nullable List<ILogisticsTask> mergedTasks;
 	private @Nullable LogisticsTaskWithdrawItem compositeTask; // Task we were merged into
@@ -80,7 +80,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 		this.component = owningComponent;
 	}
 	
-	public LogisticsTaskWithdrawItem(EntityLivingBase requester, String displayName, ItemDeepStack item, boolean useBuffers) {
+	public LogisticsTaskWithdrawItem(LivingEntity requester, String displayName, ItemDeepStack item, boolean useBuffers) {
 		this(displayName, item, useBuffers);
 		this.entity = requester;
 	}
@@ -259,7 +259,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 		return component;
 	}
 	
-	public @Nullable EntityLivingBase getSourceEntity() {
+	public @Nullable LivingEntity getSourceEntity() {
 		return entity;
 	}
 
@@ -494,8 +494,8 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 			if (entity == null) {
 				component.addItem(stack.copy());
 			} else {
-				if (entity instanceof EntityPlayer) {
-					EntityPlayer player = (EntityPlayer) entity;
+				if (entity instanceof PlayerEntity) {
+					PlayerEntity player = (PlayerEntity) entity;
 					player.inventory.addItemStackToInventory(stack.copy());
 					player.world.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, .75f, 2f);
 				} else {
