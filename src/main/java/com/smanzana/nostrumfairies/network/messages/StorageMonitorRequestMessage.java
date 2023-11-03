@@ -1,96 +1,84 @@
 package com.smanzana.nostrumfairies.network.messages;
 
+import java.util.function.Supplier;
+
 import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 /**
  * Client has added a requested item to a storage monitor
  * @author Skyler
  *
  */
-public class StorageMonitorRequestMessage implements IMessage {
+public class StorageMonitorRequestMessage {
 
-	public static class Handler implements IMessageHandler<StorageMonitorRequestMessage, IMessage> {
-
-		@Override
-		public IMessage onMessage(StorageMonitorRequestMessage message, MessageContext ctx) {
-			
+	public static void handle(StorageMonitorRequestMessage message, Supplier<NetworkEvent.Context> ctx) {
+		ctx.get().enqueueWork(() -> {
 			try {
-				final BlockPos pos = BlockPos.fromLong(message.tag.getLong(NBT_POS));
-				final World world = ctx.getServerHandler().player.world;
-				final @Nonnull ItemStack request = new ItemStack(message.tag.getCompoundTag(NBT_REQ));
-				final boolean delete = message.tag.getBoolean(NBT_DEL);
-				
-				ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
-					final TileEntity te = world.getTileEntity(pos);
-					if (te != null && te instanceof StorageMonitorTileEntity) {
-						StorageMonitorTileEntity monitor = (StorageMonitorTileEntity) te;
-						if (!delete) {
-							monitor.addRequest(request);
-						} else {
-							monitor.removeRequest(request);
-						}
+				final World world = ctx.get().getSender().world;
+				final TileEntity te = world.getTileEntity(message.pos);
+				if (te != null && te instanceof StorageMonitorTileEntity) {
+					StorageMonitorTileEntity monitor = (StorageMonitorTileEntity) te;
+					if (!message.delete) {
+						monitor.addRequest(message.template);
+					} else {
+						monitor.removeRequest(message.template);
 					}
-					
-					// Cause an update to be sent back
-					BlockState state = world.getBlockState(pos);
-					world.notifyBlockUpdate(pos, state, state, 2);
-				});
+				}
 				
-				
-				// This is dumb. Because of network thread, this interface has to return null and instead send
-				// packet manually in scheduled task.
-				return null;
+				// Cause an update to be sent back
+				BlockState state = world.getBlockState(message.pos);
+				world.notifyBlockUpdate(message.pos, state, state, 2);
 			} catch (Exception e) {
 				NostrumFairies.logger.error(e);
 			}
-			
-			return null;
-		}
+		});
+		
+		ctx.get().setPacketHandled(true);
+		
 	}
 	
-	private static final String NBT_POS = "pos";
-	private static final String NBT_REQ = "request";
-	private static final String NBT_DEL = "delete";
-	
-	protected CompoundNBT tag;
-	
-	public StorageMonitorRequestMessage() {
-		this(null, ItemStack.EMPTY, false);
-	}
+	private final BlockPos pos;
+	private final @Nonnull ItemStack template;
+	private final boolean delete;
 	
 	public StorageMonitorRequestMessage(StorageMonitorTileEntity monitor, @Nonnull ItemStack template, boolean delete) {
-		tag = new CompoundNBT();
-		
-		if (!template.isEmpty()) {
-			tag.setLong(NBT_POS, monitor.getPos().toLong());
-			tag.setTag(NBT_REQ, template.serializeNBT());
-			tag.setBoolean(NBT_DEL, delete);
-		}
+		this(monitor.getPos(), template, delete);
 	}
 	
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		tag = ByteBufUtils.readTag(buf);
+	protected StorageMonitorRequestMessage(BlockPos pos, @Nonnull ItemStack template, boolean delete) {
+		this.pos = pos;
+		this.template = template;
+		this.delete = delete;
+	}
+	
+	public static StorageMonitorRequestMessage decode(PacketBuffer buf) {
+		return new StorageMonitorRequestMessage(
+				buf.readBlockPos(),
+				(buf.readBoolean() ? buf.readItemStack() : null),
+				buf.readBoolean()
+				);
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		ByteBufUtils.writeTag(buf, tag);
+	public static void encode(StorageMonitorRequestMessage msg, PacketBuffer buf) {
+		buf.writeBlockPos(msg.pos);
+		if (msg.template != null) {
+			buf.writeBoolean(true);
+			buf.writeItemStack(msg.template);
+		} else {
+			buf.writeBoolean(false);
+		}
+		buf.writeBoolean(msg.delete);
 	}
 
 }

@@ -1,20 +1,18 @@
 package com.smanzana.nostrumfairies.network.messages;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.function.Supplier;
+
+import javax.annotation.Nonnull;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.FakeLogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 /**
  * Server has processed a request for an update about all logistics networks and is
@@ -22,62 +20,53 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
  * @author Skyler
  *
  */
-public class LogisticsUpdateResponse implements IMessage {
+public class LogisticsUpdateResponse {
 
-	public static class Handler implements IMessageHandler<LogisticsUpdateResponse, IMessage> {
+	public static void handle(LogisticsUpdateResponse message, Supplier<NetworkEvent.Context> ctx) {
 
-		@Override
-		public IMessage onMessage(LogisticsUpdateResponse message, MessageContext ctx) {
+		ctx.get().enqueueWork(() -> {
+			
+			NostrumFairies.logger.debug("Received logistics network refreshed data");
+			
+			// Clear out our list of networks, since this should be all networks
+			NostrumFairies.instance.getLogisticsRegistry().clear();
+			
+			// Inject any network returned to us
+			for (LogisticsNetwork network : message.networks) {
+				NostrumFairies.instance.getLogisticsRegistry().injectNetwork(network);
+			}
+		});
 
-			Minecraft.getMinecraft().addScheduledTask(() -> {
-				
-				NostrumFairies.logger.info("Received logistics network refreshed data");
-				
-				// Clear out our list of networks, since this should be all networks
-				NostrumFairies.instance.getLogisticsRegistry().clear();
-				
-				// Inject any network returned to us
-				NBTTagList list = message.tag.getTagList(NBT_LIST, NBT.TAG_COMPOUND);
-				for (int i = list.tagCount() - 1; i >= 0; i--) {
-					CompoundNBT nbt = list.getCompoundTagAt(i);
-					LogisticsNetwork network = FakeLogisticsNetwork.fromNBT(nbt);
-					
-					NostrumFairies.instance.getLogisticsRegistry().injectNetwork(network);
-				}
-			});
-
-			return null;
-		}
-		
+		ctx.get().setPacketHandled(true);
 	}
 
-	private static final String NBT_LIST = "list";
-	
-	protected CompoundNBT tag;
-	
-	public LogisticsUpdateResponse() {
-		tag = new CompoundNBT();
-	}
+	private final @Nonnull List<LogisticsNetwork> networks;
 	
 	public LogisticsUpdateResponse(Collection<LogisticsNetwork> networks) {
-		this();
-		
-		NBTTagList list = new NBTTagList();
-		for (LogisticsNetwork network : networks) {
-			list.appendTag(new FakeLogisticsNetwork(network).toNBT());
+		if (networks != null) {
+			this.networks = new ArrayList<>(networks);
+		} else {
+			this.networks = new ArrayList<>();
 		}
-		
-		tag.setTag(NBT_LIST, list);
 	}
 	
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		tag = ByteBufUtils.readTag(buf);
+	public static LogisticsUpdateResponse decode(PacketBuffer buf) {
+		final int count = buf.readVarInt();
+		final List<LogisticsNetwork> networks = new ArrayList<>(count);
+		
+		for (int i = 0; i < count; i++) {
+			LogisticsNetwork network = FakeLogisticsNetwork.fromNBT(buf.readCompoundTag());
+			networks.add(network);
+		}
+		
+		return new LogisticsUpdateResponse(networks);
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		ByteBufUtils.writeTag(buf, tag);
+	public static void encode(LogisticsUpdateResponse msg, PacketBuffer buf) {
+		buf.writeVarInt(msg.networks.size());
+		for (LogisticsNetwork network : msg.networks) {
+			buf.writeCompoundTag(new FakeLogisticsNetwork(network).toNBT());
+		}
 	}
 
 }

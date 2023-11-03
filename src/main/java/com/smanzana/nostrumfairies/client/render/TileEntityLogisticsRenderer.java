@@ -5,9 +5,9 @@ import java.util.Collection;
 
 import org.lwjgl.opengl.GL11;
 
+import com.smanzana.nostrumfairies.effect.FeyVisibilityEffect;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
-import com.smanzana.nostrumfairies.potion.FeyVisibilityEffect;
 import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.utils.Curves;
 
@@ -38,7 +38,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 	public void render(T te, double x, double y, double z, float partialTicks, int destroyStage, float alphaIn) {
 		super.render(te, x, y, z, partialTicks, destroyStage, alphaIn);
 		
-		Minecraft mc = Minecraft.getMinecraft();
+		Minecraft mc = Minecraft.getInstance();
 		PlayerEntity player = mc.player;
 		PotionEffect effect = player.getActivePotionEffect(FeyVisibilityEffect.instance());
 		
@@ -125,7 +125,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 //				GlStateManager.enableAlpha();
 //				GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
 //				
-//				Minecraft.getMinecraft().getRenderItem()
+//				Minecraft.getInstance().getRenderItem()
 //					.renderItem(item, TransformType.GROUND);
 				
 				GlStateManager.popMatrix();

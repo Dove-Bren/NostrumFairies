@@ -58,7 +58,7 @@ public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> 
 	
 	@Override
 	public void renderTileEntityFast(T te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
-		Minecraft mc = Minecraft.getMinecraft();
+		Minecraft mc = Minecraft.getInstance();
 		
 		ItemStack icon = te.getSignIcon(te);
 		IBakedModel model = null;

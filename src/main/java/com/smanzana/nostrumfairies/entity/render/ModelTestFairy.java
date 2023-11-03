@@ -33,7 +33,7 @@ public class ModelTestFairy extends ModelBase {
 		if (!stack.isEmpty()) {
 			GlStateManager.pushMatrix();
 			GlStateManager.translate(0, 2, 0);
-			Minecraft.getMinecraft().getRenderItem().renderItem(stack, TransformType.GROUND);
+			Minecraft.getInstance().getRenderItem().renderItem(stack, TransformType.GROUND);
 			GlStateManager.popMatrix();
 		}
 	}

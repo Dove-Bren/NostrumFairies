@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.potion;
+package com.smanzana.nostrumfairies.effect;
 
 import java.util.function.Supplier;
 

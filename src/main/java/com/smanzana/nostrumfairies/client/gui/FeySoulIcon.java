@@ -33,7 +33,7 @@ public final class FeySoulIcon {
 	public static void draw(int offsetX, int offsetY, float scale, SoulStoneType slot) {
 		init();
 
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TEXTS.get(slot));
+        Minecraft.getInstance().getTextureManager().bindTexture(TEXTS.get(slot));
 		GlStateManager.disableLighting();
 		
 		GlStateManager.pushMatrix();

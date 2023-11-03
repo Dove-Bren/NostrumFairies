@@ -70,7 +70,7 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 	public void render(MiningBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float alphaIn) {
 		super.render(te, x, y, z, partialTicks, destroyStage, alphaIn);
 		
-		Minecraft mc = Minecraft.getMinecraft();
+		Minecraft mc = Minecraft.getInstance();
 		PlayerEntity player = mc.player;
 		
 		// TODO make a capability and see if they can see logistics stuff / its turned on

@@ -33,7 +33,7 @@ public final class FeySlotIcon {
 	public static void draw(int offsetX, int offsetY, float scale, FeySlotType slot) {
 		init();
 
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TEXTS.get(slot));
+        Minecraft.getInstance().getTextureManager().bindTexture(TEXTS.get(slot));
 		GlStateManager.disableLighting();
 		
 		GlStateManager.pushMatrix();

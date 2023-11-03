@@ -45,7 +45,7 @@ public class RenderFairy extends RenderLiving<EntityFairy> {
 		if (!item.isEmpty()) {
 			GlStateManager.translate(0, .25, 0);
 			GlStateManager.rotate(-entityYaw, 0, 1, 0);
-			Minecraft.getMinecraft().getRenderItem().renderItem(item, TransformType.GROUND);
+			Minecraft.getInstance().getRenderItem().renderItem(item, TransformType.GROUND);
 		}
 		
 		GlStateManager.popMatrix();

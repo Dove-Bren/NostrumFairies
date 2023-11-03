@@ -55,7 +55,7 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 		// Draw template on table, if present
 		ItemStack template = te.getTemplateScroll();
 		if (!template.isEmpty()) {
-			Minecraft mc = Minecraft.getMinecraft();
+			Minecraft mc = Minecraft.getInstance();
 			IBakedModel model = null;
 			model = mc.getRenderItem().getItemModelMesher().getItemModel(template);
 			

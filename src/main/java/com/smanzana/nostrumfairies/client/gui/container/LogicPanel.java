@@ -75,7 +75,7 @@ public class LogicPanel {
 		// Slot only shows up in logic mode, so it'll only be in one spot (so we only need one slot).
 		// Margin spacing depends on whether we need to show the mode button or not
 		final int sections = (comp.isLogicOnly() ? 4 : 5);
-		final int minHeight = (comp.isLogicOnly() ? 0 : PANEL_BUTTON_HEIGHT) + PANEL_SLOT_HEIGHT + PANEL_BUTTON_HEIGHT + (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT + 6);
+		final int minHeight = (comp.isLogicOnly() ? 0 : PANEL_BUTTON_HEIGHT) + PANEL_SLOT_HEIGHT + PANEL_BUTTON_HEIGHT + (Minecraft.getInstance().fontRenderer.FONT_HEIGHT + 6);
 		final int leftover = Math.max(0, height - minHeight);
 		this.margin = (leftover / sections);
 		this.upperSpace = (comp.isLogicOnly() ? margin : (margin + PANEL_BUTTON_HEIGHT + margin)); // mode button, but uses BUTTON height

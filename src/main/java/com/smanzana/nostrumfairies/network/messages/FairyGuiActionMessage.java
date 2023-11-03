@@ -1,75 +1,64 @@
 package com.smanzana.nostrumfairies.network.messages;
 
+import java.util.function.Supplier;
+
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 /**
  * Client has made a client-side action in the fairy gui
  * @author Skyler
  *
  */
-public class FairyGuiActionMessage implements IMessage {
+public class FairyGuiActionMessage {
 	
 	public static enum GuiAction {
 		CHANGE_TARGET,
 		CHANGE_PLACEMENT,
 	}
 
-	public static class Handler implements IMessageHandler<FairyGuiActionMessage, IMessage> {
-
-		@Override
-		public CapabilitySyncMessage onMessage(FairyGuiActionMessage message, MessageContext ctx) {
-			ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
-				INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(ctx.getServerHandler().player);
-				FairyHolderInventory inv = (attr == null ? null : attr.getFairyInventory());
-				
-				if (inv != null && ctx.getServerHandler().player.openContainer instanceof FairyScreenGui.FairyScreenContainer) {
-					FairyScreenGui.FairyScreenContainer container = (FairyScreenGui.FairyScreenContainer) ctx.getServerHandler().player.openContainer;
-					container.handleAction(message.action, message.slot, message.selection);
-				} else {
-					NostrumFairies.logger.error("Got a Fairy screen gui action but no inventory present or gui isn't open");
-				}
-			});
+	public static void handle(FairyGuiActionMessage message, Supplier<NetworkEvent.Context> ctx) {
+		ctx.get().enqueueWork(() -> {
+			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(ctx.get().getSender());
+			FairyHolderInventory inv = (attr == null ? null : attr.getFairyInventory());
 			
-			// This is dumb. Because of network thread, this interface has to return null and instead send
-			// packet manually in scheduled task.
-			return null;
-		}
+			if (inv != null && ctx.get().getSender().openContainer instanceof FairyScreenGui.FairyScreenContainer) {
+				FairyScreenGui.FairyScreenContainer container = (FairyScreenGui.FairyScreenContainer) ctx.get().getSender().openContainer;
+				container.handleAction(message.action, message.slot, message.selection);
+			} else {
+				NostrumFairies.logger.error("Got a Fairy screen gui action but no inventory present or gui isn't open");
+			}
+		});
+		
+		ctx.get().setPacketHandled(true);
 	}
 	
-	private GuiAction action;
-	private int slot;
-	private int selection;
+	private final GuiAction action;
+	private final int slot;
+	private final int selection;
 	
-	public FairyGuiActionMessage() {
-		this(GuiAction.CHANGE_TARGET, 0, 0);
-	}
-
 	public FairyGuiActionMessage(GuiAction action, int slot, int selection) {
 		this.action = action;
 		this.slot = slot;
 		this.selection = selection;
 	}
 	
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		this.action = GuiAction.values()[buf.readInt() % GuiAction.values().length];
-		this.slot = buf.readInt();
-		this.selection = buf.readInt();
+	public static FairyGuiActionMessage decode(PacketBuffer buf) {
+		GuiAction action = buf.readEnumValue(GuiAction.class);
+		int slot = buf.readVarInt();
+		int selection = buf.readVarInt();
+		return new FairyGuiActionMessage(action, slot, selection);
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		buf.writeInt(action.ordinal());
-		buf.writeInt(this.slot);
-		buf.writeInt(this.selection);
+	public static void encode(FairyGuiActionMessage msg, PacketBuffer buf) {
+		buf.writeEnumValue(msg.action);
+		buf.writeVarInt(msg.slot);
+		buf.writeVarInt(msg.selection);
 	}
 
 }

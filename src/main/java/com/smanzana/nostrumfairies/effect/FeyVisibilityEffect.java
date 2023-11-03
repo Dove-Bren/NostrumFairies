@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.potion;
+package com.smanzana.nostrumfairies.effect;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;

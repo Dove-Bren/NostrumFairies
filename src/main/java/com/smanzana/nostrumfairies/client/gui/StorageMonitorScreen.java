@@ -99,7 +99,7 @@ public class StorageMonitorScreen extends GuiScreen {
 	}
 	
 	private void drawMenuItem(int x, int y, ItemStack request, boolean mouseOver) {
-		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXT);
+		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
 		GlStateManager.enableLighting();
 		GlStateManager.disableLighting();
 		GlStateManager.disableTexture2D();
@@ -146,7 +146,7 @@ public class StorageMonitorScreen extends GuiScreen {
 	}
 	
 	private void drawCell(int x, int y, @Nullable ItemDeepStack stack, boolean mouseOver) {
-		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXT);
+		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
 		GlStateManager.color(1.0f, 1.0f, 1.0f, 0.9f);
 		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
 		GlStateManager.enableLighting();
@@ -194,7 +194,7 @@ public class StorageMonitorScreen extends GuiScreen {
 	}
 	
 	private void drawSlider(int x, int y, boolean mouseOver) {
-		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXT);
+		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
 		GlStateManager.color(1f, 1f, 1f, 1f);
 		this.drawTexturedModalRect(x, y, GUI_TEXT_SLIDER_HOFFSET, mouseOver ? GUI_INV_SLIDER_HEIGHT : 0, GUI_INV_SLIDER_WIDTH, GUI_INV_SLIDER_HEIGHT);
 	}
@@ -211,7 +211,7 @@ public class StorageMonitorScreen extends GuiScreen {
 		GlStateManager.disableLighting();
 		GlStateManager.disableTexture2D();
 		GlStateManager.enableTexture2D();
-		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXT);
+		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
 		
 		if (monitor.getNetwork() != null) {
 			final List<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
@@ -267,7 +267,7 @@ public class StorageMonitorScreen extends GuiScreen {
 		
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(0, 0, 1000);
-		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXT);
+		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
 		GlStateManager.color(1.0f, 1.0f, 1.0f, 0.9f);
 		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
 		GlStateManager.enableLighting();

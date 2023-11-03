@@ -1,62 +1,50 @@
 package com.smanzana.nostrumfairies.network.messages;
 
+import java.util.function.Supplier;
+
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 /**
  * Server is sending the most recent version of the fey capability to a client-side player
  * @author Skyler
  *
  */
-public class CapabilitySyncMessage implements IMessage {
+public class CapabilitySyncMessage {
 
-	public static class Handler implements IMessageHandler<CapabilitySyncMessage, IMessage> {
-
-		@Override
-		public IMessage onMessage(CapabilitySyncMessage message, MessageContext ctx) {
-			Minecraft.getMinecraft().addScheduledTask(() -> {
-				INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(NostrumFairies.proxy.getPlayer());
-				attr.readNBT(message.tag.getCompoundTag(NBT_ATTR));
-			});
-			
-			return null;
-		}
+	public static void handle(CapabilitySyncMessage message, Supplier<NetworkEvent.Context> ctx) {
+		ctx.get().enqueueWork(() -> {
+			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(NostrumFairies.proxy.getPlayer());
+			attr.readNBT(message.capData);
+		});
+		
+		ctx.get().setPacketHandled(true);
 	}
 
-	private static final String NBT_ATTR = "attr";
+	private final @Nonnull CompoundNBT capData;
 	
-	protected CompoundNBT tag;
-	
-	public CapabilitySyncMessage() {
-		this(null);
+	public CapabilitySyncMessage(@Nonnull CompoundNBT attrData) {
+		this.capData = attrData;
 	}
 	
 	public CapabilitySyncMessage(@Nullable INostrumFeyCapability attr) {
-		tag = new CompoundNBT();
-		
-		if (attr != null) {
-			tag.setTag(NBT_ATTR, attr.toNBT());
-		}
+		this(attr == null ? new CompoundNBT() : attr.toNBT());
 	}
 	
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		tag = ByteBufUtils.readTag(buf);
+	public static CapabilitySyncMessage decode(PacketBuffer buf) {
+		@Nonnull CompoundNBT data = buf.readCompoundTag(); 
+		return new CapabilitySyncMessage(data);
 	}
-
-	@Override
-	public void toBytes(ByteBuf buf) {
-		ByteBufUtils.writeTag(buf, tag);
+	
+	public static void encode(CapabilitySyncMessage msg, PacketBuffer buf) {
+		buf.writeCompoundTag(msg.capData);
 	}
 
 }

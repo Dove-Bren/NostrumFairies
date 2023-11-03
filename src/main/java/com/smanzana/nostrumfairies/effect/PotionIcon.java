@@ -1,4 +1,4 @@
-package com.smanzana.nostrumfairies.potion;
+package com.smanzana.nostrumfairies.effect;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrummagica.utils.RenderFuncs;

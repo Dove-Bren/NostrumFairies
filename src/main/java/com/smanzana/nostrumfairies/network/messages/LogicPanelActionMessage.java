@@ -1,6 +1,9 @@
 package com.smanzana.nostrumfairies.network.messages;
 
+import java.util.function.Supplier;
+
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.tiles.ILogisticsLogicProvider;
@@ -8,69 +11,19 @@ import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicMode;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicOp;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 /**
  * Client has made an action in a crafting station
  * @author Skyler
  *
  */
-public class LogicPanelActionMessage implements IMessage {
-
-	public static class Handler implements IMessageHandler<LogicPanelActionMessage, IMessage> {
-
-		@Override
-		public IMessage onMessage(LogicPanelActionMessage message, MessageContext ctx) {
-			
-			try {
-				final Action type = Action.valueOf(message.tag.getString(NBT_TYPE));
-				final BlockPos pos = BlockPos.fromLong(message.tag.getLong(NBT_POS));
-				final World world = ctx.getServerHandler().player.world;
-				
-				// Implemented ILogisticsLogicProvider on your tile entity if it has a logic component that uses the logic panel gui
-				ILogisticsLogicProvider te = (ILogisticsLogicProvider) world.getTileEntity(pos);
-				
-				ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
-					final LogisticsLogicComponent comp = te.getLogicComponent();
-					if (type == Action.TEMPLATE) {
-						@Nonnull ItemStack stack = new ItemStack(message.tag.getCompoundTag(NBT_ITEM_VAL));
-						comp.setLogicTemplate(stack);
-					} else if (type == Action.OP) {
-						LogicOp op = LogicOp.valueOf(message.tag.getString(NBT_INT_VAL));
-						comp.setLogicOp(op);
-					} else if (type == Action.MODE) {
-						LogicMode mode = LogicMode.valueOf(message.tag.getString(NBT_INT_VAL));
-						comp.setLogicMode(mode);
-					} else {
-						final int val = Integer.parseInt(message.tag.getString(NBT_INT_VAL));
-						comp.setLogicCount(val);
-					}
-					
-					// Cause an update to be sent back
-					BlockState state = world.getBlockState(pos);
-					world.notifyBlockUpdate(pos, state, state, 2);
-				});
-				
-				
-				// This is dumb. Because of network thread, this interface has to return null and instead send
-				// packet manually in scheduled task.
-				return null;
-			} catch (Exception e) {
-				NostrumFairies.logger.error(e);
-			}
-			
-			return null;
-		}
-	}
+public class LogicPanelActionMessage {
 	
 	public static enum Action {
 		TEMPLATE,
@@ -79,63 +32,119 @@ public class LogicPanelActionMessage implements IMessage {
 		MODE,
 	}
 
-	private static final String NBT_TYPE = "type";
-	private static final String NBT_INT_VAL = "val";
-	private static final String NBT_ITEM_VAL = "item";
-	private static final String NBT_POS = "pos";
+	public static void handle(LogicPanelActionMessage message, Supplier<NetworkEvent.Context> ctx) {
+		final World world = ctx.get().getSender().world;
+		
+		// Implemented ILogisticsLogicProvider on your tile entity if it has a logic component that uses the logic panel gui
+		ILogisticsLogicProvider te = (ILogisticsLogicProvider) world.getTileEntity(message.pos);
+		
+		ctx.get().enqueueWork(() -> {
+			try {
+				final LogisticsLogicComponent comp = te.getLogicComponent();
+				if (message.action == Action.TEMPLATE) {
+					comp.setLogicTemplate(message.itemVal);
+				} else if (message.action == Action.OP) {
+					comp.setLogicOp(message.opVal);
+				} else if (message.action == Action.MODE) {
+					comp.setLogicMode(message.modeVal);
+				} else {
+					comp.setLogicCount(message.intVal);
+				}
+				
+				// Cause an update to be sent back
+				BlockState state = world.getBlockState(message.pos);
+				world.notifyBlockUpdate(message.pos, state, state, 2);
+
+			} catch (Exception e) {
+				NostrumFairies.logger.error(e);
+			}
+		});
+		
+		ctx.get().setPacketHandled(true);
+	}
+
+	private final Action action;
+	private final BlockPos pos;
 	
-	protected CompoundNBT tag;
+	// One of these should be filled in, depending on the Action
+	private final @Nullable LogicOp opVal;
+	private final @Nullable LogicMode modeVal;
+	private final @Nullable Integer intVal;
+	private final @Nullable ItemStack itemVal;
 	
-	public LogicPanelActionMessage() {
-		this(null, (String) null, null);
+	protected LogicPanelActionMessage(Action action, BlockPos pos,
+			@Nullable LogicOp opVal,
+			@Nullable LogicMode modeVal,
+			@Nullable Integer intVal,
+			@Nullable ItemStack itemVal) {
+		
+		this.action = action;
+		this.pos = pos;
+		
+		this.opVal = opVal;
+		this.modeVal = modeVal;
+		this.intVal = intVal;
+		this.itemVal = itemVal;
 	}
 	
 	public LogicPanelActionMessage(ILogisticsLogicProvider ent, @Nonnull ItemStack template) {
-		this(Action.TEMPLATE, template, ent.getPos());
+		this(Action.TEMPLATE, ent.getPos(), null, null, null, template);
 	}
 	
 	public LogicPanelActionMessage(ILogisticsLogicProvider ent, LogicOp op) {
-		this(Action.OP, op.name(), ent.getPos());
+		this(Action.OP, ent.getPos(), op, null, null, null);
 	}
 	
 	public LogicPanelActionMessage(ILogisticsLogicProvider ent, int val) {
-		this(Action.COUNT, String.format("%d", val), ent.getPos());
+		this(Action.COUNT, ent.getPos(), null, null, val, null);
 	}
 
 	public LogicPanelActionMessage(ILogisticsLogicProvider ent, LogicMode mode) {
-		this(Action.MODE, mode.name(), ent.getPos());
+		this(Action.MODE, ent.getPos(), null, mode, null, null);
 	}
 	
-	protected LogicPanelActionMessage(Action type, String val, BlockPos pos) {
-		tag = new CompoundNBT();
+	public static LogicPanelActionMessage decode(PacketBuffer buf) {
+		final Action action = buf.readEnumValue(Action.class);
+		final BlockPos pos = buf.readBlockPos();
+		final @Nullable LogicOp opVal = buf.readBoolean() ? buf.readEnumValue(LogicOp.class) : null;
+		final @Nullable LogicMode modeVal = buf.readBoolean() ? buf.readEnumValue(LogicMode.class) : null;
+		final @Nullable Integer intVal = buf.readBoolean() ? buf.readVarInt() : null;
+		final @Nullable ItemStack itemVal = buf.readBoolean() ? buf.readItemStack() : null;
 		
-		if (type != null) {
-			tag.setString(NBT_TYPE, type.name());
-			tag.setString(NBT_INT_VAL, val);
-			tag.setLong(NBT_POS, pos.toLong());
-		}
-	}
-	
-	protected LogicPanelActionMessage(Action type, @Nonnull ItemStack template, BlockPos pos) {
-		tag = new CompoundNBT();
-		
-		if (type != null) {
-			tag.setString(NBT_TYPE, type.name());
-			if (!template.isEmpty()) {
-				tag.setTag(NBT_ITEM_VAL, template.serializeNBT());
-			}
-			tag.setLong(NBT_POS, pos.toLong());
-		}
-	}
-	
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		tag = ByteBufUtils.readTag(buf);
+		return new LogicPanelActionMessage(action, pos, opVal, modeVal, intVal, itemVal);
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		ByteBufUtils.writeTag(buf, tag);
+	public static void encode(LogicPanelActionMessage msg, PacketBuffer buf) {
+		buf.writeEnumValue(msg.action);
+		buf.writeBlockPos(msg.pos);
+		
+		if (msg.opVal != null) {
+			buf.writeBoolean(true);
+			buf.writeEnumValue(msg.opVal);
+		} else {
+			buf.writeBoolean(false);
+		}
+		
+		if (msg.modeVal != null) {
+			buf.writeBoolean(true);
+			buf.writeEnumValue(msg.modeVal);
+		} else {
+			buf.writeBoolean(false);
+		}
+		
+		if (msg.intVal != null) {
+			buf.writeBoolean(true);
+			buf.writeVarInt(msg.intVal);
+		} else {
+			buf.writeBoolean(false);
+		}
+		
+		if (msg.itemVal != null) {
+			buf.writeBoolean(true);
+			buf.writeItemStack(msg.itemVal);
+		} else {
+			buf.writeBoolean(false);
+		}
 	}
 
 }

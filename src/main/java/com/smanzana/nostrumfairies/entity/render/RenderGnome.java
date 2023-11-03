@@ -54,7 +54,7 @@ public class RenderGnome extends RenderLiving<EntityGnome> {
 				GlStateManager.pushMatrix();
 				GlStateManager.rotate(-entityYaw, 0, 1, 0);
 				GlStateManager.translate(0, 1.1, 0.475);
-				Minecraft.getMinecraft().getRenderItem().renderItem(held, TransformType.GROUND);
+				Minecraft.getInstance().getRenderItem().renderItem(held, TransformType.GROUND);
 				GlStateManager.popMatrix();
 			}
 		}

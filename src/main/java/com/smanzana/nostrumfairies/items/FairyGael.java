@@ -258,7 +258,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	}
 	
 	public static ItemStack upgrade(FairyGaelType type, ItemStack soulStone) {
-		if (soulStone.isEmpty() || !(soulStone.getItem() instanceof FeySoulStone) || !FeySoulStone.hasStoredFey(soulStone)) {
+		if (soulStone.isEmpty() || !(soulStone.getItem() instanceof FeySoulStone) || !((FeySoulStone) soulStone.getItem()).hasStoredFey(soulStone)) {
 			return ItemStack.EMPTY;
 		}
 		ItemStack gael = new ItemStack(getItem(type));

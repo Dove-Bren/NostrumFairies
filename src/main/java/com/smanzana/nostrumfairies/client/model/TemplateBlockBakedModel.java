@@ -24,7 +24,7 @@ public class TemplateBlockBakedModel implements IBakedModel {
 	private final TextureAtlasSprite particle;
 	
 	public TemplateBlockBakedModel() {
-		particle = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(new ResourceLocation(NostrumMagica.MODID, "blocks/mimic_facade").toString());
+		particle = Minecraft.getInstance().getTextureMapBlocks().getAtlasSprite(new ResourceLocation(NostrumMagica.MODID, "blocks/mimic_facade").toString());
 	}
 	
 	protected BlockState getNestedState(@Nullable BlockState state) {
@@ -45,11 +45,11 @@ public class TemplateBlockBakedModel implements IBakedModel {
 	}
 	
 	protected IBakedModel getModelToRender(@Nullable BlockState nestedState) {
-		IBakedModel missing = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel();
+		IBakedModel missing = Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel();
 		IBakedModel nestedModel = null;
 		
 		if (nestedState != null) {
-			nestedModel = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(nestedState);
+			nestedModel = Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(nestedState);
 		}
 		
 		return nestedModel == null ? missing : nestedModel;

@@ -1,18 +1,15 @@
 package com.smanzana.nostrumfairies.network.messages;
 
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 /**
  * Client has requested an update about the logistics network.
@@ -20,67 +17,54 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
  * @author Skyler
  *
  */
-public class LogisticsUpdateRequest implements IMessage {
+public class LogisticsUpdateRequest {
 
-	public static class Handler implements IMessageHandler<LogisticsUpdateRequest, IMessage> {
-
-		@Override
-		public IMessage onMessage(LogisticsUpdateRequest message, MessageContext ctx) {
+	public static void handle(LogisticsUpdateRequest message, Supplier<NetworkEvent.Context> ctx) {
+		
+		// We actually ignore this message if we're running integrated, as the client will already have
+		// correct information in the singleton registry
+		if (!ctx.get().getSender().getServer().isDedicatedServer()) {
+			return;
+		}
+		
+		ctx.get().enqueueWork(() -> {
+			Object response;
 			
-			// We actually ignore this message if we're running integrated, as the client will already have
-			// correct information in the singleton registry
-			if (!ctx.getServerHandler().player.getServer().isDedicatedServer()) {
-				return null;
+			// Is this about a single network, or all of them?
+			if (message.id != null) {
+				// single network! look it up!
+				response = new LogisticsUpdateSingleResponse(message.id, NostrumFairies.instance.getLogisticsRegistry().findNetwork(
+						message.id));
+			} else {
+				// All networks!
+				response = new LogisticsUpdateResponse(NostrumFairies.instance.getLogisticsRegistry().getNetworks());
 			}
 			
-			ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
-				IMessage response;
-				
-				// Is this about a single network, or all of them?
-				if (message.tag.hasUniqueId(NBT_NETWORK_ID)) {
-					// single network! look it up!
-					UUID uuid = message.tag.getUniqueId(NBT_NETWORK_ID);
-					response = new LogisticsUpdateSingleResponse(uuid, NostrumFairies.instance.getLogisticsRegistry().findNetwork(
-							uuid));
-				} else {
-					// All networks!
-					response = new LogisticsUpdateResponse(NostrumFairies.instance.getLogisticsRegistry().getNetworks());
-				}
-				
-				NetworkHandler.getSyncChannel().sendTo(response,
-						ctx.getServerHandler().player);
-			});
-			
-			// This is dumb. Because of network thread, this interface has to return null and instead send
-			// packet manually in scheduled task.
-			return null;
-		}
+			NetworkHandler.sendTo(response, ctx.get().getSender());
+		});
+		
+		ctx.get().setPacketHandled(true);
 	}
 
-	private static final String NBT_NETWORK_ID = "id";
-	
-	protected CompoundNBT tag;
-	
-	public LogisticsUpdateRequest() {
-		this(null);
-	}
+	private final @Nullable UUID id;
 	
 	public LogisticsUpdateRequest(@Nullable UUID id) {
-		tag = new CompoundNBT();
-		
-		if (id != null) {
-			tag.setUniqueId(NBT_NETWORK_ID, id);
-		}
+		this.id = id;
 	}
 	
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		tag = ByteBufUtils.readTag(buf);
+	public static LogisticsUpdateRequest decode(PacketBuffer buf) {
+		return new LogisticsUpdateRequest(
+				buf.readBoolean() ? buf.readUniqueId() : null
+				);
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		ByteBufUtils.writeTag(buf, tag);
+	public static void encode(LogisticsUpdateRequest msg, PacketBuffer buf) {
+		if (msg.id != null) {
+			buf.writeBoolean(true);
+			buf.writeUniqueId(msg.id);
+		} else {
+			buf.writeBoolean(false);
+		}
 	}
 
 }

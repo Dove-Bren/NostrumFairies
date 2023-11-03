@@ -447,7 +447,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@Override
 	public PlayerEntity getPlayer() {
-		return Minecraft.getMinecraft().player;
+		return Minecraft.getInstance().player;
 	}
 	
 //	@SubscribeEvent
@@ -491,7 +491,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@SubscribeEvent
 	public void onClientConnect(EntityJoinWorldEvent event) {
-		if (event.getEntity() == Minecraft.getMinecraft().player) {
+		if (event.getEntity() == Minecraft.getInstance().player) {
 			// Every time we join a world, request a copy of its networks
 			
 			NostrumFairies.logger.info("Requested automatic logistics network refresh");
@@ -516,7 +516,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@SubscribeEvent
 	public void onMouse(MouseEvent event) {
-		PlayerEntity player = Minecraft.getMinecraft().player;
+		PlayerEntity player = Minecraft.getInstance().player;
 		int wheel = event.getDwheel();
 		if (wheel != 0) {
 			if (!NostrumFairies.getFeyWrapper(player)
@@ -541,7 +541,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@SubscribeEvent
 	public void onKey(KeyInputEvent event) {
-		PlayerEntity player = Minecraft.getMinecraft().player;
+		PlayerEntity player = Minecraft.getInstance().player;
 		final boolean forwardPressed = bindingWandModeForward.isPressed(); 
 		if (forwardPressed || bindingWandModeBackward.isPressed()) {
 			final INostrumMagic magic = NostrumMagica.getMagicWrapper(player);

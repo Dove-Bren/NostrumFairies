@@ -57,7 +57,7 @@ public class TemplateBlockRenderer extends TileEntitySpecialRenderer<TemplateBlo
 	
 	@Override
 	public void renderTileEntityFast(TemplateBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
-		Minecraft mc = Minecraft.getMinecraft();
+		Minecraft mc = Minecraft.getInstance();
 		
 		BlockState state = te.getTemplateState();
 		IBakedModel model = null;

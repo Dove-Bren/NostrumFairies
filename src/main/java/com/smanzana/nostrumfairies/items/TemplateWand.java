@@ -488,25 +488,6 @@ public class TemplateWand extends Item implements ILoreTagged {
 		super.addInformation(stack, worldIn, tooltip, flagIn);
 	}
 
-	public String getModelName(WandMode type) {
-		final String suffix;
-		
-		switch (type) {
-		case CAPTURE:
-			suffix = "_write";
-			break;
-		case SELECTION:
-		default:
-			suffix = "";
-			break;
-		case SPAWN:
-			suffix = "_read";
-			break;
-		}
-		
-		return ID + suffix;
-	}
-	
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundNBT nbt) {
 		return new ICapabilityProvider() {

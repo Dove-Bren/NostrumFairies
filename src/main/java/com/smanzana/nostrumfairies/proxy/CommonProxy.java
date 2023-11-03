@@ -31,6 +31,8 @@ import com.smanzana.nostrumfairies.capabilities.templates.ITemplateViewerCapabil
 import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapability;
 import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapabilityStorage;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.effect.FeyPotions;
+import com.smanzana.nostrumfairies.effect.FeyVisibilityEffect;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfCrafter;
@@ -60,8 +62,6 @@ import com.smanzana.nostrumfairies.items.TemplateScroll;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.CapabilitySyncMessage;
-import com.smanzana.nostrumfairies.potion.FeyPotions;
-import com.smanzana.nostrumfairies.potion.FeyVisibilityEffect;
 import com.smanzana.nostrumfairies.rituals.outcomes.OutcomeConstructGael;
 import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 import com.smanzana.nostrumfairies.serializers.ArmPoseElf;

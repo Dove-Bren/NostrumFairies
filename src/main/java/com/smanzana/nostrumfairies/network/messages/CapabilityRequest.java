@@ -1,47 +1,38 @@
 package com.smanzana.nostrumfairies.network.messages;
 
+import java.util.function.Supplier;
+
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 /**
  * Client has requested an update about the their fey capability
  * @author Skyler
  *
  */
-public class CapabilityRequest implements IMessage {
+public class CapabilityRequest {
 
-	public static class Handler implements IMessageHandler<CapabilityRequest, CapabilitySyncMessage> {
-
-		@Override
-		public CapabilitySyncMessage onMessage(CapabilityRequest message, MessageContext ctx) {
-			ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
-				CapabilitySyncMessage response = new CapabilitySyncMessage(NostrumFairies.getFeyWrapper(ctx.getServerHandler().player));
-				NetworkHandler.getSyncChannel().sendTo(response,
-						ctx.getServerHandler().player);
-			});
-			
-			// This is dumb. Because of network thread, this interface has to return null and instead send
-			// packet manually in scheduled task.
-			return null;
-		}
+	public static void handle(CapabilityRequest message, Supplier<NetworkEvent.Context> ctx) {
+		ctx.get().enqueueWork(() -> {
+			CapabilitySyncMessage response = new CapabilitySyncMessage(NostrumFairies.getFeyWrapper(ctx.get().getSender()));
+			NetworkHandler.sendTo(response, ctx.get().getSender());
+		});
+		
+		ctx.get().setPacketHandled(true);
 	}
 
 	public CapabilityRequest() {
 		;
 	}
 	
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		;
+	public static CapabilityRequest decode(PacketBuffer buf) {
+		return new CapabilityRequest();
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
+	public static void encode(CapabilityRequest msg, PacketBuffer buf) {
 		;
 	}
 

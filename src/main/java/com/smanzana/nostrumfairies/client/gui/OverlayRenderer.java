@@ -51,13 +51,13 @@ public class OverlayRenderer extends Gui {
 	
 	@SubscribeEvent
 	public void onRender(RenderGameOverlayEvent.Pre event) {
-//		ClientPlayerEntity player = Minecraft.getMinecraft().player;
+//		ClientPlayerEntity player = Minecraft.getInstance().player;
 //		ScaledResolution scaledRes = event.getResolution();
 	}
 	
 	@SubscribeEvent
 	public void onRender(RenderGameOverlayEvent.Post event) {
-		Minecraft.getMinecraft().getTextureManager().bindTexture(Gui.ICONS);
+		Minecraft.getInstance().getTextureManager().bindTexture(Gui.ICONS);
 		
 	}
 	
@@ -94,9 +94,9 @@ public class OverlayRenderer extends Gui {
 	
 	@SubscribeEvent
 	public void onRender(RenderWorldLastEvent event) {
-		ClientPlayerEntity player = Minecraft.getMinecraft().player;
+		ClientPlayerEntity player = Minecraft.getInstance().player;
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
-		Minecraft mc = Minecraft.getMinecraft();
+		Minecraft mc = Minecraft.getInstance();
 		
 		// Hook into static TESR renderer
 		StaticTESRRenderer.instance.render(mc, player, event.getPartialTicks());
@@ -139,7 +139,7 @@ public class OverlayRenderer extends Gui {
 	
 	@SubscribeEvent
 	public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-		ClientPlayerEntity player = Minecraft.getMinecraft().player;
+		ClientPlayerEntity player = Minecraft.getInstance().player;
 		
 		if (event.getType() == ElementType.CROSSHAIRS) {
 			if (shouldDisplayPreview(player)) {
@@ -178,7 +178,7 @@ public class OverlayRenderer extends Gui {
 	@SubscribeEvent
 	public void onHighlight(DrawBlockHighlightEvent event) {
 		if (event.getTarget().typeOfHit == RayTraceResult.Type.BLOCK) {
-			ClientPlayerEntity player = Minecraft.getMinecraft().player;
+			ClientPlayerEntity player = Minecraft.getInstance().player;
 			
 			if (shouldDisplayPreview(player) && player.isSneaking()) {
 				ItemStack templateScroll = ItemStack.EMPTY;
@@ -217,7 +217,7 @@ public class OverlayRenderer extends Gui {
 	private int cachedRenderList = -1;
 	
 	private void renderAnchorBlock(BlockPos pos, float partialTicks) {
-		ClientPlayerEntity player = Minecraft.getMinecraft().player;
+		ClientPlayerEntity player = Minecraft.getInstance().player;
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
 		Vec3d offset = new Vec3d(pos.getX() - playerPos.x,
 				pos.getY() - playerPos.y,
@@ -279,7 +279,7 @@ public class OverlayRenderer extends Gui {
 	}
 	
 	private void renderSelectionBox(BlockPos min, BlockPos max, float partialTicks) {
-		ClientPlayerEntity player = Minecraft.getMinecraft().player;
+		ClientPlayerEntity player = Minecraft.getInstance().player;
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
 		Vec3d offset = new Vec3d(min.getX() - playerPos.x,
 				min.getY() - playerPos.y,
@@ -370,7 +370,7 @@ public class OverlayRenderer extends Gui {
 	}
 	
 	private void renderBlueprintPreview(BlockPos center, BlueprintBlock[][][] preview, Direction rotation, float partialTicks) {
-		Minecraft mc = Minecraft.getMinecraft();
+		Minecraft mc = Minecraft.getInstance();
 		ClientPlayerEntity player = mc.player;
 		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
 		Vec3d offset = new Vec3d(center.getX() - playerPos.x,
@@ -510,7 +510,7 @@ public class OverlayRenderer extends Gui {
 			return;
 		}
 		
-		Minecraft mc = Minecraft.getMinecraft();
+		Minecraft mc = Minecraft.getInstance();
 		
 		GlStateManager.disableBlend();
 		GlStateManager.pushMatrix();
