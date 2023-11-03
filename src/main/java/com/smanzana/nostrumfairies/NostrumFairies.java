@@ -14,49 +14,47 @@ import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
+import com.smanzana.nostrumfairies.proxy.ClientProxy;
 import com.smanzana.nostrumfairies.proxy.CommonProxy;
 import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
-import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.research.NostrumResearch.NostrumResearchTab;
 
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.IEntityOwnable;
-import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraftforge.common.DimensionManager;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
-@Mod(modid = NostrumFairies.MODID, version = NostrumFairies.VERSION,
-	dependencies="required-after:" + NostrumMagica.MODID + "@[" + NostrumMagica.VERSION + ",)")
+@Mod(NostrumFairies.MODID)
 public class NostrumFairies {
 
 	public static final String MODID = "nostrumfairies";
-    public static final String VERSION = "1.12.2-1.2.1";
+    public static final String VERSION = "1.14.4-1.2.0";
 	
     public static NostrumFairies instance;
-    @SidedProxy(clientSide="com.smanzana.nostrumfairies.proxy.ClientProxy", serverSide="com.smanzana.nostrumfairies.proxy.CommonProxy")
     public static CommonProxy proxy;
     public static Logger logger = LogManager.getLogger(MODID);
-    public static CreativeTabs creativeTab;
+    public static ItemGroup creativeTab;
     public static LogisticsComponentRegistry logisticsComponentRegistry;
     public static Random random = new Random();
     public static NostrumResearchTab researchTab;
@@ -64,53 +62,53 @@ public class NostrumFairies {
     private LogisticsRegistry logisticsRegistry; // use getter below
     private boolean logisticsRegistryInitRecurseGuard;
     
-    @EventHandler
-    public void init(FMLInitializationEvent event) {
-        proxy.init();
-        
-        registerLogisticsComponents();
-    }
-    
-    @EventHandler
-    public void preinit(FMLPreInitializationEvent event) {
+    public NostrumFairies() {
     	instance = this;
+    	
+    	proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> CommonProxy::new);
     	logisticsRegistryInitRecurseGuard = false;
     	
     	logisticsComponentRegistry = new LogisticsComponentRegistry();
     	
-    	NostrumFairies.creativeTab = new CreativeTabs(MODID){
+    	NostrumFairies.creativeTab = new ItemGroup(MODID){
 	    	@Override
 	        @OnlyIn(Dist.CLIENT)
-			public ItemStack getTabIconItem() {
+			public ItemStack createIcon() {
 	    		return FeySoulStone.create(FeySoulStone.SoulStoneType.GEM);
 	        }
 	    };
-	    FeySoulStone.instance().setCreativeTab(NostrumFairies.creativeTab);
+	    
+	    FMLJavaModLoadingContext.get().getModEventBus().register(this);
 	    
     	proxy.preinit();
-    	researchTab = new NostrumResearchTab("fey", FeySoulStone.create(SoulStoneType.GEM));
     }
     
-    @EventHandler
-    public void postinit(FMLPostInitializationEvent event) {
-    	proxy.postinit();
+    @SubscribeEvent
+	public void commonSetup(FMLCommonSetupEvent event) {
+    	researchTab = new NostrumResearchTab("fey", FeySoulStone.create(SoulStoneType.GEM));
+    	
+    	proxy.init();
+        registerLogisticsComponents();
+        
+        proxy.postinit();
     	MinecraftForge.EVENT_BUS.register(this);
     }
     
-    @EventHandler
+    
+    @SubscribeEvent
     public void startup(FMLServerStartingEvent event) {
     	//event.registerServerCommand(new CommandGotoDungeon());
     }
     
-    @EventHandler
+    @SubscribeEvent
     public void onServerShutdown(FMLServerStoppedEvent event) {
     	;
     }
     
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
-    	if (!event.getWorld().isRemote) {
-    		initLogisticsRegistry(event.getWorld());
+    	if (!event.getWorld().isRemote()) {
+    		initLogisticsRegistry((ServerWorld) event.getWorld());
     	}
     }
     
@@ -125,20 +123,20 @@ public class NostrumFairies {
     	return logisticsRegistry;
     }
     
-    private void initLogisticsRegistry(World world) {
+    private void initLogisticsRegistry(ServerWorld world) {
     	if (logisticsRegistryInitRecurseGuard) {
     		throw new RuntimeException("Recursed into logistics registry init code while initting registry");
     	}
     	logisticsRegistry = null;
     	logisticsRegistryInitRecurseGuard = true;
     	
-    	logisticsRegistry = (LogisticsRegistry) world.getMapStorage().getOrLoadData(
-    			LogisticsRegistry.class, LogisticsRegistry.DATA_NAME);
+    	logisticsRegistry = (LogisticsRegistry) world.getServer().getWorld(DimensionType.OVERWORLD).getSavedData().getOrCreate(
+    			LogisticsRegistry::new, LogisticsRegistry.DATA_NAME);
 		
-		if (logisticsRegistry == null) { // still
-			logisticsRegistry = new LogisticsRegistry();
-			world.getMapStorage().setData(LogisticsRegistry.DATA_NAME, logisticsRegistry);
-		}
+//		if (logisticsRegistry == null) { // still
+//			logisticsRegistry = new LogisticsRegistry();
+//			world.getMapStorage().setData(LogisticsRegistry.DATA_NAME, logisticsRegistry);
+//		}
 		
 		logisticsRegistryInitRecurseGuard = false;
     }
@@ -156,22 +154,16 @@ public class NostrumFairies {
     			new LogisticsTileEntity.LogisticsTileEntityComponent.ComponentFactory());
     }
     
-    public static @Nullable World getWorld(int dimension) {
+    public static @Nullable World getWorld(DimensionType dimension) {
     	PlayerEntity p = proxy.getPlayer();
-    	if (p != null && p.world.isRemote) {
-    		if (p.world.provider.getDimension() == dimension) {
+    	if (p != null && p.world.isRemote()) {
+    		if (p.world.getDimension().getType() == dimension) {
 				return p.world;
 			}
     		return null;
     	}
     	
-		for (World world : DimensionManager.getWorlds()) {
-			if (world.provider.getDimension() == dimension) {
-				return world;
-			}
-		}
-    	
-    	return null;
+    	return ServerLifecycleHooks.getCurrentServer().getWorld(dimension);
     }
     
     @SubscribeEvent
@@ -182,13 +174,8 @@ public class NostrumFairies {
     	
     	if (e.getEntity() instanceof MonsterEntity) {
     		MonsterEntity mob = (MonsterEntity) e.getEntity();
-    		if (e.getEntity() instanceof IEntityOwnable) {
-    			IEntityOwnable owned = (IEntityOwnable) mob;
-    			mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, 10, true, false, (target) -> {
-    				return target != null && owned.getOwnerId() != null && !target.getUniqueID().equals(owned.getOwnerId());
-    			}));
-    		} else {
-	    		mob.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityFeyBase>(mob, EntityFeyBase.class, true));
+    		if (e.getEntity() instanceof MonsterEntity) {
+	    		mob.targetSelector.addGoal(2, new NearestAttackableTargetGoal<EntityFeyBase>(mob, EntityFeyBase.class, true));
     		}
     	}
     }
@@ -197,7 +184,7 @@ public class NostrumFairies {
     	if (e == null)
     		return null;
     	
-    	return e.getCapability(AttributeProvider.CAPABILITY, null);
+    	return e.getCapability(AttributeProvider.CAPABILITY, null).orElse(null);
     }
     
     private static int potionID = 85;

@@ -1,12 +1,12 @@
 package com.smanzana.nostrumfairies.potion;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public enum PotionIcon {
 
@@ -29,9 +29,9 @@ public enum PotionIcon {
 	
 	@OnlyIn(Dist.CLIENT)
 	public void draw(Minecraft mc, int posX, int posY) {
-		mc.renderEngine.bindTexture(text);
+		mc.textureManager.bindTexture(text);
 		
-		Gui.drawScaledCustomSizeModalRect(posX, posY,
+		RenderFuncs.drawScaledCustomSizeModalRect(posX, posY,
 				TEXT_OFFSETU + (u * 32), TEXT_OFFSETV + (v * 32),
 				32, 32,
 				16, 16,

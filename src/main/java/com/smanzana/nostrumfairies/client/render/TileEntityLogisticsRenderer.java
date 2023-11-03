@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
-import com.smanzana.nostrumfairies.potion.FeyVisibilityPotion;
+import com.smanzana.nostrumfairies.potion.FeyVisibilityEffect;
 import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.utils.Curves;
 
@@ -40,7 +40,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 		
 		Minecraft mc = Minecraft.getMinecraft();
 		PlayerEntity player = mc.player;
-		PotionEffect effect = player.getActivePotionEffect(FeyVisibilityPotion.instance());
+		PotionEffect effect = player.getActivePotionEffect(FeyVisibilityEffect.instance());
 		
 		if (player != null && effect != null) { // REPLACE ME
 			LogisticsNetwork network = te.getNetwork();

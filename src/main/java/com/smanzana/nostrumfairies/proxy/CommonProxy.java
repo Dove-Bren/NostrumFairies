@@ -60,8 +60,8 @@ import com.smanzana.nostrumfairies.items.TemplateScroll;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.CapabilitySyncMessage;
-import com.smanzana.nostrumfairies.potion.FeyPotionTypes;
-import com.smanzana.nostrumfairies.potion.FeyVisibilityPotion;
+import com.smanzana.nostrumfairies.potion.FeyPotions;
+import com.smanzana.nostrumfairies.potion.FeyVisibilityEffect;
 import com.smanzana.nostrumfairies.rituals.outcomes.OutcomeConstructGael;
 import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
@@ -1098,29 +1098,6 @@ public class CommonProxy {
 		.build("soul_jars", NostrumFairies.researchTab, Size.NORMAL, 0, 2, true, new ItemStack(SoulJar.instance()));
     }
 
-	@SubscribeEvent
-    public void registerPotions(RegistryEvent.Register<Potion> event) {
-    	final IForgeRegistry<Potion> registry = event.getRegistry();
-    	registry.register(FeyVisibilityPotion.instance());
-	}
-	
-	@SubscribeEvent
-	public void registerPotionTypes(RegistryEvent.Register<PotionType> event) {
-    	final IForgeRegistry<PotionType> registry = event.getRegistry();
-		
-    	FeyPotionTypes.register(registry);
-    	
-    	// Is this the right time to register brewing recipes?
-    	registerPotionMixes();
-    }
-	
-	private void registerPotionMixes() {
-    	ItemStack ingredStack = FeyResource.create(FeyResourceType.TEARS, 1);
-    	PotionHelper.addMix(PotionTypes.THICK, Ingredient.fromStacks(ingredStack), FeyPotionTypes.FEY_VISIBILITY.getType());
-    	ingredStack = new ItemStack(Items.REDSTONE);
-    	PotionHelper.addMix(FeyPotionTypes.FEY_VISIBILITY.getType(), Ingredient.fromStacks(ingredStack), FeyPotionTypes.FEY_VISIBILITY_EXTENDED.getType());
-	}
-    
     @SubscribeEvent
     public void registerSounds(RegistryEvent.Register<SoundEvent> event) {
     	NostrumFairiesSounds.registerSounds(event.getRegistry());
