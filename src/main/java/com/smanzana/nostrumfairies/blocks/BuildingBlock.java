@@ -5,63 +5,58 @@ import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockContainer;
 import net.minecraft.block.BlockCrops;
-import net.minecraft.block.BlockHorizontal;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.state.DirectionProperty;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.BlockStateContainer;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.ToolType;
 
-public class BuildingBlock extends BlockContainer {
+public class BuildingBlock extends FeyContainerBlock {
 
-	public static final PropertyDirection FACING = BlockHorizontal.FACING;
+	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
 	public static final String ID = "logistics_building_block";
 	private static double BB_MAJOR = .345;
 	private static double BB_MINOR = .03;
 	private static final AxisAlignedBB AABB_NS = new AxisAlignedBB(.5 - BB_MAJOR, 0, .5 - BB_MINOR, .5 + BB_MAJOR, .685, .5 + BB_MINOR);
 	private static final AxisAlignedBB AABB_EW = new AxisAlignedBB(.5 - BB_MINOR, 0, .5 - BB_MAJOR, .5 + BB_MINOR, .685, .5 + BB_MAJOR);
 	
-	private static BuildingBlock instance = null;
-	public static BuildingBlock instance() {
-		if (instance == null)
-			instance = new BuildingBlock();
-		
-		return instance;
-	}
-	
 	public BuildingBlock() {
-		super(Material.WOOD, MapColor.WOOD);
-		this.setUnlocalizedName(ID);
-		this.setHardness(3.0f);
-		this.setResistance(1.0f);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setSoundType(SoundType.WOOD);
-		this.setHarvestLevel("pickaxe", 0);
-		this.setLightOpacity(2);
+		super(Block.Properties.create(Material.WOOD)
+				.hardnessAndResistance(3f, 1f)
+				.sound(SoundType.WOOD)
+				.harvestTool(ToolType.PICKAXE)
+				);
 	}
 	
 	@Override
 	protected BlockStateContainer createBlockState() {
 		return new BlockStateContainer(this, FACING);
+	}
+	
+	@Override
+	public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {
+		return 2; // How much light out of 16 I think to take away
 	}
 	
 	protected static int metaFromFacing(Direction facing) {
@@ -164,20 +159,20 @@ public class BuildingBlock extends BlockContainer {
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, BlockState state, PlayerEntity playerIn, Hand hand, Direction side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		playerIn.openGui(NostrumFairies.MODID, NostrumFairyGui.buildBlockID, worldIn, pos.getX(), pos.getY(), pos.getZ());
 		return true;
 	}
 	
 	@Override
-	public TileEntity createNewTileEntity(World worldIn, int meta) {
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
 		TileEntity ent = new BuildingBlockTileEntity();
 		return ent;
 	}
 	
 	@Override
-	public EnumBlockRenderType getRenderType(BlockState state) {
-		return EnumBlockRenderType.MODEL;
+	public BlockRenderType getRenderType(BlockState state) {
+		return BlockRenderType.MODEL;
 	}
 	
 	@Override

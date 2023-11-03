@@ -19,7 +19,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -27,7 +27,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class LogisticsSensorBlock extends BlockContainer
+public class LogisticsSensorBlock extends FeyContainerBlock
 {
 	private static final PropertyBool ACTIVE = PropertyBool.create("active");
 	public static final String ID = "logistics_sensor";
@@ -152,7 +152,7 @@ public class LogisticsSensorBlock extends BlockContainer
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, BlockState state, PlayerEntity playerIn, Hand hand, Direction side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		
 		// Kick off a request to refresh info.
 		if (worldIn.isRemote) {
@@ -176,13 +176,13 @@ public class LogisticsSensorBlock extends BlockContainer
 	}
 	
 	@Override
-	public TileEntity createNewTileEntity(World worldIn, int meta) {
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
 		return new LogisticsSensorTileEntity();
 	}
 	
 	@Override
-	public EnumBlockRenderType getRenderType(BlockState state) {
-		return EnumBlockRenderType.MODEL;
+	public BlockRenderType getRenderType(BlockState state) {
+		return BlockRenderType.MODEL;
 	}
 	
 	@Override

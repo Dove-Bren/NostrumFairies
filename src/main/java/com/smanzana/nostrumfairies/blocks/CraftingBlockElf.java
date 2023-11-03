@@ -6,11 +6,11 @@ import com.smanzana.nostrumfairies.tiles.CraftingBlockElfTileEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
-import net.minecraft.block.BlockHorizontal;
+import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.properties.DirectionProperty;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.LivingEntity;
@@ -18,7 +18,7 @@ import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -26,9 +26,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class CraftingBlockElf extends BlockContainer {
+public class CraftingBlockElf extends FeyContainerBlock {
 	
-	public static final PropertyDirection FACING = BlockHorizontal.FACING;
+	public static final DirectionProperty FACING = HorizontalBlock.FACING;
 	public static final String ID = "logistics_crafting_station_elf";
 	private static final AxisAlignedBB AABB = new AxisAlignedBB(0, 0, 0, 1, .5, 1);
 	
@@ -147,7 +147,7 @@ public class CraftingBlockElf extends BlockContainer {
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, BlockState state, PlayerEntity playerIn, Hand hand, Direction side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		
 		if (!worldIn.isRemote) {
 			worldIn.notifyBlockUpdate(pos, state, state, 2);
@@ -174,13 +174,13 @@ public class CraftingBlockElf extends BlockContainer {
 	}
 	
 	@Override
-	public TileEntity createNewTileEntity(World worldIn, int meta) {
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
 		return new CraftingBlockElfTileEntity();
 	}
 	
 	@Override
-	public EnumBlockRenderType getRenderType(BlockState state) {
-		return EnumBlockRenderType.MODEL;
+	public BlockRenderType getRenderType(BlockState state) {
+		return BlockRenderType.MODEL;
 	}
 	
 	@Override

@@ -9,14 +9,14 @@ import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.properties.DirectionProperty;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -24,9 +24,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class OutputLogisticsPanel extends BlockContainer {
+public class OutputLogisticsPanel extends FeyContainerBlock {
 	
-	private static final PropertyDirection FACING = PropertyDirection.create("facing");
+	private static final DirectionProperty FACING = DirectionProperty.create("facing");
 	private static final double BB_MINOR = 1.0 / 16.0;
 	private static final double BB_MAJOR = 2.0 / 16.0;
 	private static final AxisAlignedBB AABB_N = new AxisAlignedBB(BB_MAJOR, BB_MAJOR, 0, 1 - BB_MAJOR, 1 - BB_MAJOR, BB_MINOR);
@@ -207,7 +207,7 @@ public class OutputLogisticsPanel extends BlockContainer {
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, BlockState state, PlayerEntity playerIn, Hand hand, Direction side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		
 		playerIn.openGui(NostrumFairies.instance,
 				NostrumFairyGui.outputPanelID, worldIn,
@@ -217,13 +217,13 @@ public class OutputLogisticsPanel extends BlockContainer {
 	}
 	
 	@Override
-	public TileEntity createNewTileEntity(World worldIn, int meta) {
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
 		return new OutputPanelTileEntity();
 	}
 	
 	@Override
-	public EnumBlockRenderType getRenderType(BlockState state) {
-		return EnumBlockRenderType.MODEL;
+	public BlockRenderType getRenderType(BlockState state) {
+		return BlockRenderType.MODEL;
 	}
 	
 	@Override

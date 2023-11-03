@@ -4,50 +4,35 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.tiles.BufferChestTileEntity;
 
-import net.minecraft.block.BlockContainer;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ToolType;
 
-public class BufferLogisticsChest extends BlockContainer {
+public class BufferLogisticsChest extends FeyContainerBlock {
 	
 	public static final String ID = "logistics_buffer_chest";
 	
-	private static BufferLogisticsChest instance = null;
-	public static BufferLogisticsChest instance() {
-		if (instance == null)
-			instance = new BufferLogisticsChest();
-		
-		return instance;
-	}
-	
 	public BufferLogisticsChest() {
-		super(Material.WOOD, MapColor.WOOD);
-		this.setUnlocalizedName(ID);
-		this.setHardness(3.0f);
-		this.setResistance(1.0f);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setSoundType(SoundType.WOOD);
-		this.setHarvestLevel("axe", 0);
+		super(Block.Properties.create(Material.WOOD)
+				.hardnessAndResistance(3.0f, 1.0f)
+				.sound(SoundType.WOOD)
+				.harvestTool(ToolType.AXE)
+				);
 	}
 	
 	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return true;
-	}
-	
-	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, BlockState state, PlayerEntity playerIn, Hand hand, Direction side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		
 		playerIn.openGui(NostrumFairies.instance,
 				NostrumFairyGui.bufferChestID, worldIn,
@@ -57,13 +42,13 @@ public class BufferLogisticsChest extends BlockContainer {
 	}
 	
 	@Override
-	public TileEntity createNewTileEntity(World worldIn, int meta) {
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
 		return new BufferChestTileEntity();
 	}
 	
 	@Override
-	public EnumBlockRenderType getRenderType(BlockState state) {
-		return EnumBlockRenderType.MODEL;
+	public BlockRenderType getRenderType(BlockState state) {
+		return BlockRenderType.MODEL;
 	}
 	
 	@Override
@@ -85,7 +70,7 @@ public class BufferLogisticsChest extends BlockContainer {
 				ItemEntity item = new ItemEntity(
 						world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 						table.removeStackFromSlot(i));
-				world.spawnEntity(item);
+				world.addEntity(item);
 			}
 		}
 		

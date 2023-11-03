@@ -28,7 +28,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -46,7 +46,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 
-public class TemplateBlock extends BlockContainer {
+public class TemplateBlock extends FeyContainerBlock {
 	
 	/**
 	 * Attempts to deduce what item is needed to create the provided blockstate.
@@ -153,7 +153,7 @@ public class TemplateBlock extends BlockContainer {
 		
 	};
 	
-	public static String ID = "template_block";
+	public static final String ID = "template_block";
 	
 	private static TemplateBlock instance= null;
 	public static TemplateBlock instance() {
@@ -247,8 +247,8 @@ public class TemplateBlock extends BlockContainer {
 	
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public EnumBlockRenderType getRenderType(BlockState state) {
-		return EnumBlockRenderType.INVISIBLE;
+	public BlockRenderType getRenderType(BlockState state) {
+		return BlockRenderType.INVISIBLE;
 	}
 	
 	protected static @Nullable TemplateBlockTileEntity GetEntity(IBlockAccess world, BlockPos pos) {
@@ -316,7 +316,7 @@ public class TemplateBlock extends BlockContainer {
 	}
 	
 	@Override
-	public TileEntity createNewTileEntity(World worldIn, int meta) {
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
 		return new TemplateBlockTileEntity();
 	}
 	

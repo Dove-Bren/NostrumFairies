@@ -9,18 +9,18 @@ import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
-import net.minecraft.block.BlockHorizontal;
+import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.properties.DirectionProperty;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -28,10 +28,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class StorageMonitor extends BlockContainer {
+public class StorageMonitor extends FeyContainerBlock {
 	
 	// TODO what about viewing tasks? Condensed tasks that is.
-	private static final PropertyDirection FACING = BlockHorizontal.FACING;
+	private static final DirectionProperty FACING = HorizontalBlock.FACING;
 	private static final double BB_MINOR = 2.0 / 16.0;
 	private static final AxisAlignedBB AABB_N = new AxisAlignedBB(0, 0, 1 - BB_MINOR, 1, 1, 1);
 	private static final AxisAlignedBB AABB_E = new AxisAlignedBB(0, 0, 0, BB_MINOR, 1, 1);
@@ -202,7 +202,7 @@ public class StorageMonitor extends BlockContainer {
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, BlockState state, PlayerEntity playerIn, Hand hand, Direction side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		
 		// Kick off a request to refresh info.
 		if (worldIn.isRemote) {
@@ -228,13 +228,13 @@ public class StorageMonitor extends BlockContainer {
 	}
 	
 	@Override
-	public TileEntity createNewTileEntity(World worldIn, int meta) {
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
 		return new StorageMonitorTileEntity();
 	}
 	
 	@Override
-	public EnumBlockRenderType getRenderType(BlockState state) {
-		return EnumBlockRenderType.MODEL;
+	public BlockRenderType getRenderType(BlockState state) {
+		return BlockRenderType.MODEL;
 	}
 	
 	@Override

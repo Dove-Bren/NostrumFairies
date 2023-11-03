@@ -59,7 +59,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	
 	//public static final PropertyEnum<ResidentType> TYPE = PropertyEnum.<ResidentType>create("type", ResidentType.class);
 	public static final PropertyEnum<BlockFunction> BLOCKFUNC = PropertyEnum.<BlockFunction>create("func", BlockFunction.class);
-	public static final PropertyDirection FACING = BlockHorizontal.FACING;
+	public static final DirectionProperty FACING = HorizontalBlock.FACING;
 	
 	protected static final String ID = "home_block";
 	
@@ -141,7 +141,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, BlockState state, PlayerEntity playerIn, Hand hand, Direction side, float hitX, float hitY, float hitZ) {
+	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		if (state == null || !(state.getBlock() instanceof FeyHomeBlock)) {
 			return false;
 		}
@@ -160,8 +160,8 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	}
 	
 	@Override
-	public EnumBlockRenderType getRenderType(BlockState state) {
-		return EnumBlockRenderType.MODEL;
+	public BlockRenderType getRenderType(BlockState state) {
+		return BlockRenderType.MODEL;
 	}
 	
 	@Override
@@ -303,7 +303,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	}
 	
 	@Override
-	public TileEntity createNewTileEntity(World worldIn, int meta) {
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
 		BlockState state = this.getStateFromMeta(meta);
 		if (isCenter(state)) {
 			return new HomeBlockTileEntity(type);
