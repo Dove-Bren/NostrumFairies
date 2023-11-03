@@ -1,7 +1,6 @@
 package com.smanzana.nostrumfairies.items;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
@@ -13,125 +12,102 @@ import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
-import com.smanzana.nostrummagica.entity.golem.EntityGolem;
 import com.smanzana.nostrummagica.listeners.PlayerListener.Event;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.block.Block;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.IMobEntityData;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.monster.EntityIronGolem;
+import net.minecraft.entity.ILivingEntityData;
+import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.passive.GolemEntity;
+import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionEffect;
+import net.minecraft.item.ItemUseContext;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class FeyResource extends Item implements ILoreTagged {
 
 	public static enum FeyResourceType {
-		TEARS("tears", "fey_tears"),
-		ESSENCE("essence", "fey_essence"),
-		ESSENCE_CORRUPTED("essence_corrupted", "fey_essence_corrupted"),
-		BELL("bell", "fey_bell"),
-		FLOWER("flower", "fey_flower"),
-		TABLET("tablet", "fey_tablet"),
-		GOLEM_TOKEN("golem_token", "golem_token"),
-		LOGIC_TOKEN("logic_token", "logic_token");
+		TEARS("tears"),
+		ESSENCE("essence"),
+		ESSENCE_CORRUPTED("essence_corrupted"),
+		BELL("bell"),
+		FLOWER("flower"),
+		TABLET("tablet"),
+		GOLEM_TOKEN("golem_token"),
+		LOGIC_TOKEN("logic_token");
 		
 		private final String suffix;
-		private final String model;
 		
-		private FeyResourceType(String suffix, String model) {
+		private FeyResourceType(String suffix) {
 			this.suffix = suffix;;
-			this.model = model;
 		}
 		
 		public String getSuffix() {
 			return suffix;
 		}
-		
-		public String getModelName() {
-			return model;
-		}
 	}
 	
-	private static FeyResource instance = null;
-	public static FeyResource instance() {
-		if (instance == null)
-			instance = new FeyResource();
-		
-		return instance;
-	}
+	public static final String ID_TEARS = "fey_tears";
+	public static final String ID_ESSENCE = "fey_essence";
+	public static final String ID_ESSENCE_CORRUPTED = "fey_essence_corrupted";
+	public static final String ID_BELL = "fey_bell";
+	public static final String ID_FLOWER = "fey_flower";
+	public static final String ID_TABLET = "fey_tablet";
+	public static final String ID_GOLEM_TOKEN = "golem_token";
+	public static final String ID_LOGIC_TOKEN = "logic_token";
 	
-	public FeyResource() {
-		super();
-		this.setUnlocalizedName(ID);
-		this.setRegistryName(ID);
-		this.setMaxDamage(0);
-		this.setMaxStackSize(64);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setHasSubtypes(true);
-		
+	private final FeyResourceType type;
+	
+	public FeyResource(FeyResourceType type) {
+		super(FairyItems.PropBase());
+		this.type = type;
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
-	@Override
-	public String getUnlocalizedName(ItemStack stack) {
-		int i = stack.getMetadata();
+	public static Item getItem(FeyResourceType type) {
+		switch (type) {
+		case BELL:
+			return FairyItems.feyBell;
+		case ESSENCE:
+			return FairyItems.feyEssence;
+		case ESSENCE_CORRUPTED:
+			return FairyItems.feyCorruptedEssence;
+		case FLOWER:
+			return FairyItems.feyFlower;
+		case GOLEM_TOKEN:
+			return FairyItems.feyGolemToken;
+		case LOGIC_TOKEN:
+			return FairyItems.feyLogicToken;
+		case TABLET:
+			return FairyItems.feyTablet;
+		case TEARS:
+			return FairyItems.feyTears;
+		}
 		
-		String suffix = typeFromMeta(i).getSuffix();
-		
-		return this.getUnlocalizedName() + "." + suffix;
+		return null;
 	}
 	
-	@OnlyIn(Dist.CLIENT)
-	public String getModelName(FeyResourceType type) {
-		return type.getModelName();
-	}
-	
-	/**
-     * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
-     */
-    @OnlyIn(Dist.CLIENT)
-    @Override
-	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
-    	if (this.isInCreativeTab(tab)) {
-	    	for (FeyResourceType type: FeyResourceType.values()) {
-	    		subItems.add(create(type, 1));
-	    	}
-    	}
-	}
-    
     public static ItemStack create(FeyResourceType type, int count) {
-    	return new ItemStack(instance(), count, metaFromType(type));
+    	return new ItemStack(getItem(type), count);
     }
-	
-	protected static int metaFromType(FeyResourceType type) {
-		return type.ordinal();
-	}
-	
-	protected FeyResourceType typeFromMeta(int meta) {
-		return FeyResourceType.values()[meta % FeyResourceType.values().length];
-	}
 	
     @Override
 	public String getLoreKey() {
@@ -160,7 +136,7 @@ public class FeyResource extends Item implements ILoreTagged {
 	}
 
 	public FeyResourceType getType(ItemStack stack) {
-		return typeFromMeta(stack.getMetadata());
+		return this.type;
 	}
 	
 	protected void spawnFey(World worldIn, BlockPos at) {
@@ -184,11 +160,11 @@ public class FeyResource extends Item implements ILoreTagged {
 			break;
 		}
 		fey.setPosition(at.getX() + .5, at.getY(), at.getZ() + .5);
-		fey.onInitialSpawn(worldIn.getDifficultyForLocation(new BlockPos(fey)), (IMobEntityData)null);
+		fey.onInitialSpawn(worldIn, worldIn.getDifficultyForLocation(new BlockPos(fey)), SpawnReason.MOB_SUMMONED, (ILivingEntityData)null, null);
 		
-		worldIn.spawnEntity(fey);
+		worldIn.addEntity(fey);
 		
-		((WorldServer) worldIn).spawnParticle(EnumParticleTypes.END_ROD,
+		((ServerWorld) worldIn).spawnParticle(ParticleTypes.END_ROD,
 				at.getX() + .5,
 				at.getY() + .25,
 				at.getZ() + .5,
@@ -196,13 +172,16 @@ public class FeyResource extends Item implements ILoreTagged {
 				.25,
 				.4,
 				.25,
-				.05,
-				new int[0]);
+				.05);
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand, Direction facing, float hitX, float hitY, float hitZ) {
+	public ActionResultType onItemUse(ItemUseContext context) {
+		final PlayerEntity playerIn = context.getPlayer();
+		final Hand hand = context.getHand();
+		final World worldIn = context.getWorld();
 		final ItemStack stack = playerIn.getHeldItem(hand);
+		final BlockPos pos = context.getPos();
 		FeyResourceType type = getType(stack);
 		
 		if (type == FeyResourceType.FLOWER) {
@@ -212,13 +191,13 @@ public class FeyResource extends Item implements ILoreTagged {
 				int count = NostrumFairies.random.nextInt(3) + 1;
 				MutableBlockPos cursor = new MutableBlockPos();
 				for (int i = 0; i < count; i++) {
-					cursor.setPos(pos.up()).move(Direction.HORIZONTALS[NostrumFairies.random.nextInt(4)], NostrumFairies.random.nextInt(2) + 1);
+					cursor.setPos(pos.up()).move(Direction.Plane.HORIZONTAL.random(NostrumFairies.random), NostrumFairies.random.nextInt(2) + 1);
 					for (int j = 0; j < 5; j++) {
 						if (worldIn.isAirBlock(cursor)) {
-							if (FeyBush.instance().canPlaceBlockAt(worldIn, cursor)) {
+							if (FeyBlocks.feyBush.canPlaceBlockAt(worldIn, cursor)) {
 								// Found a spot!
-								worldIn.setBlockState(cursor.toImmutable(), FeyBush.instance().getDefaultState());
-								((WorldServer) worldIn).spawnParticle(EnumParticleTypes.VILLAGER_HAPPY,
+								worldIn.setBlockState(cursor.toImmutable(), FeyBlocks.feyBush.getDefaultState());
+								((ServerWorld) worldIn).spawnParticle(ParticleTypes.HAPPY_VILLAGER,
 										cursor.getX() + .5,
 										cursor.getY() + .25,
 										cursor.getZ() + .5,
@@ -226,8 +205,7 @@ public class FeyResource extends Item implements ILoreTagged {
 										.25,
 										1,
 										.25,
-										0,
-										new int[0]);
+										0);
 								break;
 							} else {
 								cursor.move(Direction.DOWN);
@@ -241,10 +219,10 @@ public class FeyResource extends Item implements ILoreTagged {
 			}
 			
 			stack.shrink(1);
-			return EnumActionResult.SUCCESS;
+			return ActionResultType.SUCCESS;
 		}
 		
-		return EnumActionResult.PASS;
+		return ActionResultType.PASS;
 	}
 	
 	@Override
@@ -258,19 +236,19 @@ public class FeyResource extends Item implements ILoreTagged {
 					if (!attr.hasLore(FeyFriendLore.instance)) {
 						attr.giveFullLore(FeyFriendLore.instance());
 						stack.shrink(1);
-						return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
+						return new ActionResult<ItemStack>(ActionResultType.SUCCESS, stack);
 					} else {
-						playerIn.sendMessage(new TextComponentTranslation("info.tablet.fail"));
-						return new ActionResult<ItemStack>(EnumActionResult.FAIL, stack);
+						playerIn.sendMessage(new TranslationTextComponent("info.tablet.fail"));
+						return new ActionResult<ItemStack>(ActionResultType.FAIL, stack);
 					}
 				}
 			} else {
-				return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
+				return new ActionResult<ItemStack>(ActionResultType.SUCCESS, stack);
 			}
 		} else if (type == FeyResourceType.BELL) {
 			if (!worldIn.isRemote) {
-				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, Block.FULL_BLOCK_AABB.offset(playerIn.posX, playerIn.posY, playerIn.posZ).grow(30))) {
-					ent.addPotionEffect(new PotionEffect(Potion.getPotionFromResourceLocation("glowing"), 20 * 5));
+				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, VoxelShapes.fullCube().getBoundingBox().offset(playerIn.posX, playerIn.posY, playerIn.posZ).grow(30))) {
+					ent.addPotionEffect(new EffectInstance(Effects.GLOWING, 20 * 5));
 					NostrumMagica.playerListener.registerTimer((/*Event*/ eType, /*LivingEntity*/ entity, /*Object*/ data) -> {
 						if (eType == Event.TIME) {
 							NostrumFairiesSounds.BELL.play(worldIn, ent.posX, ent.posY, ent.posZ);
@@ -281,18 +259,18 @@ public class FeyResource extends Item implements ILoreTagged {
 				
 				NostrumFairiesSounds.BELL.play(worldIn, playerIn.posX, playerIn.posY, playerIn.posZ);
 			}
-			return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
+			return new ActionResult<ItemStack>(ActionResultType.SUCCESS, stack);
 		}
 		
-		return new ActionResult<ItemStack>(EnumActionResult.PASS, stack);
+		return new ActionResult<ItemStack>(ActionResultType.PASS, stack);
 	}
 	
 	@SubscribeEvent
 	public void onMobDrop(LivingDropsEvent event) {
 		final float chance;
-		if (event.getMobEntity() instanceof EntityIronGolem) {
+		if (event.getEntityLiving() instanceof IronGolemEntity) {
 			chance = .2f;
-		} else if (event.getMobEntity() instanceof EntityGolem) {
+		} else if (event.getEntityLiving() instanceof GolemEntity) {
 			chance = .01f;
 		} else {
 			chance = 0f;
@@ -304,7 +282,7 @@ public class FeyResource extends Item implements ILoreTagged {
 		
 		for (int i = 0; i <= event.getLootingLevel(); i++) {
 			if (NostrumFairies.random.nextFloat() < chance) {
-				EntityItem entity = new EntityItem(event.getEntity().world,
+				ItemEntity entity = new ItemEntity(event.getEntity().world,
 						event.getEntity().posX,
 						event.getEntity().posY,
 						event.getEntity().posZ,

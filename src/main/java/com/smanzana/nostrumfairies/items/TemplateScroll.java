@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
@@ -16,11 +15,14 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 
 /**
@@ -31,39 +33,24 @@ import net.minecraft.world.World;
 public class TemplateScroll extends Item implements ILoreTagged {
 
 	public static final String ID = "template_scroll";
-	
-	private static TemplateScroll instance = null;
-	public static TemplateScroll instance() {
-		if (instance == null)
-			instance = new TemplateScroll();
-		
-		return instance;
-	}
+	private static final String NBT_TEMPLATE = "template";
 	
 	public TemplateScroll() {
-		super();
-		this.setUnlocalizedName(ID);
-		this.setRegistryName(ID);
-		this.setMaxDamage(0);
-		this.setMaxStackSize(1);
-		this.setHasSubtypes(false);
-		this.setCreativeTab(NostrumFairies.creativeTab);
+		super(FairyItems.PropUnstackable());
 	}
 	
 	@Override
-	public String getHighlightTip(ItemStack item, String displayName ) {
+	public String getHighlightTip(ItemStack item, String displayName) {
 		return displayName;
 	}
 	
-	private static final String NBT_TEMPLATE = "template";
-	
 	public static TemplateBlueprint GetTemplate(ItemStack stack) {
-		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateScroll) || !stack.hasTagCompound()) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateScroll) || !stack.hasTag()) {
 			return null;
 		}
 		
-		CompoundNBT nbt = stack.getTagCompound();
-		CompoundNBT blueprintTag = nbt.getCompoundTag(NBT_TEMPLATE);
+		CompoundNBT nbt = stack.getTag();
+		CompoundNBT blueprintTag = nbt.getCompound(NBT_TEMPLATE);
 		return TemplateBlueprint.fromNBT(blueprintTag);
 	}
 	
@@ -82,9 +69,9 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	public static ItemStack Create(TemplateBlueprint blueprint) {
-		ItemStack stack = new ItemStack(instance());
+		ItemStack stack = new ItemStack(FairyItems.templateScroll);
 		SetTemplate(stack, blueprint);
-		stack.setStackDisplayName("New Template");
+		stack.setDisplayName(new StringTextComponent("New Template"));
 		return stack;
 	}
 	
@@ -97,13 +84,13 @@ public class TemplateScroll extends Item implements ILoreTagged {
 			return;
 		}
 		
-		CompoundNBT nbt = stack.getTagCompound();
+		CompoundNBT nbt = stack.getTag();
 		if (nbt == null) {
 			nbt = new CompoundNBT();
 		}
 		
-		nbt.setTag(NBT_TEMPLATE, blueprintTag);
-		stack.setTagCompound(nbt);
+		nbt.put(NBT_TEMPLATE, blueprintTag);
+		stack.setTag(nbt);
 	}
 	
 	@Override
@@ -133,8 +120,8 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand, Direction facing, float hitX, float hitY, float hitZ) {
-		return EnumActionResult.PASS;
+	public ActionResultType onItemUse(ItemUseContext context) {
+		return ActionResultType.PASS;
 	}
 	
 	@Override
@@ -143,7 +130,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
 		super.addInformation(stack, worldIn, tooltip, flagIn);
 	}
 	

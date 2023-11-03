@@ -17,21 +17,20 @@ import com.smanzana.nostrummagica.loretag.Lore;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
+import net.minecraft.item.Rarity;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.Direction;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Magical instrument that allows you to open up the fairy GUI and interact with personal fairies
@@ -41,85 +40,50 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class FairyInstrument extends Item implements ILoreTagged {
 
 	public static enum InstrumentType {
-		FLUTE("flute", "fairy_instrument_flute"),
-		HARP("harp", "fairy_instrument_harp"),
-		OCARINA("ocarina", "fairy_instrument_ocarina");
+		FLUTE("flute"),
+		HARP("harp"),
+		OCARINA("ocarina");
 		
 		private final String suffix;
-		private final String model;
 		
-		private InstrumentType(String suffix, String model) {
-			this.suffix = suffix;;
-			this.model = model;
+		private InstrumentType(String suffix) {
+			this.suffix = suffix;
 		}
 		
 		public String getSuffix() {
 			return suffix;
 		}
-		
-		public String getModelName() {
-			return model;
+	}
+	
+	protected static final String ID_BASE = "fairy_";
+	public static final String ID_FLUTE = ID_BASE + "flute";
+	public static final String ID_HARP = ID_BASE + "harp";
+	public static final String ID_OCARINA = ID_BASE + "ocarina";
+	
+	private final InstrumentType type;
+	
+	public FairyInstrument(InstrumentType type) {
+		super(FairyItems.PropUnstackable()
+				.rarity(Rarity.UNCOMMON));
+		this.type = type;
+	}
+	
+	public static Item getItem(InstrumentType type) {
+		switch (type) {
+		case FLUTE:
+			return FairyItems.fairyFlute;
+		case HARP:
+			return FairyItems.fairyHarp;
+		case OCARINA:
+			return FairyItems.fairyOcarina;
 		}
-	}
-	
-	protected static final String ID_BASE = "fairy_instrument";
-	
-	private static FairyInstrument instance = null;
-	public static FairyInstrument instance() {
-		if (instance == null)
-			instance = new FairyInstrument();
 		
-		return instance;
+		return null;
 	}
 	
-	public FairyInstrument() {
-		super();
-		this.setUnlocalizedName(ID);
-		this.setRegistryName(ID);
-		this.setMaxDamage(0);
-		this.setMaxStackSize(1);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setHasSubtypes(true);
-	}
-	
-	@Override
-	public String getUnlocalizedName(ItemStack stack) {
-		int i = stack.getMetadata();
-		
-		String suffix = typeFromMeta(i).getSuffix();
-		
-		return this.getUnlocalizedName() + "." + suffix;
-	}
-	
-	@OnlyIn(Dist.CLIENT)
-	public String getModelName(InstrumentType type) {
-		return type.getModelName();
-	}
-	
-	/**
-     * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
-     */
-    @OnlyIn(Dist.CLIENT)
-    @Override
-	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
-    	if (this.isInCreativeTab(tab)) {
-	    	for (InstrumentType type: InstrumentType.values()) {
-	    		subItems.add(create(type));
-	    	}
-    	}
-	}
-    
     public static ItemStack create(InstrumentType type) {
-    	return new ItemStack(instance(), 1, metaFromType(type));
+    	return new ItemStack(getItem(type));
     }
-	
-	protected static int metaFromType(InstrumentType type) {
-		return type.ordinal();
-	}
-	
-	protected InstrumentType typeFromMeta(int meta) {
-		return InstrumentType.values()[meta % InstrumentType.values().length];
-	}
 	
     @Override
 	public String getLoreKey() {
@@ -148,12 +112,12 @@ public class FairyInstrument extends Item implements ILoreTagged {
 	}
 
 	public InstrumentType getType(ItemStack stack) {
-		return typeFromMeta(stack.getMetadata());
+		return this.type;
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand, Direction facing, float hitX, float hitY, float hitZ) {
-		return EnumActionResult.PASS;
+	public ActionResultType onItemUse(ItemUseContext context) {
+		return ActionResultType.PASS;
 	}
 	
 	@Override
@@ -177,7 +141,7 @@ public class FairyInstrument extends Item implements ILoreTagged {
 				attr.setEnabled(!attr.isEnabled());
 				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
 				NostrumFairiesSounds.BELL.play(playerIn.world, playerIn.posX, playerIn.posY, playerIn.posZ);
-				return ActionResult.newResult(EnumActionResult.PASS, stack);
+				return ActionResult.newResult(ActionResultType.PASS, stack);
 			}
 				
 			
@@ -205,27 +169,27 @@ public class FairyInstrument extends Item implements ILoreTagged {
 				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
 				
 				NostrumMagica.playerListener.registerTimer((t, entity, data) -> {
-					if (!playerIn.isDead && playerIn.getHeldItem(hand) == stack) {
+					if (playerIn.isAlive() && playerIn.getHeldItem(hand) == stack) {
 						playerIn.openGui(NostrumFairies.instance, NostrumFairyGui.fairyGuiID, worldIn, (int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ);
 					}
 					return true;
 				}, 30, 0);
 			} else {
-				playerIn.sendMessage(new TextComponentTranslation("info.instrument.locked"));
+				playerIn.sendMessage(new TranslationTextComponent("info.instrument.locked"));
 			}
 		}
 		
-		return ActionResult.newResult(EnumActionResult.PASS, stack);
+		return ActionResult.newResult(ActionResultType.PASS, stack);
 	}
 	
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
 		super.addInformation(stack, worldIn, tooltip, flagIn);
 		
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(NostrumFairies.proxy.getPlayer());
 		if (attr != null && !attr.isEnabled()) {
-			tooltip.add(ChatFormatting.DARK_RED + I18n.format("info.instrument.disabled") + ChatFormatting.RESET);
+			tooltip.add(new TranslationTextComponent("info.instrument.disabled").applyTextStyle(TextFormatting.DARK_RED));
 		}
 	}
 	

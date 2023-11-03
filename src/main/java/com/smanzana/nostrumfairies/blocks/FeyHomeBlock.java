@@ -13,38 +13,26 @@ import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockHorizontal;
-import net.minecraft.block.BlockLeaves;
-import net.minecraft.block.BlockNewLeaf;
-import net.minecraft.block.BlockNewLog;
-import net.minecraft.block.BlockPlanks;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.properties.PropertyEnum;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.world.chunk.BlockStateContainer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Houses fey.
@@ -53,23 +41,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  *
  */
 public class FeyHomeBlock extends Block implements ITileEntityProvider {
-	
-	public static enum ResidentType implements IStringSerializable {
-		FAIRY,
-		ELF,
-		DWARF,
-		GNOME;
-
-		@Override
-		public String getName() {
-			return this.name().toLowerCase();
-		}
-		
-		@Override
-		public String toString() {
-			return this.getName();
-		}
-	}
 	
 	private static enum BlockFunction implements IStringSerializable {
 		CENTER,

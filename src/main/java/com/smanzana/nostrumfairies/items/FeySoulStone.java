@@ -6,31 +6,30 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
+import com.smanzana.nostrumfairies.utils.EntitySpawning;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.Direction;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.storage.AnvilChunkLoader;
-import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**
  * Carries fey.
@@ -67,124 +66,118 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		}
 	}
 	
-	public static final String ID = "fey_soul_stone";
+	public static final String ID_SOUL_GEM = "soul_amethyst";
+	public static final String ID_SOUL_GAEL = "fairy_gael_basic";
 	
-	private static FeySoulStone instance = null;
-	public static FeySoulStone instance() {
-		if (instance == null)
-			instance = new FeySoulStone();
-		
-		return instance;
+	private static final String NBT_FEY_TYPE = "fey_type";
+	private static final String NBT_FEY_NAME = "fey_name";
+	private static final String NBT_FEY_DATA = "fey_data";
+	
+	private final SoulStoneType type;
+	
+	public FeySoulStone(SoulStoneType type) {
+		super(FairyItems.PropUnstackable());
+		this.type = type;
 	}
 	
-	public FeySoulStone() {
-		super();
-		this.setUnlocalizedName(ID);
-		this.setRegistryName(ID);
-		this.setMaxDamage(0);
-		this.setMaxStackSize(1);
-		this.setHasSubtypes(true);
-	}
-	
-	protected static final int metaFromTypes(boolean filled, SoulStoneType type, @Nullable ResidentType feyType) {
-		if (feyType == null) {
-			feyType = ResidentType.FAIRY;
+	public static FeySoulStone getItem(SoulStoneType type) {
+		switch (type) {
+		case GAEL:
+			return FairyItems.soulGael;
+		case GEM:
+			return FairyItems.soulGem;
 		}
-		return (feyType.ordinal() << 3) | (type.ordinal() << 1) | (filled ? 1 : 0);
-	}
-	
-	protected static final boolean filledFromMeta(int meta) {
-		return (meta & 1) == 1;
-	}
-	
-	protected static final SoulStoneType typeFromMeta(int meta) {
-		int raw = (meta >> 1) & 0x3;
-		return SoulStoneType.values()[raw % SoulStoneType.values().length];
-	}
-	
-	protected static final ResidentType feyTypeFromMeta(int meta) {
-		int raw = (meta  >> 3) & 0x3;
-		return ResidentType.values()[raw % ResidentType.values().length];
+		
+		return null;
 	}
 	
 	public static final SoulStoneType getTypeOf(ItemStack stack) {
-		return typeFromMeta(stack.getMetadata());
+		return ((FeySoulStone) stack.getItem()).type;
 	}
 	
-	public static final boolean hasStoredFey(ItemStack stack) {
-		return filledFromMeta(stack.getMetadata()) && stack.hasTagCompound();
+	protected @Nullable ResidentType getFeyType(ItemStack stack) {
+		if (stack.isEmpty() || !stack.hasTag()) {
+			return null;
+		}
+		
+		CompoundNBT tag = stack.getTag();
+		ResidentType type;
+		try {
+			type = ResidentType.valueOf(tag.getString(NBT_FEY_TYPE).toUpperCase());
+		} catch (Exception e) {
+			type = null;
+		}
+		
+		return type;
+	}
+	
+	protected void setFeyType(ItemStack stack, ResidentType type) {
+		CompoundNBT tag = stack.getTag();
+		if (tag == null) {
+			tag = new CompoundNBT();
+		}
+		
+		tag.putString(NBT_FEY_TYPE, type.name());
+		
+		stack.setTag(tag);
+	}
+	
+	protected @Nullable CompoundNBT getFeyData(ItemStack stack) {
+		if (stack.isEmpty() || !stack.hasTag()) {
+			return null;
+		}
+		
+		return stack.getTag().getCompound(NBT_FEY_DATA);
+	}
+	
+	protected void setFeyData(ItemStack stack, @Nullable CompoundNBT data) {
+		CompoundNBT tag = stack.getTag();
+		if (tag == null) {
+			tag = new CompoundNBT();
+		}
+		
+		if (data == null) {
+			tag.remove(NBT_FEY_DATA);
+		} else {
+			tag.put(NBT_FEY_DATA, data);
+		}
+		
+		stack.setTag(tag);
+	}
+	
+	protected @Nullable String getFeyName(ItemStack stack) {
+		if (stack.isEmpty() || !stack.hasTag()) {
+			return null;
+		}
+		
+		return stack.getTag().getString(NBT_FEY_NAME);
+	}
+	
+	protected void setFeyName(ItemStack stack, String name) {
+		CompoundNBT tag = stack.getTag();
+		if (tag == null) {
+			tag = new CompoundNBT();
+		}
+		
+		if (name == null) {
+			tag.remove(NBT_FEY_NAME);
+		} else {
+			tag.putString(NBT_FEY_NAME, name);
+		}
+		
+		stack.setTag(tag);
+	}
+	
+	protected boolean hasStoredFey(ItemStack stack) {
+		return stack.hasTag() && stack.getTag().contains(NBT_FEY_DATA);
+	}
+	
+	public static final boolean HasStoredFey(ItemStack stack) {
+		return ((FeySoulStone) stack.getItem()).hasStoredFey(stack);
 	}
 	
 	public static final ResidentType getStoredFeyType(ItemStack stack) {
-		return feyTypeFromMeta(stack.getMetadata());
-	}
-	
-	@Override
-	public String getUnlocalizedName(ItemStack stack) {
-		SoulStoneType type = getTypeOf(stack);
-		return this.getUnlocalizedName() + "." + type.suffix;
-	}
-	
-	@OnlyIn(Dist.CLIENT)
-	public String getModelName(ItemStack stack) {
-		SoulStoneType type = getTypeOf(stack);
-		return type.modelName;
-	}
-	
-	protected String getModelName(SoulStoneType stoneType, ResidentType feyType) {
-		// This sucks. Improve by actually tying into material system?
-		if (stoneType == SoulStoneType.GAEL) {
-			return stoneType.modelName;
-		}
-		
-		final String material;
-		if (feyType == null) {
-			material = "amethyst";
-		} else {
-			switch (feyType) {
-			case DWARF:
-				material = "aquamarine";
-				break;
-			case ELF:
-				material = "emerald";
-				break;
-			case GNOME:
-				material = "garnet";
-				break;
-			case FAIRY:
-			default:
-				material = "amethyst";
-				break;
-			}
-		}
-		
-		return "soul_" + material;
-	}
-	
-	@OnlyIn(Dist.CLIENT)
-	public String getModelName(ResidentType type) {
-		SoulStoneType soulType = SoulStoneType.GEM;
-		for (SoulStoneType t : SoulStoneType.values()) {
-			if (t.canHold(type)) {
-				soulType = t;
-				break;
-			}
-		}
-		
-		return getModelName(soulType, type);
-	}
-	
-	/**
-	 * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
-	 */
-	@OnlyIn(Dist.CLIENT)
-	@Override
-	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
-		if (this.isInCreativeTab(tab)) {
-			for (SoulStoneType type : SoulStoneType.values()) {
-				subItems.add(create(type));
-			}
-		}
+		return ((FeySoulStone) stack.getItem()).getFeyType(stack);
 	}
 	
 	public static ItemStack create(SoulStoneType type) {
@@ -220,13 +213,11 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	protected static ItemStack create(SoulStoneType type, String name, ResidentType residentType, CompoundNBT nbt) {
-		ItemStack stack = new ItemStack(instance(), 1, metaFromTypes(nbt != null, type, residentType));
-		if (nbt != null) {
-			CompoundNBT tag = new CompoundNBT();
-			tag.setString("name", name);
-			tag.setTag("data", nbt);
-			stack.setTagCompound(tag);
-		}
+		final FeySoulStone item = getItem(type);
+		ItemStack stack = new ItemStack(item);
+		item.setFeyType(stack, residentType);
+		item.setFeyName(stack, name);
+		item.setFeyData(stack, nbt);
 		return stack;
 	}
 	
@@ -236,16 +227,18 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	
 	public static @Nullable EntityFeyBase spawnStoredEntity(ItemStack stack, World world, double x, double y, double z) {
 		EntityFeyBase fey = null;
-		CompoundNBT nbt = stack.getTagCompound();
-		if (nbt != null && nbt.hasKey("data", NBT.TAG_COMPOUND)) {
-			Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompoundTag("data"), world, x, y, z, true);
+		CompoundNBT feyData = ((FeySoulStone) stack.getItem()).getFeyData(stack);
+		if (feyData != null) {
+			Entity entity = EntitySpawning.readEntity(world, feyData, new Vec3d(x, y, z));
+			//Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompound("data"), world, x, y, z, true);
 			if (entity == null) {
 				;
 			} else if (entity instanceof EntityFeyBase) {
 				fey = (EntityFeyBase) entity;
+				world.addEntity(fey);
 			} else {
-				entity.isDead = true;
-				world.removeEntity(entity);
+				entity.remove();//.isDead = true;
+				//world.removeEntity(entity);
 			}
 		}
 		return fey;
@@ -274,16 +267,17 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		}
 		
 		ItemStack stack = create(soulType);
-		stack.setItemDamage(metaFromTypes(true, soulType, type));
+		((FeySoulStone) stack.getItem()).setFeyType(stack, type);
+		((FeySoulStone) stack.getItem()).setFeyData(stack, new CompoundNBT()); // Empty data
 		return stack;
 	}
 	
 	public static CompoundNBT getStoredEntityTag(ItemStack stack) {
-		return stack.hasTagCompound() ? stack.getTagCompound().getCompoundTag("data") : null; 
+		return ((FeySoulStone) stack.getItem()).getFeyData(stack);
 	}
 	
 	public static String getStoredEntityName(ItemStack stack) {
-		return stack.hasTagCompound() ? stack.getTagCompound().getString("name") : null;
+		return ((FeySoulStone) stack.getItem()).getFeyName(stack);
 	}
 	
 	@Override
@@ -313,24 +307,30 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand, Direction facing, float hitX, float hitY, float hitZ) {
+	public ActionResultType onItemUse(ItemUseContext context) {
+		final World worldIn = context.getWorld();
+		final PlayerEntity playerIn = context.getPlayer();
+		final Hand hand = context.getHand();
+		final BlockPos pos = context.getPos();
+		final Vec3d hitPos = context.getHitVec();
+		
 		if (worldIn.isRemote) {
-			return EnumActionResult.SUCCESS;
+			return ActionResultType.SUCCESS;
 		}
 		
 		ItemStack stack = playerIn.getHeldItem(hand);
-		if (filledFromMeta(stack.getMetadata())) {
+		if (this.hasStoredFey(stack)) {
 			// Drop entity at the provided spot
-			EntityFeyBase fey = spawnStoredEntity(stack, worldIn, pos.getX() + hitX, pos.getY() + hitY, pos.getZ() + hitZ);
+			EntityFeyBase fey = spawnStoredEntity(stack, worldIn, pos.getX() + hitPos.x, pos.getY() + hitPos.y, pos.getZ() + hitPos.z);
 			if (fey != null) {
 				stack = clearEntity(stack);
 				playerIn.setHeldItem(hand, stack);
-				return EnumActionResult.SUCCESS;
+				return ActionResultType.SUCCESS;
 			} else {
-				return EnumActionResult.FAIL;
+				return ActionResultType.FAIL;
 			}
 		}
-		return EnumActionResult.PASS;
+		return ActionResultType.PASS;
 	}
 	
 	@Override
@@ -339,7 +339,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			return true;
 		}
 		
-		if (!filledFromMeta(stack.getMetadata())) {
+		if (!this.hasStoredFey(stack)) {
 			// Pick up fey, if it is one
 			if (!(target instanceof EntityFeyBase)) {
 				return false;
@@ -352,7 +352,8 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			ItemStack newStack = storeEntity(stack, (EntityFeyBase) target);
 			if (!newStack.isEmpty()) {
 				playerIn.setHeldItem(hand, newStack);
-				playerIn.world.removeEntity(target);
+				target.remove();
+				//playerIn.world.removeEntity(target);
 				return true;
 			}
 		}
@@ -360,17 +361,17 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-		if (filledFromMeta(stack.getMetadata()) && stack.hasTagCompound()) {
-			String name = stack.getTagCompound().getString("name");
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+		if (this.hasStoredFey(stack)) {
+			String name = this.getFeyName(stack);
 			if (name == null || name.isEmpty()) {
 				name = "An unknown entity";
 			}
-			tooltip.add(ChatFormatting.AQUA + name + ChatFormatting.RESET);
+			tooltip.add(new StringTextComponent(name).applyTextStyle(TextFormatting.AQUA));
 			
 			ResidentType type = getStoredFeyType(stack);
 			if (type != null) {
-				tooltip.add(ChatFormatting.DARK_AQUA + type.getName() + ChatFormatting.RESET);
+				tooltip.add(new StringTextComponent(type.getName()).applyTextStyle(TextFormatting.DARK_AQUA));
 			}
 		}
 	}

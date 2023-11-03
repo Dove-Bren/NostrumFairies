@@ -63,7 +63,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.ServerWorld;
 
 public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	
@@ -356,8 +356,8 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			this.isSwingInProgress = true;
 			this.swingingHand = hand;
 
-			if (this.world instanceof WorldServer) {
-				((WorldServer)this.world).getEntityTracker().sendToTracking(this, new SPacketAnimation(this, hand == Hand.MAIN_HAND ? 0 : 3));
+			if (this.world instanceof ServerWorld) {
+				((ServerWorld)this.world).getEntityTracker().sendToTracking(this, new SPacketAnimation(this, hand == Hand.MAIN_HAND ? 0 : 3));
 			}
 		}
 	}

@@ -5,7 +5,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.mojang.realmsclient.gui.ChatFormatting;
 import com.smanzana.nostrumaetheria.api.proxy.APIProxy;
 import com.smanzana.nostrumaetheria.api.recipes.IAetherRepairerRecipe;
 import com.smanzana.nostrumfairies.NostrumFairies;
@@ -17,25 +16,27 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.IMobEntityData;
+import net.minecraft.entity.ILivingEntityData;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.Direction;
-import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.DimensionManager;
 
 /**
  * Like SoulStone#Gael's, carry fairies. However, these are solidified and cannot be emptied.
@@ -68,7 +69,7 @@ public class FairyGael extends Item implements ILoreTagged {
 			@Override
 			public boolean matches(ItemStack stack) {
 				return stack.getItem() instanceof FairyGael
-						&& isCracked(stack);
+						&& ((FairyGael) stack.getItem()).isCracked(stack);
 			}
 			
 			@Override
@@ -110,10 +111,6 @@ public class FairyGael extends Item implements ILoreTagged {
 		return ((FairyGael) stack.getItem()).type;
 	}
 	
-	public static final boolean isCracked(ItemStack stack) {
-		return ((FairyGael) stack.getItem()).isCracked(stack);
-	}
-	
 	public static FairyGael getItem(FairyGaelType type) {
 		switch (type) {
 		case ATTACK:
@@ -139,7 +136,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		return stack;
 	}
 	
-	public static void initGael(ItemStack stack, World world) {
+	public static void initGael(ItemStack stack, @Nonnull World world) {
 		// For some easy creative intergration
 		if (!stack.hasTag()) {
 			FairyGaelType type = getTypeOf(stack);
@@ -157,11 +154,7 @@ public class FairyGael extends Item implements ILoreTagged {
 				break;
 			}
 			
-			if (world == null) {
-				world = DimensionManager.getWorld(DimensionType.OVERWORLD);
-			}
-			
-			fairy.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(0, 10, 0)), (IMobEntityData)null);
+			fairy.onInitialSpawn(world, world.getDifficultyForLocation(new BlockPos(0, 10, 0)), SpawnReason.MOB_SUMMONED, (ILivingEntityData) null, null);
 			setStoredEntity(stack, fairy);
 		}
 	}
@@ -303,27 +296,27 @@ public class FairyGael extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand, Direction facing, float hitX, float hitY, float hitZ) { 
-		return EnumActionResult.PASS;
+	public ActionResultType onItemUse(ItemUseContext context) { 
+		return ActionResultType.PASS;
 	}
 	
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand hand) {
-		return ActionResult.newResult(EnumActionResult.PASS, playerIn.getHeldItem(hand));
+		return ActionResult.newResult(ActionResultType.PASS, playerIn.getHeldItem(hand));
 	}
 	
 	@OnlyIn(Dist.CLIENT)
 	@Override
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
 		if (isCracked(stack)) {
-			tooltip.add(ChatFormatting.DARK_RED + I18n.format("info.fairy_gael.cracked") + ChatFormatting.RESET);
+			tooltip.add(new TranslationTextComponent("info.fairy_gael.cracked").applyTextStyle(TextFormatting.DARK_RED));
 		}
 		if (stack.hasTag()) {
 			String name = getStoredName(stack);
 			if (name == null || name.isEmpty()) {
 				name = "An unknown entity";
 			}
-			tooltip.add(ChatFormatting.AQUA + name + ChatFormatting.RESET);
+			tooltip.add(new StringTextComponent(name).applyTextStyle(TextFormatting.AQUA));
 		}
 	}
 	

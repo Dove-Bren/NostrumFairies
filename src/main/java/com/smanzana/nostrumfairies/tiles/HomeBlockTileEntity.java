@@ -59,7 +59,7 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.ServerWorld;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickable, IAetherHandlerProvider, IAetherComponentListener {
@@ -859,7 +859,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 				}
 				
 				if (NostrumFairies.random.nextFloat() < .2f) {
-					((WorldServer) world).spawnParticle(EnumParticleTypes.VILLAGER_HAPPY,
+					((ServerWorld) world).spawnParticle(EnumParticleTypes.VILLAGER_HAPPY,
 							pos.getX() + .5,
 							pos.getY() + 1,
 							pos.getZ() + .5,

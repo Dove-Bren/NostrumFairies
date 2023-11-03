@@ -27,7 +27,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.ServerWorld;
 import net.minecraftforge.common.IShearable;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -150,7 +150,7 @@ public class FeyBush extends BlockBush implements IShearable {
 			if (fey.getStatus() == FairyGeneralStatus.WANDERING) {
 				if (!target.world.isRemote) {
 					target.entityDropItem(FeyResource.create(FeyResourceType.TABLET, 1), .1f);
-					((WorldServer) target.world).spawnParticle(EnumParticleTypes.HEART,
+					((ServerWorld) target.world).spawnParticle(EnumParticleTypes.HEART,
 							target.posX,
 							target.posY,	
 							target.posZ,

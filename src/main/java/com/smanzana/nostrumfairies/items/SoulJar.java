@@ -5,32 +5,30 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.mojang.realmsclient.gui.ChatFormatting;
-import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.utils.EntitySpawning;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.ITameableEntity;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.passive.EntityTameable;
+import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.Direction;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**
  * Stores any tamed entity
@@ -41,60 +39,17 @@ public class SoulJar extends Item implements ILoreTagged {
 
 	public static final String ID = "soul_jar";
 	
-	private static SoulJar instance = null;
-	public static SoulJar instance() {
-		if (instance == null)
-			instance = new SoulJar();
-		
-		return instance;
-	}
-	
 	public SoulJar() {
-		super();
-		this.setUnlocalizedName(ID);
-		this.setRegistryName(ID);
-		this.setMaxDamage(0);
-		this.setMaxStackSize(1);
-		this.setHasSubtypes(true);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-	}
-	
-	protected static final boolean filledFromMeta(int meta) {
-		return (meta & 1) == 1;
-	}
-
-	protected static final int metaFromFilled(boolean filled) {
-		return filled ? 1 : 0;
-	}
-	
-	public static boolean hasEntity(@Nonnull ItemStack stack) {
-		return !stack.isEmpty() && filledFromMeta(stack.getMetadata());
-	}
-	
-	@OnlyIn(Dist.CLIENT)
-	public String getModelName(ItemStack stack) {
-		return ID + (hasEntity(stack) ? "_filled" : "");
-	}
-	
-	/**
-	 * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
-	 */
-	@OnlyIn(Dist.CLIENT)
-	@Override
-	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
-		if (this.isInCreativeTab(tab)) {
-			subItems.add(createFake(false));
-			subItems.add(createFake(true));
-		}
+		super(FairyItems.PropUnstackable());
 	}
 	
 	protected static ItemStack createInternal(LivingEntity entity) {
-		ItemStack stack = createFake(true);
+		ItemStack stack = new ItemStack(FairyItems.soulJar);
 		setStoredEntity(stack, entity);
 		return stack;
 	}
 	
-	public static ItemStack create(EntityTameable entity) {
+	public static ItemStack create(TameableEntity entity) {
 		return createInternal(entity);
 	}
 	
@@ -102,47 +57,63 @@ public class SoulJar extends Item implements ILoreTagged {
 		return createInternal((LivingEntity) entity);
 	}
 	
-	public static ItemStack createFake(boolean filled) {
-		return new ItemStack(instance(), 1, metaFromFilled(filled));
+	public static ItemStack createFakeFilled() {
+		ItemStack stack = new ItemStack(FairyItems.soulJar);
+		setStoredEntityData(stack, new CompoundNBT(), null);
+		return stack;
+	}
+	
+	protected static void setStoredEntityData(ItemStack stack, @Nullable CompoundNBT data, @Nullable String name) {
+		CompoundNBT tag = null; // create a new one to discard old entity if passed in null
+		if (data != null) {
+			tag = new CompoundNBT();
+			tag.put("entity", data);
+			tag.putString("name", name == null ? "" : name);
+		}
+		stack.setTag(tag);
 	}
 	
 	protected static void setStoredEntity(ItemStack stack, @Nullable LivingEntity entity) {
-		CompoundNBT tag = null; // create a new one to discard old entity if passed in null
-		if (entity != null) {
-			tag = new CompoundNBT();
-			tag.setTag("entity", entity.serializeNBT());
-			tag.setString("name", entity.getName());
-		}
-		stack.setTagCompound(tag);
+		final CompoundNBT data = entity == null ? null : entity.serializeNBT();
+		final String name = entity == null ? null : entity.getDisplayName().getFormattedText();
+		setStoredEntityData(stack, data, name);
 	}
 	
 	protected static @Nullable LivingEntity spawnStoredEntity(ItemStack stack, World world, double x, double y, double z) {
 		LivingEntity ent = null;
-		CompoundNBT nbt = stack.getTagCompound();
-		if (nbt != null && nbt.hasKey("entity", NBT.TAG_COMPOUND)) {
-			Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompoundTag("entity"), world, x, y, z, true);
+		CompoundNBT nbt = stack.getTag();
+		if (nbt != null && nbt.contains("entity", NBT.TAG_COMPOUND)) {
+			Entity entity = EntitySpawning.readEntity(world, nbt.getCompound("entity"), new Vec3d(x, y, z));
 			if (entity == null) {
 				;
 			} else if (entity instanceof LivingEntity) {
 				ent = (LivingEntity) entity;
+				world.addEntity(ent);
 			} else {
-				entity.isDead = true;
-				world.removeEntity(entity);
+				entity.remove();
 			}
 		}
 		return ent;
 	}
 	
 	public static @Nullable String getStoredEntityName(@Nonnull ItemStack stack) {
-		if (stack.isEmpty() || !stack.hasTagCompound()) {
+		if (stack.isEmpty() || !stack.hasTag()) {
 			return null;
 		}
 		
-		return stack.getTagCompound().getString("name");
+		return stack.getTag().getString("name");
 	}
 	
 	public static ItemStack clearEntity(ItemStack stack) {
-		return createFake(false);
+		if (stack.hasTag()) {
+			stack.getTag().remove("name");
+			stack.getTag().remove("entity");
+		}
+		return stack;
+	}
+	
+	public static boolean isFilled(ItemStack stack) {
+		return stack.hasTag() && stack.getTag().contains("entity", NBT.TAG_COMPOUND);
 	}
 	
 	@Override
@@ -172,24 +143,30 @@ public class SoulJar extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand, Direction facing, float hitX, float hitY, float hitZ) {
+	public ActionResultType onItemUse(ItemUseContext context) {
+		final World worldIn = context.getWorld();
+		final PlayerEntity playerIn = context.getPlayer();
+		final Hand hand = context.getHand();
+		final BlockPos pos = context.getPos();
+		final Vec3d hitPos = context.getHitVec();
+		
 		if (worldIn.isRemote) {
-			return EnumActionResult.SUCCESS;
+			return ActionResultType.SUCCESS;
 		}
 		
 		ItemStack stack = playerIn.getHeldItem(hand);
-		if (filledFromMeta(stack.getMetadata())) {
+		if (isFilled(stack)) {
 			// Drop entity at the provided spot
-			LivingEntity ent = spawnStoredEntity(stack, worldIn, pos.getX() + hitX, pos.getY() + hitY, pos.getZ() + hitZ);
+			LivingEntity ent = spawnStoredEntity(stack, worldIn, pos.getX() + hitPos.x, pos.getY() + hitPos.y, pos.getZ() + hitPos.z);
 			if (ent != null) {
 				stack = clearEntity(stack);
 				playerIn.setHeldItem(hand, stack);
-				return EnumActionResult.SUCCESS;
+				return ActionResultType.SUCCESS;
 			} else {
-				return EnumActionResult.FAIL;
+				return ActionResultType.FAIL;
 			}
 		}
-		return EnumActionResult.PASS;
+		return ActionResultType.PASS;
 	}
 	
 	@Override
@@ -198,15 +175,15 @@ public class SoulJar extends Item implements ILoreTagged {
 			return true;
 		}
 		
-		if (!filledFromMeta(stack.getMetadata())) {
+		if (!isFilled(stack)) {
 			// Pick up fey, if it is one
 			if (!(target instanceof LivingEntity)) {
 				return false;
 			}
 			
 			final ItemStack filled;
-			if (target instanceof EntityTameable) {
-				EntityTameable tameable = (EntityTameable) target;
+			if (target instanceof TameableEntity) {
+				TameableEntity tameable = (TameableEntity) target;
 				if (tameable.isTamed()) {
 					filled = create(tameable);
 				} else {
@@ -225,7 +202,8 @@ public class SoulJar extends Item implements ILoreTagged {
 			
 			if (!filled.isEmpty()) {
 				playerIn.setHeldItem(hand, filled);
-				playerIn.world.removeEntityDangerously(target);
+				target.remove();
+				//playerIn.world.removeEntityDangerously(target);
 				return true;
 			}
 		}
@@ -233,13 +211,13 @@ public class SoulJar extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-		if (filledFromMeta(stack.getMetadata()) && stack.hasTagCompound()) {
-			String name = stack.getTagCompound().getString("name");
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+		if (isFilled(stack) && stack.hasTag()) {
+			String name = stack.getTag().getString("name");
 			if (name == null || name.isEmpty()) {
 				name = "An unknown entity";
 			}
-			tooltip.add(ChatFormatting.AQUA + name + ChatFormatting.RESET);
+			tooltip.add(new StringTextComponent(name).applyTextStyle(TextFormatting.AQUA));
 		}
 	}
 	

@@ -1,109 +1,119 @@
 package com.smanzana.nostrumfairies.items;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.inventory.IFeySlotted;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.item.Rarity;
 
 public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 
-	public static final String ID = "fey_stone";
+	protected static final String ID_PREFIX = "stone_";
+	protected static final String ID_SPEC_PREFIX = "spec_";
+	protected static final String ID_UPGRADE_PREFIX = "upgrade_";
+	protected static final String ID_DOWNGRADE_PREFIX = "downgrade_";
+	protected static final String ID_EMERALD_SUFFIX = "emerald";
+	protected static final String ID_GARNET_SUFFIX = "garnet";
+	protected static final String ID_AQUAMARINE_SUFFIX = "aquamarine";
+	protected static final String ID_RUBY_SUFFIX = "ruby";
+	protected static final String ID_SAPPHIRE_SUFFIX = "sapphire";
+	public static final String ID_SPEC_EMERALD = ID_PREFIX + ID_SPEC_PREFIX + ID_EMERALD_SUFFIX;
+	public static final String ID_SPEC_GARNET = ID_PREFIX + ID_SPEC_PREFIX + ID_GARNET_SUFFIX;
+	public static final String ID_SPEC_AQUAMARINE = ID_PREFIX + ID_SPEC_PREFIX + ID_AQUAMARINE_SUFFIX;
+	public static final String ID_SPEC_RUBY = ID_PREFIX + ID_SPEC_PREFIX + ID_RUBY_SUFFIX;
+	public static final String ID_SPEC_SAPPHIRE = ID_PREFIX + ID_SPEC_PREFIX + ID_SAPPHIRE_SUFFIX;
+	public static final String ID_UPGRADE_EMERALD = ID_PREFIX + ID_UPGRADE_PREFIX + ID_EMERALD_SUFFIX;
+	public static final String ID_UPGRADE_GARNET = ID_PREFIX + ID_UPGRADE_PREFIX + ID_GARNET_SUFFIX;
+	public static final String ID_UPGRADE_AQUAMARINE = ID_PREFIX + ID_UPGRADE_PREFIX + ID_AQUAMARINE_SUFFIX;
+	public static final String ID_UPGRADE_RUBY = ID_PREFIX + ID_UPGRADE_PREFIX + ID_RUBY_SUFFIX;
+	public static final String ID_UPGRADE_SAPPHIRE = ID_PREFIX + ID_UPGRADE_PREFIX + ID_SAPPHIRE_SUFFIX;
+	public static final String ID_DOWNGRADE_EMERALD = ID_PREFIX + ID_DOWNGRADE_PREFIX + ID_EMERALD_SUFFIX;
+	public static final String ID_DOWNGRADE_GARNET = ID_PREFIX + ID_DOWNGRADE_PREFIX + ID_GARNET_SUFFIX;
+	public static final String ID_DOWNGRADE_AQUAMARINE = ID_PREFIX + ID_DOWNGRADE_PREFIX + ID_AQUAMARINE_SUFFIX;
+	public static final String ID_DOWNGRADE_RUBY = ID_PREFIX + ID_DOWNGRADE_PREFIX + ID_RUBY_SUFFIX;
+	public static final String ID_DOWNGRADE_SAPPHIRE = ID_PREFIX + ID_DOWNGRADE_PREFIX + ID_SAPPHIRE_SUFFIX;
 	
-	private static FeyStone instance = null;
-	public static FeyStone instance() {
-		if (instance == null)
-			instance = new FeyStone();
-		
-		return instance;
+	private final FeySlotType slotType;
+	private final FeyStoneMaterial stoneMaterial;
+	
+	public FeyStone(FeySlotType type, FeyStoneMaterial material) {
+		super(FairyItems.PropBase().rarity(Rarity.UNCOMMON));
+		this.slotType = type;
+		this.stoneMaterial = material;
 	}
 	
-	public FeyStone() {
-		super();
-		this.setUnlocalizedName(ID);
-		this.setRegistryName(ID);
-		this.setMaxDamage(0);
-		this.setMaxStackSize(1);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setHasSubtypes(true);
-	}
-	
-	@Override
-	public String getUnlocalizedName(ItemStack stack) {
-		int i = stack.getMetadata();
-		
-		String suffix = getNameFromMeta(i);
-		
-		return this.getUnlocalizedName() + "." + suffix;
-	}
-	
-	@OnlyIn(Dist.CLIENT)
-	public String getModelName(ItemStack stack) {
-		return getNameFromMeta(stack.getMetadata());
-	}
-	
-	/**
-     * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
-     */
-    @OnlyIn(Dist.CLIENT)
-    @Override
-	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
-    	if (this.isInCreativeTab(tab)) {
-	    	for (FeySlotType slot : FeySlotType.values())
-	    	for (FeyStoneMaterial material : FeyStoneMaterial.values()) {
-	    		if (material.existsForSlot(slot)) {
-	    			subItems.add(create(slot, material, 1));
-	    		}
-	    	}
-    	}
-	}
-    
-    public static ItemStack create(FeySlotType slot, FeyStoneMaterial material, int count) {
-    	return new ItemStack(instance(), count, getMeta(slot, material));
-    }
-	
-	protected static int getMeta(FeySlotType type, FeyStoneMaterial material) {
-		// bottom 3 bits are material. bits above are type.
-		return (
-				(material.ordinal() & 0x7)
-			| 	(type.ordinal() << 3)
-			);
-	}
-	
-	protected FeySlotType slotFromMeta(int meta) {
-		return FeySlotType.values()[(meta >> 3)];
-	}
-	
-	protected FeyStoneMaterial materialFromMeta(int meta) {
-		return FeyStoneMaterial.values()[meta & 0x7];
-	}
-	
-	@Nullable
-	public FeyStoneMaterial getStoneMaterial(@Nonnull ItemStack stack) {
-		if (stack.isEmpty()) {
-			return null;
+	public static Item getItem(FeySlotType slot, FeyStoneMaterial material) {
+		switch (slot) {
+		case DOWNGRADE:
+			switch (material) {
+			case AQUAMARINE:
+				return FairyItems.stoneDowngradeAquamarine;
+			case EMERALD:
+				return FairyItems.stoneDowngradeEmerald;
+			case GARNET:
+				return FairyItems.stoneDowngradeGarnet;
+			case RUBY:
+				return FairyItems.stoneDowngradeRuby;
+			case SAPPHIRE:
+				return FairyItems.stoneDowngradeSapphire;
+			}
+			break;
+		case SPECIALIZATION:
+			switch (material) {
+			case AQUAMARINE:
+				return FairyItems.stoneSpecAquamarine;
+			case EMERALD:
+				return FairyItems.stoneSpecEmerald;
+			case GARNET:
+				return FairyItems.stoneSpecGarnet;
+			case RUBY:
+				return FairyItems.stoneSpecRuby;
+			case SAPPHIRE:
+				return FairyItems.stoneSpecSapphire;
+			}
+			break;
+		case UPGRADE:
+			switch (material) {
+			case AQUAMARINE:
+				return FairyItems.stoneUpgradeAquamarine;
+			case EMERALD:
+				return FairyItems.stoneUpgradeEmerald;
+			case GARNET:
+				return FairyItems.stoneUpgradeGarnet;
+			case RUBY:
+				return FairyItems.stoneUpgradeRuby;
+			case SAPPHIRE:
+				return FairyItems.stoneUpgradeSapphire;
+			}
+			break;
+		case EITHERGRADE:
+			; // No stones for this type; it's a SLOT type. So fall through.
+			break;
 		}
 		
-		return materialFromMeta(stack.getMetadata());
+		return null;
 	}
 	
-	public String getNameFromMeta(int meta) {
-		FeySlotType type = slotFromMeta(meta);
-		FeyStoneMaterial material = materialFromMeta(meta);
-    	return type.getID() + "_" + material.name().toLowerCase();
+    public static ItemStack create(FeySlotType slot, FeyStoneMaterial material, int count) {
+    	return new ItemStack(getItem(slot, material), count);
     }
-    
+	
+    @Override
+	public FeyStoneMaterial getStoneMaterial(@Nonnull ItemStack stack) {
+		return this.stoneMaterial;
+	}
+	
+    @Override
+	public FeySlotType getFeySlot(@Nonnull ItemStack stack) {
+		return this.slotType;
+	}
+	
     @Override
 	public String getLoreKey() {
 		return "fey_stone";
@@ -128,14 +138,5 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 	@Override
 	public InfoScreenTabs getTab() {
 		return InfoScreenTabs.INFO_ITEMS;
-	}
-
-	@Override
-	public FeySlotType getFeySlot(ItemStack stack) {
-		if (stack.isEmpty()) {
-			return null;
-		}
-		
-		return slotFromMeta(stack.getMetadata());
 	}
 }

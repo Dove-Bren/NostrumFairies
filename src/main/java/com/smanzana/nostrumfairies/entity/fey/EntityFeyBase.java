@@ -56,7 +56,7 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -498,8 +498,8 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 			this.isSwingInProgress = true;
 			this.swingingHand = hand;
 
-			if (this.world instanceof WorldServer) {
-				((WorldServer)this.world).getEntityTracker().sendToTracking(this, new SPacketAnimation(this, hand == Hand.MAIN_HAND ? 0 : 3));
+			if (this.world instanceof ServerWorld) {
+				((ServerWorld)this.world).getEntityTracker().sendToTracking(this, new SPacketAnimation(this, hand == Hand.MAIN_HAND ? 0 : 3));
 			}
 		}
 	}
