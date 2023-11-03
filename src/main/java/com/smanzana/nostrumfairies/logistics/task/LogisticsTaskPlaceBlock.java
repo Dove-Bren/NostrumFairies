@@ -22,8 +22,8 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.RequestedItemRecor
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -415,8 +415,8 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	
 	protected boolean isSpotValid(World world, BlockPos pos) {
 		if (world.isAirBlock(pos)
-				|| world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
-			return (state.getBlock().canPlaceBlockAt(world, pos));
+				|| world.getBlockState(pos).getMaterial().isReplaceable()) {
+			return (state.isValidPosition(world, pos));
 		}
 		
 		return false;
@@ -463,9 +463,9 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 		
 		// Make sure the block still needs placing
 		if (this.phase != Phase.DONE) {
-			if (lastPlaceCheck == 0 || this.world.getTotalWorldTime() - lastPlaceCheck > 60) {
+			if (lastPlaceCheck == 0 || this.world.getGameTime() - lastPlaceCheck > 60) {
 				lastPlaceResult = isSpotValid(world, block);
-				lastPlaceCheck = world.getTotalWorldTime();
+				lastPlaceCheck = world.getGameTime();
 			}
 			
 			if (!lastPlaceResult) {

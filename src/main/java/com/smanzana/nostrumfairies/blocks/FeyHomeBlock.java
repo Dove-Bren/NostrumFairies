@@ -225,7 +225,7 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			for (IInventory inv : new IInventory[] {te.getSlotInventory(), te.getUpgradeInventory()}) {
 				for (int i = 0; i < inv.getSizeInventory(); i++) {
 					if (!inv.getStackInSlot(i).isEmpty()) {
-						EntityItem item = new EntityItem(
+						ItemEntity item = new ItemEntity(
 								world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 								inv.removeStackFromSlot(i));
 						world.spawnEntity(item);

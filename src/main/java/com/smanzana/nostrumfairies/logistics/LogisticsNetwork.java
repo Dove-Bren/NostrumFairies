@@ -31,7 +31,7 @@ import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -188,26 +188,26 @@ public class LogisticsNetwork {
 	
 	public CompoundNBT toNBT() {
 		CompoundNBT tag = new CompoundNBT();
-		tag.setUniqueId(NBT_UUID, uuid);
+		tag.putUniqueId(NBT_UUID, uuid);
 		
-		NBTTagList list = new NBTTagList();
+		ListNBT list = new ListNBT();
 		
 		for (ILogisticsComponent component : this.components) {
 			CompoundNBT subtag = new CompoundNBT();
-			subtag.setString(NBT_COMPONENT_KEY, component.getSerializationTag());
-			subtag.setTag(NBT_COMPONENT_VALUE, component.toNBT());
-			list.appendTag(subtag);
+			subtag.putString(NBT_COMPONENT_KEY, component.getSerializationTag());
+			subtag.put(NBT_COMPONENT_VALUE, component.toNBT());
+			list.add(subtag);
 		}
 		
-		tag.setTag(NBT_COMPONENTS, list);
+		tag.put(NBT_COMPONENTS, list);
 		
-		list = new NBTTagList();
+		list = new ListNBT();
 		
 		for (Location beacon : extraBeacons) {
-			list.appendTag(beacon.toNBT());
+			list.add(beacon.toNBT());
 		}
 		
-		tag.setTag(NBT_BEACONS, list);
+		tag.put(NBT_BEACONS, list);
 		
 		
 		return tag;
@@ -221,9 +221,9 @@ public class LogisticsNetwork {
 		UUID id = tag.getUniqueId(NBT_UUID);
 		LogisticsNetwork network = new LogisticsNetwork(id, false);
 		
-		NBTTagList list = tag.getTagList(NBT_COMPONENTS, NBT.TAG_COMPOUND);
-		for (int i = list.tagCount() - 1; i >= 0; i--) {
-			CompoundNBT wrapper = list.getCompoundTagAt(i);
+		ListNBT list = tag.getList(NBT_COMPONENTS, NBT.TAG_COMPOUND);
+		for (int i = list.size() - 1; i >= 0; i--) {
+			CompoundNBT wrapper = list.getCompound(i);
 			String key = wrapper.getString(NBT_COMPONENT_KEY);
 			ILogisticsComponentFactory<?> factory = NostrumFairies.logisticsComponentRegistry.lookupFactory(key);
 			
@@ -231,13 +231,13 @@ public class LogisticsNetwork {
 				throw new RuntimeException("Failed to find factory for component type [" + key + "]! Data has been lost!");
 			} else {
 				// Avoid 'adding' them the regular way to avoid calling the onAdd, and constnatly rebuilding graph
-				network.components.add(factory.construct(wrapper.getCompoundTag(NBT_COMPONENT_VALUE), network));
+				network.components.add(factory.construct(wrapper.getCompound(NBT_COMPONENT_VALUE), network));
 			}
 		}
 		
-		list = tag.getTagList(NBT_BEACONS, NBT.TAG_COMPOUND);
-		for (int i = list.tagCount() - 1; i >= 0; i--) {
-			CompoundNBT wrapper = list.getCompoundTagAt(i);
+		list = tag.getList(NBT_BEACONS, NBT.TAG_COMPOUND);
+		for (int i = list.size() - 1; i >= 0; i--) {
+			CompoundNBT wrapper = list.getCompound(i);
 			network.addBeacon(Location.FromNBT(wrapper));
 		}
 		
@@ -616,7 +616,7 @@ public class LogisticsNetwork {
 			list.removeIf((stack) -> {
 				return stack == null || stack.getTemplate() == null;
 			});
-			Collections.sort(list, (stack1, stack2) -> {return stack1.getTemplate().getUnlocalizedName().compareTo(stack2.getTemplate().getUnlocalizedName());});
+			Collections.sort(list, (stack1, stack2) -> {return stack1.getTemplate().getItem().getRegistryName().compareTo(stack2.getTemplate().getItem().getRegistryName());});
 			CachedItemList itemList = makeItemListEntry(component, list);
 			addToCondensed(itemList.rawItems, itemList.netItems, itemList.grossItems);
 			cachedItemMap.put(component, itemList);

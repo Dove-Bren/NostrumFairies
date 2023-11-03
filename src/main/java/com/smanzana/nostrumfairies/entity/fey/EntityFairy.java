@@ -26,7 +26,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityMoveHelper;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
@@ -260,7 +260,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 //			}
 //			
 //			// Check for pathing
-//			if (this.getDistanceSq(pickupTask.getEntityItem()) < .2) {
+//			if (this.getDistanceSq(pickupTask.getItemEntity()) < .2) {
 //				return true;
 //			}
 //			
@@ -271,7 +271,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected void dropItem() {
-		EntityItem item = new EntityItem(this.world, posX, posY, posZ, getHeldItem());
+		ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, getHeldItem());
 		world.spawnEntity(item);
 		this.dataManager.set(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
@@ -580,7 +580,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		super.writeEntityToNBT(compound);
 		
 		if (!getHeldItem().isEmpty()) {
-			compound.setTag(NBT_ITEM, getHeldItem().writeToNBT(new CompoundNBT()));
+			compound.put(NBT_ITEM, getHeldItem().writeToNBT(new CompoundNBT()));
 		}
 	}
 	

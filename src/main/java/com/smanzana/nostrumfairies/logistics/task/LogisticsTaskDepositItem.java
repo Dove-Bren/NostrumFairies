@@ -109,7 +109,7 @@ public class LogisticsTaskDepositItem implements ILogisticsItemTask {
 	
 	@Override
 	public String getDisplayName() {
-		return displayName + " (" + item.getUnlocalizedName() + " x " + item.getCount() + " - " + phase.name() + ")";
+		return displayName + " (" + item.getItem().getRegistryName() + " x " + item.getCount() + " - " + phase.name() + ")";
 	}
 
 	@Override

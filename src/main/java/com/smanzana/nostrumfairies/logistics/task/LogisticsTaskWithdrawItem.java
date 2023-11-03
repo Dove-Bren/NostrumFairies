@@ -23,11 +23,11 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 
 public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
@@ -117,7 +117,7 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 
 	@Override
 	public String getDisplayName() {
-		return displayName + " (" + item.getTemplate().getUnlocalizedName() + " x " + item.getCount() + " - " + phase.name() + ")";
+		return displayName + " (" + item.getTemplate().getItem().getRegistryName() + " x " + item.getCount() + " - " + phase.name() + ")";
 	}
 
 	@Override
@@ -499,8 +499,8 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 					player.inventory.addItemStackToInventory(stack.copy());
 					player.world.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, .75f, 2f);
 				} else {
-					EntityItem item = new EntityItem(entity.world, entity.posX, entity.posY + .5, entity.posZ, stack);
-					entity.world.spawnEntity(item);
+					ItemEntity item = new ItemEntity(entity.world, entity.posX, entity.posY + .5, entity.posZ, stack);
+					entity.world.addEntity(item);
 				}
 			}
 			worker.removeItem(stack);

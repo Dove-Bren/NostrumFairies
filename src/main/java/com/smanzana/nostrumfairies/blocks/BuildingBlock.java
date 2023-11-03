@@ -15,7 +15,7 @@ import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -194,7 +194,7 @@ public class BuildingBlock extends BlockContainer {
 		BuildingBlockTileEntity block = (BuildingBlockTileEntity) ent;
 		block.unlinkFromNetwork();
 		if (!block.getTemplateScroll().isEmpty()) {
-			EntityItem item = new EntityItem(
+			ItemEntity item = new ItemEntity(
 					world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 					block.getTemplateScroll());
 			world.spawnEntity(item);

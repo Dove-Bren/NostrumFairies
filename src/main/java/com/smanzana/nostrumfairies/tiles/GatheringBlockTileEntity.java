@@ -18,7 +18,7 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.items.ReagentBag;
 
 import net.minecraft.block.state.BlockState;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
@@ -28,15 +28,15 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.item.ItemExpireEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
-import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
+import net.minecraftforge.event.entity.player.ItemEntityPickupEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener, IFeySign {
 	
-	protected static final ILogisticsTaskUniqueData<EntityItem> GATHERING_ITEM = new ILogisticsTaskUniqueData<EntityItem>() { };
+	protected static final ILogisticsTaskUniqueData<ItemEntity> GATHERING_ITEM = new ILogisticsTaskUniqueData<ItemEntity>() { };
 
 	private int tickCount;
-	private Map<EntityItem, LogisticsTaskPickupItem> taskMap;
+	private Map<ItemEntity, LogisticsTaskPickupItem> taskMap;
 	private double radius;
 	
 	private AxisAlignedBB boxCache;
@@ -67,7 +67,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		return false;
 	}
 	
-	private void makeTask(EntityItem item) {
+	private void makeTask(ItemEntity item) {
 		LogisticsNetwork network = this.getNetwork();
 		if (network == null) {
 			return;
@@ -80,7 +80,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		}
 	}
 	
-	private void removeTask(EntityItem item) {
+	private void removeTask(ItemEntity item) {
 		LogisticsTaskPickupItem task = taskMap.remove(item);
 		if (task == null) {
 			// wut
@@ -108,9 +108,9 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		}
 		
 		// Check items on the ground nearby and create/destroy any tasks needed
-		List<EntityItem> items = this.world.getEntitiesWithinAABB(EntityItem.class, boxCache);
-		Set<EntityItem> known = Sets.newHashSet(taskMap.keySet());
-		for (EntityItem item : items) {
+		List<ItemEntity> items = this.world.getEntitiesWithinAABB(ItemEntity.class, boxCache);
+		Set<ItemEntity> known = Sets.newHashSet(taskMap.keySet());
+		for (ItemEntity item : items) {
 			if (known.remove(item)) {
 				// we knew about that item.
 				continue;
@@ -121,7 +121,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		}
 		
 		// For any left in known, the item is not there anymore! Remove!
-		for (EntityItem item : known) {
+		for (ItemEntity item : known) {
 			// Ignore any tasks that don't have entities anymore but that's because the worker
 			// picked it up
 			if (taskMap.get(item).hasTakenItems()) {
@@ -144,7 +144,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		}
 	}
 	
-	private boolean inRange(EntityItem e) {
+	private boolean inRange(ItemEntity e) {
 		// Max distance with a square radius of X is X times sqrt(3).
 		// sqrt(3) is ~1.7321
 		
@@ -155,7 +155,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	}
 	
 	@SubscribeEvent
-	public void onPickup(EntityItemPickupEvent e) {
+	public void onPickup(ItemEntityPickupEvent e) {
 		 if (inRange(e.getItem())) {
 			 this.scan();
 		 }
@@ -163,14 +163,14 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	
 	@SubscribeEvent
 	public void onToss(ItemTossEvent e) {
-		 if (inRange(e.getEntityItem())) {
+		 if (inRange(e.getItemEntity())) {
 			 this.scan();
 		 }
 	}
 	
 	@SubscribeEvent
 	public void onExpire(ItemExpireEvent e) {
-		 if (inRange(e.getEntityItem())) {
+		 if (inRange(e.getItemEntity())) {
 			 this.scan();
 		 }
 	}
@@ -197,7 +197,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	public void onTaskComplete(ILogisticsTask task, IFeyWorker worker) {
 		if (task != null && task instanceof LogisticsTaskPickupItem) {
 			LogisticsTaskPickupItem pickup = (LogisticsTaskPickupItem) task;
-			this.removeTask(pickup.getEntityItem());
+			this.removeTask(pickup.getItemEntity());
 		}
 	}
 	

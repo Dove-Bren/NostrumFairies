@@ -31,7 +31,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.NBTTagLong;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
@@ -1010,36 +1010,36 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			// We hook things back up on the server when we load by position.
 			nbt = super.writeToNBT(nbt);
 			
-			NBTTagList list = new NBTTagList();
+			ListNBT list = new ListNBT();
 			for (BlockPos pos : oreLocations) {
-				list.appendTag(new NBTTagLong(pos.toLong()));
+				list.add(new NBTTagLong(pos.toLong()));
 			}
-			nbt.setTag(NBT_ORES, list);
+			nbt.put(NBT_ORES, list);
 			
-			list = new NBTTagList();
+			list = new ListNBT();
 			for (BlockPos pos : repairLocations) {
-				list.appendTag(new NBTTagLong(pos.toLong()));
+				list.add(new NBTTagLong(pos.toLong()));
 			}
-			nbt.setTag(NBT_REPAIRS, list);
+			nbt.put(NBT_REPAIRS, list);
 			
-			list = new NBTTagList();
+			list = new ListNBT();
 			for (BlockPos pos : beacons) {
-				list.appendTag(new NBTTagLong(pos.toLong()));
+				list.add(new NBTTagLong(pos.toLong()));
 			}
-			nbt.setTag(NBT_BEACONS, list);
+			nbt.put(NBT_BEACONS, list);
 			
 			if (!buildingMaterial.isEmpty()) {
-				nbt.setTag(NBT_PLATFORMS, this.buildingMaterial.serializeNBT());
+				nbt.put(NBT_PLATFORMS, this.buildingMaterial.serializeNBT());
 			}
 			if (!torches.isEmpty()) {
-				nbt.setTag(NBT_TORCHES, this.torches.serializeNBT());
+				nbt.put(NBT_TORCHES, this.torches.serializeNBT());
 			}
 			
-			list = new NBTTagList();
+			list = new ListNBT();
 			for (BlockPos pos : taskMap.keySet()) {
-				list.appendTag(new NBTTagLong(pos.toLong()));
+				list.add(new NBTTagLong(pos.toLong()));
 			}
-			nbt.setTag("paths", list);
+			nbt.put("paths", list);
 			
 			return nbt;
 		}
@@ -1051,26 +1051,26 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			this.oreLocations.clear();
 			this.repairLocations.clear();
 			if (world != null && world.isRemote) {
-				NBTTagList list = nbt.getTagList(NBT_ORES, NBT.TAG_LONG);
-				for (int i = 0; i < list.tagCount(); i++) {
-					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
+				ListNBT list = nbt.getList(NBT_ORES, NBT.TAG_LONG);
+				for (int i = 0; i < list.size(); i++) {
+					BlockPos pos = broke(); //BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
 					oreLocations.add(pos);
 				}
-				list = nbt.getTagList(NBT_REPAIRS, NBT.TAG_LONG);
-				for (int i = 0; i < list.tagCount(); i++) {
-					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
+				list = nbt.getList(NBT_REPAIRS, NBT.TAG_LONG);
+				for (int i = 0; i < list.size(); i++) {
+					BlockPos pos = broke(); //BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
 					repairLocations.add(pos);
 				}
 				this.taskMap.clear();
-				list = nbt.getTagList("paths", NBT.TAG_LONG);
-				for (int i = 0; i < list.tagCount(); i++) {
-					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
+				list = nbt.getList("paths", NBT.TAG_LONG);
+				for (int i = 0; i < list.size(); i++) {
+					BlockPos pos = broke(); //BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
 					taskMap.put(pos, null);
 				}
 			} else {
-				NBTTagList list = nbt.getTagList(NBT_BEACONS, NBT.TAG_LONG);
-				for (int i = 0; i < list.tagCount(); i++) {
-					BlockPos pos = BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
+				ListNBT list = nbt.getList(NBT_BEACONS, NBT.TAG_LONG);
+				for (int i = 0; i < list.size(); i++) {
+					BlockPos pos = broke(); //BlockPos.fromLong( ((NBTTagLong) list.get(i)).getLong());
 					beacons.add(pos);
 				}
 			}

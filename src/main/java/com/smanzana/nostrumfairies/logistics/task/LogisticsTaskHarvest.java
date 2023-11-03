@@ -210,10 +210,10 @@ public class LogisticsTaskHarvest implements ILogisticsTask {
 		}
 		
 		if (this.phase != Phase.DONE) {
-			if (lastCropCheck == 0 || this.world.getTotalWorldTime() - lastCropCheck > 100) {
+			if (lastCropCheck == 0 || this.world.getGameTime() - lastCropCheck > 100) {
 				// Validate there's still a crop there
 				lastCropResult = !world.isAirBlock(crop);
-				lastCropCheck = world.getTotalWorldTime();
+				lastCropCheck = world.getGameTime();
 			}
 			
 			if (!lastCropResult) {

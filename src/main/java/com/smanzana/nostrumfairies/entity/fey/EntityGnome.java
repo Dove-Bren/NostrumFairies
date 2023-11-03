@@ -28,7 +28,7 @@ import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAISwimming;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
@@ -259,7 +259,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	private void dropItem() {
-		EntityItem item = new EntityItem(this.world, posX, posY, posZ, getCarriedItem());
+		ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, getCarriedItem());
 		world.spawnEntity(item);
 		this.dataManager.set(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
@@ -538,7 +538,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		
 		ItemStack held = getCarriedItem();
 		if (!held.isEmpty()) {
-			compound.setTag(NBT_ITEM, held.serializeNBT());
+			compound.put(NBT_ITEM, held.serializeNBT());
 		}
 	}
 	

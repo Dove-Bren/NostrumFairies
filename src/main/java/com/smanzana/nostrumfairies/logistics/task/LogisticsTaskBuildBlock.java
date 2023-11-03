@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.logistics.task;
 
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;

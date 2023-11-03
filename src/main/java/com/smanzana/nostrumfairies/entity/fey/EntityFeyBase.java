@@ -933,7 +933,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 		boolean hasHome = false;
 		if (compound.hasKey(NBT_HOME)) {
 			hasHome = true;
-			BlockPos home =  BlockPos.fromLong(compound.getLong(NBT_HOME));
+			BlockPos home =  broke(); //BlockPos.fromLong(compound.getLong(NBT_HOME));
 			this.dataManager.set(HOME, Optional.fromNullable(home));
 			this.setHomePosAndDistance(home, home == null ? -1 : (int) this.wanderDistanceSq);
 			

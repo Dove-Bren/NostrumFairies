@@ -88,7 +88,7 @@ public class StorageMonitorScreen extends GuiScreen {
 			}
 		}
 		
-		if (monitor.getWorld().getTotalWorldTime() % 20 == 0) {
+		if (monitor.getWorld().getGameTime() % 20 == 0) {
 			LogisticsNetwork network = monitor.getNetwork();
 			if (network != null) {
 				NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest(network.getUUID()));

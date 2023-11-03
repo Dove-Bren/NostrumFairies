@@ -14,7 +14,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.IncomingItemRecord
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -32,7 +32,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 	}
 	
 	private String displayName;
-	private EntityItem item;
+	private ItemEntity item;
 	private ILogisticsComponent owningComponent;
 	
 	private IItemCarrierFey fairy;
@@ -53,7 +53,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 	 */
 	private boolean networkCachedItemResult;
 	
-	public LogisticsTaskPickupItem(ILogisticsComponent owningComponent, String displayName, EntityItem item) {
+	public LogisticsTaskPickupItem(ILogisticsComponent owningComponent, String displayName, ItemEntity item) {
 		this.displayName = displayName;
 		this.item = item;
 		this.owningComponent = owningComponent;
@@ -158,7 +158,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 		return fairy;
 	}
 	
-	public EntityItem getEntityItem() {
+	public ItemEntity getItemEntity() {
 		return item;
 	}
 	
@@ -253,7 +253,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 			ItemStack stack = giveItem.splitStack((int) Math.min(giveItem.getTemplate().getMaxStackSize(), giveItem.getCount()));
 			fairy.addItem(stack);
 		}
-		item.world.removeEntity(item);
+		item.remove();
 	}
 	
 	private void giveItems() {
@@ -284,7 +284,7 @@ public class LogisticsTaskPickupItem implements ILogisticsTask {
 		}
 		
 		if (this.phase == Phase.IDLE || this.phase == Phase.PICKINGUP) {
-			if (this.item == null || this.item.isDead) {
+			if (this.item == null || !this.item.isAlive()) {
 				return false;
 			}
 		}

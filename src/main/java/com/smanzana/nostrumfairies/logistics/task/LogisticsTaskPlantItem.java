@@ -7,9 +7,9 @@ import org.apache.commons.lang3.Validate;
 
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemBlock;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -54,8 +54,8 @@ public class LogisticsTaskPlantItem extends LogisticsTaskPlaceBlock {
 	protected static IPlantable getPlantable(ItemStack seed) {
 		if (seed.getItem() instanceof IPlantable) {
 			return (IPlantable) seed.getItem();
-		} else if (seed.getItem() instanceof ItemBlock && ((ItemBlock) seed.getItem()).getBlock() instanceof IPlantable) {
-			return (IPlantable) ((ItemBlock) seed.getItem()).getBlock();
+		} else if (seed.getItem() instanceof BlockItem && ((BlockItem) seed.getItem()).getBlock() instanceof IPlantable) {
+			return (IPlantable) ((BlockItem) seed.getItem()).getBlock();
 		}
 		
 		throw new RuntimeException("Given a seed that is not plantable");

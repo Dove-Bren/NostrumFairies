@@ -48,11 +48,11 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackMelee;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.ai.EntityAISwimming;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
@@ -533,7 +533,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			if (heldItem.isEmpty()) {
 				continue;
 			}
-			EntityItem item = new EntityItem(this.world, posX, posY, posZ, heldItem);
+			ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, heldItem);
 			world.spawnEntity(item);
 		}
 		updateItems(new ItemStack[INV_SIZE]);
@@ -861,14 +861,14 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
 	}
 	
-	private NBTTagList inventoryToNBT() {
-		NBTTagList list = new NBTTagList();
+	private ListNBT inventoryToNBT() {
+		ListNBT list = new ListNBT();
 		
 		ItemStack items[] = dataManager.get(ITEMS);
 		for (int i = 0; i < INV_SIZE; i++) {
 			ItemStack stack = items[i];
 			if (!stack.isEmpty()) {
-				list.appendTag(stack.serializeNBT());
+				list.add(stack.serializeNBT());
 			}
 		}
 		
@@ -879,15 +879,15 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	public void writeEntityToNBT(CompoundNBT compound) {
 		super.writeEntityToNBT(compound);
 		
-		compound.setTag(NBT_ITEMS, inventoryToNBT());
+		compound.put(NBT_ITEMS, inventoryToNBT());
 	}
 	
-	private void loadInventoryFromNBT(NBTTagList list) {
+	private void loadInventoryFromNBT(ListNBT list) {
 		ItemStack items[] = new ItemStack[INV_SIZE];
 		
 		for (int i = 0; i < INV_SIZE; i++) {
-			if (i < list.tagCount()) {
-				items[i] = new ItemStack(list.getCompoundTagAt(i));
+			if (i < list.size()) {
+				items[i] = new ItemStack(list.getCompound(i));
 			} else {
 				items[i] = ItemStack.EMPTY;
 			}
@@ -900,7 +900,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	public void readEntityFromNBT(CompoundNBT compound) {
 		super.readEntityFromNBT(compound);
 		
-		loadInventoryFromNBT(compound.getTagList(NBT_ITEMS, NBT.TAG_COMPOUND));
+		loadInventoryFromNBT(compound.getList(NBT_ITEMS, NBT.TAG_COMPOUND));
 	}
 
 	@Override

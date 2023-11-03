@@ -213,9 +213,9 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		this.fairyInventory.readNBT(nbt.getCompound(NBT_FAIRY_INVENTORY));
 		
 		if (nbt.contains(NBT_TEMPLATE_SELECTION + "_1")) {
-			templateSelection.left = BlockPos.fromLong(nbt.getLong(NBT_TEMPLATE_SELECTION + "_1"));
+			templateSelection.left = broke(); //BlockPos.fromLong(nbt.getLong(NBT_TEMPLATE_SELECTION + "_1"));
 			if (nbt.contains(NBT_TEMPLATE_SELECTION + "_2")) {
-				templateSelection.right = BlockPos.fromLong(nbt.getLong(NBT_TEMPLATE_SELECTION + "_2"));
+				templateSelection.right = broke(); //BlockPos.fromLong(nbt.getLong(NBT_TEMPLATE_SELECTION + "_2"));
 			} else {
 				templateSelection.right = null;
 			}

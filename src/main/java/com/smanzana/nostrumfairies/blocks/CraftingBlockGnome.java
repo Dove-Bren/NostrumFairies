@@ -14,7 +14,7 @@ import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
@@ -198,7 +198,7 @@ public class CraftingBlockGnome extends BlockContainer {
 		CraftingBlockGnomeTileEntity table = (CraftingBlockGnomeTileEntity) ent;
 		for (int i = 0; i < table.getSizeInventory(); i++) {
 			if (!table.getStackInSlot(i).isEmpty()) {
-				EntityItem item = new EntityItem(
+				ItemEntity item = new ItemEntity(
 						world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 						table.removeStackFromSlot(i));
 				world.spawnEntity(item);

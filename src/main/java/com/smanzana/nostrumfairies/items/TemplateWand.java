@@ -105,7 +105,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		CompoundNBT tag = stack.getTag();
 		if (tag == null) tag = new CompoundNBT();
 		tag.putString(NBT_MODE, mode.name());
-		stack.setTag(tag);
+		stack.put(tag);
 	}
 	
 	public static int GetTemplateIndex(ItemStack stack) {
@@ -128,7 +128,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		}
 		
 		nbt.putInt(NBT_TEMPLATE_INDEX, index);
-		stack.setTag(nbt);
+		stack.put(nbt);
 	}
 	
 	public static IInventory GetTemplateInventory(ItemStack stack) {
@@ -186,7 +186,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		
 		// also reset selection index
 		nbt.putInt(NBT_TEMPLATE_INDEX, 0);
-		stack.setTag(nbt);
+		stack.put(nbt);
 	}
 	
 	/**
@@ -212,7 +212,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			list.add(scroll.serializeNBT());
 			scroll = ItemStack.EMPTY;
 			tag.put(NBT_TEMPLATE_INV, list);
-			wand.setTag(tag);
+			wand.put(tag);
 		}
 		
 		return scroll;
@@ -288,7 +288,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		}
 		
 		nbt.putInt(NBT_TEMPLATE_INDEX, index);
-		stack.setTag(nbt);
+		stack.put(nbt);
 	}
 	
 	public static void HandleModeChange(PlayerEntity player, ItemStack stack, boolean forward) {

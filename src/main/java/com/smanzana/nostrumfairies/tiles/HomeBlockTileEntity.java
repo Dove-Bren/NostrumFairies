@@ -51,7 +51,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.EnumParticleTypes;
@@ -200,7 +200,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			
 			nbt.setString(NBT_NAME, this.getName());
 			nbt.setBoolean(NBT_CUSTOM, this.hasCustomName());
-			nbt.setTag(NBT_ITEMS, Inventories.serializeInventory(this));
+			nbt.put(NBT_ITEMS, Inventories.serializeInventory(this));
 			
 			return nbt;
 		}
@@ -255,7 +255,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			
 			nbt.setString(NBT_NAME, this.getName());
 			nbt.setBoolean(NBT_CUSTOM, this.hasCustomName());
-			nbt.setTag(NBT_ITEMS, Inventories.serializeInventory(this));
+			nbt.put(NBT_ITEMS, Inventories.serializeInventory(this));
 			
 			return nbt;
 		}
@@ -726,7 +726,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		nbt.putInt(NBT_SLOT_COUNT, slots);
 		nbt.setFloat(NBT_SLOT_GROWTH, growth);
 		
-		NBTTagList list = new NBTTagList();
+		ListNBT list = new ListNBT();
 		for (int i = 0; i < getEffectiveSlots(); i++) {
 			UUID id = feySlots[i];
 			CompoundNBT tag = new CompoundNBT();
@@ -735,13 +735,13 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 				tag.setString(NBT_FEY_NAME, record.name);
 				tag.setString(NBT_FEY_UUID, id.toString());
 			}
-			list.appendTag(tag);
+			list.add(tag);
 		}
-		nbt.setTag(NBT_FEY, list);
+		nbt.put(NBT_FEY, list);
 		
-		nbt.setTag(NBT_UPGRADES, this.upgradeInv.toNBT());
-		nbt.setTag(NBT_SLOT_INV, slotInv.toNBT());
-		nbt.setTag(NBT_HANDLER, handler.writeToNBT(new CompoundNBT()));
+		nbt.put(NBT_UPGRADES, this.upgradeInv.toNBT());
+		nbt.put(NBT_SLOT_INV, slotInv.toNBT());
+		nbt.put(NBT_HANDLER, handler.writeToNBT(new CompoundNBT()));
 		
 		return nbt;
 	}
@@ -764,9 +764,9 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		this.upgradeInv = HomeBlockUpgradeInventory.fromNBT(this, nbt.getCompoundTag(NBT_UPGRADES));
 		
 		feyCacheMap.clear();
-		NBTTagList list = nbt.getTagList(NBT_FEY, NBT.TAG_COMPOUND);
+		ListNBT list = nbt.getList(NBT_FEY, NBT.TAG_COMPOUND);
 		for (int i = 0; i < getEffectiveSlots(); i++) {
-			CompoundNBT tag = list.getCompoundTagAt(i);
+			CompoundNBT tag = list.getCompound(i);
 			UUID id = null;
 			if (tag != null && tag.hasKey(NBT_FEY_UUID)) {
 				id = UUID.fromString(tag.getString(NBT_FEY_UUID));

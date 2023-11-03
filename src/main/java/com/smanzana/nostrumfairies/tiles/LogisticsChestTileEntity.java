@@ -10,7 +10,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -165,13 +165,13 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 				continue;
 			
 			CompoundNBT tag = new CompoundNBT();
-			compound.setTag(i + "", getStackInSlot(i).writeToNBT(tag));
+			compound.put(i + "", getStackInSlot(i).writeToNBT(tag));
 		}
 		
 		if (nbt == null)
 			nbt = new CompoundNBT();
 		
-		nbt.setTag(NBT_INV, compound);
+		nbt.put(NBT_INV, compound);
 		return nbt;
 	}
 	
@@ -217,7 +217,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 		//super.addItem(stack);
 		ItemStack leftover = Inventories.addItem(this, stack);
 		if (!leftover.isEmpty()) {
-			EntityItem item = new EntityItem(this.world, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, leftover);
+			ItemEntity item = new ItemEntity(this.world, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, leftover);
 			world.spawnEntity(item);
 		}
 	}

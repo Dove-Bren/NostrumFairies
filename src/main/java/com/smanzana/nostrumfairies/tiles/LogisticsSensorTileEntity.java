@@ -31,7 +31,7 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 		
 		CompoundNBT tag = new CompoundNBT();
 		logicComp.writeToNBT(tag);
-		nbt.setTag(NBT_LOGIC_COMP, tag);
+		nbt.put(NBT_LOGIC_COMP, tag);
 		
 		return nbt;
 	}
@@ -88,7 +88,7 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	
 	@Override
 	public void update() {
-		if (!placed || world.getTotalWorldTime() % 5 == 0) {
+		if (!placed || world.getGameTime() % 5 == 0) {
 			if (!world.isRemote) {
 				final boolean activated = this.logicComp.isActivated(); 
 

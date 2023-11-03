@@ -15,7 +15,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisti
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
@@ -189,7 +189,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	
 	public void addItem(ItemStack stack) {
 		if (!world.isRemote) {
-			EntityItem ent = new EntityItem(world, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, stack);
+			ItemEntity ent = new ItemEntity(world, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, stack);
 			world.spawnEntity(ent);
 		}
 	}
@@ -326,7 +326,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		}
 		
 		protected static LogisticsTileEntityComponent loadFromNBT(CompoundNBT nbt, LogisticsNetwork network) {
-			BlockPos pos = BlockPos.fromLong(nbt.getLong(NBT_POS));
+			BlockPos pos = broke(); //BlockPos.fromLong(nbt.getLong(NBT_POS));
 			World world = NostrumFairies.getWorld(nbt.getInt(NBT_DIM));
 			UUID compID = nbt.getUniqueId(NBT_UUID);
 			double linkRange = nbt.getDouble(NBT_LINK_RANGE);

@@ -26,11 +26,11 @@ import com.smanzana.nostrummagica.utils.Inventories;
 import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -301,7 +301,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			if (heldItem.isEmpty()) {
 				continue;
 			}
-			EntityItem item = new EntityItem(this.world, posX, posY, posZ, heldItem);
+			ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, heldItem);
 			world.spawnEntity(item);
 		}
 		inventory.clear();
@@ -576,13 +576,13 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
 	}
 	
-	private NBTTagList inventoryToNBT() {
-		NBTTagList list = new NBTTagList();
+	private ListNBT inventoryToNBT() {
+		ListNBT list = new ListNBT();
 		
 		for (int i = 0; i < INV_SIZE; i++) {
 			ItemStack stack = inventory.getStackInSlot(i);
 			if (!stack.isEmpty()) {
-				list.appendTag(stack.serializeNBT());
+				list.add(stack.serializeNBT());
 			}
 		}
 		
@@ -593,14 +593,14 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	public void writeEntityToNBT(CompoundNBT compound) {
 		super.writeEntityToNBT(compound);
 		
-		compound.setTag(NBT_ITEMS, inventoryToNBT());
+		compound.put(NBT_ITEMS, inventoryToNBT());
 	}
 	
-	private void loadInventoryFromNBT(NBTTagList list) {
+	private void loadInventoryFromNBT(ListNBT list) {
 		inventory.clear();
 		
-		for (int i = 0; i < list.tagCount(); i++) {
-			inventory.setInventorySlotContents(i, new ItemStack(list.getCompoundTagAt(i)));
+		for (int i = 0; i < list.size(); i++) {
+			inventory.setInventorySlotContents(i, new ItemStack(list.getCompound(i)));
 		}
 	}
 	
@@ -608,7 +608,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	public void readEntityFromNBT(CompoundNBT compound) {
 		super.readEntityFromNBT(compound);
 		
-		loadInventoryFromNBT(compound.getTagList(NBT_ITEMS, NBT.TAG_COMPOUND));
+		loadInventoryFromNBT(compound.getList(NBT_ITEMS, NBT.TAG_COMPOUND));
 	}
 
 	@Override

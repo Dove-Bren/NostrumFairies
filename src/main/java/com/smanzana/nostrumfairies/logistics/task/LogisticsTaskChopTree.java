@@ -278,10 +278,10 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 		}
 		
 		if (this.phase != Phase.DONE) {
-			if (lastTreeCheck == 0 || this.world.getTotalWorldTime() - lastTreeCheck > 100) {
+			if (lastTreeCheck == 0 || this.world.getGameTime() - lastTreeCheck > 100) {
 				// Validate there's still a tree there
 				lastTreeResult = WoodcuttingBlock.isTrunkMaterial(world, trunk);
-				lastTreeCheck = world.getTotalWorldTime();
+				lastTreeCheck = world.getGameTime();
 			}
 			
 			if (!lastTreeResult) {

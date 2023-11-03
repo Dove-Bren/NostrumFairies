@@ -104,7 +104,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		}
 		
 		tag.putBoolean(NBT_CRACKED, cracked);
-		stack.setTag(tag);
+		stack.put(tag);
 	}
 	
 	public static final FairyGaelType getTypeOf(ItemStack stack) {
@@ -198,9 +198,9 @@ public class FairyGael extends Item implements ILoreTagged {
 			tag.putDouble("healthD", (double) fey.getHealth() / Math.max(1, (double) fey.getMaxHealth()));
 			tag.putDouble("energyD", (double) fey.getEnergy() / Math.max(1, (double) fey.getMaxEnergy()));
 			tag.put("data", fey.serializeNBT());
-			stack.setTag(tag);
+			stack.put(tag);
 		} else {
-			stack.setTag(null);
+			stack.put(null);
 		}
 	}
 	
@@ -265,7 +265,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		CompoundNBT tag = new CompoundNBT();
 		tag.put("data", FeySoulStone.getStoredEntityTag(soulStone));
 		tag.putString("name", FeySoulStone.getStoredEntityName(soulStone));
-		gael.setTag(tag);
+		gael.put(tag);
 		return gael;
 	}
 	

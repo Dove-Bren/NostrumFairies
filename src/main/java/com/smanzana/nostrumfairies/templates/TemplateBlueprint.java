@@ -16,7 +16,7 @@ import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.INBTGenerator;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -84,13 +84,13 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 		
 		nbt.setUniqueId(NBT_ID, id);
 		
-		NBTTagList list = new NBTTagList();
+		ListNBT list = new ListNBT();
 		INBTGenerator gen = blueprint.toNBTWithBreakdown();
 		while (gen.hasNext()) {
-			list.appendTag(gen.next());
+			list.add(gen.next());
 		}
 		
-		nbt.setTag(NBT_BLUEPRINT, list);
+		nbt.put(NBT_BLUEPRINT, list);
 		
 		return nbt;
 	}
@@ -103,9 +103,9 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 		}
 		
 		RoomBlueprint roomPrint = null;
-		NBTTagList list = nbt.getTagList(NBT_BLUEPRINT, NBT.TAG_COMPOUND);
-		for (int i = 0; i < list.tagCount(); i++) {
-			CompoundNBT blueprintTag = list.getCompoundTagAt(i);
+		ListNBT list = nbt.getList(NBT_BLUEPRINT, NBT.TAG_COMPOUND);
+		for (int i = 0; i < list.size(); i++) {
+			CompoundNBT blueprintTag = list.getCompound(i);
 			RoomBlueprint room = RoomBlueprint.fromNBT(blueprintTag);
 			
 			if (roomPrint == null) {

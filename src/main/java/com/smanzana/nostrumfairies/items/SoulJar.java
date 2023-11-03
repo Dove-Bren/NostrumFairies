@@ -70,7 +70,7 @@ public class SoulJar extends Item implements ILoreTagged {
 			tag.put("entity", data);
 			tag.putString("name", name == null ? "" : name);
 		}
-		stack.setTag(tag);
+		stack.put(tag);
 	}
 	
 	protected static void setStoredEntity(ItemStack stack, @Nullable LivingEntity entity) {

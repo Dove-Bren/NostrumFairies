@@ -11,13 +11,13 @@ import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**
  * Has a serialized master list of all current logistics networks.
@@ -42,26 +42,26 @@ public class LogisticsRegistry extends WorldSavedData {
 	}
 
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
-		NBTTagList list = nbt.getTagList(NBT_NETWORKS, NBT.TAG_COMPOUND);
-		for (int i = list.tagCount() - 1; i >= 0; i--) {
-			CompoundNBT compound = list.getCompoundTagAt(i);
+	public void read(CompoundNBT nbt) {
+		ListNBT list = nbt.getList(NBT_NETWORKS, NBT.TAG_COMPOUND);
+		for (int i = list.size() - 1; i >= 0; i--) {
+			CompoundNBT compound = list.getCompound(i);
 			this.networks.add(LogisticsNetwork.fromNBT(compound));
 		}
 	}
 
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT compound) {
+	public CompoundNBT write(CompoundNBT compound) {
 		if (compound == null) {
 			compound = new CompoundNBT();
 		}
 		
 		if (!this.networks.isEmpty()) {
-			NBTTagList list = new NBTTagList();
+			ListNBT list = new ListNBT();
 			for (LogisticsNetwork network : this.networks) {
-				list.appendTag(network.toNBT());
+				list.add(network.toNBT());
 			}
-			compound.setTag(NBT_NETWORKS, list);
+			compound.put(NBT_NETWORKS, list);
 		}
 		
 		return compound;

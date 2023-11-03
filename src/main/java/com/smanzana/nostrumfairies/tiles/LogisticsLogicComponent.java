@@ -211,7 +211,7 @@ public class LogisticsLogicComponent {
 		nbt.putInt(NBT_LOGIC_COUNT, count);
 		nbt.setString(NBT_LOGIC_OP, op.name());
 		if (!template.isEmpty()) {
-			nbt.setTag(NBT_LOGIC_ITEM, template.serializeNBT());
+			nbt.put(NBT_LOGIC_ITEM, template.serializeNBT());
 		}
 		
 		return nbt;

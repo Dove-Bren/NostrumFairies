@@ -14,10 +14,12 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.common.util.Constants.NBT;
 
 /**
@@ -67,12 +69,12 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 	public CompoundNBT toNBT() {
 		CompoundNBT tag = new CompoundNBT();
 		
-		tag.setUniqueId(NBT_ID, getUUID());
-		NBTTagList list = new NBTTagList();
+		tag.putUniqueId(NBT_ID, getUUID());
+		ListNBT list = new ListNBT();
 		for (ILogisticsComponent comp : components) {
-			list.appendTag(comp.toNBT());
+			list.add(comp.toNBT());
 		}
-		tag.setTag(NBT_COMPONENTS, list);
+		tag.put(NBT_COMPONENTS, list);
 		
 		return tag;
 	}
@@ -81,9 +83,9 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		UUID id = tag.getUniqueId(NBT_ID);
 		FakeLogisticsNetwork network = new FakeLogisticsNetwork(id);
 		
-		NBTTagList list = tag.getTagList(NBT_COMPONENTS, NBT.TAG_COMPOUND);
-		for (int i = list.tagCount() - 1; i >= 0; i--) {
-			ILogisticsComponent comp = FakeLogisticsComponent.fromNBT(list.getCompoundTagAt(i));
+		ListNBT list = tag.getList(NBT_COMPONENTS, NBT.TAG_COMPOUND);
+		for (int i = list.size() - 1; i >= 0; i--) {
+			ILogisticsComponent comp = FakeLogisticsComponent.fromNBT(list.getCompound(i));
 			network.components.add(comp);
 			comp.onJoinNetwork(network);
 		}
@@ -210,25 +212,25 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		public CompoundNBT toNBT() {
 			CompoundNBT tag = new CompoundNBT();
 			
-			tag.setDouble(NBT_COMP_LOG_RANGE, logisticsRange);
-			tag.setDouble(NBT_COMP_LINK_RANGE, linkRange);
+			tag.putDouble(NBT_COMP_LOG_RANGE, logisticsRange);
+			tag.putDouble(NBT_COMP_LINK_RANGE, linkRange);
 			if (world != null) {
-				tag.putInt(NBT_COMP_DIM, world.provider.getDimension());
+				tag.putInt(NBT_COMP_DIM, world.getDimension().getType().getId());
 			}
-			tag.setLong(NBT_COMP_POS, pos.toLong());
+			tag.put(NBT_COMP_POS, NBTUtil.writeBlockPos(pos));
 			
 			// Note: since fake components don't need individual stack info and just typeXcount info, we _could_
 			// send ItemDeepStacks here instead, and convert to regular itemstacks.
 			// That'd mean the stacks on the client woulnd't match the server, but overal quantity would.
 			
-			NBTTagList list = new NBTTagList();
+			ListNBT list = new ListNBT();
 			for (ItemStack stack : this.items) {
 				if (stack.isEmpty()) {
 					continue;
 				}
-				list.appendTag(stack.writeToNBT(new CompoundNBT()));
+				list.add(stack.write(new CompoundNBT()));
 			}
-			tag.setTag(NBT_COMP_ITEMS, list);
+			tag.put(NBT_COMP_ITEMS, list);
 			
 			return tag;
 		}
@@ -237,39 +239,39 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			double logisticsRange = tag.getDouble(NBT_COMP_LOG_RANGE);
 			double linkRange = tag.getDouble(NBT_COMP_LINK_RANGE);
 			int dim = tag.getInt(NBT_COMP_DIM);
-			long pos = tag.getLong(NBT_COMP_POS);
+			BlockPos pos = NBTUtil.readBlockPos(tag.getCompound(NBT_COMP_POS));
 			World world = null;
 			
-			NBTTagList list = tag.getTagList(NBT_COMP_ITEMS, NBT.TAG_COMPOUND);
-			List<ItemStack> items = new ArrayList<>(list.tagCount());
-			for (int i = list.tagCount() - 1; i >= 0; i--) {
-				items.add(new ItemStack(list.getCompoundTagAt(i)));
+			ListNBT list = tag.getList(NBT_COMP_ITEMS, NBT.TAG_COMPOUND);
+			List<ItemStack> items = new ArrayList<>(list.size());
+			for (int i = list.size() - 1; i >= 0; i--) {
+				items.add(ItemStack.read(list.getCompound(i)));
 			}
 			
-			world = NostrumFairies.getWorld(dim);
+			world = NostrumFairies.getWorld(DimensionType.getById(dim));
 			
-			return new FakeLogisticsComponent(logisticsRange, linkRange, world, BlockPos.fromLong(pos), items);
+			return new FakeLogisticsComponent(logisticsRange, linkRange, world, pos, items);
 		}
 		
 		public void overrideFromNBT(CompoundNBT tag) {
 			double logisticsRange = tag.getDouble(NBT_COMP_LOG_RANGE);
 			double linkRange = tag.getDouble(NBT_COMP_LINK_RANGE);
 			int dim = tag.getInt(NBT_COMP_DIM);
-			long pos = tag.getLong(NBT_COMP_POS);
+			BlockPos pos = NBTUtil.readBlockPos(tag.getCompound(NBT_COMP_POS));
 			World world = null;
 			
-			NBTTagList list = tag.getTagList(NBT_COMP_ITEMS, NBT.TAG_COMPOUND);
-			List<ItemStack> items = new ArrayList<>(list.tagCount());
-			for (int i = list.tagCount() - 1; i >= 0; i--) {
-				items.add(new ItemStack(list.getCompoundTagAt(i)));
+			ListNBT list = tag.getList(NBT_COMP_ITEMS, NBT.TAG_COMPOUND);
+			List<ItemStack> items = new ArrayList<>(list.size());
+			for (int i = list.size() - 1; i >= 0; i--) {
+				items.add(ItemStack.read(list.getCompound(i)));
 			}
 			
-			world = NostrumFairies.getWorld(dim);
+			world = NostrumFairies.getWorld(DimensionType.getById(dim));
 			
 			this.linkRange = linkRange;
 			this.logisticsRange = logisticsRange;
 			this.world = world;
-			this.pos = BlockPos.fromLong(pos);
+			this.pos = pos;
 			this.items = items;
 		}
 		

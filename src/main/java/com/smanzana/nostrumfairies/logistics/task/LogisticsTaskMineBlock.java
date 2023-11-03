@@ -12,16 +12,18 @@ import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
-import net.minecraft.block.BlockFalling;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.FallingBlock;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 
 /*
  * Travel to a block and mine it. If the block drops anything, return it to the surface.
@@ -439,18 +441,18 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		BlockState state = world.getBlockState(block);
 		
 		NonNullList<ItemStack> drops = NonNullList.create();
-		if (state.getBlock() instanceof BlockFalling) {
+		if (state.getBlock() instanceof FallingBlock) {
 			// Walk and DESTROY ALL GRAVEL that's up
 			MutableBlockPos cursor = new MutableBlockPos(block);
 			do {
-				state.getBlock().getDrops(drops, world, cursor, state, 0); // Fortune?
+				drops.addAll(Block.getDrops(state, (ServerWorld) world, cursor, world.getTileEntity(cursor)));
 				world.destroyBlock(cursor, false);
 				
 				cursor.move(Direction.UP);
 				state = world.getBlockState(cursor);
-			} while (cursor.getY() < 256 && state.getBlock() instanceof BlockFalling);
+			} while (cursor.getY() < 256 && state.getBlock() instanceof FallingBlock);
 		} else {
-			state.getBlock().getDrops(drops, world, block, state, 0); // Fortune?
+			drops.addAll(Block.getDrops(state, (ServerWorld) world, block, world.getTileEntity(block)));
 			world.destroyBlock(block, false);
 		}
 		
@@ -460,7 +462,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 				fairy.addItem(drop);
 			} else {
 				// drop on the floor
-				world.spawnEntity(new EntityItem(world, block.getX() + .5, block.getY() + .5, block.getZ() + .5, drop));
+				world.addEntity(new ItemEntity(world, block.getX() + .5, block.getY() + .5, block.getZ() + .5, drop));
 			}
 		}
 	}
@@ -497,7 +499,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 				continue;
 			}
 			fairy.removeItem(stack);
-			world.spawnEntity(new EntityItem(world, x, y, z, stack));
+			world.addEntity(new ItemEntity(world, x, y, z, stack));
 		}
 	}
 	
@@ -527,9 +529,9 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		} else {
 			if (this.phase == Phase.IDLE || this.phase == Phase.MOVING || phase == Phase.MINING) {
 				// Make sure block is still there
-				if (lastOreCheck == 0 || this.world.getTotalWorldTime() - lastOreCheck > 100) {
+				if (lastOreCheck == 0 || this.world.getGameTime() - lastOreCheck > 100) {
 					lastOreResult = !world.isAirBlock(block) && world.getBlockState(block).getBlockHardness(world, block) >= 0;
-					lastOreCheck = world.getTotalWorldTime();
+					lastOreCheck = world.getGameTime();
 				}
 				
 				if (!lastOreResult) {

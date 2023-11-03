@@ -259,7 +259,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		nbt = super.writeToNBT(nbt);
 		
 		if (this.slot != null) {
-			nbt.setTag(NBT_SLOT, slot.serializeNBT());
+			nbt.put(NBT_SLOT, slot.serializeNBT());
 		}
 		
 		return nbt;

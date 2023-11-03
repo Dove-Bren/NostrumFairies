@@ -9,7 +9,7 @@ import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockState;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
@@ -82,7 +82,7 @@ public class StorageLogisticsChest extends BlockContainer {
 		StorageChestTileEntity table = (StorageChestTileEntity) ent;
 		for (int i = 0; i < table.getSizeInventory(); i++) {
 			if (!table.getStackInSlot(i).isEmpty()) {
-				EntityItem item = new EntityItem(
+				ItemEntity item = new ItemEntity(
 						world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 						table.removeStackFromSlot(i));
 				world.spawnEntity(item);

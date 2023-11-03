@@ -16,7 +16,7 @@ import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -131,7 +131,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 		nbt = super.writeToNBT(nbt);
 		
 		// Save templates
-		NBTTagList templates = new NBTTagList();
+		ListNBT templates = new ListNBT();
 		for (int i = 0; i < SLOTS; i++) {
 			ItemStack stack = this.getTemplate(i);
 			if (stack.isEmpty()) {
@@ -141,12 +141,12 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 			CompoundNBT template = new CompoundNBT();
 			
 			template.putInt(NBT_TEMPLATE_INDEX, i);
-			template.setTag(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
+			template.put(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
 			
-			templates.appendTag(template);
+			templates.add(template);
 		}
-		nbt.setTag(NBT_TEMPLATES, templates);
-		nbt.setTag(NBT_LOGIC_COMP, this.logicComp.writeToNBT(new CompoundNBT()));
+		nbt.put(NBT_TEMPLATES, templates);
+		nbt.put(NBT_LOGIC_COMP, this.logicComp.writeToNBT(new CompoundNBT()));
 		
 		return nbt;
 	}
@@ -156,9 +156,9 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
-		NBTTagList list = nbt.getTagList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
-		for (int i = 0; i < list.tagCount(); i++) {
-			CompoundNBT template = list.getCompoundTagAt(i);
+		ListNBT list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
+		for (int i = 0; i < list.size(); i++) {
+			CompoundNBT template = list.getCompound(i);
 			int index = template.getInt(NBT_TEMPLATE_INDEX);
 			
 			if (index < 0 || index > SLOTS) {

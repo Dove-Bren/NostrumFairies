@@ -12,10 +12,10 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.block.state.BlockState;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -50,7 +50,7 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	@Override
 	public void addItem(ItemStack stack) {
 		if (!world.isRemote) {
-			EntityItem ent = new EntityItem(world, pos.getX() + .5, pos.getY() + .2, pos.getZ() + .5, stack);
+			ItemEntity ent = new ItemEntity(world, pos.getX() + .5, pos.getY() + .2, pos.getZ() + .5, stack);
 			world.spawnEntity(ent);
 		}
 	}
@@ -177,11 +177,11 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	public CompoundNBT writeToNBT(CompoundNBT nbt) {
 		super.writeToNBT(nbt);
 		
-		NBTTagList list = new NBTTagList();
+		ListNBT list = new ListNBT();
 		for (ItemStack stack : requests) {
-			list.appendTag(stack.serializeNBT());
+			list.add(stack.serializeNBT());
 		}
-		nbt.setTag(NBT_REQUESTS, list);
+		nbt.put(NBT_REQUESTS, list);
 		
 		return nbt;
 	}
@@ -191,10 +191,10 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 		super.readFromNBT(nbt);
 		
 		requests.clear();
-		NBTTagList list = nbt.getTagList(NBT_REQUESTS, NBT.TAG_COMPOUND);
-		if (list != null && list.tagCount() > 0) {
-			for (int i = 0; i < list.tagCount(); i++) {
-				CompoundNBT tag = list.getCompoundTagAt(i);
+		ListNBT list = nbt.getList(NBT_REQUESTS, NBT.TAG_COMPOUND);
+		if (list != null && list.size() > 0) {
+			for (int i = 0; i < list.size(); i++) {
+				CompoundNBT tag = list.getCompound(i);
 				ItemStack stack = new ItemStack(tag);
 				if (!stack.isEmpty()) {
 					requests.add(stack);

@@ -119,7 +119,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		
 		tag.putString(NBT_FEY_TYPE, type.name());
 		
-		stack.setTag(tag);
+		stack.put(tag);
 	}
 	
 	protected @Nullable CompoundNBT getFeyData(ItemStack stack) {
@@ -142,7 +142,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			tag.put(NBT_FEY_DATA, data);
 		}
 		
-		stack.setTag(tag);
+		stack.put(tag);
 	}
 	
 	protected @Nullable String getFeyName(ItemStack stack) {
@@ -165,7 +165,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			tag.putString(NBT_FEY_NAME, name);
 		}
 		
-		stack.setTag(tag);
+		stack.put(tag);
 	}
 	
 	protected boolean hasStoredFey(ItemStack stack) {
