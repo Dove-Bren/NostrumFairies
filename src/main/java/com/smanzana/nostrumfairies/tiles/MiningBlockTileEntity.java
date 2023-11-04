@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
@@ -1211,7 +1212,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		@Override
 		public Direction getSignFacing(IFeySign sign) {
 			BlockState state = world.getBlockState(pos);
-			return state.getValue(MiningBlock.FACING);
+			return state.get(MiningBlock.FACING);
 		}
 		
 		@Override

@@ -102,13 +102,13 @@ public class MagicLight extends Block {
 	}
 	
 	@Override
-	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, Age);
+	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+		builder.add(Age);
 	}
 	
 	@Override
 	public BlockState getStateFromMeta(int meta) {
-		return getDefaultState().withProperty(Age, Math.min(4, Math.max(0, meta)));
+		return getDefaultState().with(Age, Math.min(4, Math.max(0, meta)));
 	}
 	
 	@Override
@@ -117,14 +117,14 @@ public class MagicLight extends Block {
     }
 	
 	@Override
-	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
+	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
 		return worldIn.getBlockState(pos.up()).isSideSolid(worldIn, pos.up(), Direction.DOWN)
 				&& worldIn.getBlockState(pos.up()).getMaterial() == Material.ROCK;
 	}
 	
 	@Override
 	public int getMetaFromState(BlockState state) {
-		return state.getValue(Age);
+		return state.get(Age);
 	}
 	
 	@Override
@@ -158,7 +158,7 @@ public class MagicLight extends Block {
 	}
 	
 	@Override
-	public AxisAlignedBB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos) {
+	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
 		//LANTERN_AABB = new AxisAlignedBB(0.375D, 0.5D, 0.375D, 0.625D, 1D, 0.625D)
 		return LANTERN_AABB;
 	}
@@ -182,7 +182,7 @@ public class MagicLight extends Block {
 		}
 		
 		// Age
-		int age = state.getValue(Age) + 1;
+		int age = state.get(Age) + 1;
 		if (age > 4) {
 			switch (this.brightness) {
 			case BRIGHT:
@@ -199,7 +199,7 @@ public class MagicLight extends Block {
 			}
 			
 		} else {
-			worldIn.setBlockState(pos, this.getDefaultState().withProperty(Age, age));
+			worldIn.setBlockState(pos, this.getDefaultState().with(Age, age));
 		}
 	}
 	

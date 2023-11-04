@@ -323,7 +323,7 @@ public class EntityElfArcher extends EntityElf {
 		}
 
 		//this.playSound(SoundEvents.ENTITY_SKELETON_SHOOT, 1.0F, 1.0F / (this.getRNG().nextFloat() * 0.4F + 0.8F));
-		this.world.spawnEntity(entitytippedarrow);
+		this.world.addEntity(entitytippedarrow);
 	}
 	
 	protected void slashAt(LivingEntity target, float distanceFactor) {

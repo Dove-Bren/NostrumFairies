@@ -31,7 +31,7 @@ import net.minecraft.world.World;
 public class StorageMonitor extends FeyContainerBlock {
 	
 	// TODO what about viewing tasks? Condensed tasks that is.
-	private static final DirectionProperty FACING = HorizontalBlock.FACING;
+	private static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
 	private static final double BB_MINOR = 2.0 / 16.0;
 	private static final AxisAlignedBB AABB_N = new AxisAlignedBB(0, 0, 1 - BB_MINOR, 1, 1, 1);
 	private static final AxisAlignedBB AABB_E = new AxisAlignedBB(0, 0, 0, BB_MINOR, 1, 1);
@@ -59,8 +59,8 @@ public class StorageMonitor extends FeyContainerBlock {
 	}
 	
 	@Override
-	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, FACING);
+	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+		builder.add(FACING);
 	}
 	
 	protected static int metaFromFacing(Direction facing) {
@@ -74,21 +74,21 @@ public class StorageMonitor extends FeyContainerBlock {
 	@Override
 	public BlockState getStateFromMeta(int meta) {
 		return getDefaultState()
-				.withProperty(FACING, facingFromMeta(meta));
+				.with(FACING, facingFromMeta(meta));
 	}
 	
 	@Override
 	public int getMetaFromState(BlockState state) {
-		return metaFromFacing(state.getValue(FACING));
+		return metaFromFacing(state.get(FACING));
 	}
 	
 	public Direction getFacing(BlockState state) {
-		return state.getValue(FACING);
+		return state.get(FACING);
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(World world, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
-		Direction side = placer.getHorizontalFacing().getOpposite();
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
+		Direction side = context.getPlacementHorizontalFacing().getOpposite();
 		if (!this.canPlaceAt(world, pos, side)) {
 			// Rotate and find it
 			for (int i = 0; i < 3; i++) {
@@ -100,11 +100,11 @@ public class StorageMonitor extends FeyContainerBlock {
 		}
 		
 		return this.getDefaultState()
-				.withProperty(FACING, side);
+				.with(FACING, side);
 	}
 	
 	@Override
-	public BlockRenderLayer getBlockLayer() {
+	public BlockRenderLayer getRenderLayer() {
 		return BlockRenderLayer.CUTOUT;
 	}
 	
@@ -124,8 +124,8 @@ public class StorageMonitor extends FeyContainerBlock {
 	}
 	
 	@Override
-	public AxisAlignedBB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos) {
-		switch (state.getValue(FACING)) {
+	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+		switch (state.get(FACING)) {
 		case NORTH:
 		case UP:
 		case DOWN:
@@ -174,7 +174,7 @@ public class StorageMonitor extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
+	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
 		for (Direction side : Direction.HORIZONTALS) {
 			if (canPlaceAt(worldIn, pos, side)) {
 				return true;
@@ -187,7 +187,7 @@ public class StorageMonitor extends FeyContainerBlock {
 	@SuppressWarnings("deprecation")
 	@Override
 	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
-		Direction face = state.getValue(FACING);
+		Direction face = state.get(FACING);
 		if (!canPlaceAt(worldIn, pos, face)) {
 			this.dropBlockAsItem(worldIn, pos, state, 0);
 			worldIn.setBlockToAir(pos);

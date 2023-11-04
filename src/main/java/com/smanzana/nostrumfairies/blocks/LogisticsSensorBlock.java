@@ -52,8 +52,8 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 	}
 	
 	@Override
-	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, ACTIVE);
+	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+		builder.add(ACTIVE);
 	}
 	
 	protected static int metaFromActive(boolean active) {
@@ -67,30 +67,30 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 	@Override
 	public BlockState getStateFromMeta(int meta) {
 		return getDefaultState()
-				.withProperty(ACTIVE, activeFromMeta(meta));
+				.with(ACTIVE, activeFromMeta(meta));
 	}
 	
 	@Override
 	public int getMetaFromState(BlockState state) {
-		return metaFromActive(state.getValue(ACTIVE));
+		return metaFromActive(state.get(ACTIVE));
 	}
 	
 	public boolean getActive(BlockState state) {
-		return state.getValue(ACTIVE);
+		return state.get(ACTIVE);
 	}
 	
 	public static BlockState getStateWithActive(boolean active) {
-		return instance().getDefaultState().withProperty(ACTIVE, active);
+		return instance().getDefaultState().with(ACTIVE, active);
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(World world, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
 		return this.getDefaultState()
-				.withProperty(ACTIVE, false);
+				.with(ACTIVE, false);
 	}
 	
 	@Override
-	public BlockRenderLayer getBlockLayer() {
+	public BlockRenderLayer getRenderLayer() {
 		return BlockRenderLayer.CUTOUT;
 	}
 	
@@ -110,7 +110,7 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 	}
 	
 	@Override
-	public AxisAlignedBB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos) {
+	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
 		return Block.FULL_BLOCK_AABB;
 	}
 	
@@ -125,7 +125,7 @@ public class LogisticsSensorBlock extends FeyContainerBlock
     }
 	
 	@Override
-	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
+	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
 		BlockState state = worldIn.getBlockState(pos.down());
 		if (state == null || !(state.isSideSolid(worldIn, pos.down(), Direction.UP))) {
 			return false;

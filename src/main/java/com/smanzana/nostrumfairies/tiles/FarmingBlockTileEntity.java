@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
+import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -290,7 +291,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	@Override
 	public Direction getSignFacing(IFeySign sign) {
 		BlockState state = world.getBlockState(pos);
-		return state.getValue(FarmingBlock.FACING);
+		return state.get(FarmingBlock.FACING);
 	}
 	
 	@Override

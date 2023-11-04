@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.blocks.WoodcuttingBlock;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
@@ -340,7 +341,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 	@Override
 	public Direction getSignFacing(IFeySign sign) {
 		BlockState state = world.getBlockState(pos);
-		return state.getValue(WoodcuttingBlock.FACING);
+		return state.get(WoodcuttingBlock.FACING);
 	}
 	
 	@Override

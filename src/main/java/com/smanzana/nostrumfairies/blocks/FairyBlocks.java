@@ -1,6 +1,7 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.items.FairyItems;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.LoreRegistry;
@@ -26,7 +27,10 @@ public class FairyBlocks {
 	@ObjectHolder(CraftingBlockGnome.ID) public static CraftingBlockGnome gnomeCraftingBlock;
 	@ObjectHolder(FarmingBlock.ID) public static FarmingBlock farmingBlock;
 	@ObjectHolder(FeyBush.ID) public static FeyBush feyBush;
-	@ObjectHolder(FeyHomeBlock.ID) public static FeyHomeBlock feyHomeBlock;
+	@ObjectHolder(FeyHomeBlock.ID_DWARF) public static FeyHomeBlock dwarfHome;
+	@ObjectHolder(FeyHomeBlock.ID_ELF) public static FeyHomeBlock elfHome;
+	@ObjectHolder(FeyHomeBlock.ID_FAIRY) public static FeyHomeBlock fairyHome;
+	@ObjectHolder(FeyHomeBlock.ID_GNOME) public static FeyHomeBlock gnomeHome;
 	@ObjectHolder(GatheringBlock.ID) public static GatheringBlock gatheringBlock;
 	@ObjectHolder(InputLogisticsChest.ID) public static InputLogisticsChest inputChest;
 	@ObjectHolder(LogisticsPylon.ID) public static LogisticsPylon logisticsPylon;
@@ -97,7 +101,10 @@ public class FairyBlocks {
 		registerBlock(new CraftingBlockGnome(), CraftingBlockGnome.ID, registry);
 		registerBlock(new FarmingBlock(), FarmingBlock.ID, registry);
 		registerBlock(new FeyBush(), FeyBush.ID, registry);
-		registerBlock(new FeyHomeBlock(), FeyHomeBlock.ID, registry);
+		registerBlock(new FeyHomeBlock(ResidentType.DWARF), FeyHomeBlock.ID_DWARF, registry);
+		registerBlock(new FeyHomeBlock(ResidentType.ELF), FeyHomeBlock.ID_ELF, registry);
+		registerBlock(new FeyHomeBlock(ResidentType.FAIRY), FeyHomeBlock.ID_FAIRY, registry);
+		registerBlock(new FeyHomeBlock(ResidentType.GNOME), FeyHomeBlock.ID_GNOME, registry);
 		registerBlock(new GatheringBlock(), GatheringBlock.ID, registry);
 		registerBlock(new InputLogisticsChest(), InputLogisticsChest.ID, registry);
 		registerBlock(new LogisticsPylon(), LogisticsPylon.ID, registry);

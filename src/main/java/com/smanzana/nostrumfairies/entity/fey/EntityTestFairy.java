@@ -302,7 +302,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				continue;
 			}
 			ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, heldItem);
-			world.spawnEntity(item);
+			world.addEntity(item);
 		}
 		inventory.clear();
 	}

@@ -272,7 +272,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	
 	protected void dropItem() {
 		ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, getHeldItem());
-		world.spawnEntity(item);
+		world.addEntity(item);
 		this.dataManager.set(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
 
@@ -759,7 +759,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		}
 		replacement.copyFrom(this);
 		world.removeEntityDangerously(this);
-		world.spawnEntity(replacement);
+		world.addEntity(replacement);
 		
 		return replacement;
 	}

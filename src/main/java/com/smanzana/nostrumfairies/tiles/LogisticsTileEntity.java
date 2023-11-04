@@ -190,7 +190,7 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	public void addItem(ItemStack stack) {
 		if (!world.isRemote) {
 			ItemEntity ent = new ItemEntity(world, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5, stack);
-			world.spawnEntity(ent);
+			world.addEntity(ent);
 		}
 	}
 	

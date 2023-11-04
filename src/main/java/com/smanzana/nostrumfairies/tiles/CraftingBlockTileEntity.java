@@ -550,7 +550,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		// Any leftover?
 		if (!stack.isEmpty()) {
 			ItemEntity ent = new ItemEntity(world, pos.getX() + .5, pos.getY() + 1.2, pos.getZ() + .5, stack);
-			world.spawnEntity(ent);
+			world.addEntity(ent);
 		}
 	}
 	

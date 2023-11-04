@@ -1,150 +1,82 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import com.google.common.collect.Lists;
-import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.tiles.PylonTileEntity;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.DirectionProperty;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ToolType;
 
 public class LogisticsPylon extends FeyContainerBlock {
 	
 	public static final DirectionProperty FACING = DirectionProperty.create("facing", Lists.newArrayList(Direction.UP, Direction.DOWN));
 	public static final String ID = "logistics_pylon";
 	
-	private static LogisticsPylon instance = null;
-	public static LogisticsPylon instance() {
-		if (instance == null)
-			instance = new LogisticsPylon();
-		
-		return instance;
-	}
-	
 	public LogisticsPylon() {
-		super(Material.ROCK, MapColor.BLUE);
-		this.setUnlocalizedName(ID);
-		this.setHardness(3.0f);
-		this.setResistance(1.0f);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setSoundType(SoundType.WOOD);
-		this.setHarvestLevel("pickaxe", 0);
-		this.setLightOpacity(2);
+		super(Block.Properties.create(Material.ROCK)
+				.hardnessAndResistance(2.0f, 1.0f)
+				.sound(SoundType.STONE)
+				.harvestTool(ToolType.PICKAXE)
+				);
 	}
 	
 	@Override
-	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, FACING);
-	}
-	
-	protected static int metaFromFacing(Direction facing) {
-		return facing == Direction.UP ? 0 : 1;
-	}
-	
-	protected static Direction facingFromMeta(int meta) {
-		return meta == 0 ? Direction.UP : Direction.DOWN;
-	}
-	
-	@Override
-	public BlockState getStateFromMeta(int meta) {
-		return getDefaultState()
-				.withProperty(FACING, facingFromMeta(meta));
-	}
-	
-	@Override
-	public int getMetaFromState(BlockState state) {
-		return metaFromFacing(state.getValue(FACING));
+	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+		builder.add(FACING);
 	}
 	
 	public Direction getFacing(BlockState state) {
-		return state.getValue(FACING);
+		return state.get(FACING);
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(World world, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
+		if (!Direction.Axis.Y.test(context.getFace())) {
+			return null;
+		}
+		
+		BlockPos attachedPos = context.getPos().offset(context.getFace().getOpposite());
+		if (!Block.hasSolidSide(context.getWorld().getBlockState(attachedPos), context.getWorld(), attachedPos, context.getFace())) {
+			return null;
+		}
+		
 		return this.getDefaultState()
-				.withProperty(FACING, facing == Direction.DOWN ? facing : Direction.UP);
+				.with(FACING, context.getFace() == Direction.DOWN ? context.getFace() : Direction.UP);
 	}
 	
 	@Override
-	public BlockRenderLayer getBlockLayer() {
+	public BlockRenderLayer getRenderLayer() {
 		return BlockRenderLayer.CUTOUT;
 	}
 	
 	@Override
-	public boolean isFullBlock(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isFullCube(BlockState state) {
-		return true;
-	}
-	
-	@Override
-	public boolean isOpaqueCube(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return false;
-    }
-	
-	@Override
-	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
-//		BlockState state = worldIn.getBlockState(pos.up());
-//		if (state == null || !(state.isSideSolid(worldIn, pos.down(), Direction.DOWN))) {
-//			return false;
-//		}
-		
-		return super.canPlaceBlockAt(worldIn, pos);
-	}
-	
-	@Override
-	public boolean canPlaceBlockOnSide(World worldIn, BlockPos pos, Direction side) {
-		if (side == Direction.DOWN) {
-			BlockState state = worldIn.getBlockState(pos.up());
-			if (state == null || !state.isSideSolid(worldIn, pos.up(), Direction.DOWN)) {
-				return false;
-			}
+	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
+		if (facing != getFacing(stateIn).getOpposite()) {
+			return null; // Not what we're attached to
 		}
 		
-		return true;
-	}
-	
-	@SuppressWarnings("deprecation")
-	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
-		if (state.getValue(FACING) == Direction.DOWN) {
-			BlockState ceilState = worldIn.getBlockState(pos.up());
-			if (ceilState == null || !ceilState.isSideSolid(worldIn, pos.up(), Direction.DOWN)) {
-				this.dropBlockAsItem(worldIn, pos, state, 0);
-				worldIn.setBlockToAir(pos);
-			}
+		BlockPos attachedPos = pos.offset(facing.getOpposite());
+		if (!Block.hasSolidSide(world.getBlockState(attachedPos), world, attachedPos, facing.getOpposite())) {
+			return null;
 		}
 		
-		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
-	}
-	
-	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return true;
+		return stateIn;
 	}
 	
 	@Override

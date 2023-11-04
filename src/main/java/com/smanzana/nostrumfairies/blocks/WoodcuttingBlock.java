@@ -1,7 +1,6 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.tiles.IFeySign;
 import com.smanzana.nostrumfairies.tiles.WoodcuttingBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.OreDict;
 
@@ -30,7 +29,7 @@ import net.minecraftforge.common.MinecraftForge;
 
 public class WoodcuttingBlock extends FeyContainerBlock {
 
-	public static final DirectionProperty FACING = HorizontalBlock.FACING;
+	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
 	public static final String ID = "logistics_woodcutting_block";
 	
 	private static WoodcuttingBlock instance = null;
@@ -53,8 +52,8 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, FACING);
+	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+		builder.add(FACING);
 	}
 	
 	protected static int metaFromFacing(Direction facing) {
@@ -68,26 +67,26 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	@Override
 	public BlockState getStateFromMeta(int meta) {
 		return getDefaultState()
-				.withProperty(FACING, facingFromMeta(meta));
+				.with(FACING, facingFromMeta(meta));
 	}
 	
 	@Override
 	public int getMetaFromState(BlockState state) {
-		return metaFromFacing(state.getValue(FACING));
+		return metaFromFacing(state.get(FACING));
 	}
 	
 	public Direction getFacing(BlockState state) {
-		return state.getValue(FACING);
+		return state.get(FACING);
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(World world, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
 		return this.getDefaultState()
-				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+				.with(FACING, context.getPlacementHorizontalFacing().getOpposite());
 	}
 	
 	@Override
-	public BlockRenderLayer getBlockLayer() {
+	public BlockRenderLayer getRenderLayer() {
 		return BlockRenderLayer.CUTOUT;
 	}
 	
@@ -107,8 +106,8 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public AxisAlignedBB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos) {
-		if (state.getValue(FACING).getHorizontalIndex() % 2 == 0) {
+	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+		if (state.get(FACING).getHorizontalIndex() % 2 == 0) {
 			return IFeySign.AABB_NS;
 		} else {
 			return IFeySign.AABB_EW;
@@ -130,7 +129,7 @@ public class WoodcuttingBlock extends FeyContainerBlock {
     }
 	
 	@Override
-	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
+	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
 		BlockState state = worldIn.getBlockState(pos.down());
 		if (state == null || !(state.isSideSolid(worldIn, pos.down(), Direction.UP))) {
 			return false;

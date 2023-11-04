@@ -1,38 +1,44 @@
 package com.smanzana.nostrumfairies.blocks;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.List;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.ITileEntityProvider;
+import net.minecraft.block.HorizontalBlock;
+import net.minecraft.block.LeavesBlock;
+import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.EnumProperty;
+import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.BlockStateContainer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.world.storage.loot.LootContext;
+import net.minecraftforge.common.ToolType;
 
 /**
  * Houses fey.
@@ -40,7 +46,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * @author Skyler
  *
  */
-public class FeyHomeBlock extends Block implements ITileEntityProvider {
+public class FeyHomeBlock extends FeyContainerBlock {
 	
 	private static enum BlockFunction implements IStringSerializable {
 		CENTER,
@@ -58,86 +64,55 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	}
 	
 	//public static final PropertyEnum<ResidentType> TYPE = PropertyEnum.<ResidentType>create("type", ResidentType.class);
-	public static final PropertyEnum<BlockFunction> BLOCKFUNC = PropertyEnum.<BlockFunction>create("func", BlockFunction.class);
-	public static final DirectionProperty FACING = HorizontalBlock.FACING;
+	public static final EnumProperty<BlockFunction> BLOCKFUNC = EnumProperty.<BlockFunction>create("func", BlockFunction.class);
+	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
 	
-	protected static final String ID = "home_block";
-	
-	private static Map<ResidentType, FeyHomeBlock> instances = null;
-	
-	public static FeyHomeBlock instance(ResidentType type) {
-		if (instances == null) {
-			instances = new EnumMap<>(ResidentType.class);
-			for (ResidentType t : ResidentType.values()) {
-				instances.put(t, new FeyHomeBlock(t));
-			}
-		}
-		
-		return instances.get(type);
-	}
-	
-	public static String ID(ResidentType type) {
-		return ID + "_" + type.name().toLowerCase();
-	}
+	protected static final String ID_PREFIX = "home_block_";
+	public static final String ID_DWARF = ID_PREFIX + "dwarf";
+	public static final String ID_ELF = ID_PREFIX + "elf";
+	public static final String ID_GNOME = ID_PREFIX + "gnome";
+	public static final String ID_FAIRY = ID_PREFIX + "fairy";
 	
 	private final ResidentType type;
 	
-	private FeyHomeBlock(ResidentType type) {
-		super(Material.WOOD, MapColor.BLUE);
-		this.setUnlocalizedName(ID(type));
-		this.setHardness(0.0f);
-		this.setResistance(100.0f);
-		this.setLightOpacity(0);
-		this.setTickRandomly(true);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		
+	public FeyHomeBlock(ResidentType type) {
+		super(Block.Properties.create(Material.WOOD)
+				.hardnessAndResistance(4f, 100.0f)
+				.sound(SoundType.WOOD)
+				.harvestTool(ToolType.AXE)
+				);
 		this.type = type;
 	}
 	
-	@Override
-	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, BLOCKFUNC, FACING);
-	}
-	
-	private BlockFunction functionFromMeta(int meta) {
-		int raw = (meta & 1);
-		return BlockFunction.values()[raw];
-	}
-	
-	private int metaFromFunc(BlockFunction func) {
-		return (func.ordinal() & 1);
-	}
-	
-	private Direction facingFromMeta(int meta) {
-		int raw = (meta >> 1) & 0x3;
-		return Direction.HORIZONTALS[raw];
-	}
-	
-	private int metaFromFacing(Direction facing) {
-		return facing.getHorizontalIndex() << 1;
+	public static FeyHomeBlock getBlock(ResidentType type) {
+		switch (type) {
+		case DWARF:
+			return FairyBlocks.dwarfHome;
+		case ELF:
+			return FairyBlocks.elfHome;
+		case FAIRY:
+			return FairyBlocks.fairyHome;
+		case GNOME:
+			return FairyBlocks.gnomeHome;
+		}
+		
+		return null;
 	}
 	
 	@Override
-	public BlockState getStateFromMeta(int meta) {
-		return getDefaultState()
-				.withProperty(BLOCKFUNC, functionFromMeta(meta))
-				.withProperty(FACING, facingFromMeta(meta));
+	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+		builder.add(BLOCKFUNC, FACING);
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
-	public int getMetaFromState(BlockState state) {
-		return metaFromFunc(state.getValue(BLOCKFUNC)) | metaFromFacing(state.getValue(FACING));
-	}
-	
-	@Override
-	public Item getItemDropped(BlockState state, Random rand, int fortune) {
-        return super.getItemDropped(state, rand, fortune);
-		//return null;
-    }
-	
-	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return true;
+	public List<ItemStack> getDrops(BlockState state, LootContext.Builder builder) {
+		// non-center states don't do drops!
+		if (!isCenter(state)) {
+			return new ArrayList<>();
+		}
+		
+		return super.getDrops(state, builder);
 	}
 	
 	@Override
@@ -164,45 +139,8 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 		return BlockRenderType.MODEL;
 	}
 	
-	@Override
-	public boolean isFullBlock(BlockState state) {
-		return true;
-	}
-	
-	@Override
-	public boolean isOpaqueCube(BlockState state) {
-		return true;
-	}
-	
-	@SuppressWarnings("deprecation")
-	@Override
-	public AxisAlignedBB getCollisionBoundingBox(BlockState blockState, IBlockAccess worldIn, BlockPos pos) {
-		return super.getCollisionBoundingBox(blockState, worldIn, pos);
-	}
-	
-	@Override
-	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return false;
-    }
-	
-	@Override
-	public void randomTick(World worldIn, BlockPos pos, BlockState state, Random random) {
-		super.randomTick(worldIn, pos, state, random);
-	}
-	
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public void randomDisplayTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
-		super.randomDisplayTick(stateIn, worldIn, pos, rand);
-	}
-	
-	@Override
-	public boolean canSustainLeaves(BlockState state, IBlockAccess world, BlockPos pos) {
-		return true;
-	}
-	
 	public boolean isCenter(BlockState state) {
-		return state.getValue(BLOCKFUNC) == BlockFunction.CENTER;
+		return state.get(BLOCKFUNC) == BlockFunction.CENTER;
 	}
 	
 	public ResidentType getType(BlockState state) {
@@ -228,18 +166,18 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 						ItemEntity item = new ItemEntity(
 								world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 								inv.removeStackFromSlot(i));
-						world.spawnEntity(item);
+						world.addEntity(item);
 					}
 				}
 			}
 		}
 		world.removeTileEntity(pos);
 		
-		world.setBlockToAir(getPaired(state, pos));
+		world.destroyBlock(getPaired(state, pos), true);
 	}
 	
 	private BlockPos getPaired(BlockState state, BlockPos pos) {
-		return pos.offset(state.getValue(BLOCKFUNC) == BlockFunction.CENTER ? Direction.UP : Direction.DOWN);
+		return pos.offset(state.get(BLOCKFUNC) == BlockFunction.CENTER ? Direction.UP : Direction.DOWN);
 	}
 	
 	@Override
@@ -250,16 +188,17 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	}
 	
 	@Override
-	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
+	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
 		
 		for (BlockPos cursor : new BlockPos[] {pos, pos.up(), pos.up().up()}) {
 			if (cursor.getY() > 255 || cursor.getY() <= 0) {
 				return false;
 			}
 			
-			Block block = worldIn.getBlockState(cursor).getBlock();
-			if (!block.isReplaceable(worldIn, cursor)
-					&& !(block instanceof BlockLeaves)) {
+			BlockState state = worldIn.getBlockState(cursor);
+			Block block = state.getBlock();
+			if (!state.getMaterial().isReplaceable()
+					&& !(block instanceof LeavesBlock)) {
 				return false;
 			}
 			
@@ -268,43 +207,30 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 			}
 		}
 		
-		return super.canPlaceBlockAt(worldIn, pos);
+		return true;
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(World world, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
 		return this.getDefaultState()
-				.withProperty(BLOCKFUNC, BlockFunction.CENTER)
-				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+				.with(BLOCKFUNC, BlockFunction.CENTER)
+				.with(FACING, context.getPlacementHorizontalFacing().getOpposite());
 				
-	}
-	
-	@Override
-	public int damageDropped(BlockState state) {
-//		return metaFromType(state.getValue(TYPE));
-		return 0;
-	}
-
-	@OnlyIn(Dist.CLIENT)
-	@Override
-	public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> list) {
-		super.getSubBlocks(tab, list);
 	}
 	
 	@Override
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
 		// This method hopefully is ONLY called when placed manually in the world.
 		// Auto-create slave state
-		Direction facing = state.getValue(FACING);
+		Direction facing = state.get(FACING);
 		this.spawn(worldIn, pos, type, facing);
 		
 //		worldIn.setBlockState(pos.up(), this.getDefaultState()
-//				.withProperty(BLOCKFUNC, BlockFunction.TOP));
+//				.with(BLOCKFUNC, BlockFunction.TOP));
 	}
 	
 	@Override
 	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-		BlockState state = this.getStateFromMeta(meta);
 		if (isCenter(state)) {
 			return new HomeBlockTileEntity(type);
 		}
@@ -330,11 +256,11 @@ public class FeyHomeBlock extends Block implements ITileEntityProvider {
 	 * @param type
 	 */
 	public void spawn(World world, BlockPos base, ResidentType type, Direction direction) {
-		//world.setBlockState(base, getDefaultState().withProperty(BLOCKFUNC, BlockFunction.CENTER).withProperty(FACING, direction));
-		world.setBlockState(base.up(), getDefaultState().withProperty(BLOCKFUNC, BlockFunction.TOP).withProperty(FACING, direction)); // could be random
-		world.setBlockState(base.up().up(), Blocks.LOG2.getDefaultState().withProperty(BlockNewLog.VARIANT, BlockPlanks.EnumType.DARK_OAK));
+		//world.setBlockState(base, getDefaultState().with(BLOCKFUNC, BlockFunction.CENTER).with(FACING, direction));
+		world.setBlockState(base.up(), getDefaultState().with(BLOCKFUNC, BlockFunction.TOP).with(FACING, direction)); // could be random
+		world.setBlockState(base.up().up(), Blocks.DARK_OAK_LOG.getDefaultState());
 		
-		BlockState leaves = Blocks.LEAVES2.getDefaultState().withProperty(BlockNewLeaf.VARIANT, BlockPlanks.EnumType.DARK_OAK);
+		BlockState leaves = Blocks.DARK_OAK_LEAVES.getDefaultState();
 		BlockPos origin = base.up().up();
 		for (BlockPos cursor : new BlockPos[] {
 				// Layer 1

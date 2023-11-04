@@ -51,7 +51,7 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	public void addItem(ItemStack stack) {
 		if (!world.isRemote) {
 			ItemEntity ent = new ItemEntity(world, pos.getX() + .5, pos.getY() + .2, pos.getZ() + .5, stack);
-			world.spawnEntity(ent);
+			world.addEntity(ent);
 		}
 	}
 	

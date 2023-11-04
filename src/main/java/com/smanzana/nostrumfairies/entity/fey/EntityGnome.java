@@ -260,7 +260,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
 	private void dropItem() {
 		ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, getCarriedItem());
-		world.spawnEntity(item);
+		world.addEntity(item);
 		this.dataManager.set(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
 
@@ -713,7 +713,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
 			world.removeEntityDangerously(this);
-			world.spawnEntity(replacement);
+			world.addEntity(replacement);
 		}
 		
 		return replacement == null ? this : replacement;

@@ -1025,7 +1025,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		}
 		
 		fey.setPosition(pos.getX() + .5, pos.getY() + .05, pos.getZ() + .5);
-		world.spawnEntity(fey);
+		world.addEntity(fey);
 	}
 	
 	protected void dirtyAndUpdate() {

@@ -181,7 +181,7 @@ public class TemplateBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	protected BlockStateContainer createBlockState() {
+	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
 		return new BlockStateContainer.Builder(this).add(NESTED_STATE).build();
 	}
 	
@@ -192,7 +192,7 @@ public class TemplateBlock extends FeyContainerBlock {
 		if (ent != null) {
 			state = ent.getTemplateState();
 			if (state != null) {
-				ext = ext.withProperty(NESTED_STATE, state.getBlock().getExtendedState(state, world, pos));
+				ext = ext.with(NESTED_STATE, state.getBlock().getExtendedState(state, world, pos));
 			}
 		}
 		
@@ -209,13 +209,13 @@ public class TemplateBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public AxisAlignedBB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos) {
+	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
 		return Block.FULL_BLOCK_AABB;
 	}
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public BlockState getStateForPlacement(World world, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
 		return super.getStateForPlacement(world, pos, facing, hitX, hitY, hitZ, meta, placer);
 	}
 	
@@ -241,7 +241,7 @@ public class TemplateBlock extends FeyContainerBlock {
 	
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public BlockRenderLayer getBlockLayer() {
+	public BlockRenderLayer getRenderLayer() {
 		return BlockRenderLayer.SOLID;
 	}
 	

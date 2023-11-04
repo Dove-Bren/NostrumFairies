@@ -218,7 +218,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 		ItemStack leftover = Inventories.addItem(this, stack);
 		if (!leftover.isEmpty()) {
 			ItemEntity item = new ItemEntity(this.world, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, leftover);
-			world.spawnEntity(item);
+			world.addEntity(item);
 		}
 	}
 }

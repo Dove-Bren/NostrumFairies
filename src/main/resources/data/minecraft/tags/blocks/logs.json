@@ -1,0 +1,9 @@
+{
+	"replace": false,
+	"values": [
+		"nostrumfairies:home_block_dwarf",
+		"nostrumfairies:home_block_elf",
+		"nostrumfairies:home_block_gnome",
+		"nostrumfairies:home_block_fairy"
+	]
+}

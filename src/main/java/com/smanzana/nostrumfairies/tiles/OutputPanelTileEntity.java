@@ -355,7 +355,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 		// Any leftover?
 		if (!remaining.isEmpty()) {
 			ItemEntity item = new ItemEntity(this.world, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, remaining);
-			world.spawnEntity(item);
+			world.addEntity(item);
 		}
 	}
 	

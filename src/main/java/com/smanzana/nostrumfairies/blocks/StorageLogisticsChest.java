@@ -85,7 +85,7 @@ public class StorageLogisticsChest extends FeyContainerBlock {
 				ItemEntity item = new ItemEntity(
 						world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 						table.removeStackFromSlot(i));
-				world.spawnEntity(item);
+				world.addEntity(item);
 			}
 		}
 		

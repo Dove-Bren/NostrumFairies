@@ -5,29 +5,31 @@ import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.CropsBlock;
 import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemBlock;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.BlockStateContainer;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.ToolType;
@@ -36,22 +38,23 @@ public class BuildingBlock extends FeyContainerBlock {
 
 	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
 	public static final String ID = "logistics_building_block";
-	private static double BB_MAJOR = .345;
-	private static double BB_MINOR = .03;
-	private static final AxisAlignedBB AABB_NS = new AxisAlignedBB(.5 - BB_MAJOR, 0, .5 - BB_MINOR, .5 + BB_MAJOR, .685, .5 + BB_MINOR);
-	private static final AxisAlignedBB AABB_EW = new AxisAlignedBB(.5 - BB_MINOR, 0, .5 - BB_MAJOR, .5 + BB_MINOR, .685, .5 + BB_MAJOR);
+	private static double BB_MAJOR = 16 * .345;
+	private static double BB_MINOR = 16 * .03;
+	private static final VoxelShape AABB_NS = Block.makeCuboidShape(8 - BB_MAJOR, 0, 8 - BB_MINOR, 8 + BB_MAJOR, 16 * .685, 8 + BB_MINOR);
+	private static final VoxelShape AABB_EW = Block.makeCuboidShape(8 - BB_MINOR, 0, 8 - BB_MAJOR, 8 + BB_MINOR, 16 * .685, 8 + BB_MAJOR);
 	
 	public BuildingBlock() {
 		super(Block.Properties.create(Material.WOOD)
 				.hardnessAndResistance(3f, 1f)
 				.sound(SoundType.WOOD)
 				.harvestTool(ToolType.PICKAXE)
+				.doesNotBlockMovement()
 				);
 	}
 	
 	@Override
-	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, FACING);
+	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+		builder.add(FACING);
 	}
 	
 	@Override
@@ -59,58 +62,24 @@ public class BuildingBlock extends FeyContainerBlock {
 		return 2; // How much light out of 16 I think to take away
 	}
 	
-	protected static int metaFromFacing(Direction facing) {
-		return facing.getHorizontalIndex();
-	}
-	
-	protected static Direction facingFromMeta(int meta) {
-		return Direction.getHorizontal(meta);
-	}
-	
-	@Override
-	public BlockState getStateFromMeta(int meta) {
-		return getDefaultState()
-				.withProperty(FACING, facingFromMeta(meta));
-	}
-	
-	@Override
-	public int getMetaFromState(BlockState state) {
-		return metaFromFacing(state.getValue(FACING));
-	}
-	
 	public Direction getFacing(BlockState state) {
-		return state.getValue(FACING);
+		return state.get(FACING);
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(World world, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
 		return this.getDefaultState()
-				.withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+				.with(FACING, context.getPlacementHorizontalFacing().getOpposite());
 	}
 	
 	@Override
-	public BlockRenderLayer getBlockLayer() {
+	public BlockRenderLayer getRenderLayer() {
 		return BlockRenderLayer.CUTOUT;
 	}
 	
 	@Override
-	public boolean isFullBlock(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isFullCube(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isOpaqueCube(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public AxisAlignedBB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos) {
-		if (state.getValue(FACING).getHorizontalIndex() % 2 == 0) {
+	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+		if (state.get(FACING).getHorizontalIndex() % 2 == 0) {
 			return AABB_NS;
 		} else {
 			return AABB_EW;
@@ -118,23 +87,8 @@ public class BuildingBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(BlockState blockState, IBlockAccess worldIn, BlockPos pos) {
-		if (blockState.getValue(FACING).getHorizontalIndex() % 2 == 0) {
-			return AABB_NS;
-		} else {
-			return AABB_EW;
-		}
-	}
-	
-	@Override
-	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return false;
-    }
-	
-	@Override
-	public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
-		BlockState state = worldIn.getBlockState(pos.down());
-		if (state == null || !(state.isSideSolid(worldIn, pos.down(), Direction.UP))) {
+	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
+		if (Block.hasSolidSide(worldIn.getBlockState(pos.down()), worldIn, pos.down(), Direction.UP)) {
 			return false;
 		}
 		
@@ -142,20 +96,12 @@ public class BuildingBlock extends FeyContainerBlock {
 		return true;
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
-		if (!canPlaceBlockAt(worldIn, pos)) {
-			this.dropBlockAsItem(worldIn, pos, state, 0);
-			worldIn.setBlockToAir(pos);
+	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
+		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
+			return null;
 		}
-		
-		super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
-	}
-	
-	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return true;
+		return stateIn;
 	}
 	
 	@Override
@@ -192,7 +138,7 @@ public class BuildingBlock extends FeyContainerBlock {
 			ItemEntity item = new ItemEntity(
 					world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
 					block.getTemplateScroll());
-			world.spawnEntity(item);
+			world.addEntity(item);
 		}
 		MinecraftForge.EVENT_BUS.unregister(block);
 	}
@@ -207,11 +153,11 @@ public class BuildingBlock extends FeyContainerBlock {
 			return false;
 		}
 		
-		if (!(state.getBlock() instanceof BlockCrops)) {
+		if (!(state.getBlock() instanceof CropsBlock)) {
 			return false;
 		}
 		
-		return ((BlockCrops) state.getBlock()).isMaxAge(state);
+		return ((CropsBlock) state.getBlock()).isMaxAge(state);
 	}
 	
 	public static boolean isPlantableSpot(World world, BlockPos base, ItemStack seed) {
@@ -226,8 +172,8 @@ public class BuildingBlock extends FeyContainerBlock {
 		IPlantable plantable = null;
 		if (seed.getItem() instanceof IPlantable) {
 			plantable = (IPlantable) seed.getItem();
-		} else if (seed.getItem() instanceof ItemBlock && ((ItemBlock) seed.getItem()).getBlock() instanceof IPlantable) {
-			plantable = (IPlantable) ((ItemBlock) seed.getItem()).getBlock();
+		} else if (seed.getItem() instanceof BlockItem && ((BlockItem) seed.getItem()).getBlock() instanceof IPlantable) {
+			plantable = (IPlantable) ((BlockItem) seed.getItem()).getBlock();
 		}
 		
 		if (plantable == null) {

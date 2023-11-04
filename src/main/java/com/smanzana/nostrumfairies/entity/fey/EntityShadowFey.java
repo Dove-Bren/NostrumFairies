@@ -311,7 +311,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		}
 
 		//this.playSound(SoundEvents.ENTITY_SKELETON_SHOOT, 1.0F, 1.0F / (this.getRNG().nextFloat() * 0.4F + 0.8F));
-		this.world.spawnEntity(entitytippedarrow);
+		this.world.addEntity(entitytippedarrow);
 	}
 	
 	protected void slashAt(LivingEntity target, float distanceFactor) {
@@ -404,7 +404,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		fey.onInitialSpawn(this.world.getDifficultyForLocation(new BlockPos(fey)), (IMobEntityData)null);
 		
 		world.removeEntity(this);
-		world.spawnEntity(fey);
+		world.addEntity(fey);
 		fey.setCursed(true);
 		
 		this.world.playEvent((PlayerEntity)null, 1027, new BlockPos((int)this.posX, (int)this.posY, (int)this.posZ), 0);

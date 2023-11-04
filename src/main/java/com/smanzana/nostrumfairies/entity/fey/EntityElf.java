@@ -639,7 +639,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
 			world.removeEntityDangerously(this);
-			world.spawnEntity(replacement);
+			world.addEntity(replacement);
 		}
 		
 		return replacement == null ? this : replacement;

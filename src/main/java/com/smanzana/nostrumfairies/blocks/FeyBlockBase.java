@@ -20,6 +20,6 @@ public abstract class FeyBlockBase extends Block {
 	}
 	
 	public void breakBlock(World world, BlockPos pos, BlockState state) {
-		;
+		world.removeTileEntity(pos);
 	}
 }
