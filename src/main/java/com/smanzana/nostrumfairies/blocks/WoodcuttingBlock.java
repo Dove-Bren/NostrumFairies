@@ -1,78 +1,49 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.tiles.WoodcuttingBlockTileEntity;
-import com.smanzana.nostrumfairies.utils.OreDict;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.HorizontalBlock;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.StateContainer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.Direction;
-import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.BlockStateContainer;
-import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.ToolType;
 
 public class WoodcuttingBlock extends FeyContainerBlock {
 
 	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
 	public static final String ID = "logistics_woodcutting_block";
 	
-	private static WoodcuttingBlock instance = null;
-	public static WoodcuttingBlock instance() {
-		if (instance == null)
-			instance = new WoodcuttingBlock();
-		
-		return instance;
-	}
-	
 	public WoodcuttingBlock() {
-		super(Material.WOOD, MapColor.WOOD);
-		this.setUnlocalizedName(ID);
-		this.setHardness(3.0f);
-		this.setResistance(1.0f);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setSoundType(SoundType.WOOD);
-		this.setHarvestLevel("axe", 0);
-		this.setLightOpacity(2);
+		super(Block.Properties.create(Material.WOOD)
+				.hardnessAndResistance(3.0f, 1.0f)
+				.sound(SoundType.WOOD)
+				.harvestTool(ToolType.AXE)
+				);
 	}
 	
 	@Override
 	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
 		builder.add(FACING);
-	}
-	
-	protected static int metaFromFacing(Direction facing) {
-		return facing.getHorizontalIndex();
-	}
-	
-	protected static Direction facingFromMeta(int meta) {
-		return Direction.getHorizontal(meta);
-	}
-	
-	@Override
-	public BlockState getStateFromMeta(int meta) {
-		return getDefaultState()
-				.with(FACING, facingFromMeta(meta));
-	}
-	
-	@Override
-	public int getMetaFromState(BlockState state) {
-		return metaFromFacing(state.get(FACING));
 	}
 	
 	public Direction getFacing(BlockState state) {
@@ -91,21 +62,6 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean isFullBlock(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isFullCube(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isOpaqueCube(BlockState state) {
-		return false;
-	}
-	
-	@Override
 	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
 		if (state.get(FACING).getHorizontalIndex() % 2 == 0) {
 			return IFeySign.AABB_NS;
@@ -115,23 +71,8 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(BlockState blockState, IBlockAccess worldIn, BlockPos pos) {
-		if (blockState.getValue(FACING).getHorizontalIndex() % 2 == 0) {
-			return IFeySign.AABB_NS;
-		} else {
-			return IFeySign.AABB_EW;
-		}
-	}
-	
-	@Override
-	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return false;
-    }
-	
-	@Override
 	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		BlockState state = worldIn.getBlockState(pos.down());
-		if (state == null || !(state.isSideSolid(worldIn, pos.down(), Direction.UP))) {
+		if (!Block.hasSolidSide(worldIn.getBlockState(pos.down()), worldIn, pos.down(), Direction.UP)) {
 			return false;
 		}
 		
@@ -139,20 +80,12 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 		return true;
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
-		if (!canPlaceBlockAt(worldIn, pos)) {
-			this.dropBlockAsItem(worldIn, pos, state, 0);
-			worldIn.setBlockToAir(pos);
+	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
+		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
+			return null;
 		}
-		
-		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
-	}
-	
-	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return true;
+		return stateIn;
 	}
 	
 	@Override
@@ -184,18 +117,10 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 		
 		WoodcuttingBlockTileEntity block = (WoodcuttingBlockTileEntity) ent;
 		block.unlinkFromNetwork();
-		MinecraftForge.TERRAIN_GEN_BUS.unregister(block);
 	}
 	
 	public static boolean isLeafMaterial(BlockState state) {
-		
-		// Easy fast check
-		if (state.getBlock() == Blocks.LEAVES
-				|| state.getBlock() == Blocks.LEAVES2) {
-			return true;
-		}
-		
-		return OreDict.blockMatchesOreDict(state, "treeLeaves", false);
+		return BlockTags.LEAVES.contains(state.getBlock());
 	}
 	
 	public static boolean isLeafMaterial(World world, BlockPos pos) {
@@ -203,14 +128,7 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	}
 	
 	public static boolean isTrunkMaterial(BlockState state) {
-		
-		// Easy fast check
-		if (state.getBlock() == Blocks.LOG
-				|| state.getBlock() == Blocks.LOG2) {
-			return true;
-		}
-		
-		return OreDict.blockMatchesOreDict(state, "logWood", false);
+		return BlockTags.LOGS.contains(state.getBlock());
 	}
 	
 	public static boolean isTrunkMaterial(World world, BlockPos pos) {
@@ -229,7 +147,7 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 		}
 		
 		// A tree must be on the ground
-		if (!world.isSideSolid(base.down(), Direction.UP)) {
+		if (!Block.hasSolidSide(world.getBlockState(base.down()), world, base.down(), Direction.UP)) {
 			return false;
 		}
 		
@@ -258,7 +176,7 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 		}
 		
 		// A branch is NOT on the ground
-		if (world.isSideSolid(base.down(), Direction.UP)) {
+		if (Block.hasSolidSide(world.getBlockState(base.down()), world, base.down(), Direction.UP)) {
 			return false;
 		}
 		

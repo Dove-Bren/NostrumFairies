@@ -10,40 +10,39 @@ import org.apache.commons.lang3.Validate;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
-import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.utils.NonNullHashMap;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockContainer;
-import net.minecraft.block.SoundType;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.init.Blocks;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.BlockStateContainer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 
 public class TemplateBlock extends FeyContainerBlock {
@@ -155,34 +154,18 @@ public class TemplateBlock extends FeyContainerBlock {
 	
 	public static final String ID = "template_block";
 	
-	private static TemplateBlock instance= null;
-	public static TemplateBlock instance() {
-		if (instance == null) {
-			instance = new TemplateBlock();
-		}
-		
-		return instance;
-	}
-	
 	public TemplateBlock() {
-		super(Material.PLANTS);
-		this.setUnlocalizedName(ID);
-		this.setHardness(0.2f);
-		this.setCreativeTab(NostrumMagica.creativeTab);
-		this.setSoundType(SoundType.PLANT);
-		this.setLightOpacity(0);
+		super(Block.Properties.create(Material.PLANTS)
+				.hardnessAndResistance(.2f)
+				.doesNotBlockMovement()
+				);
 		
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	@Override
-	public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> list) {
-		super.getSubBlocks(tab, list);
-	}
-	
-	@Override
 	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-		return new BlockStateContainer.Builder(this).add(NESTED_STATE).build();
+		builder.add(NESTED_STATE);
 	}
 	
 	@Override

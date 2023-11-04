@@ -1,94 +1,59 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.tiles.ReinforcedChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedDiamondChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedGoldChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedIronChestTileEntity;
 
-import net.minecraft.block.BlockContainer;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ToolType;
 
 public class ReinforcedStorageLogisticsChest extends FeyContainerBlock {
 	
-	private static enum Type {
-		IRON("iron"),
-		GOLD("gold"),
-		DIAMOND("diamond");
-		
-		private final String suffix;
-		
-		private Type(String suffix) {
-			this.suffix = suffix;
-		}
+	public static enum Type {
+		IRON,
+		GOLD,
+		DIAMOND;
 	}
 	
-	private static final String ID_PREFIX = "logistics_reinforced_chest";
-	
-	private static ReinforcedStorageLogisticsChest Iron = null;
-	private static ReinforcedStorageLogisticsChest Gold = null;
-	private static ReinforcedStorageLogisticsChest Diamond = null;
-	
-	public static ReinforcedStorageLogisticsChest Iron() {
-		if (Iron == null)
-			Iron = new ReinforcedStorageLogisticsChest(Type.IRON);
-		
-		return Iron;
-	}
-	
-	public static ReinforcedStorageLogisticsChest Gold() {
-		if (Gold == null)
-			Gold = new ReinforcedStorageLogisticsChest(Type.GOLD);
-		
-		return Gold;
-	}
-	
-	public static ReinforcedStorageLogisticsChest Diamond() {
-		if (Diamond == null)
-			Diamond = new ReinforcedStorageLogisticsChest(Type.DIAMOND);
-		
-		return Diamond;
-	}
+	private static final String ID_PREFIX = "logistics_reinforced_chest_";
+	public static final String ID_IRON = ID_PREFIX + "iron";
+	public static final String ID_GOLD = ID_PREFIX + "gold";
+	public static final String ID_DIAMOND = ID_PREFIX + "diamond";
 	
 	private final Type type;
 	
 	public ReinforcedStorageLogisticsChest(Type type) {
-		super(Material.WOOD, MapColor.WOOD);
+		super(Block.Properties.create(Material.WOOD)
+				.hardnessAndResistance(3.0f, 1.0f)
+				.sound(SoundType.WOOD)
+				.harvestTool(ToolType.AXE)
+				);
 		this.type = type;
-		this.setUnlocalizedName(getID());
-		this.setHardness(3.0f);
-		this.setResistance(1.0f);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setSoundType(SoundType.WOOD);
-		this.setHarvestLevel("axe", 0);
+	}
+	
+	public static ReinforcedStorageLogisticsChest getBlock(Type type) {
+		switch (type) {
+		case IRON:
+			return FairyBlocks.reinforcedIronChest;
+		case GOLD:
+			return FairyBlocks.reinforcedGoldChest;
+		case DIAMOND:
+			return FairyBlocks.reinforcedDiamondChest;
+		}
+		
+		return null;
 	}
 
-	public String getID() {
-		return ID_PREFIX + "_" + type.suffix;
-	}
-	
-	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return true;
-	}
-	
-	@Override
-	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
-		return super.onBlockActivated(worldIn, pos, state, playerIn, hand, side, hitX, hitY, hitZ);
-	}
-	
 	@Override
 	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
 		switch (this.type) {

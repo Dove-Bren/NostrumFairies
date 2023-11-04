@@ -5,54 +5,46 @@ import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.tiles.OutputPanelTileEntity;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.DirectionProperty;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ToolType;
 
 public class OutputLogisticsPanel extends FeyContainerBlock {
 	
 	private static final DirectionProperty FACING = DirectionProperty.create("facing");
-	private static final double BB_MINOR = 1.0 / 16.0;
-	private static final double BB_MAJOR = 2.0 / 16.0;
-	private static final AxisAlignedBB AABB_N = new AxisAlignedBB(BB_MAJOR, BB_MAJOR, 0, 1 - BB_MAJOR, 1 - BB_MAJOR, BB_MINOR);
-	private static final AxisAlignedBB AABB_E = new AxisAlignedBB(1 - BB_MINOR, BB_MAJOR, BB_MAJOR, 1, 1 - BB_MAJOR, 1 - BB_MAJOR);
-	private static final AxisAlignedBB AABB_S = new AxisAlignedBB(BB_MAJOR, BB_MAJOR, 1 - BB_MINOR, 1 - BB_MAJOR, 1 - BB_MAJOR, 1);
-	private static final AxisAlignedBB AABB_W = new AxisAlignedBB(0, BB_MAJOR, BB_MAJOR, BB_MINOR, 1 - BB_MAJOR, 1 - BB_MAJOR);
-	private static final AxisAlignedBB AABB_U = new AxisAlignedBB(BB_MAJOR, 1 - BB_MINOR, BB_MAJOR, 1 - BB_MAJOR, 1, 1 - BB_MAJOR);
-	private static final AxisAlignedBB AABB_D = new AxisAlignedBB(BB_MAJOR, 0, BB_MAJOR, 1 - BB_MAJOR, BB_MINOR, 1 - BB_MAJOR);
+	private static final double BB_MINOR = 1.0;
+	private static final double BB_MAJOR = 2.0;
+	private static final VoxelShape AABB_N = Block.makeCuboidShape(BB_MAJOR, BB_MAJOR, 0, 16 - BB_MAJOR, 16 - BB_MAJOR, BB_MINOR);
+	private static final VoxelShape AABB_E = Block.makeCuboidShape(16 - BB_MINOR, BB_MAJOR, BB_MAJOR, 16, 16 - BB_MAJOR, 16 - BB_MAJOR);
+	private static final VoxelShape AABB_S = Block.makeCuboidShape(BB_MAJOR, BB_MAJOR, 16 - BB_MINOR, 16 - BB_MAJOR, 16 - BB_MAJOR, 16);
+	private static final VoxelShape AABB_W = Block.makeCuboidShape(0, BB_MAJOR, BB_MAJOR, BB_MINOR, 16 - BB_MAJOR, 16 - BB_MAJOR);
+	private static final VoxelShape AABB_U = Block.makeCuboidShape(BB_MAJOR, 16 - BB_MINOR, BB_MAJOR, 16 - BB_MAJOR, 16, 16 - BB_MAJOR);
+	private static final VoxelShape AABB_D = Block.makeCuboidShape(BB_MAJOR, 0, BB_MAJOR, 16 - BB_MAJOR, BB_MINOR, 16 - BB_MAJOR);
 	public static final String ID = "logistics_output_panel";
 	
-	private static OutputLogisticsPanel instance = null;
-	public static OutputLogisticsPanel instance() {
-		if (instance == null)
-			instance = new OutputLogisticsPanel();
-		
-		return instance;
-	}
-	
 	public OutputLogisticsPanel() {
-		super(Material.WOOD, MapColor.WOOD);
-		this.setUnlocalizedName(ID);
-		this.setHardness(3.0f);
-		this.setResistance(1.0f);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setSoundType(SoundType.WOOD);
-		this.setHarvestLevel("axe", 0);
+		super(Block.Properties.create(Material.WOOD)
+				.hardnessAndResistance(3.0f, 1.0f)
+				.sound(SoundType.WOOD)
+				.harvestTool(ToolType.AXE)
+				);
 	}
 	
 	@Override
@@ -64,21 +56,6 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 		return facing.getIndex();
 	}
 	
-	protected static Direction facingFromMeta(int meta) {
-		return Direction.VALUES[meta % Direction.VALUES.length];
-	}
-	
-	@Override
-	public BlockState getStateFromMeta(int meta) {
-		return getDefaultState()
-				.with(FACING, facingFromMeta(meta));
-	}
-	
-	@Override
-	public int getMetaFromState(BlockState state) {
-		return metaFromFacing(state.get(FACING));
-	}
-	
 	public Direction getFacing(BlockState state) {
 		return state.get(FACING);
 	}
@@ -86,7 +63,9 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	@Override
 	public BlockState getStateForPlacement(BlockItemUseContext context) {
 		// Want to point towards the block we clicked
-		facing = facing.getOpposite();
+		final World world = context.getWorld();
+		final BlockPos pos = context.getPos();
+		Direction facing = context.getFace().getOpposite();
 		if (!this.canPlaceAt(world, pos, facing) && facing.getIndex() > 1) {
 			// Rotate and find it
 			for (int i = 0; i < 3; i++) {
@@ -104,21 +83,6 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	@Override
 	public BlockRenderLayer getRenderLayer() {
 		return BlockRenderLayer.CUTOUT;
-	}
-	
-	@Override
-	public boolean isFullBlock(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isFullCube(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isOpaqueCube(BlockState state) {
-		return false;
 	}
 	
 	@Override
@@ -140,31 +104,7 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 		}
 	}
 	
-	@Override
-	public AxisAlignedBB getCollisionBoundingBox(BlockState blockState, IBlockAccess worldIn, BlockPos pos) {
-		switch (blockState.getValue(FACING)) {
-		case NORTH:
-			return AABB_N;
-		case EAST:
-			return AABB_E;
-		case SOUTH:
-			return AABB_S;
-		case WEST:
-			return AABB_W;
-		case UP:
-			return AABB_U;
-		case DOWN:
-		default:
-			return AABB_D;
-		}
-	}
-	
-	@Override
-	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return true;
-    }
-	
-	protected boolean canPlaceAt(World worldIn, BlockPos pos, Direction side) {
+	protected boolean canPlaceAt(IWorldReader worldIn, BlockPos pos, Direction side) {
 		BlockState state = worldIn.getBlockState(pos.offset(side));
 		if (state == null || !(state.getMaterial().blocksMovement())) {
 			return false;
@@ -175,7 +115,7 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	
 	@Override
 	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		for (Direction side : Direction.VALUES) {
+		for (Direction side : Direction.values()) {
 			if (canPlaceAt(worldIn, pos, side)) {
 				return true;
 			}
@@ -186,11 +126,10 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
+	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom, boolean isMoving) {
 		Direction face = state.get(FACING);
 		if (!canPlaceAt(worldIn, pos, face)) {
-			this.dropBlockAsItem(worldIn, pos, state, 0);
-			worldIn.setBlockToAir(pos);
+			worldIn.removeBlock(pos, true);
 		} else {
 			TileEntity ent = worldIn.getTileEntity(pos);
 			if (ent != null && ent instanceof OutputPanelTileEntity) {
@@ -198,12 +137,7 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 			}
 		}
 		
-		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
-	}
-	
-	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return true;
+		super.neighborChanged(state, worldIn, posFrom, blockIn, posFrom, isMoving);
 	}
 	
 	@Override

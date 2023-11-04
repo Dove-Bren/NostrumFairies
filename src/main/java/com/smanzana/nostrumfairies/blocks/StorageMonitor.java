@@ -8,24 +8,26 @@ import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.DirectionProperty;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 
 public class StorageMonitor extends FeyContainerBlock {
@@ -33,29 +35,18 @@ public class StorageMonitor extends FeyContainerBlock {
 	// TODO what about viewing tasks? Condensed tasks that is.
 	private static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
 	private static final double BB_MINOR = 2.0 / 16.0;
-	private static final AxisAlignedBB AABB_N = new AxisAlignedBB(0, 0, 1 - BB_MINOR, 1, 1, 1);
-	private static final AxisAlignedBB AABB_E = new AxisAlignedBB(0, 0, 0, BB_MINOR, 1, 1);
-	private static final AxisAlignedBB AABB_S = new AxisAlignedBB(0, 0, 0, 1, 1, BB_MINOR);
-	private static final AxisAlignedBB AABB_W = new AxisAlignedBB(1 - BB_MINOR, 0, 0, 1, 1, 1);
+	private static final VoxelShape AABB_N = Block.makeCuboidShape(0, 0, 1 - BB_MINOR, 1, 1, 1);
+	private static final VoxelShape AABB_E = Block.makeCuboidShape(0, 0, 0, BB_MINOR, 1, 1);
+	private static final VoxelShape AABB_S = Block.makeCuboidShape(0, 0, 0, 1, 1, BB_MINOR);
+	private static final VoxelShape AABB_W = Block.makeCuboidShape(1 - BB_MINOR, 0, 0, 1, 1, 1);
 	public static final String ID = "logistics_storage_monitor";
 	
-	private static StorageMonitor instance = null;
-	public static StorageMonitor instance() {
-		if (instance == null)
-			instance = new StorageMonitor();
-		
-		return instance;
-	}
-	
 	public StorageMonitor() {
-		super(Material.WOOD, MapColor.WOOD);
-		this.setUnlocalizedName(ID);
-		this.setHardness(2.0f);
-		this.setResistance(1.0f);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setSoundType(SoundType.WOOD);
-		this.setHarvestLevel("axe", 0);
-		this.setLightOpacity(0);
+		super(Block.Properties.create(Material.WOOD)
+				.hardnessAndResistance(2.0f, 1.0f)
+				.sound(SoundType.WOOD)
+				.lightValue(4)
+				);
 	}
 	
 	@Override
@@ -63,32 +54,24 @@ public class StorageMonitor extends FeyContainerBlock {
 		builder.add(FACING);
 	}
 	
-	protected static int metaFromFacing(Direction facing) {
-		return facing.getHorizontalIndex();
-	}
-	
-	protected static Direction facingFromMeta(int meta) {
-		return Direction.getHorizontal(meta);
-	}
-	
-	@Override
-	public BlockState getStateFromMeta(int meta) {
-		return getDefaultState()
-				.with(FACING, facingFromMeta(meta));
-	}
-	
-	@Override
-	public int getMetaFromState(BlockState state) {
-		return metaFromFacing(state.get(FACING));
-	}
-	
 	public Direction getFacing(BlockState state) {
 		return state.get(FACING);
+	}
+	
+	protected boolean canPlaceAt(IWorldReader worldIn, BlockPos pos, Direction side) {
+		if (!Block.hasSolidSide(worldIn.getBlockState(pos.down()), worldIn, pos.down(), Direction.UP)) {
+			return false;
+		}
+		
+		return true;
 	}
 	
 	@Override
 	public BlockState getStateForPlacement(BlockItemUseContext context) {
 		Direction side = context.getPlacementHorizontalFacing().getOpposite();
+		final World world = context.getWorld();
+		final BlockPos pos = context.getPos();
+		
 		if (!this.canPlaceAt(world, pos, side)) {
 			// Rotate and find it
 			for (int i = 0; i < 3; i++) {
@@ -106,21 +89,6 @@ public class StorageMonitor extends FeyContainerBlock {
 	@Override
 	public BlockRenderLayer getRenderLayer() {
 		return BlockRenderLayer.CUTOUT;
-	}
-	
-	@Override
-	public boolean isFullBlock(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isFullCube(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isOpaqueCube(BlockState state) {
-		return false;
 	}
 	
 	@Override
@@ -142,63 +110,16 @@ public class StorageMonitor extends FeyContainerBlock {
 	}
 	
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(BlockState blockState, IBlockAccess worldIn, BlockPos pos) {
-		switch (blockState.getValue(FACING)) {
-		case NORTH:
-		case UP:
-		case DOWN:
-		default:
-			return AABB_N;
-		case EAST:
-			return AABB_E;
-		case SOUTH:
-			return AABB_S;
-		case WEST:
-			return AABB_W;
-		
-		}
-	}
-	
-	@Override
-	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return true;
-    }
-	
-	protected boolean canPlaceAt(World worldIn, BlockPos pos, Direction side) {
-		BlockState state = worldIn.getBlockState(pos.offset(side.getOpposite()));
-		if (state == null || !(state.isSideSolid(worldIn, pos.offset(side.getOpposite()), side.getOpposite()))) {
-			return false;
-		}
-		
-		return true;
-	}
-	
-	@Override
 	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		for (Direction side : Direction.HORIZONTALS) {
-			if (canPlaceAt(worldIn, pos, side)) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	@SuppressWarnings("deprecation")
-	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
-		Direction face = state.get(FACING);
-		if (!canPlaceAt(worldIn, pos, face)) {
-			this.dropBlockAsItem(worldIn, pos, state, 0);
-			worldIn.setBlockToAir(pos);
-		}
-		
-		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
+		return this.canPlaceAt(worldIn, pos, getFacing(stateIn));
 	}
 	
 	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return true;
+	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
+		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
+			return null;
+		}
+		return stateIn;
 	}
 	
 	@Override
@@ -211,9 +132,9 @@ public class StorageMonitor extends FeyContainerBlock {
 				StorageMonitorTileEntity storage = (StorageMonitorTileEntity) te;
 				LogisticsNetwork network = storage.getNetwork();
 				if (network != null) {
-					NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest(network.getUUID()));
+					NetworkHandler.sendToServer(new LogisticsUpdateRequest(network.getUUID()));
 				} else {
-					NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest());
+					NetworkHandler.sendToServer(new LogisticsUpdateRequest(null));
 				}
 			}
 		}

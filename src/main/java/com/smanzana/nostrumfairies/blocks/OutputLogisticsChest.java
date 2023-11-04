@@ -5,46 +5,30 @@ import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
 import com.smanzana.nostrumfairies.tiles.OutputChestTileEntity;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderType;
-import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ToolType;
 
 public class OutputLogisticsChest extends FeyContainerBlock {
 	
 	public static final String ID = "logistics_output_chest";
 	
-	private static OutputLogisticsChest instance = null;
-	public static OutputLogisticsChest instance() {
-		if (instance == null)
-			instance = new OutputLogisticsChest();
-		
-		return instance;
-	}
-	
 	public OutputLogisticsChest() {
-		super(Material.WOOD, MapColor.WOOD);
-		this.setUnlocalizedName(ID);
-		this.setHardness(3.0f);
-		this.setResistance(1.0f);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setSoundType(SoundType.WOOD);
-		this.setHarvestLevel("axe", 0);
-	}
-	
-	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return true;
+		super(Block.Properties.create(Material.WOOD)
+				.hardnessAndResistance(3.0f, 1.0f)
+				.sound(SoundType.WOOD)
+				.harvestTool(ToolType.AXE)
+				);
 	}
 	
 	@Override
@@ -95,12 +79,12 @@ public class OutputLogisticsChest extends FeyContainerBlock {
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
+	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving) {
 		TileEntity ent = worldIn.getTileEntity(pos);
 		if (ent != null && ent instanceof OutputChestTileEntity) {
 			((OutputChestTileEntity) ent).notifyNeighborChanged();
 		}
 		
-		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
+		super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
 	}
 }

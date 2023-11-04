@@ -8,47 +8,40 @@ import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.tiles.LogisticsSensorTileEntity;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyBool;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.state.BooleanProperty;
+import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.BlockRenderType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ToolType;
 
 public class LogisticsSensorBlock extends FeyContainerBlock
 {
-	private static final PropertyBool ACTIVE = PropertyBool.create("active");
+	private static final BooleanProperty ACTIVE = BooleanProperty.create("active");
 	public static final String ID = "logistics_sensor";
 	
-	private static LogisticsSensorBlock instance = null;
-	public static LogisticsSensorBlock instance() {
-		if (instance == null)
-			instance = new LogisticsSensorBlock();
-		
-		return instance;
-	}
-	
 	public LogisticsSensorBlock() {
-		super(Material.WOOD, MapColor.WOOD);
-		this.setUnlocalizedName(ID);
-		this.setHardness(2.0f);
-		this.setResistance(1.0f);
-		this.setCreativeTab(NostrumFairies.creativeTab);
-		this.setSoundType(SoundType.WOOD);
-		this.setHarvestLevel("axe", 0);
-		this.setLightOpacity(2);
+		super(Block.Properties.create(Material.WOOD)
+				.hardnessAndResistance(2.0f, 1.0f)
+				.sound(SoundType.WOOD)
+				.harvestTool(ToolType.AXE)
+				);
 	}
 	
 	@Override
@@ -56,31 +49,12 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 		builder.add(ACTIVE);
 	}
 	
-	protected static int metaFromActive(boolean active) {
-		return active ? 1 : 0;
-	}
-	
-	protected static boolean activeFromMeta(int meta) {
-		return meta == 0 ? false : true;
-	}
-	
-	@Override
-	public BlockState getStateFromMeta(int meta) {
-		return getDefaultState()
-				.with(ACTIVE, activeFromMeta(meta));
-	}
-	
-	@Override
-	public int getMetaFromState(BlockState state) {
-		return metaFromActive(state.get(ACTIVE));
-	}
-	
 	public boolean getActive(BlockState state) {
 		return state.get(ACTIVE);
 	}
 	
-	public static BlockState getStateWithActive(boolean active) {
-		return instance().getDefaultState().with(ACTIVE, active);
+	public BlockState getStateWithActive(boolean active) {
+		return getDefaultState().with(ACTIVE, active);
 	}
 	
 	@Override
@@ -95,39 +69,13 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 	}
 	
 	@Override
-	public boolean isFullBlock(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isFullCube(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isOpaqueCube(BlockState state) {
-		return false;
-	}
-	
-	@Override
 	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		return Block.FULL_BLOCK_AABB;
+		return VoxelShapes.fullCube();
 	}
-	
-	@Override
-	public AxisAlignedBB getCollisionBoundingBox(BlockState blockState, IBlockAccess worldIn, BlockPos pos) {
-		return Block.FULL_BLOCK_AABB;
-	}
-	
-	@Override
-	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return false;
-    }
 	
 	@Override
 	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		BlockState state = worldIn.getBlockState(pos.down());
-		if (state == null || !(state.isSideSolid(worldIn, pos.down(), Direction.UP))) {
+		if (!Block.hasSolidSide(worldIn.getBlockState(pos.down()), worldIn, pos.down(), Direction.UP)) {
 			return false;
 		}
 		
@@ -135,20 +83,12 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 		return true;
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
-		if (!canPlaceBlockAt(worldIn, pos)) {
-			this.dropBlockAsItem(worldIn, pos, state, 0);
-			worldIn.setBlockToAir(pos);
+	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
+		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
+			return null;
 		}
-		
-		super.neighborChanged(state, worldIn, pos, blockIn, posFrom);
-	}
-	
-	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return true;
+		return stateIn;
 	}
 	
 	@Override
@@ -202,13 +142,13 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 		
 		if (activated) {
 			for (Direction side : Direction.values()) {
-				world.notifyNeighborsOfStateChange(pos.offset(side), this, false);
+				world.notifyNeighborsOfStateChange(pos.offset(side), this);
 			}
 		}
 	}
 	
 	@Override
-	public boolean canConnectRedstone(BlockState state, IBlockAccess world, BlockPos pos, Direction side) {
+	public boolean canConnectRedstone(BlockState state, IBlockReader world, BlockPos pos, Direction side) {
 		return true;
 	}
 	
@@ -218,8 +158,8 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 	}
 	
 	@Override
-	public int getWeakPower(BlockState blockState, IBlockAccess blockAccess, BlockPos pos, Direction side) {
-		if (blockState.getValue(ACTIVE)) {
+	public int getWeakPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side) {
+		if (blockState.get(ACTIVE)) {
 			return 15;
 		}
 		

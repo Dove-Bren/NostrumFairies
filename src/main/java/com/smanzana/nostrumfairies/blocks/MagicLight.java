@@ -3,102 +3,58 @@ package com.smanzana.nostrumfairies.blocks;
 import java.util.Random;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.material.MapColor;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyInteger;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.util.BlockRenderType;
+import net.minecraft.state.IntegerProperty;
+import net.minecraft.state.StateContainer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class MagicLight extends Block {
 	
-	private static enum Brightness {
-		BRIGHT,
-		MEDIUM,
-		DIM,
-		UNLIT
+	public static enum Brightness {
+		BRIGHT(14),
+		MEDIUM(12),
+		DIM(8),
+		UNLIT(0);
+		
+		public final int lightLevel;
+		
+		private Brightness(int lightLevel) {
+			this.lightLevel = lightLevel;
+		}
 	}
 	
-	protected static AxisAlignedBB LANTERN_AABB = new AxisAlignedBB(0.375D, 0.5D, 0.375D, 0.625D, 1D, 0.625D);
+	protected static VoxelShape LANTERN_AABB = Block.makeCuboidShape(16 * 0.375D, 8, 16 * 0.375D, 16 * 0.625D, 16, 16 * 0.625D);
 	
-	public static final PropertyInteger Age = PropertyInteger.create("age", 0, 4);
+	public static final IntegerProperty Age = IntegerProperty.create("age", 0, 4);
 	
-	public static final String BrightID = "magic_light_bright";
-	public static final String MediumID = "magic_light_medium";
-	public static final String DimID = "magic_light_dim";
-	public static final String UnlitID = "magic_light_unlit";
-	
-	private static MagicLight bright = null;
-	private static MagicLight medium = null;
-	private static MagicLight dim = null;
-	private static MagicLight unlit = null;
+	public static final String ID_BRIGHT = "magic_light_bright";
+	public static final String ID_MEDIUM = "magic_light_medium";
+	public static final String ID_DIM = "magic_light_dim";
+	public static final String ID_UNLIT = "magic_light_unlit";
 	
 	private final Brightness brightness;
 	
-	public static MagicLight Bright() {
-		if (bright == null)
-			bright = new MagicLight(Brightness.BRIGHT);
-		
-		return bright;
-	}
-	
-	public static MagicLight Medium() {
-		if (medium == null)
-			medium = new MagicLight(Brightness.MEDIUM);
-		
-		return medium;
-	}
-	
-	public static MagicLight Dim() {
-		if (dim == null)
-			dim = new MagicLight(Brightness.DIM);
-		
-		return dim;
-	}
-	
-	public static MagicLight Unlit() {
-		if (unlit == null)
-			unlit = new MagicLight(Brightness.UNLIT);
-		
-		return unlit;
-	}
-	
-	private MagicLight(Brightness brightness) {
-		super(Material.CIRCUITS, MapColor.BLUE);
-		this.setHardness(0.0f);
-		this.setResistance(100.0f);
-		this.setLightOpacity(0);
-		this.setTickRandomly(true);
+	public MagicLight(Brightness brightness) {
+		super(Block.Properties.create(Material.IRON)
+				.hardnessAndResistance(0f, 100f)
+				.tickRandomly()
+				.lightValue(brightness.lightLevel)
+				.noDrops()
+				);
 		this.brightness = brightness;
-		
-		switch (brightness) {
-		case BRIGHT:
-			this.setUnlocalizedName(BrightID);
-			this.setLightLevel(0.875f);
-			break;
-		case MEDIUM:
-			this.setUnlocalizedName(MediumID);
-			this.setLightLevel(0.75f);
-			break;
-		case DIM:
-			this.setUnlocalizedName(DimID);
-			this.setLightLevel(0.5f);
-			break;
-		case UNLIT:
-			this.setUnlocalizedName(UnlitID);
-			this.setLightLevel(0f);
-			break;
-		}
 	}
 	
 	@Override
@@ -107,29 +63,22 @@ public class MagicLight extends Block {
 	}
 	
 	@Override
-	public BlockState getStateFromMeta(int meta) {
-		return getDefaultState().with(Age, Math.min(4, Math.max(0, meta)));
-	}
-	
-	@Override
-	public Item getItemDropped(BlockState state, Random rand, int fortune) {
-        return null;
-    }
-	
-	@Override
 	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		return worldIn.getBlockState(pos.up()).isSideSolid(worldIn, pos.up(), Direction.DOWN)
-				&& worldIn.getBlockState(pos.up()).getMaterial() == Material.ROCK;
+		if (!Block.hasSolidSide(worldIn.getBlockState(pos.down()), worldIn, pos.down(), Direction.UP)
+				|| worldIn.getBlockState(pos.up()).getMaterial() != Material.ROCK) {
+			return false;
+		}
+		
+		//return super.canPlaceBlockAt(worldIn, pos);
+		return true;
 	}
 	
 	@Override
-	public int getMetaFromState(BlockState state) {
-		return state.get(Age);
-	}
-	
-	@Override
-	public boolean isSideSolid(BlockState state, IBlockAccess worldIn, BlockPos pos, Direction side) {
-		return false;
+	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
+		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
+			return null;
+		}
+		return stateIn;
 	}
 	
 	@Override
@@ -143,18 +92,8 @@ public class MagicLight extends Block {
 	}
 	
 	@Override
-	public boolean isFullBlock(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isOpaqueCube(BlockState state) {
-		return false;
-	}
-	
-	@Override
-	public AxisAlignedBB getCollisionBoundingBox(BlockState blockState, IBlockAccess worldIn, BlockPos pos) {
-		return NULL_AABB;
+	public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+		return VoxelShapes.empty();
 	}
 	
 	@Override
@@ -164,16 +103,10 @@ public class MagicLight extends Block {
 	}
 	
 	@Override
-	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
-        return true;
-    }
-	
-	@Override
-	public void randomTick(World worldIn, BlockPos pos, BlockState state, Random random) {
-		super.randomTick(worldIn, pos, state, random);
+	public void randomTick(BlockState state, World worldIn, BlockPos pos, Random random) {
 		
-		if (!canPlaceBlockAt(worldIn, pos)) {
-			worldIn.setBlockToAir(pos);
+		if (!isValidPosition(state, worldIn, pos)) {
+			worldIn.removeBlock(pos, false);
 			return;
 		}
 		
@@ -186,13 +119,13 @@ public class MagicLight extends Block {
 		if (age > 4) {
 			switch (this.brightness) {
 			case BRIGHT:
-				worldIn.setBlockState(pos, MagicLight.Medium().getDefaultState());
+				worldIn.setBlockState(pos, FairyBlocks.magicLightMedium.getDefaultState());
 				break;
 			case MEDIUM:
-				worldIn.setBlockState(pos, MagicLight.Dim().getDefaultState());
+				worldIn.setBlockState(pos, FairyBlocks.magicLightDim.getDefaultState());
 				break;
 			case DIM:
-				worldIn.setBlockState(pos, MagicLight.Unlit().getDefaultState());
+				worldIn.setBlockState(pos, FairyBlocks.magicLightUnlit.getDefaultState());
 				break;
 			case UNLIT:
 				break;
@@ -203,45 +136,7 @@ public class MagicLight extends Block {
 		}
 	}
 	
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public void randomDisplayTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
-		super.randomDisplayTick(stateIn, worldIn, pos, rand);
-		
-//		switch (brightness) {
-//		case BRIGHT:
-//			; // always
-//			break;
-//		case MEDIUM:
-//			// 75% effects
-//			if (rand.nextFloat() < .25f) {
-//				return;
-//			}
-//			break;
-//		case DIM:
-//			// 50%
-//			if (rand.nextFloat() < .5f) {
-//				return;
-//			}
-//			break;
-//		}
-//		
-//		double x = (double)pos.getX() + 0.25D + (rand.nextFloat() * .5f);
-//		double y = (double)pos.getY() + 0.6D + (rand.nextFloat() * .2f);
-//		double z = (double)pos.getZ() + 0.25D + (rand.nextFloat() * .5f);
-//
-//		worldIn.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, y, z, 0.0D, 0.0D, 0.0D, new int[0]);
-//		worldIn.spawnParticle(EnumParticleTypes.FLAME, x, y, z, 0.0D, 0.0D, 0.0D, new int[0]);
-	}
-	
 	public void refresh(World worldIn, BlockPos pos) {
-		worldIn.setBlockState(pos, Bright().getDefaultState());
-	}
-	
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom) {
-		if (!canPlaceBlockAt(worldIn, pos)) {
-			this.dropBlockAsItem(worldIn, pos, state, 0);
-			worldIn.setBlockToAir(pos);
-		}
+		worldIn.setBlockState(pos, FairyBlocks.magicLightBright.getDefaultState());
 	}
 }
