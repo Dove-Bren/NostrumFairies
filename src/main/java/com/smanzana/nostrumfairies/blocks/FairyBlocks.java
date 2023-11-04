@@ -42,6 +42,7 @@ public class FairyBlocks {
 	@ObjectHolder(MagicLight.ID_UNLIT) public static MagicLight magicLightUnlit;
 	@ObjectHolder(MiningBlock.ID) public static MiningBlock miningBlock;
 	@ObjectHolder(OutputLogisticsChest.ID) public static OutputLogisticsChest outputChest;
+	@ObjectHolder(OutputLogisticsPanel.ID) public static OutputLogisticsPanel outputPanel;
 	@ObjectHolder(ReinforcedStorageLogisticsChest.ID_IRON) public static ReinforcedStorageLogisticsChest reinforcedIronChest;
 	@ObjectHolder(ReinforcedStorageLogisticsChest.ID_GOLD) public static ReinforcedStorageLogisticsChest reinforcedGoldChest;
 	@ObjectHolder(ReinforcedStorageLogisticsChest.ID_DIAMOND) public static ReinforcedStorageLogisticsChest reinforcedDiamondChest;
@@ -86,6 +87,7 @@ public class FairyBlocks {
 		registerBlockItem(magicLightUnlit, magicLightUnlit.getRegistryName(), registry);
 		registerBlockItem(miningBlock, miningBlock.getRegistryName(), registry);
 		registerBlockItem(outputChest, outputChest.getRegistryName(), registry);
+		registerBlockItem(outputPanel, outputPanel.getRegistryName(), registry);
 		registerBlockItem(reinforcedIronChest, reinforcedIronChest.getRegistryName(), registry);
 		registerBlockItem(reinforcedGoldChest, reinforcedGoldChest.getRegistryName(), registry);
 		registerBlockItem(reinforcedDiamondChest, reinforcedDiamondChest.getRegistryName(), registry);
@@ -129,6 +131,7 @@ public class FairyBlocks {
 		registerBlock(new MagicLight(Brightness.UNLIT), MagicLight.ID_UNLIT, registry);
 		registerBlock(new MiningBlock(), MiningBlock.ID, registry);
 		registerBlock(new OutputLogisticsChest(), OutputLogisticsChest.ID, registry);
+		registerBlock(new OutputLogisticsPanel(), OutputLogisticsPanel.ID, registry);
 		registerBlock(new ReinforcedStorageLogisticsChest(ReinforcedStorageLogisticsChest.Type.IRON), ReinforcedStorageLogisticsChest.ID_IRON, registry);
 		registerBlock(new ReinforcedStorageLogisticsChest(ReinforcedStorageLogisticsChest.Type.GOLD), ReinforcedStorageLogisticsChest.ID_GOLD, registry);
 		registerBlock(new ReinforcedStorageLogisticsChest(ReinforcedStorageLogisticsChest.Type.DIAMOND), ReinforcedStorageLogisticsChest.ID_DIAMOND, registry);

@@ -6,13 +6,10 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrummagica.tiles.MimicBlockTileEntity;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
-import net.minecraft.network.NetworkManager;
-import net.minecraftforge.common.util.Constants.NBT;
 
 public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	
