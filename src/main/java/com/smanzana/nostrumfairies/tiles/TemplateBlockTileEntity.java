@@ -1,18 +1,22 @@
 package com.smanzana.nostrumfairies.tiles;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
+import com.smanzana.nostrummagica.tiles.MimicBlockTileEntity;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public class TemplateBlockTileEntity extends TileEntity {
+public class TemplateBlockTileEntity extends MimicBlockTileEntity {
+	
+	private static final String NBT_STATE = "state";
 	
 	private BlockState state;
 	
@@ -21,16 +25,19 @@ public class TemplateBlockTileEntity extends TileEntity {
 	}
 	
 	public TemplateBlockTileEntity(BlockState state) {
-		this.state = state;
+		super(FairyTileEntities.TemplateBlockTileEntityType);
+		setBlockState(state);
 	}
 	
-	@Override
-	public boolean hasFastRenderer() {
-		return true;
-	}
+//	@Override
+//	public boolean hasFastRenderer() {
+//		return true;
+//	}
 	
 	public void setBlockState(BlockState state) {
 		this.state = state;
+		this.setDataBlock(state);
+		this.updateBlock(); // Refresh model
 		this.markDirty();
 	}
 	
@@ -39,42 +46,32 @@ public class TemplateBlockTileEntity extends TileEntity {
 	}
 	
 	@Override
-	public SPacketUpdateTileEntity getUpdatePacket() {
-		return new SPacketUpdateTileEntity(this.pos, 3, this.getUpdateTag());
-	}
-
-	@Override
-	public CompoundNBT getUpdateTag() {
-		return this.writeToNBT(new CompoundNBT());
+	protected @Nonnull BlockState refreshState() {
+		// Don't detect any world blocks and just send ours
+		return getTemplateState() == null ? Blocks.STONE.getDefaultState() : getTemplateState();
 	}
 	
 	@Override
-	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
-		super.onDataPacket(net, pkt);
-		handleUpdateTag(pkt.getNbtCompound());
-	}
-	
-	private static final String NBT_STATE = "state";
-	
-	public CompoundNBT writeToNBT(CompoundNBT compound) {
-		super.writeToNBT(compound);
+	public CompoundNBT write(CompoundNBT compound) {
+		super.write(compound);
 		
 		if (state != null) {
-			compound.putInt(NBT_STATE, Block.getStateId(state));
+			compound.put(NBT_STATE, NBTUtil.writeBlockState(state));
 		}
 		
 		return compound;
 	}
-	
-	public void readFromNBT(CompoundNBT compound) {
-		super.readFromNBT(compound);
+
+	@Override
+	public void read(CompoundNBT compound) {
+		super.read(compound);
 		
 		if (this.state != null) {
 			this.setBlockState(null);
 		}
 		
-		if (compound.hasKey(NBT_STATE, NBT.TAG_INT)) {
-			this.state = Block.getStateById(compound.getInt(NBT_STATE));
+		if (compound.contains(NBT_STATE)) {
+			this.state = NBTUtil.readBlockState(compound.getCompound(NBT_STATE));
 			if (this.world != null && this.world.isRemote) {
 				StaticTESRRenderer.instance.update(world, pos, this);
 			}
@@ -88,11 +85,11 @@ public class TemplateBlockTileEntity extends TileEntity {
 		}
 	}
 	
-	@Override
-	public void invalidate() {
-		super.invalidate();
-		if (world != null && world.isRemote) {
-			StaticTESRRenderer.instance.update(world, pos, null);
-		}
-	}
+//	@Override
+//	public void invalidate() {
+//		super.invalidate();
+//		if (world != null && world.isRemote) {
+//			StaticTESRRenderer.instance.update(world, pos, null);
+//		}
+//	}
 }
