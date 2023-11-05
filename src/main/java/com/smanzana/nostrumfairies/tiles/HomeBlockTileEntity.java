@@ -13,18 +13,18 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumaetheria.api.aether.IAetherFlowHandler.AetherFlowConnection;
 import com.smanzana.nostrumaetheria.api.aether.IAetherHandler;
 import com.smanzana.nostrumaetheria.api.aether.IAetherHandlerProvider;
 import com.smanzana.nostrumaetheria.api.blocks.IAetherCapableBlock;
 import com.smanzana.nostrumaetheria.api.component.IAetherComponentListener;
-import com.smanzana.nostrumaetheria.component.AetherHandlerComponent;
+import com.smanzana.nostrumaetheria.api.component.IAetherHandlerComponent;
+import com.smanzana.nostrumaetheria.api.proxy.APIProxy;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfCrafter;
@@ -40,37 +40,37 @@ import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.inventory.IFeySlotted;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
-import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
+import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.renderer.texture.ITickable;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.ServerWorld;
+import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickable, IAetherHandlerProvider, IAetherComponentListener {
 	
-	public static class HomeBlockSlotInventory extends InventoryBasic {
+	public static class HomeBlockSlotInventory extends Inventory {
 
 		private final HomeBlockTileEntity owner;
 		private final FeyStoneMaterial[] allowedSpecs;
 		
-		public HomeBlockSlotInventory(HomeBlockTileEntity owner, FeyStoneMaterial[] allowedSpecMaterials, String title, boolean customName) {
-			super(title, customName, MAX_TOTAL_SLOTS * 2);
+		public HomeBlockSlotInventory(HomeBlockTileEntity owner, FeyStoneMaterial[] allowedSpecMaterials) {
+			super(MAX_TOTAL_SLOTS * 2);
 			this.owner = owner;
 			this.allowedSpecs = allowedSpecMaterials;
 		}
@@ -111,7 +111,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 				}
 				
 				// Make sure any entity inside matches, too
-				if (FeySoulStone.hasStoredFey(stack)) {
+				if (FeySoulStone.HasStoredFey(stack)) {
 					return FeySoulStone.getStoredFeyType(stack) == owner.type;
 				}
 				
@@ -191,37 +191,31 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			return true;
 		}
 		
-		private static final String NBT_NAME = "name";
-		private static final String NBT_CUSTOM = "custom";
 		private static final String NBT_ITEMS = "items";
 		
 		public CompoundNBT toNBT() {
 			CompoundNBT nbt = new CompoundNBT();
 			
-			nbt.setString(NBT_NAME, this.getName());
-			nbt.setBoolean(NBT_CUSTOM, this.hasCustomName());
 			nbt.put(NBT_ITEMS, Inventories.serializeInventory(this));
 			
 			return nbt;
 		}
 		
 		public static HomeBlockTileEntity.HomeBlockSlotInventory fromNBT(HomeBlockTileEntity owner, CompoundNBT nbt) {
-			String name = nbt.getString(NBT_NAME);
-			boolean custom = nbt.getBoolean(NBT_CUSTOM);
 			
-			HomeBlockTileEntity.HomeBlockSlotInventory inv = new HomeBlockSlotInventory(owner, FeyHomeBlock.GetSpecMaterials(owner.type), name, custom);
-			Inventories.deserializeInventory(inv, nbt.getTag(NBT_ITEMS));
+			HomeBlockTileEntity.HomeBlockSlotInventory inv = new HomeBlockSlotInventory(owner, FeyHomeBlock.GetSpecMaterials(owner.type));
+			Inventories.deserializeInventory(inv, nbt.get(NBT_ITEMS));
 			
 			return inv;
 		}
 	}
 	
-	public static class HomeBlockUpgradeInventory extends InventoryBasic {
+	public static class HomeBlockUpgradeInventory extends Inventory {
 		
 		private final HomeBlockTileEntity owner;
 		
-		public HomeBlockUpgradeInventory(HomeBlockTileEntity owner, String title, boolean customName) {
-			super(title, customName, MAX_UPGRADES);
+		public HomeBlockUpgradeInventory(HomeBlockTileEntity owner) {
+			super(MAX_UPGRADES);
 			this.owner = owner;
 		}
 		
@@ -246,26 +240,19 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			owner.dirtyAndUpdate();
 		}
 		
-		private static final String NBT_NAME = "name";
-		private static final String NBT_CUSTOM = "custom";
 		private static final String NBT_ITEMS = "items";
 		
 		public CompoundNBT toNBT() {
 			CompoundNBT nbt = new CompoundNBT();
 			
-			nbt.setString(NBT_NAME, this.getName());
-			nbt.setBoolean(NBT_CUSTOM, this.hasCustomName());
 			nbt.put(NBT_ITEMS, Inventories.serializeInventory(this));
 			
 			return nbt;
 		}
 		
 		public static HomeBlockTileEntity.HomeBlockUpgradeInventory fromNBT(HomeBlockTileEntity owner, CompoundNBT nbt) {
-			String name = nbt.getString(NBT_NAME);
-			boolean custom = nbt.getBoolean(NBT_CUSTOM);
-			
-			HomeBlockTileEntity.HomeBlockUpgradeInventory inv = new HomeBlockUpgradeInventory(owner, name, custom);
-			Inventories.deserializeInventory(inv, nbt.getTag(NBT_ITEMS));
+			HomeBlockTileEntity.HomeBlockUpgradeInventory inv = new HomeBlockUpgradeInventory(owner);
+			Inventories.deserializeInventory(inv, nbt.get(NBT_ITEMS));
 			
 			return inv;
 		}
@@ -302,7 +289,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	protected HomeBlockTileEntity.HomeBlockSlotInventory slotInv;
 	protected HomeBlockTileEntity.HomeBlockUpgradeInventory upgradeInv;
 	private int ticksExisted;
-	protected AetherHandlerComponent handler;
+	protected IAetherHandlerComponent handler;
 	
 	private boolean aetherDirtyFlag;
 	private List<BlockPos> boostBlockSpots; // TODO make sparkles every once in a while?
@@ -310,19 +297,19 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	public HomeBlockTileEntity(ResidentType type) {
 		this();
 		this.type = type;
-		this.slotInv = new HomeBlockSlotInventory(this, FeyHomeBlock.GetSpecMaterials(type), "", false);
+		this.slotInv = new HomeBlockSlotInventory(this, FeyHomeBlock.GetSpecMaterials(type));
 	}
 	
 	public HomeBlockTileEntity() {
-		super();
+		super(FairyTileEntities.HomeBlockTileEntityType);
 		//this.feyList = new HashSet<>();
 		this.slots = DEFAULT_SLOTS;
-		this.slotInv = new HomeBlockSlotInventory(this, FeyHomeBlock.GetSpecMaterials(ResidentType.FAIRY), "", false);
-		this.upgradeInv = new HomeBlockUpgradeInventory(this, "", false);
+		this.slotInv = new HomeBlockSlotInventory(this, FeyHomeBlock.GetSpecMaterials(ResidentType.FAIRY));
+		this.upgradeInv = new HomeBlockUpgradeInventory(this);
 		this.name = generateRandomName();
 		feySlots = new UUID[MAX_TOTAL_SLOTS];
 		feyCacheMap = new HashMap<>();
-		handler = new AetherHandlerComponent(this, 0, 500);
+		handler = APIProxy.createHandlerComponent(this, 0, 500);
 		handler.configureInOut(true, false);
 		boostBlockSpots = new ArrayList<>();
 	}
@@ -337,7 +324,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		return 30;
 	}
 	
-	public ResidentType getType() {
+	public ResidentType getResidentType() {
 		return type;
 	}
 
@@ -379,7 +366,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	protected EntityFeyBase refreshFey(int idx, EntityFeyBase fey) {
 		// Check specialization
 		@Nonnull ItemStack specialization = this.slotInv.getSpecialization(idx);
-		FeyStoneMaterial specMat = FeyStone.instance().getStoneMaterial(specialization);
+		FeyStoneMaterial specMat = specialization.isEmpty() ? null : (((IFeySlotted) specialization.getItem()).getStoneMaterial(specialization));
 		if (fey.getCurrentSpecialization() != specMat) {
 			fey = fey.switchToSpecialization(specMat);
 		}
@@ -392,16 +379,18 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			entry.getValue().cache = null;
 		}
 		
-		List<Entity> ents = Lists.newArrayList(world.loadedEntityList);
+		if (world.isRemote) {
+			return;
+		}
 		
-		for (Entity ent : ents) {
+		((ServerWorld) world).getEntities().forEach((ent) -> {
 			if (ent instanceof EntityFeyBase && feyCacheMap.containsKey(ent.getUniqueID())) {
 				HomeBlockTileEntity.FeyAwayRecord record = feyCacheMap.get(ent.getUniqueID());
 				int idx = findFeySlot(ent.getUniqueID());
 				record.cache = refreshFey(idx, (EntityFeyBase) ent);
 				record.tickLastSeen = ticksExisted;
 			}
-		}
+		});
 	}
 	
 	protected void purgeFeyList() {
@@ -566,7 +555,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		int count = 0;
 		for (int i = 0; i < upgradeInv.getSizeInventory(); i++) {
 			ItemStack stack = upgradeInv.getStackInSlot(i);
-			if (!stack.isEmpty() && FeyStone.instance().getFeySlot(stack) == slot && FeyStone.instance().getStoneMaterial(stack) == material) {
+			if (!stack.isEmpty() && ((FeyStone) stack.getItem()).getFeySlot(stack) == slot && ((FeyStone) stack.getItem()).getStoneMaterial(stack) == material) {
 				count++;
 			}
 		}
@@ -587,7 +576,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		// Take aether for all fey that are currently working or re-couping
 		int count = 0;
 		for (EntityFeyBase fey : this.getAvailableFeyEntities()) {
-			if (fey != null && !fey.isDead && (fey.getCurrentTask() != null || fey.getHappiness() < 100f)) {
+			if (fey != null && fey.isAlive() && (fey.getCurrentTask() != null || fey.getHappiness() < 100f)) {
 				count++;
 			}
 		}
@@ -719,12 +708,12 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	
 	@Override
 	public CompoundNBT write(CompoundNBT nbt) {
-		nbt = super.writeToNBT(nbt);
+		nbt = super.write(nbt);
 		
-		nbt.setString(NBT_TYPE, type.name());
-		nbt.setString(NBT_NAME, getName());
+		nbt.putString(NBT_TYPE, type.name());
+		nbt.putString(NBT_NAME, getName());
 		nbt.putInt(NBT_SLOT_COUNT, slots);
-		nbt.setFloat(NBT_SLOT_GROWTH, growth);
+		nbt.putFloat(NBT_SLOT_GROWTH, growth);
 		
 		ListNBT list = new ListNBT();
 		for (int i = 0; i < getEffectiveSlots(); i++) {
@@ -732,8 +721,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			CompoundNBT tag = new CompoundNBT();
 			if (id != null) {
 				HomeBlockTileEntity.FeyAwayRecord record = this.feyCacheMap.get(id);
-				tag.setString(NBT_FEY_NAME, record.name);
-				tag.setString(NBT_FEY_UUID, id.toString());
+				tag.putString(NBT_FEY_NAME, record.name);
+				tag.putString(NBT_FEY_UUID, id.toString());
 			}
 			list.add(tag);
 		}
@@ -748,27 +737,27 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	
 	@Override
 	public void read(CompoundNBT nbt) {
-		super.readFromNBT(nbt);
+		super.read(nbt);
 		
 		String type = nbt.getString(NBT_TYPE);
 		this.type = ResidentType.valueOf(ResidentType.class, type.toUpperCase());
 		this.name = nbt.getString(NBT_NAME);
-		if (nbt.hasKey(NBT_SLOT_COUNT, NBT.TAG_INT)) {
+		if (nbt.contains(NBT_SLOT_COUNT, NBT.TAG_INT)) {
 			this.slots = Math.max(1, Math.min(MAX_NATURAL_SLOTS, nbt.getInt(NBT_SLOT_COUNT)));
 		} else {
 			this.slots = DEFAULT_SLOTS; 
 		}
 		this.growth = nbt.getFloat(NBT_SLOT_GROWTH);
 		
-		this.slotInv = HomeBlockSlotInventory.fromNBT(this, nbt.getCompoundTag(NBT_SLOT_INV));
-		this.upgradeInv = HomeBlockUpgradeInventory.fromNBT(this, nbt.getCompoundTag(NBT_UPGRADES));
+		this.slotInv = HomeBlockSlotInventory.fromNBT(this, nbt.getCompound(NBT_SLOT_INV));
+		this.upgradeInv = HomeBlockUpgradeInventory.fromNBT(this, nbt.getCompound(NBT_UPGRADES));
 		
 		feyCacheMap.clear();
 		ListNBT list = nbt.getList(NBT_FEY, NBT.TAG_COMPOUND);
 		for (int i = 0; i < getEffectiveSlots(); i++) {
 			CompoundNBT tag = list.getCompound(i);
 			UUID id = null;
-			if (tag != null && tag.hasKey(NBT_FEY_UUID)) {
+			if (tag != null && tag.contains(NBT_FEY_UUID)) {
 				id = UUID.fromString(tag.getString(NBT_FEY_UUID));
 				HomeBlockTileEntity.FeyAwayRecord record = new FeyAwayRecord();
 				record.tickLastSeen = ticksExisted;
@@ -781,11 +770,11 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			this.refreshFeyList();
 		}
 		
-		handler.readFromNBT(nbt.getCompoundTag(NBT_HANDLER));
+		handler.readFromNBT(nbt.getCompound(NBT_HANDLER));
 	}
 
 	@Override
-	public void update() {
+	public void tick() {
 		ticksExisted++;
 		
 		if (!world.isRemote && this.ticksExisted == 1) {
@@ -805,7 +794,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			for (int i = 0; i < this.slotInv.getSizeInventory(); i++) {
 				if (HomeBlockSlotInventory.isSoulSlot(i) && slotInv.hasStone(i)) {
 					ItemStack stone = slotInv.getStackInSlot(i);
-					if (FeySoulStone.hasStoredFey(stone)) {
+					if (FeySoulStone.HasStoredFey(stone)) {
 						EntityFeyBase fey = FeySoulStone.spawnStoredEntity(stone, world, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5);
 						fey.setHome(this.getPos());
 						slotInv.setInventorySlotContents(i, FeySoulStone.clearEntity(stone));
@@ -834,7 +823,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		if (!world.isRemote && ticksExisted % 100 == 0 && world.isDaytime()) {
 			if (NostrumFairies.random.nextFloat() < .2f) {
 				// Don't scan if too many are nearby
-				if (world.getEntitiesWithinAABB(EntityFeyBase.class, FeyHomeBlock.FULL_BLOCK_AABB.grow(16)).size() < 8) {
+				if (world.getEntitiesWithinAABB(EntityFeyBase.class, VoxelShapes.fullCube().getBoundingBox().grow(16)).size() < 8) {
 					// Scan for nearby flowers and possible spawn extra fey
 					final float happiness = getAverageHappiness();
 					if (happiness > 50f && this.getAether() > 0) {
@@ -859,7 +848,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 				}
 				
 				if (NostrumFairies.random.nextFloat() < .2f) {
-					((ServerWorld) world).spawnParticle(EnumParticleTypes.VILLAGER_HAPPY,
+					((ServerWorld) world).spawnParticle(ParticleTypes.HAPPY_VILLAGER,
 							pos.getX() + .5,
 							pos.getY() + 1,
 							pos.getZ() + .5,
@@ -867,8 +856,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 							.25,
 							.2,
 							.25,
-							.1,
-							new int[0]);
+							.1
+							);
 					break;
 				}
 			}
@@ -880,7 +869,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		float sum = 0f;
 		int count = 0;
 		for (EntityFeyBase fey : getAvailableFeyEntities()) {
-			if (fey == null || fey.isDead) {
+			if (fey == null || !fey.isAlive()) {
 				continue;
 			}
 			
@@ -1081,18 +1070,18 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	@Override
-	public void invalidate() {
-		super.invalidate();
+	public void remove() {
+		super.remove();
 		
 		// Clean up connections
 		handler.clearConnections();
 	}
 	
-	@Override
-	public void onChunkUnload() {
-		super.onChunkUnload();
-		handler.clearConnections();
-	}
+//	@Override
+//	public void onChunkUnload() {
+//		super.onChunkUnload();
+//		handler.clearConnections();
+//	}
 	
 	@Override
 	public IAetherHandler getHandler() {

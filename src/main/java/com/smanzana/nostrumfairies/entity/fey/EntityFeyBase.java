@@ -16,7 +16,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.items.FeyResource;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
@@ -56,7 +56,7 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.ServerWorld;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -1036,7 +1036,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 	
 	protected abstract String getUnlocPrefix();
 	
-	public abstract FeyHomeBlock.ResidentType getHomeType();
+	public abstract ResidentType getHomeType();
 	
 	@OnlyIn(Dist.CLIENT)
 	public abstract String getSpecializationName();
