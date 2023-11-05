@@ -90,7 +90,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 		}
 		
 		nbt.put(NBT_TEMPLATE, blueprintTag);
-		stack.put(nbt);
+		stack.setTag(nbt);
 	}
 	
 	@Override

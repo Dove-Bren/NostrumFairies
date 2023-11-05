@@ -1,6 +1,7 @@
 package com.smanzana.nostrumfairies.items;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
@@ -194,9 +195,9 @@ public class FeyResource extends Item implements ILoreTagged {
 					cursor.setPos(pos.up()).move(Direction.Plane.HORIZONTAL.random(NostrumFairies.random), NostrumFairies.random.nextInt(2) + 1);
 					for (int j = 0; j < 5; j++) {
 						if (worldIn.isAirBlock(cursor)) {
-							if (FeyBlocks.feyBush.canPlaceBlockAt(worldIn, cursor)) {
+							if (FairyBlocks.feyBush.isValidPosition(FairyBlocks.feyBush.getDefaultState(), worldIn, cursor)) {
 								// Found a spot!
-								worldIn.setBlockState(cursor.toImmutable(), FeyBlocks.feyBush.getDefaultState());
+								worldIn.setBlockState(cursor.toImmutable(), FairyBlocks.feyBush.getDefaultState());
 								((ServerWorld) worldIn).spawnParticle(ParticleTypes.HAPPY_VILLAGER,
 										cursor.getX() + .5,
 										cursor.getY() + .25,

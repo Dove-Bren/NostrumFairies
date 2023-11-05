@@ -5,7 +5,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.mojang.realmsclient.gui.ChatFormatting;
 import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
@@ -119,7 +118,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		
 		tag.putString(NBT_FEY_TYPE, type.name());
 		
-		stack.put(tag);
+		stack.setTag(tag);
 	}
 	
 	protected @Nullable CompoundNBT getFeyData(ItemStack stack) {
@@ -142,7 +141,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			tag.put(NBT_FEY_DATA, data);
 		}
 		
-		stack.put(tag);
+		stack.setTag(tag);
 	}
 	
 	protected @Nullable String getFeyName(ItemStack stack) {
@@ -165,7 +164,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			tag.putString(NBT_FEY_NAME, name);
 		}
 		
-		stack.put(tag);
+		stack.setTag(tag);
 	}
 	
 	protected boolean hasStoredFey(ItemStack stack) {
