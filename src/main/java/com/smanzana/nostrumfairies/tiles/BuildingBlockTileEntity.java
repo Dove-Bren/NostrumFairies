@@ -24,19 +24,19 @@ import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 
-import net.minecraft.block.state.BlockState;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ExplosionEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITickable,  ILogisticsTaskListener, IFeySign {
 
@@ -53,7 +53,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	public BuildingBlockTileEntity(double blockRadius) {
-		super();
+		super(FairyTileEntities.BuildingBlockTileEntityType);
 		taskMap = new HashMap<>();
 		this.radius = blockRadius;
 		
@@ -185,7 +185,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	@Override
-	public void update() {
+	public void tick() {
 		if (this.world.isRemote) {
 			return;
 		}
@@ -256,8 +256,8 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
-		nbt = super.writeToNBT(nbt);
+	public CompoundNBT write(CompoundNBT nbt) {
+		nbt = super.write(nbt);
 		
 		if (this.slot != null) {
 			nbt.put(NBT_SLOT, slot.serializeNBT());
@@ -267,10 +267,10 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
-		super.readFromNBT(nbt);
+	public void read(CompoundNBT nbt) {
+		super.read(nbt);
 		
-		this.slot = new ItemStack(nbt.getCompoundTag(NBT_SLOT));
+		this.slot = ItemStack.read(nbt.getCompound(NBT_SLOT));
 		
 		if (this.world != null && this.world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, this);
@@ -279,7 +279,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	
 	public IInventory getInventory() {
 		BuildingBlockTileEntity self = this;
-		IInventory inv = new InventoryBasic("BuildingBlockInv", false, 1) {
+		IInventory inv = new Inventory(1) {
 			
 			@Override
 			public void markDirty() {
@@ -304,7 +304,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		return inv;
 	}
 	
-	private static final ItemStack SIGN_ICON = new ItemStack(Blocks.BRICK_BLOCK);
+	private static final ItemStack SIGN_ICON = new ItemStack(Blocks.BRICKS);
 
 	@Override
 	public ItemStack getSignIcon(IFeySign sign) {
@@ -318,8 +318,8 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	@Override
-	public void invalidate() {
-		super.invalidate();
+	public void remove() {
+		super.remove();
 		if (world != null && world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, null);
 		}

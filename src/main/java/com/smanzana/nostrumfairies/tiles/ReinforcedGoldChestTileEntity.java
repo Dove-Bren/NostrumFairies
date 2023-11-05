@@ -5,7 +5,7 @@ public class ReinforcedGoldChestTileEntity extends ReinforcedChestTileEntity {
 	public static final int INV_SIZE = 162;
 
 	public ReinforcedGoldChestTileEntity() {
-		super();
+		super(FairyTileEntities.ReinforcedGoldChestTileEntityType);
 	}
 	
 	@Override

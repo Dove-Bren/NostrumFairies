@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.tiles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -23,24 +24,26 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
+import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Container;
-import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.inventory.container.Container;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.CraftingManager;
-import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.ICraftingRecipe;
+import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ITickable;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
-											implements ILogisticsTaskListener, ITickable, ILogisticsLogicProvider, ILogicListener {
+											implements ILogisticsTaskListener, ITickable, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
 
 	private static final String NBT_TEMPLATES = "templates";
 	private static final String NBT_BUILD_POINTS = "build_points";
@@ -49,7 +52,6 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	private static final String NBT_TEMPLATE_INDEX = "index";
 	private static final String NBT_TEMPLATE_ITEM = "item";
 	
-	private String displayName;
 	private NonNullList<ItemStack> templates;
 	private float buildPoints; // out of 100
 	private final LogisticsLogicComponent logicComp;
@@ -61,7 +63,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	// Transient validation vars
 	private boolean recipeDirty;
 	private boolean recipeValidCache;
-	private @Nullable IRecipe recipeCache;
+	private @Nullable ICraftingRecipe recipeCache;
 	private boolean[] recipeIssuesCache;
 	private boolean[] recipeBonusesCache; // like issue cache but positive.
 	private float recipeBonusCache; // Total of all bonuses
@@ -73,9 +75,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	private boolean placed = false;
 	
-	public CraftingBlockTileEntity() {
-		super();
-		displayName = "Crafting Block";
+	public CraftingBlockTileEntity(TileEntityType<? extends CraftingBlockTileEntity> type) {
+		super(type);
 		this.TEMPLATE_SLOTS = getCraftGridDim() * getCraftGridDim();
 		templates = NonNullList.withSize(TEMPLATE_SLOTS, ItemStack.EMPTY);
 		recipeDirty = true;
@@ -107,16 +108,6 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	@Override
 	public LogisticsLogicComponent getLogicComponent() {
 		return this.logicComp;
-	}
-	
-	@Override
-	public String getName() {
-		return displayName;
-	}
-
-	@Override
-	public boolean hasCustomName() {
-		return false;
 	}
 	
 	@Override
@@ -193,7 +184,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	 * @param recipe
 	 * @return
 	 */
-	protected boolean canCraft(IRecipe recipe) {
+	protected boolean canCraft(ICraftingRecipe recipe) {
 		return true;
 	}
 	
@@ -206,9 +197,9 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	protected abstract float getCraftBonus(ItemStack item);
 	
-	protected IRecipe findRecipe() {
+	protected ICraftingRecipe findRecipe(World world) {
 		// Have to janki-fy the recipe manager, since the inventories it takes as input require a container to work
-		InventoryCrafting inv = new InventoryCrafting(new Container() {
+		CraftingInventory inv = new CraftingInventory(new Container(null, 0) {
 
 			@Override
 			public boolean canInteractWith(PlayerEntity playerIn) {
@@ -227,9 +218,9 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			}
 		}
 		
-		IRecipe match = CraftingManager.findMatchingRecipe(inv, world);
-		if (match != null && canCraft(match)) {
-			return match;
+		Optional<ICraftingRecipe> match = world.getServer().getRecipeManager().getRecipe(IRecipeType.CRAFTING, inv, world);
+		if (match.isPresent() && canCraft(match.get())) {
+			return match.get();
 		}
 		
 		return null;
@@ -241,7 +232,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	 */
 	public boolean validateRecipe() {
 		if (this.recipeDirty) {
-			this.recipeCache = findRecipe();
+			this.recipeCache = findRecipe(world);
 			
 			recipeValidCache = (recipeCache != null);
 			recipeBonusCache = 0f;
@@ -268,7 +259,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		return this.recipeValidCache;
 	}
 	
-	public @Nullable IRecipe getRecipe() {
+	public @Nullable ICraftingRecipe getRecipe() {
 		if (!validateRecipe()) {
 			return null;
 		}
@@ -361,8 +352,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
-		nbt = super.writeToNBT(nbt);
+	public CompoundNBT write(CompoundNBT nbt) {
+		nbt = super.write(nbt);
 		
 		// Save templates
 		ListNBT templates = new ListNBT();
@@ -375,21 +366,21 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			CompoundNBT template = new CompoundNBT();
 			
 			template.putInt(NBT_TEMPLATE_INDEX, i);
-			template.put(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
+			template.put(NBT_TEMPLATE_ITEM, stack.write(new CompoundNBT()));
 			
 			templates.add(template);
 		}
 		nbt.put(NBT_TEMPLATES, templates);
 		
-		nbt.put(NBT_LOGIC_COMP, logicComp.writeToNBT(new CompoundNBT()));
+		nbt.put(NBT_LOGIC_COMP, logicComp.write(new CompoundNBT()));
 		
-		nbt.setFloat(NBT_BUILD_POINTS, buildPoints);
+		nbt.putFloat(NBT_BUILD_POINTS, buildPoints);
 		
 		return nbt;
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
+	public void read(CompoundNBT nbt) {
 		templates = NonNullList.withSize(TEMPLATE_SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
@@ -403,20 +394,20 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 				continue;
 			}
 			
-			ItemStack stack = new ItemStack(template.getCompoundTag(NBT_TEMPLATE_ITEM));
+			ItemStack stack = ItemStack.read(template.getCompound(NBT_TEMPLATE_ITEM));
 			
 			templates.set(index, stack);
 		}
 		
-		CompoundNBT tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
+		CompoundNBT tag = nbt.getCompound(NBT_LOGIC_COMP);
 		if (tag != null) {
-			this.logicComp.readFromNBT(tag);
+			this.logicComp.read(tag);
 		}
 		
 		this.buildPoints = nbt.getFloat(NBT_BUILD_POINTS);
 		
 		// Do super afterwards so taht we have templates already
-		super.readFromNBT(nbt);
+		super.read(nbt);
 		
 		this.recipeDirty = true;
 		this.ingredientsDirty = true;
@@ -530,7 +521,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			int amt = Math.min(stack.getCount(), desire);
 			if (inSlot.isEmpty()) {
 				// take out template desire amount
-				this.setInventorySlotContentsDirty(i, stack.splitStack(amt)); // doesn't set dirty
+				this.setInventorySlotContentsDirty(i, stack.split(amt)); // doesn't set dirty
 				anyChanges = true;
 			} else {
 				stack.shrink(amt);
@@ -614,11 +605,32 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		return TEMPLATE_SLOTS + 3; // 0 is progress, 1 is mode, 2 is op, and  3-N+2 are slot invalid flags (true = error)
 	}
 	
+	protected boolean hasUpgradeStone() {
+		if (this.getUpgrade().isEmpty()) {
+			return false;
+		}
+		
+		FeyStone stone = (FeyStone) this.getUpgrade().getItem();
+		return stone.getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE
+				&& stone.getFeySlot(getUpgrade()) == FeySlotType.UPGRADE;
+	}
+	
+	protected boolean hasDowngradeStone() {
+		if (this.getUpgrade().isEmpty()) {
+			return false;
+		}
+		
+		FeyStone stone = (FeyStone) this.getUpgrade().getItem();
+		return stone.getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE
+				&& stone.getFeySlot(getUpgrade()) == FeySlotType.DOWNGRADE;
+	}
+	
 	protected float getCraftSpeed(float bonus) {
 		float mult = 1f;
 		if (!this.getUpgrade().isEmpty()) {
-			if (FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.RUBY) {
-				FeySlotType type = FeyStone.instance().getFeySlot(this.getUpgrade()); 
+			FeyStone stone = (FeyStone) this.getUpgrade().getItem();
+			if (stone.getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.RUBY) {
+				FeySlotType type = stone.getFeySlot(this.getUpgrade()); 
 				if (type == FeySlotType.DOWNGRADE) {
 					mult = .3f;
 				} else if (type == FeySlotType.UPGRADE) {
@@ -683,7 +695,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	protected ItemStack generateOutput() {
 		// Have to janki-fy the recipe manager, since the inventories it takes as input require a container to work
-		InventoryCrafting inv = new InventoryCrafting(new Container() {
+		CraftingInventory inv = new CraftingInventory(new Container(null, 0) {
 
 			@Override
 			public boolean canInteractWith(PlayerEntity playerIn) {
@@ -724,7 +736,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		}
 	}
 	
-	protected float getBuildPointsFor(IRecipe recipe) {
+	protected float getBuildPointsFor(ICraftingRecipe recipe) {
 		return 100f;
 	}
 	
@@ -789,7 +801,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public void update() {
+	public void tick() {
 		if (!placed) {
 			placed = true;
 			if (!world.isRemote) {

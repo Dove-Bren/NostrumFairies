@@ -20,13 +20,13 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.block.state.BlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
@@ -44,7 +44,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 	}
 	
 	public WoodcuttingBlockTileEntity(double blockRadius) {
-		super();
+		super(FairyTileEntities.WoodcuttingBlockTileEntityType);
 		taskMap = new HashMap<>();
 		this.radius = blockRadius;
 	}
@@ -84,9 +84,9 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 		}
 		
 		if (!taskMap.containsKey(base) && network.taskDataAdd(WOODCUTTING_POSITION, base)) {
-			// Find spot underneath on ground\
+			// Find spot underneath on ground
 			BlockPos target = base;
-			while (!world.isSideSolid(target.down(), Direction.UP)) {
+			while (!Block.func_220055_a(world, target.down(), Direction.UP)) {
 				target = target.down();
 			}
 			
@@ -260,7 +260,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 	}
 	
 	@Override
-	public void update() {
+	public void tick() {
 		if (this.world.isRemote) {
 			return;
 		}
@@ -297,7 +297,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 	
 	// TODO make configurable!
 	public ItemStack getSapling() {
-		return new ItemStack(Blocks.SAPLING);
+		return new ItemStack(Items.OAK_SAPLING);
 	}
 
 	@Override
@@ -345,8 +345,8 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT compound) {
-		super.readFromNBT(compound);
+	public void read(CompoundNBT compound) {
+		super.read(compound);
 		
 		if (this.world != null && this.world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, this);
@@ -354,8 +354,8 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 	}
 	
 	@Override
-	public void invalidate() {
-		super.invalidate();
+	public void remove() {
+		super.remove();
 		if (world != null && world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, null);
 		}

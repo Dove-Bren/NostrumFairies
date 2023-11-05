@@ -1,16 +1,12 @@
 package com.smanzana.nostrumfairies.tiles;
 
-import com.smanzana.nostrumfairies.inventory.FeySlotType;
-import com.smanzana.nostrumfairies.items.FeyStone;
-import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
-
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class CraftingBlockDwarfTileEntity extends CraftingBlockTileEntity {
 
 	public CraftingBlockDwarfTileEntity() {
-		super();
+		super(FairyTileEntities.CraftingBlockDwarfTileEntityType);
 	}
 
 	@Override
@@ -36,25 +32,23 @@ public class CraftingBlockDwarfTileEntity extends CraftingBlockTileEntity {
 				|| unloc.contains("part")
 				|| unloc.contains("cast");
 	}
-
+	
 	@Override
 	protected boolean canCraftWith(ItemStack item) {
 		if (item.isEmpty()) {
 			return true;
 		}
 		
-		boolean strict = false;
-		if (FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
-			FeySlotType slot = FeyStone.instance().getFeySlot(this.getUpgrade()); 
-			if (slot == FeySlotType.DOWNGRADE) {
-				return true;
-			} else if (slot == FeySlotType.UPGRADE) {
-				strict = true;
-			}
+		// If downgrade present, can always craft
+		if (this.hasDowngradeStone()) {
+			return true;
 		}
+		
+		// If upgrade present, material matching is strict
+		boolean strict = hasUpgradeStone();
 	
 		Item itemBase = item.getItem();
-		String unloc = itemBase.getUnlocalizedName();
+		String unloc = itemBase.getRegistryName().getPath().toLowerCase();
 		
 		if (strict) {
 			// HAS to be a friendly material
@@ -81,18 +75,12 @@ public class CraftingBlockDwarfTileEntity extends CraftingBlockTileEntity {
 			return 0f;
 		}
 		
-		float buff = .1f;
-		if (FeyStone.instance().getStoneMaterial(this.getUpgrade()) == FeyStoneMaterial.SAPPHIRE) {
-			FeySlotType slot = FeyStone.instance().getFeySlot(this.getUpgrade());
-			if (slot == FeySlotType.DOWNGRADE) {
-				buff = .025f; // but no disallowed item types
-			} else if (slot == FeySlotType.UPGRADE) {
-				buff = .35f;
-			}
-		}
+		float buff = hasUpgradeStone() ? .35f 
+				: hasDowngradeStone() ? .025f
+				: .1f;
 		
 		Item itemBase = item.getItem();
-		String unloc = itemBase.getUnlocalizedName();
+		String unloc = itemBase.getRegistryName().getPath().toLowerCase();
 		if (isGoodMaterialName(unloc)) {
 			return buff;
 		}

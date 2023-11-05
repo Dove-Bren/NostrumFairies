@@ -20,14 +20,11 @@ import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.research.NostrumResearch.NostrumResearchTab;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Potion;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
@@ -187,12 +184,12 @@ public class NostrumFairies {
     	return e.getCapability(AttributeProvider.CAPABILITY, null).orElse(null);
     }
     
-    private static int potionID = 85;
-	
-    public static int registerPotion(Potion potion, ResourceLocation loc) {
-    	while (Potion.getPotionById(potionID) != null)
-    		potionID++;
-    	Potion.REGISTRY.register(potionID, loc, potion);
-    	return potionID;
-    }
+//    private static int potionID = 85;
+//	
+//    public static int registerPotion(Potion potion, ResourceLocation loc) {
+//    	while (Potion.getPotionById(potionID) != null)
+//    		potionID++;
+//    	Potion.REGISTRY.register(potionID, loc, potion);
+//    	return potionID;
+//    }
 }

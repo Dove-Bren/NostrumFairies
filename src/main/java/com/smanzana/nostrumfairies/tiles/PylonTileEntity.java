@@ -7,7 +7,7 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 public class PylonTileEntity extends LogisticsTileEntity {
 
 	public PylonTileEntity() {
-		super();
+		super(FairyTileEntities.PylonTileEntityType);
 	}
 	
 	@Override

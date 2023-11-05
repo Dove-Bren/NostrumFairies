@@ -5,23 +5,12 @@ import java.util.List;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
+import net.minecraft.tileentity.TileEntityType;
+
 public abstract class ReinforcedChestTileEntity extends LogisticsChestTileEntity {
 
-	private String displayName;
-	
-	public ReinforcedChestTileEntity() {
-		super();
-		displayName = "Reinforced Storage Chest";
-	}
-	
-	@Override
-	public String getName() {
-		return displayName;
-	}
-
-	@Override
-	public boolean hasCustomName() {
-		return false;
+	public ReinforcedChestTileEntity(TileEntityType<? extends ReinforcedChestTileEntity> type) {
+		super(type);
 	}
 	
 	@Override

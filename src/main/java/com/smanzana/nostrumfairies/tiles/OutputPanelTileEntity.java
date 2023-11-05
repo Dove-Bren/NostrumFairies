@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.Validate;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.OutputLogisticsPanel;
+import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
@@ -19,7 +19,8 @@ import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -27,7 +28,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -49,7 +49,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	private final LogisticsLogicComponent logicComp;
 	
 	public OutputPanelTileEntity() {
-		super();
+		super(FairyTileEntities.OutputPanelTileEntityType);
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		logicComp = new LogisticsLogicComponent(false, this);
 	}
@@ -111,8 +111,8 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 	
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
-		nbt = super.writeToNBT(nbt);
+	public CompoundNBT write(CompoundNBT nbt) {
+		nbt = super.write(nbt);
 		
 		// Save templates
 		ListNBT templates = new ListNBT();
@@ -125,19 +125,19 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 			CompoundNBT template = new CompoundNBT();
 			
 			template.putInt(NBT_TEMPLATE_INDEX, i);
-			template.put(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
+			template.put(NBT_TEMPLATE_ITEM, stack.write(new CompoundNBT()));
 			
 			templates.add(template);
 		}
 		nbt.put(NBT_TEMPLATES, templates);
 		
-		nbt.put(NBT_LOGIC_COMP, this.logicComp.writeToNBT(new CompoundNBT()));
+		nbt.put(NBT_LOGIC_COMP, this.logicComp.write(new CompoundNBT()));
 		
 		return nbt;
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
+	public void read(CompoundNBT nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
@@ -151,18 +151,18 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 				continue;
 			}
 			
-			ItemStack stack = new ItemStack(template.getCompoundTag(NBT_TEMPLATE_ITEM));
+			ItemStack stack = ItemStack.read(template.getCompound(NBT_TEMPLATE_ITEM));
 			
 			templates.set(index, stack);
 		}
 		
-		CompoundNBT tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
+		CompoundNBT tag = nbt.getCompound(NBT_LOGIC_COMP);
 		if (tag != null) {
-			this.logicComp.readFromNBT(tag);
+			this.logicComp.read(tag);
 		}
 		
 		// Do super afterwards so taht we have templates already
-		super.readFromNBT(nbt);
+		super.read(nbt);
 	}
 	
 	protected LogisticsItemWithdrawRequester makeRequester(LogisticsNetwork network, LogisticsTileEntityComponent networkComponent) {
@@ -232,8 +232,8 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 		final BlockPos linkPos = pos.offset(direction);
 		final TileEntity te = world.getTileEntity(linkPos);
 		if (te != null) {
-			if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, direction.getOpposite())) {
-				@Nullable IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, direction.getOpposite());
+			if (te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, direction.getOpposite()).isPresent()) {
+				@Nullable IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, direction.getOpposite()).orElse(null);
 				return handler;
 			}
 		}
@@ -369,7 +369,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 		if (world != null) {
 			BlockState state = world.getBlockState(pos);
 			try {
-				return OutputLogisticsPanel.instance().getFacing(state);
+				return FairyBlocks.outputPanel.getFacing(state);
 			} catch (Exception e) {
 				;
 			}
@@ -385,7 +385,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 	
 	@Override
-	public void update() {
+	public void tick() {
 		ticksExisted++;
 		if (this.ticksExisted % 8 == 0) {
 			tickRequester();

@@ -23,14 +23,14 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockCrops;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.CropsBlock;
+import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
-import net.minecraft.util.ITickable;
+import net.minecraft.util.IItemProvider;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
@@ -50,7 +50,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	}
 	
 	public FarmingBlockTileEntity(double blockRadius) {
-		super();
+		super(FairyTileEntities.FarmingBlockTileEntityType);
 		taskMap = new HashMap<>();
 		seenStates = new HashMap<>();
 		this.radius = blockRadius;
@@ -187,7 +187,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	}
 	
 	@Override
-	public void update() {
+	public void tick() {
 		if (this.world.isRemote) {
 			return;
 		}
@@ -210,10 +210,10 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 			}
 			
 			// Try and figure out what the seed would be
-			if (state.getBlock() instanceof BlockCrops) {
+			if (state.getBlock() instanceof CropsBlock) {
 				try {
-					Method getSeed = ObfuscationReflectionHelper.findMethod(BlockCrops.class, "func_149866_i", Item.class); //getSeed
-					seeds = new ItemStack((Item) getSeed.invoke((BlockCrops) state.getBlock()));
+					Method getSeed = ObfuscationReflectionHelper.findMethod(CropsBlock.class, "func_199772_f", IItemProvider.class); //getSeedItem
+					seeds = new ItemStack(((IItemProvider) getSeed.invoke((CropsBlock) state.getBlock())).asItem());
 				} catch (Exception e) {
 					seeds = ItemStack.EMPTY;
 				}
@@ -295,8 +295,8 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT compound) {
-		super.readFromNBT(compound);
+	public void read(CompoundNBT compound) {
+		super.read(compound);
 		
 		if (this.world != null && this.world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, this);
@@ -304,8 +304,8 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	}
 	
 	@Override
-	public void invalidate() {
-		super.invalidate();
+	public void remove() {
+		super.remove();
 		if (world != null && world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, null);
 		}

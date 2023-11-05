@@ -25,24 +25,12 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	private static final String NBT_TEMPLATE_INDEX = "index";
 	private static final String NBT_TEMPLATE_ITEM = "item";
 	
-	private String displayName;
 	private NonNullList<ItemStack> templates;
 	private LogisticsItemWithdrawRequester requester;
 	
 	public BufferChestTileEntity() {
-		super();
-		displayName = "Buffer Chest";
+		super(FairyTileEntities.BufferChestTileEntityType);
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
-	}
-	
-	@Override
-	public String getName() {
-		return displayName;
-	}
-
-	@Override
-	public boolean hasCustomName() {
-		return false;
 	}
 	
 	@Override
@@ -98,8 +86,8 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
-		nbt = super.writeToNBT(nbt);
+	public CompoundNBT write(CompoundNBT nbt) {
+		nbt = super.write(nbt);
 		
 		// Save templates
 		ListNBT templates = new ListNBT();
@@ -112,7 +100,7 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 			CompoundNBT template = new CompoundNBT();
 			
 			template.putInt(NBT_TEMPLATE_INDEX, i);
-			template.put(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
+			template.put(NBT_TEMPLATE_ITEM, stack.write(new CompoundNBT()));
 			
 			templates.add(template);
 		}
@@ -122,7 +110,7 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
+	public void read(CompoundNBT nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
@@ -136,13 +124,13 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 				continue;
 			}
 			
-			ItemStack stack = new ItemStack(template.getCompoundTag(NBT_TEMPLATE_ITEM));
+			ItemStack stack = ItemStack.read(template.getCompound(NBT_TEMPLATE_ITEM));
 			
 			templates.set(index, stack);
 		}
 		
 		// Do super afterwards so taht we ahve templates already
-		super.readFromNBT(nbt);
+		super.read(nbt);
 	}
 	
 	@Override
@@ -232,7 +220,7 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 			int amt = Math.min(stack.getCount(), desire);
 			if (inSlot.isEmpty()) {
 				// take out template desire amount
-				this.setInventorySlotContentsDirty(i, stack.splitStack(amt)); // doesn't set dirty
+				this.setInventorySlotContentsDirty(i, stack.split(amt)); // doesn't set dirty
 				anyChanges = true;
 			} else {
 				stack.shrink(amt);

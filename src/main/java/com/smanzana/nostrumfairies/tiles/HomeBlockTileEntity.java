@@ -718,7 +718,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
+	public CompoundNBT write(CompoundNBT nbt) {
 		nbt = super.writeToNBT(nbt);
 		
 		nbt.setString(NBT_TYPE, type.name());
@@ -747,7 +747,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
+	public void read(CompoundNBT nbt) {
 		super.readFromNBT(nbt);
 		
 		String type = nbt.getString(NBT_TYPE);

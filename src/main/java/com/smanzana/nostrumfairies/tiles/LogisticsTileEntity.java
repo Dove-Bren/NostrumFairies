@@ -18,11 +18,14 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionType;
 
 public abstract class LogisticsTileEntity extends TileEntity {
 
@@ -31,42 +34,42 @@ public abstract class LogisticsTileEntity extends TileEntity {
 	protected static final List<ItemStack> emptyList = new ArrayList<>(1);
 	protected LogisticsTileEntityComponent networkComponent;
 	
-	public LogisticsTileEntity() {
-		super();
+	public LogisticsTileEntity(TileEntityType<? extends LogisticsTileEntity> type) {
+		super(type);
 	}
 	
 	@Override
-	public SPacketUpdateTileEntity getUpdatePacket() {
-		return new SPacketUpdateTileEntity(this.pos, 3, this.getUpdateTag());
+	public SUpdateTileEntityPacket getUpdatePacket() {
+		return new SUpdateTileEntityPacket(this.pos, 3, this.getUpdateTag());
 	}
 
 	@Override
 	public CompoundNBT getUpdateTag() {
-		return this.writeToNBT(new CompoundNBT());
+		return this.write(new CompoundNBT());
 	}
 	
 	@Override
-	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
+	public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
 		super.onDataPacket(net, pkt);
 		handleUpdateTag(pkt.getNbtCompound());
 	}
 	
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
+	public CompoundNBT write(CompoundNBT nbt) {
 		// We STORE the UUID of our network... but only so we can communicate it to the client.
 		// We hook things back up on the server when we load by position.
-		nbt = super.writeToNBT(nbt);
+		nbt = super.write(nbt);
 		
 		if (this.networkComponent != null) {
-			nbt.setUniqueId(NBT_NETWORK_COMP_UUID, this.networkComponent.componentID);
+			nbt.putUniqueId(NBT_NETWORK_COMP_UUID, this.networkComponent.componentID);
 		}
 		
 		return nbt;
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
-		super.readFromNBT(nbt);
+	public void read(CompoundNBT nbt) {
+		super.read(nbt);
 		// Load in network UUID, so clients can hook things back up to fake network devices
 		if (nbt.hasUniqueId(NBT_NETWORK_COMP_UUID)) {
 //			UUID oldID = networkID;
@@ -316,18 +319,18 @@ public abstract class LogisticsTileEntity extends TileEntity {
 		public CompoundNBT toNBT() {
 			CompoundNBT tag = new CompoundNBT();
 			
-			tag.setUniqueId(NBT_UUID, componentID);
-			tag.setLong(NBT_POS, this.pos.toLong());
-			tag.putInt(NBT_DIM, this.world.provider.getDimension());
-			tag.setDouble(NBT_LINK_RANGE, linkRange);
-			tag.setDouble(NBT_LOG_RANGE, logisticsRange);
+			tag.putUniqueId(NBT_UUID, componentID);
+			tag.put(NBT_POS, NBTUtil.writeBlockPos(pos));
+			tag.putInt(NBT_DIM, this.world.getDimension().getType().getId());
+			tag.putDouble(NBT_LINK_RANGE, linkRange);
+			tag.putDouble(NBT_LOG_RANGE, logisticsRange);
 			
 			return tag;
 		}
 		
 		protected static LogisticsTileEntityComponent loadFromNBT(CompoundNBT nbt, LogisticsNetwork network) {
-			BlockPos pos = broke(); //BlockPos.fromLong(nbt.getLong(NBT_POS));
-			World world = NostrumFairies.getWorld(nbt.getInt(NBT_DIM));
+			BlockPos pos = NBTUtil.readBlockPos(nbt.getCompound(NBT_POS));
+			World world = NostrumFairies.getWorld(DimensionType.getById(nbt.getInt(NBT_DIM)));
 			UUID compID = nbt.getUniqueId(NBT_UUID);
 			double linkRange = nbt.getDouble(NBT_LINK_RANGE);
 			double logisticsRange = nbt.getDouble(NBT_LOG_RANGE);

@@ -16,21 +16,21 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrummagica.items.ReagentBag;
+import com.smanzana.nostrummagica.items.NostrumItems;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.item.ItemExpireEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
-import net.minecraftforge.event.entity.player.ItemEntityPickupEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.ItemPickupEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener, IFeySign {
 	
@@ -48,7 +48,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	}
 	
 	public GatheringBlockTileEntity(double blockRadius) {
-		super();
+		super(FairyTileEntities.GatheringBlockTileEntityType);
 		taskMap = new HashMap<>();
 		this.radius = blockRadius;
 	}
@@ -134,7 +134,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	}
 	
 	@Override
-	public void update() {
+	public void tick() {
 		if (this.world.isRemote) {
 			return;
 		}
@@ -156,22 +156,22 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	}
 	
 	@SubscribeEvent
-	public void onPickup(ItemEntityPickupEvent e) {
-		 if (inRange(e.getItem())) {
+	public void onPickup(ItemPickupEvent e) {
+		 if (inRange(e.getOriginalEntity())) {
 			 this.scan();
 		 }
 	}
 	
 	@SubscribeEvent
 	public void onToss(ItemTossEvent e) {
-		 if (inRange(e.getItemEntity())) {
+		 if (inRange(e.getEntityItem())) {
 			 this.scan();
 		 }
 	}
 	
 	@SubscribeEvent
 	public void onExpire(ItemExpireEvent e) {
-		 if (inRange(e.getItemEntity())) {
+		 if (inRange(e.getEntityItem())) {
 			 this.scan();
 		 }
 	}
@@ -202,7 +202,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		}
 	}
 	
-	private static final ItemStack SIGN_ICON = new ItemStack(ReagentBag.instance());
+	private static final ItemStack SIGN_ICON = new ItemStack(NostrumItems.reagentBag);
 
 	@Override
 	public ItemStack getSignIcon(IFeySign sign) {
@@ -216,8 +216,8 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT compound) {
-		super.readFromNBT(compound);
+	public void read(CompoundNBT compound) {
+		super.read(compound);
 		
 		if (this.world != null && this.world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, this);
@@ -225,8 +225,8 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	}
 	
 	@Override
-	public void invalidate() {
-		super.invalidate();
+	public void remove() {
+		super.remove();
 		if (world != null && world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, null);
 		}

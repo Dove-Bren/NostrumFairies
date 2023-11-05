@@ -11,7 +11,7 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -28,7 +28,7 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	private NonNullList<ItemStack> requests;
 
 	public StorageMonitorTileEntity() {
-		super();
+		super(FairyTileEntities.StorageMonitorTileEntityType);
 		requests = NonNullList.create();
 	}
 	
@@ -174,8 +174,8 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
-		super.writeToNBT(nbt);
+	public CompoundNBT write(CompoundNBT nbt) {
+		super.write(nbt);
 		
 		ListNBT list = new ListNBT();
 		for (ItemStack stack : requests) {
@@ -187,15 +187,15 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
-		super.readFromNBT(nbt);
+	public void read(CompoundNBT nbt) {
+		super.read(nbt);
 		
 		requests.clear();
 		ListNBT list = nbt.getList(NBT_REQUESTS, NBT.TAG_COMPOUND);
 		if (list != null && list.size() > 0) {
 			for (int i = 0; i < list.size(); i++) {
 				CompoundNBT tag = list.getCompound(i);
-				ItemStack stack = new ItemStack(tag);
+				ItemStack stack = ItemStack.read(tag);
 				if (!stack.isEmpty()) {
 					requests.add(stack);
 				}

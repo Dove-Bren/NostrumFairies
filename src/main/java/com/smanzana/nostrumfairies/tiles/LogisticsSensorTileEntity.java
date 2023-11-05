@@ -1,13 +1,11 @@
 package com.smanzana.nostrumfairies.tiles;
 
-import com.smanzana.nostrumfairies.blocks.LogisticsSensorBlock;
+import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ITickable;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class LogisticsSensorTileEntity extends LogisticsTileEntity implements ITickable, ILogicListener, ILogisticsLogicProvider {
@@ -21,28 +19,28 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	private boolean placed = false;
 	
 	public LogisticsSensorTileEntity() {
-		super();
+		super(FairyTileEntities.LogisticsSensorTileEntityType);
 		logicComp = new LogisticsLogicComponent(true, this);
 	}
 	
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
-		nbt = super.writeToNBT(nbt);
+	public CompoundNBT write(CompoundNBT nbt) {
+		nbt = super.write(nbt);
 		
 		CompoundNBT tag = new CompoundNBT();
-		logicComp.writeToNBT(tag);
+		logicComp.write(tag);
 		nbt.put(NBT_LOGIC_COMP, tag);
 		
 		return nbt;
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
-		super.readFromNBT(nbt);
+	public void read(CompoundNBT nbt) {
+		super.read(nbt);
 		
-		CompoundNBT sub = nbt.getCompoundTag(NBT_LOGIC_COMP);
+		CompoundNBT sub = nbt.getCompound(NBT_LOGIC_COMP);
 		if (sub != null) {
-			logicComp.readFromNBT(sub);
+			logicComp.read(sub);
 		}
 	}
 	
@@ -87,7 +85,7 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public void update() {
+	public void tick() {
 		if (!placed || world.getGameTime() % 5 == 0) {
 			if (!world.isRemote) {
 				final boolean activated = this.logicComp.isActivated(); 
@@ -95,7 +93,7 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 				if (!placed || logicLastWorld != activated) {
 					// Make sure to update the world so that redstone will be updated
 					//world.notifyNeighborsOfStateChange(pos, world.getBlockState(pos).getBlock());
-					world.setBlockState(pos, LogisticsSensorBlock.getStateWithActive(activated), 3);
+					world.setBlockState(pos, FairyBlocks.logisticsSensor.getStateWithActive(activated), 3);
 					logicLastWorld = activated;
 				}
 			}
@@ -114,11 +112,6 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 		return 5;
 	}
 	
-	@Override
-	public boolean shouldRefresh(World world, BlockPos pos, BlockState oldState, BlockState newState) {
-		return !(oldState.getBlock().equals(newState.getBlock()));
-	}
-
 	@Override
 	public void onStateChange(boolean activated) {
 		; // We handle this in a tick loop, which adds lag between redstone but also won't change blockstates

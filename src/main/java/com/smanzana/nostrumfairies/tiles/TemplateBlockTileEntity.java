@@ -82,11 +82,11 @@ public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 		}
 	}
 	
-//	@Override
-//	public void invalidate() {
-//		super.invalidate();
-//		if (world != null && world.isRemote) {
-//			StaticTESRRenderer.instance.update(world, pos, null);
-//		}
-//	}
+	@Override
+	public void remove() {
+		super.remove();
+		if (world != null && world.isRemote) {
+			StaticTESRRenderer.instance.update(world, pos, null);
+		}
+	}
 }

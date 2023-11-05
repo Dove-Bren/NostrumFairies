@@ -9,21 +9,8 @@ public class StorageChestTileEntity extends LogisticsChestTileEntity {
 
 	private static final int SLOTS = 27;
 	
-	private String displayName;
-	
 	public StorageChestTileEntity() {
-		super();
-		displayName = "Storage Chest";
-	}
-	
-	@Override
-	public String getName() {
-		return displayName;
-	}
-
-	@Override
-	public boolean hasCustomName() {
-		return false;
+		super(FairyTileEntities.StorageChestTileEntityType);
 	}
 	
 	@Override

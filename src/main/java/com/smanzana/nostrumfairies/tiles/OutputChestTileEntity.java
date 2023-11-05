@@ -29,14 +29,12 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	private static final String NBT_TEMPLATE_ITEM = "item";
 	private static final String NBT_LOGIC_COMP = "logic";
 	
-	private String displayName;
 	private NonNullList<ItemStack> templates;
 	private LogisticsItemWithdrawRequester requester;
 	private final LogisticsLogicComponent logicComp;
 	
 	public OutputChestTileEntity() {
-		super();
-		displayName = "Output Chest";
+		super(FairyTileEntities.OutputChestTileEntityType);
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		logicComp = new LogisticsLogicComponent(false, this);
 	}
@@ -55,16 +53,6 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	@Override
 	public LogisticsLogicComponent getLogicComponent() {
 		return this.logicComp;
-	}
-	
-	@Override
-	public String getName() {
-		return displayName;
-	}
-
-	@Override
-	public boolean hasCustomName() {
-		return false;
 	}
 	
 	@Override
@@ -127,8 +115,8 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
-		nbt = super.writeToNBT(nbt);
+	public CompoundNBT write(CompoundNBT nbt) {
+		nbt = super.write(nbt);
 		
 		// Save templates
 		ListNBT templates = new ListNBT();
@@ -141,18 +129,18 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 			CompoundNBT template = new CompoundNBT();
 			
 			template.putInt(NBT_TEMPLATE_INDEX, i);
-			template.put(NBT_TEMPLATE_ITEM, stack.writeToNBT(new CompoundNBT()));
+			template.put(NBT_TEMPLATE_ITEM, stack.write(new CompoundNBT()));
 			
 			templates.add(template);
 		}
 		nbt.put(NBT_TEMPLATES, templates);
-		nbt.put(NBT_LOGIC_COMP, this.logicComp.writeToNBT(new CompoundNBT()));
+		nbt.put(NBT_LOGIC_COMP, this.logicComp.write(new CompoundNBT()));
 		
 		return nbt;
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
+	public void read(CompoundNBT nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
@@ -166,18 +154,18 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 				continue;
 			}
 			
-			ItemStack stack = new ItemStack(template.getCompoundTag(NBT_TEMPLATE_ITEM));
+			ItemStack stack = ItemStack.read(template.getCompound(NBT_TEMPLATE_ITEM));
 			
 			templates.set(index, stack);
 		}
 		
-		CompoundNBT tag = nbt.getCompoundTag(NBT_LOGIC_COMP);
+		CompoundNBT tag = nbt.getCompound(NBT_LOGIC_COMP);
 		if (tag != null) {
-			this.logicComp.readFromNBT(tag);
+			this.logicComp.read(tag);
 		}
 		
 		// Do super afterwards so taht we have templates already
-		super.readFromNBT(nbt);
+		super.read(nbt);
 	}
 	
 	@Override
@@ -276,7 +264,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 			int amt = Math.min(stack.getCount(), desire);
 			if (inSlot.isEmpty()) {
 				// take out template desire amount
-				this.setInventorySlotContentsDirty(i, stack.splitStack(amt)); // doesn't set dirty
+				this.setInventorySlotContentsDirty(i, stack.split(amt)); // doesn't set dirty
 				anyChanges = true;
 			} else {
 				stack.shrink(amt);

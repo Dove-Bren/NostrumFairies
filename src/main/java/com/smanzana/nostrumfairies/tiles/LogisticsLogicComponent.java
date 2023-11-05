@@ -206,10 +206,10 @@ public class LogisticsLogicComponent {
 		this.dirty();
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
-		nbt.setString(NBT_LOGIC_MODE, mode.name());
+	public CompoundNBT write(CompoundNBT nbt) {
+		nbt.putString(NBT_LOGIC_MODE, mode.name());
 		nbt.putInt(NBT_LOGIC_COUNT, count);
-		nbt.setString(NBT_LOGIC_OP, op.name());
+		nbt.putString(NBT_LOGIC_OP, op.name());
 		if (!template.isEmpty()) {
 			nbt.put(NBT_LOGIC_ITEM, template.serializeNBT());
 		}
@@ -217,7 +217,7 @@ public class LogisticsLogicComponent {
 		return nbt;
 	}
 	
-	public void readFromNBT(CompoundNBT nbt) {
+	public void read(CompoundNBT nbt) {
 		try {
 			this.mode = LogicMode.valueOf(nbt.getString(NBT_LOGIC_MODE).toUpperCase());
 		} catch (Exception e) {
@@ -230,7 +230,7 @@ public class LogisticsLogicComponent {
 			this.op = LogicOp.EQUAL;
 		}
 		
-		this.template = new ItemStack(nbt.getCompoundTag(NBT_LOGIC_ITEM));
+		this.template = ItemStack.read(nbt.getCompound(NBT_LOGIC_ITEM));
 		this.count = nbt.getInt(NBT_LOGIC_COUNT);
 		
 		this.logicCacheID = null;

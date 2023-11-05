@@ -16,22 +16,10 @@ public class InputChestTileEntity extends LogisticsChestTileEntity {
 
 	private static final int SLOTS = 27;
 	
-	private String displayName;
 	private LogisticsItemDepositRequester requester;
 	
 	public InputChestTileEntity() {
-		super();
-		displayName = "Input Chest";
-	}
-	
-	@Override
-	public String getName() {
-		return displayName;
-	}
-
-	@Override
-	public boolean hasCustomName() {
-		return false;
+		super(FairyTileEntities.InputChestTileEntityType);
 	}
 	
 	@Override

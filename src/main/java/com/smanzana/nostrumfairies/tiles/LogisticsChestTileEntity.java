@@ -15,6 +15,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -24,8 +25,8 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	
 	private NonNullList<ItemStack> slots;
 	
-	public LogisticsChestTileEntity() {
-		super();
+	public LogisticsChestTileEntity(TileEntityType<? extends LogisticsChestTileEntity> type) {
+		super(type);
 		slots = NonNullList.withSize(getSizeInventory(), ItemStack.EMPTY);
 	}
 	
@@ -133,21 +134,6 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	}
 
 	@Override
-	public int getField(int id) {
-		return 0;
-	}
-
-	@Override
-	public void setField(int id, int value) {
-		
-	}
-
-	@Override
-	public int getFieldCount() {
-		return 0;
-	}
-
-	@Override
 	public void clear() {
 		for (int i = 0; i < getSizeInventory(); i++) {
 			removeStackFromSlot(i);
@@ -156,8 +142,8 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	
 	
 	@Override
-	public CompoundNBT writeToNBT(CompoundNBT nbt) {
-		nbt = super.writeToNBT(nbt);
+	public CompoundNBT write(CompoundNBT nbt) {
+		nbt = super.write(nbt);
 		CompoundNBT compound = new CompoundNBT();
 		
 		for (int i = 0; i < getSizeInventory(); i++) {
@@ -165,7 +151,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 				continue;
 			
 			CompoundNBT tag = new CompoundNBT();
-			compound.put(i + "", getStackInSlot(i).writeToNBT(tag));
+			compound.put(i + "", getStackInSlot(i).write(tag));
 		}
 		
 		if (nbt == null)
@@ -176,13 +162,13 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	}
 	
 	@Override
-	public void readFromNBT(CompoundNBT nbt) {
-		if (nbt == null || !nbt.hasKey(NBT_INV, NBT.TAG_COMPOUND))
+	public void read(CompoundNBT nbt) {
+		if (nbt == null || !nbt.contains(NBT_INV, NBT.TAG_COMPOUND))
 			return;
 		
 		this.clear();
-		CompoundNBT items = nbt.getCompoundTag(NBT_INV);
-		for (String key : items.getKeySet()) {
+		CompoundNBT items = nbt.getCompound(NBT_INV);
+		for (String key : items.keySet()) {
 			int id;
 			try {
 				id = Integer.parseInt(key);
@@ -191,11 +177,11 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 				continue;
 			}
 			
-			ItemStack stack = new ItemStack(items.getCompoundTag(key));
+			ItemStack stack = ItemStack.read(items.getCompound(key));
 			this.setInventorySlotContents(id, stack);
 		}
 
-		super.readFromNBT(nbt);
+		super.read(nbt);
 	}
 	
 	@Override
