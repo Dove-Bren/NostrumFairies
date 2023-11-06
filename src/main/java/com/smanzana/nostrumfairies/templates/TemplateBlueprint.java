@@ -19,6 +19,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -50,10 +51,10 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 	}
 
 	@Override
-	public synchronized void spawnBlock(World world, BlockPos pos, Direction direction, BlueprintBlock block) {
+	public synchronized void spawnBlock(IWorld world, BlockPos pos, Direction direction, BlueprintBlock block) {
 		// Templating doesn't mess with clearing blocks
 		BlockState existingState = world.getBlockState(pos);
-		if (existingState != null && !existingState.getBlock().isReplaceable(world, pos) && !world.isAirBlock(pos)) {
+		if (existingState != null && !existingState.getMaterial().isReplaceable() && !world.isAirBlock(pos)) {
 			return; // Skip!
 		}
 		
@@ -64,7 +65,7 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 		
 		BlockState placeState = block.getSpawnState(direction);
 		if (placeState != null && !(placeState.getBlock() instanceof TemplateBlock)) {
-			TemplateBlock.SetTemplate(world, pos, placeState);
+			TemplateBlock.SetTemplate(world.getWorld(), pos, placeState);
 			spawnedBlocks.add(pos.toImmutable());
 		} else {
 			; // Templating doesn't mess with air or template blocks
@@ -75,14 +76,14 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 
 	public synchronized List<BlockPos> spawn(World world, BlockPos origin, Direction direction) {
 		spawnedBlocks = new ArrayList<>();
-		blueprint.spawn(origin, direction);
+		blueprint.spawn(world, origin, direction);
 		return spawnedBlocks;
 	}
 	
 	public CompoundNBT toNBT() {
 		CompoundNBT nbt = new CompoundNBT();
 		
-		nbt.setUniqueId(NBT_ID, id);
+		nbt.putUniqueId(NBT_ID, id);
 		
 		ListNBT list = new ListNBT();
 		INBTGenerator gen = blueprint.toNBTWithBreakdown();

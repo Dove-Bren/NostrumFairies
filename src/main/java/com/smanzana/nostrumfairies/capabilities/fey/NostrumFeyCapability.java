@@ -49,11 +49,14 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -193,9 +196,9 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		writeFairies();
 		nbt.put(NBT_FAIRY_INVENTORY, fairyInventory.toNBT());
 		if (templateSelection.left != null) {
-			nbt.setLong(NBT_TEMPLATE_SELECTION + "_1", templateSelection.left.toLong());
+			nbt.put(NBT_TEMPLATE_SELECTION + "_1", NBTUtil.writeBlockPos(templateSelection.left));
 			if (templateSelection.right != null) {
-				nbt.setLong(NBT_TEMPLATE_SELECTION + "_2", templateSelection.right.toLong());
+				nbt.put(NBT_TEMPLATE_SELECTION + "_2", NBTUtil.writeBlockPos(templateSelection.right));
 			}
 		}
 		
@@ -213,9 +216,9 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		this.fairyInventory.readNBT(nbt.getCompound(NBT_FAIRY_INVENTORY));
 		
 		if (nbt.contains(NBT_TEMPLATE_SELECTION + "_1")) {
-			templateSelection.left = broke(); //BlockPos.fromLong(nbt.getLong(NBT_TEMPLATE_SELECTION + "_1"));
+			templateSelection.left = NBTUtil.readBlockPos(nbt.getCompound(NBT_TEMPLATE_SELECTION + "_1"));
 			if (nbt.contains(NBT_TEMPLATE_SELECTION + "_2")) {
-				templateSelection.right = broke(); //BlockPos.fromLong(nbt.getLong(NBT_TEMPLATE_SELECTION + "_2"));
+				templateSelection.right = NBTUtil.readBlockPos(nbt.getCompound(NBT_TEMPLATE_SELECTION + "_2"));
 			} else {
 				templateSelection.right = null;
 			}
@@ -345,8 +348,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 								BlockPos pos = PositionCrystal.getBlockPosition(fairyInventory.getLogisticsGem());
 								int dim = PositionCrystal.getDimension(fairyInventory.getLogisticsGem());
 								
-								if (dim == owner.dimension && owner.getDistanceSq(pos) < 1024) {
-									World world = NostrumFairies.getWorld(dim);
+								if (dim == owner.dimension.getId() && owner.getDistanceSq(new Vec3d(pos)) < 1024) {
+									World world = NostrumFairies.getWorld(DimensionType.getById(dim));
 									LogisticsNetwork network = NostrumFairies.instance.getLogisticsRegistry().findNetwork(world, pos);
 									if (network != null) {
 										tickNetworks.add(network);
@@ -436,7 +439,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 							continue;
 						}
 						
-						if (FairyGael.isCracked(gael)) {
+						if (((FairyGael) gael.getItem()).isCracked(gael)) {
 							continue;
 						}
 						
@@ -488,7 +491,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				boolean[] deployed = deployedMap.get(type);
 				for (int i = 0; i < fairyInventory.getGaelSize(); i++) {
 					ItemStack gael = fairyInventory.getGaelByType(type, i);
-					if (gael.isEmpty() || FairyGael.isCracked(gael) || deployed[i]) {
+					if (gael.isEmpty() || ((FairyGael) gael.getItem()).isCracked(gael) || deployed[i]) {
 						continue;
 					}
 					
@@ -500,7 +503,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	
 	@SubscribeEvent
 	public void onEntityTick(LivingUpdateEvent event) {
-		if (event.getMobEntity() == this.owner && !owner.world.isRemote) {
+		if (event.getEntity() == this.owner && !owner.world.isRemote) {
 			this.tick();
 		}
 	}
@@ -508,7 +511,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	protected void clearFairies() {
 		for (FairyGaelType type : FairyGaelType.values()) { 
 			for (FairyRecord record : this.deployedFairies.get(type)) {
-				record.fairy.world.removeEntity(record.fairy);
+				//record.fairy.world.removeEntity(record.fairy);
+				record.fairy.remove();
 			}
 			this.deployedFairies.get(type).clear();
 		}
@@ -607,22 +611,25 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				it.remove();
 				ItemStack gael = fairyInventory.getGaelByType(type, record.index);
 				if (!gael.isEmpty()) {
-					if (fairy.getHealth() <= 0 || fairy.isDead) {
+					if (fairy.getHealth() <= 0 || !fairy.isAlive()) {
 						// Grab a snapshot of the fairy just before it died
 						float health = fairy.getHealth();
-						boolean dead = fairy.isDead;
+						boolean dead = !fairy.isAlive();
 						fairy.setHealth(1f);
-						fairy.isDead = false;
+						fairy.revive();
+						//fairy.isDead = false;
 						FairyGael.setStoredEntity(gael, fairy);
 						FairyGael.crack(gael);
 						fairyInventory.markDirty();
 						fairy.setHealth(health);
-						fairy.isDead = dead;
+						if (dead) {
+							fairy.remove();
+						}
 					} else {
 						FairyGael.setStoredEntity(gael, fairy);
 						fairyInventory.markDirty();
-						fairy.setDead();
-						fairy.world.removeEntity(fairy);
+						fairy.remove();
+						//fairy.world.removeEntity(fairy);
 					}
 				}
 				return true;
