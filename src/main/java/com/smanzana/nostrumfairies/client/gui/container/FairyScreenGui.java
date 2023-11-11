@@ -1,11 +1,11 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui.FairyScreenContainer.HideableSlot;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyCastTarget;
@@ -15,22 +15,27 @@ import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.FairyGuiActionMessage;
 import com.smanzana.nostrumfairies.network.messages.FairyGuiActionMessage.GuiAction;
+import com.smanzana.nostrummagica.client.gui.container.AutoContainer;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
+import com.smanzana.nostrummagica.utils.ContainerUtil;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.ClickType;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.ClickType;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.config.GuiUtils;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class FairyScreenGui {
 	
@@ -151,7 +156,9 @@ public class FairyScreenGui {
 	private static final int ICON_CURSOR_MINOR_WIDTH = 18 + 2;
 	private static final int ICON_CURSOR_MINOR_HEIGHT = 18 + 2;
 	
-	public static class FairyScreenContainer extends com.smanzana.nostrummagica.client.gui.container.AutoContainer {
+	public static class FairyScreenContainer extends AutoContainer {
+		
+		public static final String ID = "fairy_screen";
 		
 		protected FairyHolderInventory inv;
 		protected INostrumFeyCapability capability;
@@ -162,8 +169,8 @@ public class FairyScreenGui {
 		protected HideableSlot[] pushSlots;
 		protected HideableSlot gemSlot;
 		
-		public FairyScreenContainer(IInventory playerInv, FairyHolderInventory chest, INostrumFeyCapability capability) { 
-			super(chest);
+		public FairyScreenContainer(int windowId, PlayerInventory playerInv, FairyHolderInventory chest, INostrumFeyCapability capability) { 
+			super(FairyContainers.FairyScreen, windowId, chest);
 			this.inv = chest;
 			this.capability = capability;
 			this.scrollSlots = new HideableSlot[chest.getAttackConfigSize()];
@@ -280,6 +287,23 @@ public class FairyScreenGui {
 				};
 				this.addSlot(gemSlot);
 			}
+		}
+		
+		//FairyScreenContainer(int windowId, PlayerInventory playerInv, FairyHolderInventory chest, INostrumFeyCapability capability)
+		
+		@OnlyIn(Dist.CLIENT)
+		public static FairyScreenContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerInv.player);
+			return new FairyScreenContainer(windowId, playerInv, attr.getFairyInventory(), attr);
+		}
+		
+		public static IPackedContainerProvider Make() {
+			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
+				INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
+				return new FairyScreenContainer(windowId, playerInv, attr.getFairyInventory(), attr);
+			}, (buffer) -> {
+				; // Nothing to push
+			});
 		}
 		
 		@Override
@@ -456,7 +480,7 @@ public class FairyScreenGui {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class FairyScreenGuiContainer extends AutoGuiContainer {
+	public static class FairyScreenGuiContainer extends AutoGuiContainer<FairyScreenContainer> {
 
 		private FairyScreenContainer container;
 		protected TargetButton[] targetButtons;
@@ -472,8 +496,8 @@ public class FairyScreenGui {
 		private boolean showLogistics;
 		private boolean showConstruction;
 		
-		public FairyScreenGuiContainer(FairyScreenContainer container) {
-			super(container);
+		public FairyScreenGuiContainer(FairyScreenContainer container, PlayerInventory playerInv, ITextComponent name) {
+			super(container, playerInv, name);
 			this.container = container;
 			this.targetButtons = new TargetButton[container.inv.getAttackConfigSize()];
 			this.placementButtons = new PlacementButton[container.inv.getAttackConfigSize()];
@@ -490,15 +514,17 @@ public class FairyScreenGui {
 			final int verticalMargin = (height - ySize) / 2;
 			
 			for (int i = 0; i < container.inv.getAttackConfigSize(); i++) {
-				targetButtons[i] = new TargetButton(i * 2,
+				targetButtons[i] = new TargetButton(
 						horizontalMargin + SIDEBAR_ATTACK_HOFFSET + SIDEBAR_ATTACK_TARGET_BUTTON_HOFFSET,
 						verticalMargin + SIDEBAR_ATTACK_VOFFSET + SIDEBAR_ATTACK_TARGET_BUTTON_VOFFSET,
-						i);
+						i,
+						this);
 				this.addButton(targetButtons[i]);
-				placementButtons[i] = new PlacementButton((i * 2) + 1,
+				placementButtons[i] = new PlacementButton(
 						horizontalMargin + SIDEBAR_ATTACK_HOFFSET + SIDEBAR_ATTACK_PLACEMENT_BUTTON_HOFFSET,
 						verticalMargin + SIDEBAR_ATTACK_VOFFSET + SIDEBAR_ATTACK_PLACEMENT_BUTTON_VOFFSET,
-						i);
+						i,
+						this);
 				this.addButton(placementButtons[i]);
 			}
 			
@@ -520,23 +546,6 @@ public class FairyScreenGui {
 			}
 			container.gemSlot.hide(!showLogistics);
 			selectedGroup = -1;
-		}
-		
-		@Override
-		protected void actionPerformed(GuiButton button) throws IOException {
-			if (button.visible) {
-				if (button instanceof TargetButton) {
-					TargetButton butt = (TargetButton) button;
-					FairyHolderInventory.FairyCastTarget current = container.inv.getFairyCastTarget(butt.slot);
-					NetworkHandler.sendToServer(new FairyGuiActionMessage(
-							GuiAction.CHANGE_TARGET, butt.slot, current.ordinal() + 1));
-				} else if (button instanceof PlacementButton) {
-					PlacementButton butt = (PlacementButton) button;
-					FairyHolderInventory.FairyPlacementTarget current = container.inv.getFairyPlacementTarget(butt.slot);
-					NetworkHandler.sendToServer(new FairyGuiActionMessage(
-							GuiAction.CHANGE_PLACEMENT, butt.slot, current.ordinal() + 1));
-				}
-			}
 		}
 		
 		/**
@@ -612,39 +621,39 @@ public class FairyScreenGui {
 			final int sidebarY = verticalMargin + SIDEBAR_ATTACK_VOFFSET;
 			
 			// DRAW BARS
-			Gui.drawRect(sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET,
+			RenderFuncs.drawRect(sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET,
 					sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET,
 					sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET + SIDEBAR_ATTACK_HEALTH_WIDTH,
 					sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET + SIDEBAR_ATTACK_HEALTH_HEIGHT,
 					0xFF444444);
 			
-			Gui.drawRect(sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET,
+			RenderFuncs.drawRect(sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET,
 					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET,
 					sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET + SIDEBAR_ATTACK_ENERGY_WIDTH,
 					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET + SIDEBAR_ATTACK_ENERGY_HEIGHT,
 					0xFF444444);
 			
 			int x = (int) Math.round((float) SIDEBAR_ATTACK_HEALTH_WIDTH * (selectedHealth));
-			Gui.drawRect(sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET,
+			RenderFuncs.drawRect(sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET,
 					sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET,
 					sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET + x,
 					sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET + SIDEBAR_ATTACK_HEALTH_HEIGHT,
 					0xFFAA0000);
 			
 			x = (int) Math.round((float) SIDEBAR_ATTACK_ENERGY_WIDTH * (selectedEnergy));
-			Gui.drawRect(sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET,
+			RenderFuncs.drawRect(sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET,
 					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET,
 					sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET + x,
 					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET + SIDEBAR_ATTACK_ENERGY_HEIGHT,
 					0xFF00A040);
 			
 			// draw background
-			GlStateManager.color(1f, 1f, 1f, 1f);
-			GlStateManager.disableAlpha();
+			GlStateManager.color4f(1f, 1f, 1f, 1f);
+			GlStateManager.disableAlphaTest();
 			GlStateManager.disableBlend();
-			GlStateManager.enableAlpha();
+			GlStateManager.enableAlphaTest();
 			GlStateManager.enableBlend();
-			drawScaledCustomSizeModalRect(sidebarX, sidebarY,
+			RenderFuncs.drawScaledCustomSizeModalRect(sidebarX, sidebarY,
 					SIDEBAR_ATTACK_TEXT_HOFFSET, SIDEBAR_ATTACK_TEXT_VOFFSET,
 					SIDEBAR_ATTACK_TEXT_WIDTH, SIDEBAR_ATTACK_TEXT_HEIGHT,
 					SIDEBAR_ATTACK_WIDTH, SIDEBAR_ATTACK_HEIGHT, 256, 256);
@@ -658,17 +667,17 @@ public class FairyScreenGui {
 					name = selectedName;
 				}
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(sidebarX + (SIDEBAR_ATTACK_WIDTH / 2), sidebarY + 7, 0); 
-				GlStateManager.scale(scale, scale, scale);
+				GlStateManager.translated(sidebarX + (SIDEBAR_ATTACK_WIDTH / 2), sidebarY + 7, 0); 
+				GlStateManager.scalef(scale, scale, scale);
 				this.drawCenteredString(this.font,
 						name,
 						0,
 						0,
 						0xFFFFFFFF);
 				GlStateManager.popMatrix();
-				GlStateManager.disableAlpha();
+				GlStateManager.disableAlphaTest();
 				GlStateManager.disableBlend();
-				GlStateManager.enableAlpha();
+				GlStateManager.enableAlphaTest();
 				GlStateManager.enableBlend();
 			}
 		}
@@ -680,13 +689,13 @@ public class FairyScreenGui {
 			final int sidebarY = verticalMargin + SIDEBAR_LOGISTICS_VOFFSET;
 			
 			// DRAW BARS
-			Gui.drawRect(sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET,
+			RenderFuncs.drawRect(sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET,
 					sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET,
 					sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET + SIDEBAR_LOGISTICS_HEALTH_WIDTH,
 					sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET + SIDEBAR_LOGISTICS_HEALTH_HEIGHT,
 					0xFF444444);
 			
-			Gui.drawRect(sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET,
+			RenderFuncs.drawRect(sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET,
 					sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET,
 					sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET + SIDEBAR_LOGISTICS_ENERGY_WIDTH,
 					sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET + SIDEBAR_LOGISTICS_ENERGY_HEIGHT,
@@ -694,22 +703,22 @@ public class FairyScreenGui {
 			
 			if (!selectedEmpty) {
 				int x = (int) Math.round((float) SIDEBAR_LOGISTICS_HEALTH_WIDTH * (selectedHealth));
-				Gui.drawRect(sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET,
+				RenderFuncs.drawRect(sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET,
 						sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET,
 						sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET + x,
 						sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET + SIDEBAR_LOGISTICS_HEALTH_HEIGHT,
 						0xFFAA0000);
 				
 				x = (int) Math.round((float) SIDEBAR_LOGISTICS_ENERGY_WIDTH * (selectedEnergy));
-				Gui.drawRect(sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET,
+				RenderFuncs.drawRect(sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET,
 						sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET,
 						sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET + x,
 						sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET + SIDEBAR_LOGISTICS_ENERGY_HEIGHT,
 						0xFF00A040);
 			}
-			GlStateManager.color(1f, 1f, 1f, 1f);
+			GlStateManager.color4f(1f, 1f, 1f, 1f);
 			
-			drawScaledCustomSizeModalRect(horizontalMargin + SIDEBAR_LOGISTICS_HOFFSET, verticalMargin + SIDEBAR_LOGISTICS_VOFFSET,
+			RenderFuncs.drawScaledCustomSizeModalRect(horizontalMargin + SIDEBAR_LOGISTICS_HOFFSET, verticalMargin + SIDEBAR_LOGISTICS_VOFFSET,
 					SIDEBAR_LOGISTICS_TEXT_HOFFSET, SIDEBAR_LOGISTICS_TEXT_VOFFSET,
 					SIDEBAR_LOGISTICS_TEXT_WIDTH, SIDEBAR_LOGISTICS_TEXT_HEIGHT,
 					SIDEBAR_LOGISTICS_WIDTH, SIDEBAR_LOGISTICS_HEIGHT, 256, 256);
@@ -723,17 +732,17 @@ public class FairyScreenGui {
 					name = selectedName;
 				}
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(sidebarX + (SIDEBAR_LOGISTICS_WIDTH / 2), sidebarY + 7, 0); 
-				GlStateManager.scale(scale, scale, scale);
+				GlStateManager.translated(sidebarX + (SIDEBAR_LOGISTICS_WIDTH / 2), sidebarY + 7, 0); 
+				GlStateManager.scalef(scale, scale, scale);
 				this.drawCenteredString(this.font,
 						name,
 						0,
 						0,
 						0xFFFFFFFF);
 				GlStateManager.popMatrix();
-				GlStateManager.disableAlpha();
+				GlStateManager.disableAlphaTest();
 				GlStateManager.disableBlend();
-				GlStateManager.enableAlpha();
+				GlStateManager.enableAlphaTest();
 				GlStateManager.enableBlend();
 			}
 		}
@@ -749,39 +758,39 @@ public class FairyScreenGui {
 			final int sidebarY = verticalMargin + SIDEBAR_ATTACK_VOFFSET;
 			
 			// DRAW BARS
-			Gui.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET,
+			RenderFuncs.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET,
 					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET,
 					sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET + SIDEBAR_CONSTRUCTION_HEALTH_WIDTH,
 					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET + SIDEBAR_CONSTRUCTION_HEALTH_HEIGHT,
 					0xFF444444);
 			
-			Gui.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET,
+			RenderFuncs.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET,
 					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET,
 					sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET + SIDEBAR_CONSTRUCTION_ENERGY_WIDTH,
 					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET + SIDEBAR_CONSTRUCTION_ENERGY_HEIGHT,
 					0xFF444444);
 			
 			int x = (int) Math.round((float) SIDEBAR_CONSTRUCTION_HEALTH_WIDTH * (selectedHealth));
-			Gui.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET,
+			RenderFuncs.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET,
 					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET,
 					sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET + x,
 					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET + SIDEBAR_CONSTRUCTION_HEALTH_HEIGHT,
 					0xFFAA0000);
 			
 			x = (int) Math.round((float) SIDEBAR_CONSTRUCTION_ENERGY_WIDTH * (selectedEnergy));
-			Gui.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET,
+			RenderFuncs.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET,
 					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET,
 					sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET + x,
 					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET + SIDEBAR_CONSTRUCTION_ENERGY_HEIGHT,
 					0xFF00A040);
 			
 			// draw background
-			GlStateManager.color(1f, 1f, 1f, 1f);
-			GlStateManager.disableAlpha();
+			GlStateManager.color4f(1f, 1f, 1f, 1f);
+			GlStateManager.disableAlphaTest();
 			GlStateManager.disableBlend();
-			GlStateManager.enableAlpha();
+			GlStateManager.enableAlphaTest();
 			GlStateManager.enableBlend();
-			drawScaledCustomSizeModalRect(sidebarX, sidebarY,
+			RenderFuncs.drawScaledCustomSizeModalRect(sidebarX, sidebarY,
 					SIDEBAR_CONSTRUCTION_TEXT_HOFFSET, SIDEBAR_CONSTRUCTION_TEXT_VOFFSET,
 					SIDEBAR_CONSTRUCTION_TEXT_WIDTH, SIDEBAR_CONSTRUCTION_TEXT_HEIGHT,
 					SIDEBAR_CONSTRUCTION_WIDTH, SIDEBAR_CONSTRUCTION_HEIGHT, 256, 256);
@@ -795,23 +804,23 @@ public class FairyScreenGui {
 					name = selectedName;
 				}
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(sidebarX + (SIDEBAR_CONSTRUCTION_WIDTH / 2), sidebarY + 7, 0); 
-				GlStateManager.scale(scale, scale, scale);
+				GlStateManager.translated(sidebarX + (SIDEBAR_CONSTRUCTION_WIDTH / 2), sidebarY + 7, 0); 
+				GlStateManager.scalef(scale, scale, scale);
 				this.drawCenteredString(this.font,
 						name,
 						0,
 						0,
 						0xFFFFFFFF);
 				GlStateManager.popMatrix();
-				GlStateManager.disableAlpha();
+				GlStateManager.disableAlphaTest();
 				GlStateManager.disableBlend();
-				GlStateManager.enableAlpha();
+				GlStateManager.enableAlphaTest();
 				GlStateManager.enableBlend();
 			}
 		}
 		
 		protected void drawStar(float partialTicks) {
-			drawScaledCustomSizeModalRect(0, 0,
+			RenderFuncs.drawScaledCustomSizeModalRect(0, 0,
 					ICON_STAR_TEXT_HOFFSET, ICON_STAR_TEXT_VOFFSET,
 					ICON_STAR_TEXT_WIDTH, ICON_STAR_TEXT_HEIGHT,
 					ICON_STAR_WIDTH, ICON_STAR_HEIGHT, 256, 256);
@@ -831,7 +840,7 @@ public class FairyScreenGui {
 			final int bar_width = (int) ((float) GUI_FAIRY_XP_BAR_WIDTH * perc);
 			
 			// Draw bar
-			Gui.drawRect(horizontalMargin + GUI_FAIRY_XP_BAR_HOFFSET, verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET,
+			RenderFuncs.drawRect(horizontalMargin + GUI_FAIRY_XP_BAR_HOFFSET, verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET,
 					horizontalMargin + GUI_FAIRY_XP_BAR_HOFFSET + bar_width,
 					verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET + GUI_FAIRY_XP_BAR_HEIGHT, 0xFFFFFFA0);
 			
@@ -841,11 +850,11 @@ public class FairyScreenGui {
 			final int totalWidth = (starWidth) * level + (4 * (level - 1));
 			int x = horizontalMargin + ((GUI_TEXT_WIDTH - totalWidth) / 2);
 			GlStateManager.enableBlend();
-			GlStateManager.color(1f, 1f, 1f, 1f);
+			GlStateManager.color4f(1f, 1f, 1f, 1f);
 			
 			for (int i = 0; i < level; i++) {
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + (starWidth * i),
+				GlStateManager.translated(x + (starWidth * i),
 						verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET + (GUI_FAIRY_XP_BAR_HEIGHT / 2) + (-ICON_STAR_HEIGHT / 2),
 						0);
 				drawStar(partialTicks);
@@ -860,10 +869,10 @@ public class FairyScreenGui {
 			final int horizontalMargin = (width - xSize) / 2;
 			final int verticalMargin = (height - ySize) / 2;
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
-			drawScaledCustomSizeModalRect(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, GUI_WIDTH, GUI_HEIGHT, 256, 256);
+			RenderFuncs.drawScaledCustomSizeModalRect(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, GUI_WIDTH, GUI_HEIGHT, 256, 256);
 			
 			drawLevelDisplay(partialTicks);
 			
@@ -880,23 +889,23 @@ public class FairyScreenGui {
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 			
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(0, 0, 500);
+			GlStateManager.translated(0, 0, 500);
 			if (!container.capability.attackFairyUnlocked()) {
-				Gui.drawRect(GUI_ATTACK_SLOT_HOFFSET,
+				RenderFuncs.drawRect(GUI_ATTACK_SLOT_HOFFSET,
 						GUI_ATTACK_SLOT_VOFFSET,
 						GUI_ATTACK_SLOT_HOFFSET + (3 * 18) - (2),
 						GUI_ATTACK_SLOT_VOFFSET + (3 * 18) - (2),
 						0xAA000000);
 			}
 			if (!container.capability.builderFairyUnlocked()) {
-				Gui.drawRect(GUI_BUILD_SLOT_HOFFSET,
+				RenderFuncs.drawRect(GUI_BUILD_SLOT_HOFFSET,
 						GUI_BUILD_SLOT_VOFFSET,
 						GUI_BUILD_SLOT_HOFFSET + (3 * 18) - (2),
 						GUI_BUILD_SLOT_VOFFSET + (3 * 18) - (2),
 						0xAA000000);
 			}
 			if (!container.capability.logisticsFairyUnlocked()) {
-				Gui.drawRect(GUI_LOGISTICS_SLOT_HOFFSET,
+				RenderFuncs.drawRect(GUI_LOGISTICS_SLOT_HOFFSET,
 						GUI_LOGISTICS_SLOT_VOFFSET,
 						GUI_LOGISTICS_SLOT_HOFFSET + (3 * 18) - (2),
 						GUI_LOGISTICS_SLOT_VOFFSET + (3 * 18) - (2),
@@ -906,8 +915,8 @@ public class FairyScreenGui {
 			
 			if (selectedGroup != -1) {
 				float bright = 1f;
-				GlStateManager.color(bright, bright, bright, 1.0F);
-				GlStateManager.enableTexture2D();
+				GlStateManager.color4f(bright, bright, bright, 1.0F);
+				GlStateManager.enableTexture();
 				GlStateManager.enableBlend();
 				mc.getTextureManager().bindTexture(TEXT);
 				
@@ -924,13 +933,13 @@ public class FairyScreenGui {
 					y += GUI_LOGISTICS_SLOT_VOFFSET;
 				}
 				
-				drawScaledCustomSizeModalRect(x, y,
+				RenderFuncs.drawScaledCustomSizeModalRect(x, y,
 						ICON_CURSOR_MAJOR_TEXT_HOFFSET, ICON_CURSOR_MAJOR_TEXT_VOFFSET,
 						ICON_CURSOR_MAJOR_TEXT_WIDTH, ICON_CURSOR_MAJOR_TEXT_HEIGHT,
 						ICON_CURSOR_MAJOR_WIDTH, ICON_CURSOR_MAJOR_HEIGHT, 256, 256);
 				
 				if (selectedSlot != -1) {
-					GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+					GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 					
 					x += 3;
 					y += 3;
@@ -949,7 +958,7 @@ public class FairyScreenGui {
 					x += (18 * (localSlot % 3));
 					y += (18 * (localSlot / 3));
 					
-					drawScaledCustomSizeModalRect(x, y,
+					RenderFuncs.drawScaledCustomSizeModalRect(x, y,
 							ICON_CURSOR_MINOR_TEXT_HOFFSET, ICON_CURSOR_MINOR_TEXT_VOFFSET,
 							ICON_CURSOR_MINOR_TEXT_WIDTH, ICON_CURSOR_MINOR_TEXT_HEIGHT,
 							ICON_CURSOR_MINOR_WIDTH, ICON_CURSOR_MINOR_HEIGHT, 256, 256);
@@ -957,13 +966,17 @@ public class FairyScreenGui {
 			}
 			
 			// Let buttons draw foregrounds
-			for (GuiButton button : this.buttonList) {
-				button.drawButtonForegroundLayer(mouseX - this.guiLeft, mouseY - this.guiTop);
+			for (Widget button : this.buttons) {
+				if (button instanceof TargetButton) {
+					((TargetButton) button).drawButtonForegroundLayer(mouseX - this.guiLeft, mouseY - this.guiTop);
+				} else if (button instanceof PlacementButton) {
+					((PlacementButton) button).drawButtonForegroundLayer(mouseX - this.guiLeft, mouseY - this.guiTop);
+				}
 			}
 		}
 		
 		@Override
-		protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+		public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
 			if (mouseButton == 1 || mouseButton == 0) {
 				final int size = container.inv.getGaelSize();
 				Integer[] offsets = new Integer[3];
@@ -980,7 +993,7 @@ public class FairyScreenGui {
 						if (this.isPointInRegion(slot.xPos, slot.yPos, 16, 16, mouseX, mouseY)) {
 							if (mouseButton == 1) {
 								this.setButtonsTo(i + offset);
-								return;
+								return true;
 							} else {
 								// they're picking it up or plopping it down
 								if (slot.getSlotIndex() == this.selectedSlot) {
@@ -991,18 +1004,14 @@ public class FairyScreenGui {
 									}
 									// else unaffected
 								}
+								return true; // ?
 							}
 						}
 					}
 				}
 			}
 			
-			super.mouseClicked(mouseX, mouseY, mouseButton);
-		}
-		
-		@Override
-		protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
-			super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+			return super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
 		
 		@Override
@@ -1014,29 +1023,33 @@ public class FairyScreenGui {
 			super.handleMouseClick(slot, slotId, mouseButton, type);
 		}
 		
-		private final class TargetButton extends GuiButton {
+		private final class TargetButton extends Button {
 
 			private final int slot;
 			
-			public TargetButton(int buttonId, int x, int y, int slot) {
-				super(buttonId, x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, null);
+			public TargetButton(int x, int y, int slot, FairyScreenGuiContainer gui) {
+				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, null, (b) -> {
+					FairyHolderInventory.FairyCastTarget current = gui.container.inv.getFairyCastTarget(slot);
+					NetworkHandler.sendToServer(new FairyGuiActionMessage(
+							GuiAction.CHANGE_TARGET, slot, current.ordinal() + 1));
+				});
 				this.slot = slot;
 			}
 			
 			@Override
-			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+			public void render(int mouseX, int mouseY, float partialTicks) {
 				if (this.visible) {
-					hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+					isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 					
-					if (this.hovered) {
-						GlStateManager.color(.8f, .8f, .8f, 1.0F);
+					if (this.isHovered) {
+						GlStateManager.color4f(.8f, .8f, .8f, 1.0F);
 					} else {
-						GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+						GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 					}
 					GlStateManager.disableBlend();
 					GlStateManager.enableBlend();
 					mc.getTextureManager().bindTexture(TEXT);
-					drawScaledCustomSizeModalRect(this.x, this.y,
+					RenderFuncs.drawScaledCustomSizeModalRect(this.x, this.y,
 							ICON_SLOTHELPER_TEXT_HOFFSET, ICON_SLOTHELPER_TEXT_VOFFSET,
 							ICON_SLOTHELPER_TEXT_WIDTH, ICON_SLOTHELPER_TEXT_HEIGHT,
 							ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, 256, 256);
@@ -1056,18 +1069,17 @@ public class FairyScreenGui {
 						break;
 					}
 					
-					drawScaledCustomSizeModalRect(this.x + 1, this.y + 1,
+					RenderFuncs.drawScaledCustomSizeModalRect(this.x + 1, this.y + 1,
 							ICON_TARGET_TEXT_HOFFSET + offsetU, ICON_TARGET_TEXT_VOFFSET,
 							ICON_TARGET_TEXT_WIDTH, ICON_TARGET_TEXT_HEIGHT,
 							ICON_TARGET_WIDTH, ICON_TARGET_HEIGHT, 256, 256);
 				}
 			}
 			
-			@Override
 			public void drawButtonForegroundLayer(int mouseX, int mouseY) {
-				super.drawButtonForegroundLayer(mouseX, mouseY);
+				//super.drawButtonForegroundLayer(mouseX, mouseY);
 				
-				if (this.hovered) {
+				if (this.isHovered) {
 					final FairyCastTarget target = container.inv.getFairyCastTarget(this.slot);
 					
 					GuiUtils.drawHoveringText(target.getDescription(), mouseX, mouseY,
@@ -1078,29 +1090,33 @@ public class FairyScreenGui {
 			
 		}
 		
-		private final class PlacementButton extends GuiButton {
+		private final class PlacementButton extends Button {
 
 			private final int slot;
 			
-			public PlacementButton(int buttonId, int x, int y, int slot) {
-				super(buttonId, x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, null);
+			public PlacementButton(int x, int y, int slot, FairyScreenGuiContainer gui) {
+				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, null, (b) -> {
+					FairyHolderInventory.FairyPlacementTarget current = gui.container.inv.getFairyPlacementTarget(slot);
+					NetworkHandler.sendToServer(new FairyGuiActionMessage(
+							GuiAction.CHANGE_PLACEMENT, slot, current.ordinal() + 1));
+				});
 				this.slot = slot;
 			}
 			
 			@Override
-			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+			public void render(int mouseX, int mouseY, float partialTicks) {
 				if (this.visible) {
-					hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+					isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 					
-					if (this.hovered) {
-						GlStateManager.color(.8f, .8f, .8f, 1.0F);
+					if (this.isHovered) {
+						GlStateManager.color4f(.8f, .8f, .8f, 1.0F);
 					} else {
-						GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+						GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 					}
 					GlStateManager.disableBlend();
 					GlStateManager.enableBlend();
 					mc.getTextureManager().bindTexture(TEXT);
-					drawScaledCustomSizeModalRect(this.x, this.y,
+					RenderFuncs.drawScaledCustomSizeModalRect(this.x, this.y,
 							ICON_SLOTHELPER_TEXT_HOFFSET, ICON_SLOTHELPER_TEXT_VOFFSET,
 							ICON_SLOTHELPER_TEXT_WIDTH, ICON_SLOTHELPER_TEXT_HEIGHT,
 							ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, 256, 256);
@@ -1118,18 +1134,17 @@ public class FairyScreenGui {
 					
 					}
 					
-					drawScaledCustomSizeModalRect(this.x + 1, this.y + 1,
+					RenderFuncs.drawScaledCustomSizeModalRect(this.x + 1, this.y + 1,
 							ICON_PLACEMENT_TEXT_HOFFSET + offsetU, ICON_PLACEMENT_TEXT_VOFFSET,
 							ICON_PLACEMENT_TEXT_WIDTH, ICON_PLACEMENT_TEXT_HEIGHT,
 							ICON_PLACEMENT_WIDTH, ICON_PLACEMENT_HEIGHT, 256, 256);
 				}
 			}
 			
-			@Override
 			public void drawButtonForegroundLayer(int mouseX, int mouseY) {
-				super.drawButtonForegroundLayer(mouseX, mouseY);
+				//super.drawButtonForegroundLayer(mouseX, mouseY);
 				
-				if (this.hovered) {
+				if (this.isHovered) {
 					final FairyPlacementTarget placement = container.inv.getFairyPlacementTarget(this.slot);
 					
 					GuiUtils.drawHoveringText(placement.getDescription(), mouseX, mouseY,

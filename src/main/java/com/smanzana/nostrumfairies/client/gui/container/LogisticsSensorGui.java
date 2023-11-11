@@ -1,23 +1,26 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import java.io.IOException;
-
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.LogicPanel.LogicPanelGui;
 import com.smanzana.nostrumfairies.tiles.LogisticsSensorTileEntity;
+import com.smanzana.nostrummagica.utils.ContainerUtil;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.ClickType;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.ClickType;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Logistics logic gui
@@ -37,12 +40,14 @@ public class LogisticsSensorGui {
 	
 	public static class LogisticsSensorContainer extends LogicContainer {
 		
+		public static final String ID = "logistics_sensor";
+		
 		protected LogisticsSensorTileEntity sensor;
 		protected final LogicPanel panel;
 		protected final IInventory playerInv;
 		
-		public LogisticsSensorContainer(IInventory playerInv, LogisticsSensorTileEntity sensor) {
-			super(null);
+		public LogisticsSensorContainer(int windowId, PlayerInventory playerInv, LogisticsSensorTileEntity sensor) {
+			super(FairyContainers.LogisticsSensor, windowId, null);
 			this.sensor = sensor;
 			this.playerInv = playerInv;
 						
@@ -60,6 +65,19 @@ public class LogisticsSensorGui {
 			
 			// Do this here because this constructor adds another slot
 			this.panel = new LogicPanel(this, sensor, 0, 0, GUI_TEXT_MAIN_WIDTH, 90);
+		}
+		
+		@OnlyIn(Dist.CLIENT)
+		public static LogisticsSensorContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+			return new LogisticsSensorContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
+		}
+		
+		public static IPackedContainerProvider Make(LogisticsSensorTileEntity sensor) {
+			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
+				return new LogisticsSensorContainer(windowId, playerInv, sensor);
+			}, (buffer) -> {
+				ContainerUtil.PackTE(buffer, sensor);
+			});
 		}
 		
 		@Override
@@ -106,15 +124,15 @@ public class LogisticsSensorGui {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class LogisticsSensorGuiContainer extends LogicGuiContainer {
+	public static class LogisticsSensorGuiContainer extends LogicGuiContainer<LogisticsSensorContainer> {
 
 		//private LogisticsSensorContainer container;
-		private final LogicPanelGui panelGui;
+		private final LogicPanelGui<LogisticsSensorGuiContainer> panelGui;
 		
-		public LogisticsSensorGuiContainer(LogisticsSensorContainer container) {
-			super(container);
+		public LogisticsSensorGuiContainer(LogisticsSensorContainer container, PlayerInventory playerInv, ITextComponent name) {
+			super(container, playerInv, name);
 			//this.container = container;
-			this.panelGui = new LogicPanelGui(container.panel, this, 0xFF88C0CC, false);
+			this.panelGui = new LogicPanelGui<>(container.panel, this, 0xFF88C0CC, false);
 			
 			this.xSize = GUI_TEXT_MAIN_WIDTH;
 			this.ySize = GUI_TEXT_MAIN_HEIGHT;
@@ -133,7 +151,7 @@ public class LogisticsSensorGui {
 			int horizontalMargin = this.guiLeft;
 			int verticalMargin = this.guiTop;
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_MAIN_WIDTH, GUI_TEXT_MAIN_HEIGHT, 256, 256);
@@ -141,40 +159,13 @@ public class LogisticsSensorGui {
 			panelGui.draw(mc, guiLeft, guiTop);
 
 			GlStateManager.enableBlend();
-			GlStateManager.enableAlpha();
+			GlStateManager.enableAlphaTest();
 			
 		}
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 			super.drawGuiContainerForegroundLayer(mouseX, mouseY);
-		}
-		
-		@Override
-		public void actionPerformed(GuiButton button) {
-			if (panelGui.actionPerformed(button)) {
-				return;
-			}
-			
-			; // No other buttons for sensor
-		}
-		
-		@Override
-		protected void keyTyped(char typedChar, int keyCode) throws IOException {
-			if (panelGui.keyTyped(typedChar, keyCode)) {
-				return;
-			}
-			
-			super.keyTyped(typedChar, keyCode);
-		}
-		
-		@Override
-		protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-			if (panelGui.mouseClicked(mouseX, mouseY, mouseButton, this.guiLeft, this.guiTop)) {
-				return;
-			}
-			
-			super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
 	}
 	

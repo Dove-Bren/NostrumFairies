@@ -17,11 +17,13 @@ import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawReq
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -35,7 +37,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class OutputPanelTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsLogicProvider, ILogicListener {
+public class OutputPanelTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
 
 	private static final int SLOTS = 3;
 	private static final String NBT_TEMPLATES = "templates";
@@ -394,5 +396,71 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	
 	public void notifyNeighborChanged() {
 		logicComp.onWorldUpdate();
+	}
+
+	@Override
+	public int getSizeInventory() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public ItemStack getStackInSlot(int index) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ItemStack decrStackSize(int index, int count) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ItemStack removeStackFromSlot(int index) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setInventorySlotContents(int index, ItemStack stack) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isUsableByPlayer(PlayerEntity player) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void clear() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getFieldCount() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getField(int index) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setField(int index, int val) {
+		// TODO Auto-generated method stub
+		
 	}
 }

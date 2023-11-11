@@ -1,26 +1,29 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.LogicPanel.LogicPanelGui;
 import com.smanzana.nostrumfairies.tiles.OutputChestTileEntity;
+import com.smanzana.nostrummagica.utils.ContainerUtil;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.ClickType;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.ClickType;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class OutputChestGui {
 	
@@ -41,12 +44,14 @@ public class OutputChestGui {
 
 	public static class OutputChestContainer extends LogicContainer {
 		
+		public static final String ID = "output_chest";
+		
 		protected OutputChestTileEntity chest;
 		protected final LogicPanel logicPanel;
 		private int chestIDStart;
 		
-		public OutputChestContainer(IInventory playerInv, OutputChestTileEntity chest) {
-			super(chest);
+		public OutputChestContainer(int windowId, PlayerInventory playerInv, OutputChestTileEntity chest) {
+			super(FairyContainers.OutputChest, windowId, chest);
 			this.chest = chest;
 						
 			// Construct player inventory
@@ -93,6 +98,19 @@ public class OutputChestGui {
 			}
 
 			logicPanel = new LogicPanel(this, chest, -GUI_PANEL_WIDTH, 0, GUI_PANEL_WIDTH, GUI_PANEL_HEIGHT);
+		}
+		
+		@OnlyIn(Dist.CLIENT)
+		public static OutputChestContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+			return new OutputChestContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
+		}
+		
+		public static IPackedContainerProvider Make(OutputChestTileEntity chest) {
+			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
+				return new OutputChestContainer(windowId, playerInv, chest);
+			}, (buffer) -> {
+				ContainerUtil.PackTE(buffer, chest);
+			});
 		}
 		
 		@Override
@@ -168,15 +186,15 @@ public class OutputChestGui {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class OutputChestGuiContainer extends LogicGuiContainer {
+	public static class OutputChestGuiContainer extends LogicGuiContainer<OutputChestContainer> {
 
 		private OutputChestContainer container;
-		private final LogicPanelGui panelGui;
+		private final LogicPanelGui<OutputChestGuiContainer> panelGui;
 		
-		public OutputChestGuiContainer(OutputChestContainer container) {
-			super(container);
+		public OutputChestGuiContainer(OutputChestContainer container, PlayerInventory playerInv, ITextComponent name) {
+			super(container, playerInv, name);
 			this.container = container;
-			this.panelGui = new LogicPanelGui(container.logicPanel, this, 0xFFE2E0C3, true);
+			this.panelGui = new LogicPanelGui<>(container.logicPanel, this, 0xFFE2E0C3, true);
 			
 			this.xSize = GUI_TEXT_WIDTH;
 			this.ySize = GUI_TEXT_HEIGHT;
@@ -190,20 +208,20 @@ public class OutputChestGui {
 		
 		private void drawStatus(float partialTicks, boolean available) {
 			float alpha = (float) (.5f + (.25f * Math.sin(Math.PI * (double)(System.currentTimeMillis() % 1000) / 1000.0)));
-			GlStateManager.color(1.0F,  1.0F, 1.0F, alpha);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, alpha);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			final int text_hoffset = (available ? GUI_TEXT_WORKING_ICON_HOFFSET : GUI_TEXT_MISSING_ICON_HOFFSET);
 			final int text_voffset = 0;
 			GlStateManager.enableBlend();
-			this.drawTexturedModalRect(0, 0, text_hoffset, text_voffset, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
+			blit(0, 0, text_hoffset, text_voffset, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
 		}
 		
 		private void drawTemplate(float partialTicks, @Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
 				GlStateManager.pushMatrix();
 				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
-				GlStateManager.translate(0, 0, 110);
+				GlStateManager.translatef(0, 0, 110);
 				if (template.getCount() > 1) {
 					final String count = "" + template.getCount();
 					
@@ -212,9 +230,9 @@ public class OutputChestGui {
 							GUI_INV_CELL_LENGTH - (this.font.FONT_HEIGHT),
 							0xFFFFFFFF);
 				} else {
-					GlStateManager.enableAlpha();
+					GlStateManager.enableAlphaTest();
 				}
-				drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
+				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
 				GlStateManager.popMatrix();
 			}
 		}
@@ -225,7 +243,7 @@ public class OutputChestGui {
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
@@ -236,19 +254,19 @@ public class OutputChestGui {
 				ItemStack stack = container.chest.getStackInSlot(i);
 				
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(horizontalMargin + GUI_TOP_INV_HOFFSET + (i * GUI_INV_CELL_LENGTH),
+				GlStateManager.translatef(horizontalMargin + GUI_TOP_INV_HOFFSET + (i * GUI_INV_CELL_LENGTH),
 						verticalMargin + GUI_TOP_INV_VOFFSET,
 						0);
 				
 				if (container.chest.getStackInSlot(i).isEmpty()) {
 					GlStateManager.pushMatrix();
-					GlStateManager.scale(1f, 1f, .05f);
+					GlStateManager.scalef(1f, 1f, .05f);
 					drawTemplate(partialTicks, container.chest.getTemplate(i));
 					GlStateManager.popMatrix();
 				}
 				
 				if (!template.isEmpty() && (stack.isEmpty() || stack.getCount() < template.getCount())) {
-					GlStateManager.translate(0, 0, 100);
+					GlStateManager.translatef(0, 0, 100);
 					drawStatus(partialTicks, true);
 				}
 				
@@ -258,40 +276,13 @@ public class OutputChestGui {
 			panelGui.draw(mc, horizontalMargin, verticalMargin);
 
 			GlStateManager.enableBlend();
-			GlStateManager.enableAlpha();
+			GlStateManager.enableAlphaTest();
 			
 		}
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 			super.drawGuiContainerForegroundLayer(mouseX, mouseY);
-		}
-		
-		@Override
-		public void actionPerformed(GuiButton button) {
-			if (panelGui.actionPerformed(button)) {
-				return;
-			}
-			
-			; // No other buttons for sensor
-		}
-		
-		@Override
-		protected void keyTyped(char typedChar, int keyCode) throws IOException {
-			if (panelGui.keyTyped(typedChar, keyCode)) {
-				return;
-			}
-			
-			super.keyTyped(typedChar, keyCode);
-		}
-		
-		@Override
-		protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-			if (panelGui.mouseClicked(mouseX, mouseY, mouseButton, this.guiLeft, this.guiTop)) {
-				return;
-			}
-			
-			super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
 		
 	}

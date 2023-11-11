@@ -1,26 +1,30 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.LogicPanel.LogicPanelGui;
 import com.smanzana.nostrumfairies.tiles.OutputPanelTileEntity;
+import com.smanzana.nostrummagica.utils.ContainerUtil;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.ClickType;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.InventoryBasic;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.container.ClickType;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class OutputPanelGui {
 	
@@ -41,13 +45,15 @@ public class OutputPanelGui {
 	
 	public static class OutputPanelContainer extends LogicContainer {
 		
-		private IInventory slots = new InventoryBasic("Output Panel", false, 3);
+		public static final String ID = "output_panel";
+		
+		private IInventory slots = new Inventory(3);
 		protected OutputPanelTileEntity panel;
 		protected final LogicPanel logicPanel;
 		private int panelIDStart;
 		
-		public OutputPanelContainer(IInventory playerInv, OutputPanelTileEntity panel) {
-			super(null);
+		public OutputPanelContainer(int windowId, PlayerInventory playerInv, OutputPanelTileEntity panel) {
+			super(FairyContainers.OutputPanel, windowId, panel);
 			this.panel = panel;
 						
 			// Construct player inventory
@@ -88,6 +94,19 @@ public class OutputPanelGui {
 			}
 			
 			logicPanel = new LogicPanel(this, panel, 0, 0, GUI_LPANEL_WIDTH, GUI_LPANEL_HEIGHT);
+		}
+		
+		@OnlyIn(Dist.CLIENT)
+		public static OutputPanelContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+			return new OutputPanelContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
+		}
+		
+		public static IPackedContainerProvider Make(OutputPanelTileEntity panel) {
+			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
+				return new OutputPanelContainer(windowId, playerInv, panel);
+			}, (buffer) -> {
+				ContainerUtil.PackTE(buffer, panel);
+			});
 		}
 		
 		@Override
@@ -163,15 +182,15 @@ public class OutputPanelGui {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class OutputPanelGuiContainer extends LogicGuiContainer {
+	public static class OutputPanelGuiContainer extends LogicGuiContainer<OutputPanelContainer> {
 
 		private OutputPanelContainer container;
-		private final LogicPanelGui panelGui;
+		private final LogicPanelGui<OutputPanelGuiContainer> panelGui;
 		
-		public OutputPanelGuiContainer(OutputPanelContainer container) {
-			super(container);
+		public OutputPanelGuiContainer(OutputPanelContainer container, PlayerInventory playerInv, ITextComponent name) {
+			super(container, playerInv, name);
 			this.container = container;
-			this.panelGui = new LogicPanelGui(container.logicPanel, this, 0xFFE2E0C3, true);
+			this.panelGui = new LogicPanelGui<>(container.logicPanel, this, 0xFFE2E0C3, true);
 			
 			
 			this.xSize = GUI_TEXT_WIDTH + GUI_LPANEL_WIDTH;
@@ -188,7 +207,7 @@ public class OutputPanelGui {
 			if (!template.isEmpty()) {
 				GlStateManager.pushMatrix();
 				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
-				GlStateManager.translate(0, 0, 110);
+				GlStateManager.translated(0, 0, 110);
 				if (template.getCount() > 1) {
 					final String count = "" + template.getCount();
 					
@@ -197,9 +216,9 @@ public class OutputPanelGui {
 							GUI_INV_CELL_LENGTH - (this.font.FONT_HEIGHT),
 							0xFFFFFFFF);
 				} else {
-					GlStateManager.enableAlpha();
+					GlStateManager.enableAlphaTest();
 				}
-				drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
+				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
 				GlStateManager.popMatrix();
 			}
 		}
@@ -210,7 +229,7 @@ public class OutputPanelGui {
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin + GUI_LPANEL_WIDTH, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
@@ -218,12 +237,12 @@ public class OutputPanelGui {
 			// Draw templates, if needed
 			for (int i = 0; i < container.slots.getSizeInventory(); i++) {
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(horizontalMargin + GUI_LPANEL_WIDTH + GUI_TOP_INV_HOFFSET + (i * GUI_INV_CELL_LENGTH),
+				GlStateManager.translated(horizontalMargin + GUI_LPANEL_WIDTH + GUI_TOP_INV_HOFFSET + (i * GUI_INV_CELL_LENGTH),
 						verticalMargin + GUI_TOP_INV_VOFFSET,
 						0);
 				
 				GlStateManager.pushMatrix();
-				GlStateManager.scale(1f, 1f, .05f);
+				GlStateManager.scalef(1f, 1f, .05f);
 				drawTemplate(partialTicks, container.panel.getTemplate(i));
 				GlStateManager.popMatrix();
 				
@@ -233,40 +252,13 @@ public class OutputPanelGui {
 			panelGui.draw(mc, horizontalMargin, verticalMargin);
 
 			GlStateManager.enableBlend();
-			GlStateManager.enableAlpha();
+			GlStateManager.enableAlphaTest();
 			
 		}
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 			super.drawGuiContainerForegroundLayer(mouseX, mouseY);
-		}
-		
-		@Override
-		public void actionPerformed(GuiButton button) {
-			if (panelGui.actionPerformed(button)) {
-				return;
-			}
-			
-			; // No other buttons for sensor
-		}
-		
-		@Override
-		protected void keyTyped(char typedChar, int keyCode) throws IOException {
-			if (panelGui.keyTyped(typedChar, keyCode)) {
-				return;
-			}
-			
-			super.keyTyped(typedChar, keyCode);
-		}
-		
-		@Override
-		protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-			if (panelGui.mouseClicked(mouseX, mouseY, mouseButton, this.guiLeft, this.guiTop)) {
-				return;
-			}
-			
-			super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
 	}
 	

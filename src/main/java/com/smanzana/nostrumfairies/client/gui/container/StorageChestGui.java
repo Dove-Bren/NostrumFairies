@@ -2,21 +2,26 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.tiles.StorageChestTileEntity;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
+import com.smanzana.nostrummagica.utils.ContainerUtil;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Container;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class StorageChestGui {
 	
@@ -34,10 +39,13 @@ public class StorageChestGui {
 
 	public static class StorageChestContainer extends Container {
 		
+		public static final String ID = "storage_chest";
+		
 		protected StorageChestTileEntity chest;
 		//private int chestIDStart;
 		
-		public StorageChestContainer(IInventory playerInv, StorageChestTileEntity chest) {
+		public StorageChestContainer(int windowId, PlayerInventory playerInv, StorageChestTileEntity chest) {
+			super(FairyContainers.StorageChest, windowId);
 			this.chest = chest;
 						
 			// Construct player inventory
@@ -63,6 +71,19 @@ public class StorageChestGui {
 					});
 				}
 			}
+		}
+		
+		@OnlyIn(Dist.CLIENT)
+		public static StorageChestContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+			return new StorageChestContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
+		}
+		
+		public static IPackedContainerProvider Make(StorageChestTileEntity chest) {
+			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
+				return new StorageChestContainer(windowId, playerInv, chest);
+			}, (buffer) -> {
+				ContainerUtil.PackTE(buffer, chest);
+			});
 		}
 		
 		@Override
@@ -109,12 +130,12 @@ public class StorageChestGui {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class StorageChestGuiContainer extends AutoGuiContainer {
+	public static class StorageChestGuiContainer extends AutoGuiContainer<StorageChestContainer> {
 
 		//private TestChestContainer container;
 		
-		public StorageChestGuiContainer(StorageChestContainer container) {
-			super(container);
+		public StorageChestGuiContainer(StorageChestContainer container, PlayerInventory playerInv, ITextComponent name) {
+			super(container, playerInv, name);
 			//this.container = container;
 			
 			this.xSize = GUI_TEXT_WIDTH;
@@ -132,7 +153,7 @@ public class StorageChestGui {
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);

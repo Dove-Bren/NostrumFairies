@@ -12,6 +12,7 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
 import net.minecraft.item.ItemStack;
@@ -21,7 +22,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public class OutputChestTileEntity extends LogisticsChestTileEntity implements ILogisticsLogicProvider, ILogicListener {
+public class OutputChestTileEntity extends LogisticsChestTileEntity implements ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
 
 	private static final int SLOTS = 3;
 	private static final String NBT_TEMPLATES = "templates";
@@ -297,5 +298,20 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	
 	public void notifyNeighborChanged() {
 		logicComp.onWorldUpdate();
+	}
+
+	@Override
+	public int getFieldCount() {
+		return 0;
+	}
+
+	@Override
+	public int getField(int index) {
+		return 0;
+	}
+
+	@Override
+	public void setField(int index, int val) {
+		
 	}
 }
