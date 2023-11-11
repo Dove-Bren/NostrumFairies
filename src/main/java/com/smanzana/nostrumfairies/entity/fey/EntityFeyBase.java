@@ -461,7 +461,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 	protected abstract boolean canMergeMoreJobs();
 	
 	@Override
-	protected abstract void initEntityAI();
+	protected abstract void registerGoals();
 	
 	protected void teleportFromStuck() {
 		this.teleportHome();

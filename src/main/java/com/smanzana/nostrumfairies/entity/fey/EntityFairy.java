@@ -535,7 +535,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	protected void initEntityAI() {
+	protected void registerGoals() {
 		// TODO Auto-generated method stub
 		// I guess we should wander and check if tehre's a home nearby and if so make it our home and stop wandering.
 		// Or if we're revolting... just quit for this test one?

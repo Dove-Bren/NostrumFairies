@@ -6,7 +6,8 @@ import javax.annotation.Nullable;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.entity.EntityTippedArrowEx;
+import com.smanzana.nostrumfairies.entity.EntityArrowEx;
+import com.smanzana.nostrumfairies.items.FairyItems;
 import com.smanzana.nostrumfairies.items.FeyResource;
 import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
@@ -18,7 +19,6 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
 import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
 import com.smanzana.nostrummagica.items.NostrumSkillItem;
-import com.smanzana.nostrummagica.items.NostrumSkillItem.SkillItemType;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.spells.EAlteration;
@@ -31,44 +31,39 @@ import com.smanzana.nostrummagica.spells.components.triggers.SeekingBulletTrigge
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.entity.IMobEntityData;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityAIAvoidEntity;
-import net.minecraft.entity.ai.EntityAIHurtByTarget;
-import net.minecraft.entity.ai.EntityAILookIdle;
-import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
-import net.minecraft.entity.ai.EntityAISwimming;
-import net.minecraft.entity.ai.EntityAIWander;
-import net.minecraft.entity.ai.EntityAIWatchClosest;
+import net.minecraft.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.entity.ai.goal.HurtByTargetGoal;
+import net.minecraft.entity.ai.goal.LookAtGoal;
+import net.minecraft.entity.ai.goal.LookRandomlyGoal;
+import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
+import net.minecraft.entity.ai.goal.SwimGoal;
+import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.network.datasync.IDataSerializers;
-import net.minecraft.network.play.server.SPacketAnimation;
-import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
-import net.minecraft.world.ServerWorld;
+import net.minecraft.world.server.ServerWorld;
 
 public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	
 	protected static final DataParameter<BattleStanceShadowFey> STANCE  = EntityDataManager.<BattleStanceShadowFey>createKey(EntityShadowFey.class, BattleStanceShadowFey.instance());
-	protected static final DataParameter<Boolean> MORPHING = EntityDataManager.<Boolean>createKey(EntityShadowFey.class, IDataSerializers.BOOLEAN);
+	protected static final DataParameter<Boolean> MORPHING = EntityDataManager.<Boolean>createKey(EntityShadowFey.class, DataSerializers.BOOLEAN);
 
 	private static Spell SPELL_SLOW = null;
 	
@@ -85,7 +80,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			return false;
 		}
 		
-		if (stack.getItem() instanceof FeyResource && FeyResource.instance().getType(stack) == FeyResourceType.BELL) {
+		if (stack.getItem() == FairyItems.feyBell) {
 			return true;
 		}
 		
@@ -96,10 +91,9 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	protected int idleChatTicks;
 	protected int morphTicks;
 	
-	public EntityShadowFey(World world) {
-		super(world);
+	public EntityShadowFey(EntityType<? extends EntityShadowFey> type, World world) {
+		super(type, world);
 		this.experienceValue = 9;
-		this.height = 0.75f;
 		
 		idleChatTicks = -1;
 		
@@ -135,15 +129,15 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	}
 
 	@Override
-	protected void initEntityAI() {
+	protected void registerGoals() {
 		int priority = 1;
 
-		this.tasks.addTask(priority++, new EntityAISwimming(this));
+		this.goalSelector.addGoal(priority++, new SwimGoal(this));
 		//EntityCreature theEntityIn, Class<T> classToAvoidIn, Predicate <? super T > avoidTargetSelectorIn, float avoidDistanceIn, double farSpeedIn, double nearSpeedIn
-		this.tasks.addTask(priority++, new EntityAIAvoidEntity<PlayerEntity>(this, PlayerEntity.class, (player) -> {
-				return isDangerItem(player.getHeldItemMainhand()) || isDangerItem(player.getHeldItemOffhand());
-			}, 5, 1, 1.2));
-		this.tasks.addTask(priority++, new EntityAIAttackRanged<EntityShadowFey>(this, 1.0, 0, 25) { // All delay in animation
+		this.goalSelector.addGoal(priority++, new AvoidEntityGoal<PlayerEntity>(this, PlayerEntity.class, 5, 1, 1.2, (player) -> {
+			return isDangerItem(player.getHeldItemMainhand()) || isDangerItem(player.getHeldItemOffhand());
+		}));
+		this.goalSelector.addGoal(priority++, new EntityAIAttackRanged<EntityShadowFey>(this, 1.0, 0, 25) { // All delay in animation
 			@Override
 			public boolean hasWeaponEquipped(EntityShadowFey elf) {
 				return shouldUseBow() && !elf.getMorphing();
@@ -160,7 +154,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			}
 		});
 		
-		this.tasks.addTask(priority++, new EntityAIAttackRanged<EntityShadowFey>(this, 0.75, 10, 3) {
+		this.goalSelector.addGoal(priority++, new EntityAIAttackRanged<EntityShadowFey>(this, 0.75, 10, 3) {
 			@Override
 			public boolean hasWeaponEquipped(EntityShadowFey elf) {
 				return !shouldUseBow() && !elf.getMorphing();
@@ -177,21 +171,21 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			}
 		});
 		
-		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityShadowFey>(this, 60, 10, true, (elf) -> {
+		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityShadowFey>(this, 60, 10, true, (elf) -> {
 			return elf.getAttackTarget() != null && !elf.getMorphing();
 		}, new Spell[]{SPELL_SLOW}));
-		this.tasks.addTask(priority++, new EntityAIWander(this, 1.0D));
-		this.tasks.addTask(priority++, new EntityAIWatchClosest(this, PlayerEntity.class, 8.0F));
-		this.tasks.addTask(priority++, new EntityAILookIdle(this));
+		this.goalSelector.addGoal(priority++, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
+		this.goalSelector.addGoal(priority++, new LookAtGoal(this, PlayerEntity.class, 8.0F));
+		this.goalSelector.addGoal(priority++, new LookRandomlyGoal(this));
 		
 		priority = 1;
-		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]));
-		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<EntityFeyBase>(this, EntityFeyBase.class, 5, true, false, (Predicate <EntityFeyBase >)null));
-		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<PlayerEntity>(this, PlayerEntity.class, 10, true, false, (player) -> {
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setCallsForHelp(EntityShadowFey.class));
+		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<EntityFeyBase>(this, EntityFeyBase.class, 5, true, false, null));
+		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<PlayerEntity>(this, PlayerEntity.class, 10, true, false, (player) -> {
 			return !player.isSneaking();
 		}));
-		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<MobEntity>(this, MobEntity.class, 5, true, false, (living) -> {
-			return living != null && !living.isDead && !(living instanceof IMob);
+		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<MobEntity>(this, MobEntity.class, 5, true, false, (living) -> {
+			return living != null && living.isAlive() && !(living instanceof IMob);
 		}));
 	}
 
@@ -270,7 +264,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	});
 	
 	protected void shootArrowAt(LivingEntity target, float distanceFactor) {
-		EntityTippedArrowEx entitytippedarrow = new EntityTippedArrowEx(this.world, this);
+		EntityArrowEx entitytippedarrow = new EntityArrowEx(this.world, this);
 		entitytippedarrow.setFilter(SHADOW_FEY_ARROW_FILTER);
 		double d0 = target.posX - this.posX;
 		double d1 = target.getEntityBoundingBox().minY + (double)(target.height / 3.0F) - entitytippedarrow.posY;

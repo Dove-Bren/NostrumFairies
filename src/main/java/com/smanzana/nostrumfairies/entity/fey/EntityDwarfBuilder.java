@@ -223,8 +223,8 @@ public class EntityDwarfBuilder extends EntityDwarf {
 	}
 
 	@Override
-	protected void initEntityAI() {
-		super.initEntityAI();
+	protected void registerGoals() {
+		super.registerGoals();
 	}
 
 	@Override

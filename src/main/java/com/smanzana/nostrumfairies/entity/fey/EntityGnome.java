@@ -27,7 +27,7 @@ import com.smanzana.nostrummagica.utils.ItemStacks;
 import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityAISwimming;
+import net.minecraft.entity.ai.SwimGoal;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -516,9 +516,9 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	protected void initEntityAI() {
+	protected void registerGoals() {
 		int priority = 0;
-		this.tasks.addTask(priority++, new EntityAISwimming(this));
+		this.goalSelector.addGoal(priority++, new SwimGoal(this));
 		; // Could panic when they are attacked!
 	}
 

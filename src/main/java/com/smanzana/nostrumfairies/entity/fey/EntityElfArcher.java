@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.smanzana.nostrumfairies.entity.EntityTippedArrowEx;
+import com.smanzana.nostrumfairies.entity.EntityArrowEx;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -27,8 +27,8 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityAIHurtByTarget;
-import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
+import net.minecraft.entity.ai.HurtByTargetGoal;
+import net.minecraft.entity.ai.NearestAttackableTargetGoal;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Enchantments;
@@ -173,9 +173,9 @@ public class EntityElfArcher extends EntityElf {
 	}
 
 	@Override
-	protected void initEntityAI() {
+	protected void registerGoals() {
 		int priority = 1;
-		this.tasks.addTask(priority++, new EntityAIAttackRanged<EntityElfArcher>(this, 1.0, 0, 25) { // All delay in animation
+		this.goalSelector.addGoal(priority++, new EntityAIAttackRanged<EntityElfArcher>(this, 1.0, 0, 25) { // All delay in animation
 			@Override
 			public boolean hasWeaponEquipped(EntityElfArcher elf) {
 				return shouldUseBow();
@@ -192,7 +192,7 @@ public class EntityElfArcher extends EntityElf {
 			}
 		});
 		
-		this.tasks.addTask(priority++, new EntityAIAttackRanged<EntityElfArcher>(this, 0.75, 10, 3) {
+		this.goalSelector.addGoal(priority++, new EntityAIAttackRanged<EntityElfArcher>(this, 0.75, 10, 3) {
 			@Override
 			public boolean hasWeaponEquipped(EntityElfArcher elf) {
 				return !shouldUseBow();
@@ -209,16 +209,16 @@ public class EntityElfArcher extends EntityElf {
 			}
 		});
 		
-		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityElfArcher>(this, 60, 10, false, (elf) -> {
+		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityElfArcher>(this, 60, 10, false, (elf) -> {
 			return elf.getAttackTarget() != null;
 		}, new Spell[]{SPELL_HASTE}));
 		
 		priority = 1;
-		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]));
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this, true, new Class[0]));
 		
 		// Note this means we'll stop doing a logistics ATTACK task to do this. Perhaps I should make a 'logistics target' task here
 		// which you can slot with higher priority so that the following stuff only happens when no task is present?
-		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<MonsterEntity>(this, MonsterEntity.class, 5, true, true, MonsterEntity.VISIBLE_MOB_SELECTOR));
+		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<MonsterEntity>(this, MonsterEntity.class, 5, true, true, MonsterEntity.VISIBLE_MOB_SELECTOR));
 	}
 
 	@Override
@@ -282,7 +282,7 @@ public class EntityElfArcher extends EntityElf {
 	});
 	
 	protected void shootArrowAt(LivingEntity target, float distanceFactor) {
-		EntityTippedArrowEx entitytippedarrow = new EntityTippedArrowEx(this.world, this);
+		EntityArrowEx entitytippedarrow = new EntityArrowEx(this.world, this);
 		entitytippedarrow.setFilter(ELF_ARCHER_ARROW_FILTER);
 		double d0 = target.posX - this.posX;
 		double d1 = target.getEntityBoundingBox().minY + (double)(target.height / 3.0F) - entitytippedarrow.posY;

@@ -31,8 +31,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.IMobEntityData;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityAIHurtByTarget;
-import net.minecraft.entity.ai.EntityAISwimming;
+import net.minecraft.entity.ai.HurtByTargetGoal;
+import net.minecraft.entity.ai.SwimGoal;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -415,11 +415,11 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 
 	@Override
-	protected void initEntityAI() {
+	protected void registerGoals() {
 		int priority = 1;
-		this.tasks.addTask(priority++, new EntityAISwimming(this));
-		//this.tasks.addTask(priority++, new EntityAIAttackRanged(this, 1.0, 20 * 3, 10));
-		this.tasks.addTask(priority++, new EntityAIAttackRanged<EntityElf>(this, 1.0, 20 * 3, 10) {
+		this.goalSelector.addGoal(priority++, new SwimGoal(this));
+		//this.goalSelector.addGoal(priority++, new EntityAIAttackRanged(this, 1.0, 20 * 3, 10));
+		this.goalSelector.addGoal(priority++, new EntityAIAttackRanged<EntityElf>(this, 1.0, 20 * 3, 10) {
 			@Override
 			public boolean hasWeaponEquipped(EntityElf elf) {
 				return true;
@@ -431,15 +431,15 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			}
 		});
 		
-//		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityElf>(this, 60, 10, true, (elf) -> {
+//		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityElf>(this, 60, 10, true, (elf) -> {
 //			return elf.getAttackTarget() != null;
 //		}, new Spell[]{SPELL_VINES}));
-//		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityElf>(this, 20, 4, true, (elf) -> {
+//		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityElf>(this, 20, 4, true, (elf) -> {
 //			return elf.getAttackTarget() != null;
 //		}, new Spell[]{SPELL_POISON_WIND}));
 		
 		priority = 1;
-		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]));
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this, true, new Class[0]));
 	}
 
 	@Override

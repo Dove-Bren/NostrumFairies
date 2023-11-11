@@ -47,7 +47,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.IEntityOwnable;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityAIHurtByTarget;
+import net.minecraft.entity.ai.HurtByTargetGoal;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.EntityEquipmentSlot;
@@ -570,9 +570,9 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 
 	@Override
-	protected void initEntityAI() {
+	protected void registerGoals() {
 		int priority = 1;
-		this.tasks.addTask(priority++, new EntityAIFlierDiveTask<EntityPersonalFairy>(this, 1.0, 20 * 5, 16, true) {
+		this.goalSelector.addGoal(priority++, new EntityAIFlierDiveTask<EntityPersonalFairy>(this, 1.0, 20 * 5, 16, true) {
 			@Override
 			public boolean shouldExecute() {
 				if (getJob() != FairyJob.WARRIOR) {
@@ -598,7 +598,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			}
 		});
 		
-		this.tasks.addTask(priority++, new EntityAIOrbitEntityGeneric<EntityPersonalFairy>(this, null, 2, 20 * 5) {
+		this.goalSelector.addGoal(priority++, new EntityAIOrbitEntityGeneric<EntityPersonalFairy>(this, null, 2, 20 * 5) {
 			@Override
 			public boolean shouldExecute() {
 				if (getJob() != FairyJob.WARRIOR) {
@@ -667,7 +667,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			}
 		});
 		
-		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityPersonalFairy>(this, 20, 4, true, (fairy) -> {
+		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityPersonalFairy>(this, 20, 4, true, (fairy) -> {
 			return getJob() == FairyJob.WARRIOR
 					&& fairy.getAttackTarget() != null
 					&& castTarget == FairyCastTarget.TARGET
@@ -681,7 +681,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		});
 		
 		
-		this.tasks.addTask(priority++, new EntitySpellAttackTask<EntityPersonalFairy>(this, 20, 4, true, (fairy) -> {
+		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityPersonalFairy>(this, 20, 4, true, (fairy) -> {
 			return getJob() == FairyJob.WARRIOR
 					&& fairy.getAttackTarget() != null
 					&& castTarget != FairyCastTarget.TARGET
@@ -705,7 +705,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		});
 		
 		priority = 1;
-        this.targetTasks.addTask(priority++, new EntityAIOwnerHurtByTargetGeneric<EntityPersonalFairy>(this) {
+        this.targetSelector.addGoal(priority++, new EntityAIOwnerHurtByTargetGeneric<EntityPersonalFairy>(this) {
 			@Override
 			public boolean shouldExecute() {
 				if (getJob() != FairyJob.WARRIOR) {
@@ -715,7 +715,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				return super.shouldExecute();
 			}
 		});
-        this.targetTasks.addTask(priority++, new EntityAIOwnerHurtTargetGeneric<EntityPersonalFairy>(this) {
+        this.targetSelector.addGoal(priority++, new EntityAIOwnerHurtTargetGeneric<EntityPersonalFairy>(this) {
 			@Override
 			public boolean shouldExecute() {
 				if (getJob() != FairyJob.WARRIOR) {
@@ -725,7 +725,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				return super.shouldExecute();
 			}
 		});
-		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]) {
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this, true, new Class[0]) {
 			@Override
 			public boolean shouldExecute() {
 				if (getJob() != FairyJob.WARRIOR) {

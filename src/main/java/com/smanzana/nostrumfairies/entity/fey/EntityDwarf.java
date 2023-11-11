@@ -46,8 +46,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.IMobEntityData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackMelee;
-import net.minecraft.entity.ai.EntityAIHurtByTarget;
-import net.minecraft.entity.ai.EntityAISwimming;
+import net.minecraft.entity.ai.HurtByTargetGoal;
+import net.minecraft.entity.ai.SwimGoal;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -821,9 +821,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	protected void initEntityAI() {
+	protected void registerGoals() {
 		int priority = 1;
-		this.tasks.addTask(priority++, new EntityAISwimming(this) {
+		this.goalSelector.addGoal(priority++, new SwimGoal(this) {
 			@Override
 			public boolean shouldExecute() {
 				// Ignore water when working
@@ -833,13 +833,13 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				return super.shouldExecute();
 			}
 		});
-		this.tasks.addTask(priority++, new EntityAIAttackMelee(this, 1.0, true)); // also gated on target, like 'combat tick' on fey mechs
+		this.goalSelector.addGoal(priority++, new EntityAIAttackMelee(this, 1.0, true)); // also gated on target, like 'combat tick' on fey mechs
 		
 		priority = 1;
-		this.targetTasks.addTask(priority++, new EntityAIHurtByTarget(this, true, new Class[0]));
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this, true, new Class[0]));
 		
 		// Could hunt mobs
-//		this.targetTasks.addTask(priority++, new EntityAINearestAttackableTarget<MonsterEntity>(this, MonsterEntity.class, 10, true, false, (mob) -> {
+//		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<MonsterEntity>(this, MonsterEntity.class, 10, true, false, (mob) -> {
 //			return (mob instanceof IEntityTameable ? !((IEntityTameable) mob).isTamed()
 //					: true);
 //		}));
