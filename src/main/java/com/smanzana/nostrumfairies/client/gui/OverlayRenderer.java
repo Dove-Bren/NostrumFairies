@@ -3,6 +3,9 @@ package com.smanzana.nostrumfairies.client.gui;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
+import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.capabilities.templates.ITemplateViewerCapability;
@@ -15,25 +18,23 @@ import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.BlueprintBlock;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.ClientPlayerEntity;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.GlStateManager.DestFactor;
-import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
@@ -41,9 +42,9 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-public class OverlayRenderer extends Gui {
+public class OverlayRenderer extends AbstractGui {
 
 	public OverlayRenderer() {
 		MinecraftForge.EVENT_BUS.register(this);
@@ -57,17 +58,17 @@ public class OverlayRenderer extends Gui {
 	
 	@SubscribeEvent
 	public void onRender(RenderGameOverlayEvent.Post event) {
-		Minecraft.getInstance().getTextureManager().bindTexture(Gui.ICONS);
+		Minecraft.getInstance().getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
 		
 	}
 	
 	protected boolean shouldDisplaySelection(PlayerEntity player) {
 		for (ItemStack stack : player.getEquipmentAndArmor()) {
-			if (stack.isEmpty() || !stack.hasCapability(TemplateViewerCapability.CAPABILITY, null)) {
+			if (stack.isEmpty() || !stack.getCapability(TemplateViewerCapability.CAPABILITY, null).isPresent()) {
 				continue;
 			}
 			
-			ITemplateViewerCapability cap = stack.getCapability(TemplateViewerCapability.CAPABILITY, null);
+			ITemplateViewerCapability cap = stack.getCapability(TemplateViewerCapability.CAPABILITY, null).orElse(null);
 			if (cap.isEnabled()) {
 				return true;
 			}
@@ -82,7 +83,7 @@ public class OverlayRenderer extends Gui {
 				continue;
 			}
 			
-			if (TemplateWand.getModeOf(stack) != WandMode.SPAWN) {
+			if (TemplateWand.GetWandMode(stack) != WandMode.SPAWN) {
 				continue;
 			}
 			
@@ -94,14 +95,14 @@ public class OverlayRenderer extends Gui {
 	
 	@SubscribeEvent
 	public void onRender(RenderWorldLastEvent event) {
-		ClientPlayerEntity player = Minecraft.getInstance().player;
+		final Minecraft mc = Minecraft.getInstance();
+		ClientPlayerEntity player = mc.player;
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
-		Minecraft mc = Minecraft.getInstance();
 		
 		// Hook into static TESR renderer
 		StaticTESRRenderer.instance.render(mc, player, event.getPartialTicks());
-		GlStateManager.color(1f, 1f, 0f, 1f);
-		GlStateManager.color(1f, 1f, 1f, 1f);
+		GlStateManager.color4f(1f, 1f, 0f, 1f);
+		GlStateManager.color4f(1f, 1f, 1f, 1f);
 		
 		// Check for template viewer item and then display template selection
 		if (shouldDisplaySelection(player)) {
@@ -111,9 +112,9 @@ public class OverlayRenderer extends Gui {
 			
 			if (pos1 != null) {
 				
-				double minDist = player.getDistanceSq(pos1);
+				double minDist = player.getDistanceSq(pos1.getX(), pos1.getY(), pos1.getZ());
 				if (minDist >= 5096 && pos2 != null) {
-					minDist = player.getDistanceSq(pos2);
+					minDist = player.getDistanceSq(pos2.getX(), pos2.getY(), pos2.getZ());
 				}
 				
 				if (minDist < 5096) {
@@ -139,7 +140,8 @@ public class OverlayRenderer extends Gui {
 	
 	@SubscribeEvent
 	public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-		ClientPlayerEntity player = Minecraft.getInstance().player;
+		final Minecraft mc = Minecraft.getInstance();
+		ClientPlayerEntity player = mc.player;
 		
 		if (event.getType() == ElementType.CROSSHAIRS) {
 			if (shouldDisplayPreview(player)) {
@@ -149,13 +151,13 @@ public class OverlayRenderer extends Gui {
 						continue;
 					}
 					
-					if (TemplateWand.getModeOf(held) != WandMode.SPAWN) {
+					if (TemplateWand.GetWandMode(held) != WandMode.SPAWN) {
 						continue;
 					}
 					
 					ItemStack templateScroll = TemplateWand.GetSelectedTemplate(held);
 					if (!templateScroll.isEmpty()) {
-						name = templateScroll.getDisplayName();
+						name = templateScroll.getDisplayName().getFormattedText();
 						break;
 					}
 				}
@@ -163,10 +165,10 @@ public class OverlayRenderer extends Gui {
 				if (name != null) {
 					
 					GlStateManager.pushMatrix();
-					ScaledResolution res = event.getResolution();
-					GlStateManager.translate(
-							(res.getScaledWidth_double() / 2),
-							(res.getScaledHeight_double() / 2) + 10,
+					MainWindow res = event.getWindow();
+					GlStateManager.translated(
+							((double) res.getScaledWidth() / 2),
+							((double) res.getScaledHeight() / 2) + 10,
 							0);
 					renderCurrentIndex(name);
 					GlStateManager.popMatrix();
@@ -177,8 +179,9 @@ public class OverlayRenderer extends Gui {
 	
 	@SubscribeEvent
 	public void onHighlight(DrawBlockHighlightEvent event) {
-		if (event.getTarget().typeOfHit == RayTraceResult.Type.BLOCK) {
-			ClientPlayerEntity player = Minecraft.getInstance().player;
+		if (event.getTarget().getType() == RayTraceResult.Type.BLOCK) {
+			Minecraft mc = Minecraft.getInstance();
+			ClientPlayerEntity player = mc.player;
 			
 			if (shouldDisplayPreview(player) && player.isSneaking()) {
 				ItemStack templateScroll = ItemStack.EMPTY;
@@ -187,7 +190,7 @@ public class OverlayRenderer extends Gui {
 						continue;
 					}
 					
-					if (TemplateWand.getModeOf(held) != WandMode.SPAWN) {
+					if (TemplateWand.GetWandMode(held) != WandMode.SPAWN) {
 						continue;
 					}
 					
@@ -203,8 +206,9 @@ public class OverlayRenderer extends Gui {
 				}
 				
 				if (cachedBlueprint != null) {
-					Vec3d center = event.getTarget().hitVec;
-					BlockPos blockPos = event.getTarget().getBlockPos().offset(event.getTarget().sideHit);
+					BlockRayTraceResult blockResult = (BlockRayTraceResult) event.getTarget();
+					Vec3d center = event.getTarget().getHitVec();
+					BlockPos blockPos = blockResult.getPos().offset(blockResult.getFace());
 					Direction face = Direction.getFacingFromVector((float) (center.x - player.posX), 0f, (float) (center.z - player.posZ));
 					// apply original template rotation
 					renderBlueprintPreview(blockPos, cachedBlueprint.getPreview(), face, event.getPartialTicks());
@@ -217,24 +221,25 @@ public class OverlayRenderer extends Gui {
 	private int cachedRenderList = -1;
 	
 	private void renderAnchorBlock(BlockPos pos, float partialTicks) {
-		ClientPlayerEntity player = Minecraft.getInstance().player;
-		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
+		Minecraft mc = Minecraft.getInstance();
+		ClientPlayerEntity player = mc.player;
+		Vec3d playerPos = player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
 		Vec3d offset = new Vec3d(pos.getX() - playerPos.x,
 				pos.getY() - playerPos.y,
 				pos.getZ() - playerPos.z);
 		
 		GlStateManager.pushMatrix();
 		
-		GlStateManager.disableAlpha();
+		GlStateManager.disableAlphaTest();
 		GlStateManager.disableBlend();
-		GlStateManager.enableTexture2D();
-		GlStateManager.enableAlpha();
+		GlStateManager.enableTexture();
+		GlStateManager.enableAlphaTest();
 		GlStateManager.enableBlend();
-		GlStateManager.disableTexture2D();
-		GlStateManager.disableDepth();
-		GlStateManager.color(.4f, .7f, 1f, .4f);
+		GlStateManager.disableTexture();
+		GlStateManager.disableDepthTest();
+		GlStateManager.color4f(.4f, .7f, 1f, .4f);
 		
-		GlStateManager.translate(offset.x, offset.y, offset.z);
+		GlStateManager.translated(offset.x, offset.y, offset.z);
 		
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buffer = tessellator.getBuffer();
@@ -274,26 +279,27 @@ public class OverlayRenderer extends Gui {
 		tessellator.draw();
 		
 		GlStateManager.popMatrix();
-		GlStateManager.enableTexture2D();
-		GlStateManager.enableDepth();
+		GlStateManager.enableTexture();
+		GlStateManager.enableDepthTest();
 	}
 	
 	private void renderSelectionBox(BlockPos min, BlockPos max, float partialTicks) {
-		ClientPlayerEntity player = Minecraft.getInstance().player;
-		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
+		Minecraft mc = Minecraft.getInstance();
+		ClientPlayerEntity player = mc.player;
+		Vec3d playerPos = player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
 		Vec3d offset = new Vec3d(min.getX() - playerPos.x,
 				min.getY() - playerPos.y,
 				min.getZ() - playerPos.z);
 		
 		GlStateManager.pushMatrix();
 		
-		GlStateManager.disableAlpha();
+		GlStateManager.disableAlphaTest();
 		GlStateManager.disableBlend();
-		GlStateManager.enableTexture2D();
-		GlStateManager.enableAlpha();
+		GlStateManager.enableTexture();
+		GlStateManager.enableAlphaTest();
 		GlStateManager.enableBlend();
-		GlStateManager.disableTexture2D();
-		GlStateManager.disableDepth();
+		GlStateManager.disableTexture();
+		GlStateManager.disableDepthTest();
 		
 		// Disable cull if inside
 		if (playerPos.x > min.getX() && playerPos.y > min.getY() && playerPos.z > min.getZ()
@@ -314,15 +320,15 @@ public class OverlayRenderer extends Gui {
 		}
 		
 		if (good) { // If good
-			GlStateManager.color(.4f, .9f, .4f, .3f);
+			GlStateManager.color4f(.4f, .9f, .4f, .3f);
 		} else {
-			GlStateManager.color(.9f, .4f, .4f, .3f);
+			GlStateManager.color4f(.9f, .4f, .4f, .3f);
 		}
 		
 		// TODO apply partial tick offset to effects too! lol!
 		
-		GlStateManager.translate(offset.x, offset.y, offset.z);
-		GlStateManager.scale((max.getX() - min.getX()) + 1,
+		GlStateManager.translated(offset.x, offset.y, offset.z);
+		GlStateManager.scaled((max.getX() - min.getX()) + 1,
 				(max.getY() - min.getY()) + 1,
 				(max.getZ() - min.getZ()) + 1);
 		
@@ -364,15 +370,15 @@ public class OverlayRenderer extends Gui {
 		tessellator.draw();
 		
 		GlStateManager.popMatrix();
-		GlStateManager.enableTexture2D();
-		GlStateManager.enableDepth();
+		GlStateManager.enableTexture();
+		GlStateManager.enableDepthTest();
 		GlStateManager.enableCull();
 	}
 	
 	private void renderBlueprintPreview(BlockPos center, BlueprintBlock[][][] preview, Direction rotation, float partialTicks) {
 		Minecraft mc = Minecraft.getInstance();
 		ClientPlayerEntity player = mc.player;
-		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, player.eyeHeight, 0);
+		Vec3d playerPos = player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
 		Vec3d offset = new Vec3d(center.getX() - playerPos.x,
 				center.getY() - playerPos.y,
 				center.getZ() - playerPos.z);
@@ -380,9 +386,9 @@ public class OverlayRenderer extends Gui {
 		// Compile drawlist if not present
 		if (cachedRenderList == -1) {
 			cachedRenderList = GLAllocation.generateDisplayLists(1);
-			GlStateManager.glNewList(cachedRenderList, GL11.GL_COMPILE);
+			GlStateManager.newList(cachedRenderList, GL11.GL_COMPILE);
 			
-			mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+			mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 			
 			for (int x = 0; x < 5; x++)
 			for (int y = 0; y < 2; y++)
@@ -412,14 +418,14 @@ public class OverlayRenderer extends Gui {
 				}
 				
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(xOff, yOff, zOff);
+				GlStateManager.translated(xOff, yOff, zOff);
 				
 				RenderFuncs.RenderModelWithColor(model, 0xFFFFFFFF);
 				
 				GlStateManager.popMatrix();
 			}
 
-			GlStateManager.glEndList();
+			GlStateManager.endList();
 		}
 		
 		final float angle;
@@ -478,31 +484,31 @@ public class OverlayRenderer extends Gui {
 		
 		GlStateManager.pushMatrix();
 		
-		GlStateManager.disableAlpha();
+		GlStateManager.disableAlphaTest();
 		GlStateManager.disableBlend();
-		GlStateManager.disableTexture2D();
+		GlStateManager.disableTexture();
 		GlStateManager.disableLighting();
-		GlStateManager.enableAlpha();
+		GlStateManager.enableAlphaTest();
 		GlStateManager.enableBlend();
-		GlStateManager.enableTexture2D();
+		GlStateManager.enableTexture();
 		GlStateManager.enableLighting();
 		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-		GlStateManager.color(1f, 1f, 1f, 1f);
+		GlStateManager.color4f(1f, 1f, 1f, 1f);
 		
-		GlStateManager.translate(offset.x + rotX, offset.y, offset.z + rotZ);
-		GlStateManager.rotate(angle, 0, 1, 0);
+		GlStateManager.translated(offset.x + rotX, offset.y, offset.z + rotZ);
+		GlStateManager.rotatef(angle, 0, 1, 0);
 		
-		mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 		
-		GlStateManager.pushAttrib();
+		GlStateManager.pushTextureAttributes();
 		GlStateManager.callList(cachedRenderList);
-		GlStateManager.popAttrib();
+		GlStateManager.popAttributes();
 		
 		GlStateManager.popMatrix();
-		GlStateManager.disableTexture2D();
+		GlStateManager.disableTexture();
 		GlStateManager.enableColorMaterial();
-		GlStateManager.enableDepth();
-		GlStateManager.color(1f, 1f, 1f, 1f);
+		GlStateManager.enableDepthTest();
+		GlStateManager.color4f(1f, 1f, 1f, 1f);
 	}
 	
 	private void renderCurrentIndex(String name) {
@@ -519,6 +525,6 @@ public class OverlayRenderer extends Gui {
 		
 		GlStateManager.popMatrix();
 		GlStateManager.enableBlend();
-		GlStateManager.color(1f, 1f, 1f, 1f);
+		GlStateManager.color4f(1f, 1f, 1f, 1f);
 	}
 }

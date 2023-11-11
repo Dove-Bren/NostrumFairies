@@ -495,7 +495,7 @@ public class ClientProxy extends CommonProxy {
 			// Every time we join a world, request a copy of its networks
 			
 			NostrumFairies.logger.info("Requested automatic logistics network refresh");
-			NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest());
+			NetworkHandler.sendToServer(new LogisticsUpdateRequest());
 			NostrumFairies.proxy.requestCapabilityRefresh();
 			StaticTESRRenderer.instance.clear();
 		}
@@ -503,7 +503,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@Override
 	public void requestCapabilityRefresh() {
-		NetworkHandler.getSyncChannel().sendToServer(new CapabilityRequest());
+		NetworkHandler.sendToServer(new CapabilityRequest());
 	}
 	
 	@Override

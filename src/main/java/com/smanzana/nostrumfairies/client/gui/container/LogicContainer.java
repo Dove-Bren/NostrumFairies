@@ -4,32 +4,36 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrummagica.client.gui.container.AutoContainer;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
 
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.inventory.Container;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.inventory.container.Slot;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public abstract class LogicContainer extends AutoContainer {
 	
-	public LogicContainer(@Nullable IInventory inventory) {
-		super(inventory);
+	public LogicContainer(ContainerType<? extends LogicContainer> type, int windowId, @Nullable IAutoContainerInventory inventory) {
+		super(type, windowId, inventory);
 	}
 
-	public Slot addSlotToContainer(Slot slotIn) {
-		return super.addSlotToContainer(slotIn);
+	@Override
+	public Slot addSlot(Slot slotIn) {
+		return super.addSlot(slotIn);
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static abstract class LogicGuiContainer extends AutoGuiContainer {
+	public static abstract class LogicGuiContainer<T extends LogicContainer> extends AutoGuiContainer<T> {
 
-		public LogicGuiContainer(Container inventorySlotsIn) {
-			super(inventorySlotsIn);
+		public LogicGuiContainer(T inventorySlotsIn, PlayerInventory playerInv, ITextComponent name) {
+			super(inventorySlotsIn, playerInv, name);
 		}
 	
-		public <T extends GuiButton> T addButton(T button) {
+		@Override
+		public <W extends Widget> W addButton(W button) {
 			return super.addButton(button);
 		}
 	}

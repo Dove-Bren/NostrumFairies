@@ -262,7 +262,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	public static void HandleScroll(PlayerEntity player, ItemStack stack, boolean forward) {
 		// On client, just send to server
 		if (player.world.isRemote) {
-			NetworkHandler.getSyncChannel().sendToServer(new TemplateWandUpdate(WandUpdateType.SCROLL, forward));
+			NetworkHandler.sendToServer(new TemplateWandUpdate(WandUpdateType.SCROLL, forward));
 			return;
 		}
 		
@@ -293,7 +293,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	
 	public static void HandleModeChange(PlayerEntity player, ItemStack stack, boolean forward) {
 		if (player.world.isRemote) {
-			NetworkHandler.getSyncChannel().sendToServer(new TemplateWandUpdate(WandUpdateType.MODE, forward));
+			NetworkHandler.sendToServer(new TemplateWandUpdate(WandUpdateType.MODE, forward));
 			return;
 		}
 		

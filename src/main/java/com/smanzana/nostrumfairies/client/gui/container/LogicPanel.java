@@ -14,11 +14,12 @@ import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicMode;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicOp;
 import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
@@ -72,11 +73,13 @@ public class LogicPanel {
 		invArray[0] = comp.getLogicTemplate();
 		inv = new Inventories.ItemStackArrayWrapper(invArray);
 		
+		final int fontHeight = 14; // Minecraft.getInstance().fontRenderer.FONT_HEIGHT
+		
 		// Have to figure out where slot will be. This is why position and size info needs to be in the container.
 		// Slot only shows up in logic mode, so it'll only be in one spot (so we only need one slot).
 		// Margin spacing depends on whether we need to show the mode button or not
 		final int sections = (comp.isLogicOnly() ? 4 : 5);
-		final int minHeight = (comp.isLogicOnly() ? 0 : PANEL_BUTTON_HEIGHT) + PANEL_SLOT_HEIGHT + PANEL_BUTTON_HEIGHT + (Minecraft.getInstance().fontRenderer.FONT_HEIGHT + 6);
+		final int minHeight = (comp.isLogicOnly() ? 0 : PANEL_BUTTON_HEIGHT) + PANEL_SLOT_HEIGHT + PANEL_BUTTON_HEIGHT + (fontHeight + 6);
 		final int leftover = Math.max(0, height - minHeight);
 		this.margin = (leftover / sections);
 		this.upperSpace = (comp.isLogicOnly() ? margin : (margin + PANEL_BUTTON_HEIGHT + margin)); // mode button, but uses BUTTON height
@@ -84,7 +87,7 @@ public class LogicPanel {
 		final int slotY = 1 + upperSpace;
 		
 		this.templateSlot = new HideableSlot(inv, 0, x + (width - GUI_INV_CELL_LENGTH) / 2, slotY);
-		this.parent.addSlotToContainer(templateSlot);
+		this.parent.addSlot(templateSlot);
 	}
 	
 	/**
@@ -124,20 +127,20 @@ public class LogicPanel {
 	}
 	
 	protected void setTemplate(@Nonnull ItemStack template) {
-		NetworkHandler.getSyncChannel().sendToServer(new LogicPanelActionMessage(this.logicProvider, template));
+		NetworkHandler.sendToServer(new LogicPanelActionMessage(this.logicProvider, template));
 		invArray[0] = template;
 	}
 	
 	protected void setOp(LogicOp op) {
-		NetworkHandler.getSyncChannel().sendToServer(new LogicPanelActionMessage(this.logicProvider, op));
+		NetworkHandler.sendToServer(new LogicPanelActionMessage(this.logicProvider, op));
 	}
 	
 	protected void setCount(int count) {
-		NetworkHandler.getSyncChannel().sendToServer(new LogicPanelActionMessage(this.logicProvider, count));
+		NetworkHandler.sendToServer(new LogicPanelActionMessage(this.logicProvider, count));
 	}
 	
 	protected void setMode(LogicMode mode) {
-		NetworkHandler.getSyncChannel().sendToServer(new LogicPanelActionMessage(this.logicProvider, mode));
+		NetworkHandler.sendToServer(new LogicPanelActionMessage(this.logicProvider, mode));
 	}
 	
 	protected static class HideableSlot extends Slot {
@@ -172,7 +175,7 @@ public class LogicPanel {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class LogicPanelGui {
+	public static class LogicPanelGui<T extends LogicGuiContainer<?>> extends Widget {
 		
 		private static final ResourceLocation TEXT = new ResourceLocation(NostrumFairies.MODID + ":textures/gui/container/logic_panel.png");
 		
@@ -191,7 +194,7 @@ public class LogicPanel {
 		private static final int GUI_MODE_ICON_TEXT_VOFFSET = 116;
 		
 		protected final LogicPanel panel;
-		protected final LogicGuiContainer parent;
+		protected final T parent;
 		public final boolean drawBackground;
 		protected final float colorRed;
 		protected final float colorGreen;
@@ -201,10 +204,10 @@ public class LogicPanel {
 		private OpButton opButton;
 		private ModeButton modeButton;
 		
-		private String criteriaString;
-		private boolean editSelected;
+		private TextFieldWidget criteriaField;
 		
-		public LogicPanelGui(LogicPanel panel, LogicGuiContainer parent, int color, boolean drawBackground) {
+		public LogicPanelGui(LogicPanel panel, T parent, int color, boolean drawBackground) {
+			super(panel.x, panel.y, panel.width, panel.height, "logistics panel");
 			this.panel = panel;
 			this.parent = parent;
 			this.drawBackground = drawBackground;
@@ -213,22 +216,51 @@ public class LogicPanel {
 			colorRed = (float) ((color >> 16) & 255) / 255f;
 			colorGreen = (float) ((color >> 8) & 255) / 255f;
 			colorBlue = (float) ((color >> 0) & 255) / 255f;
+			
+			final Minecraft mc = Minecraft.getInstance();
+			this.criteriaField = new TextFieldWidget(mc.fontRenderer, 0, 0, 5, 5, "logic panel value field");
+			this.criteriaField.setValidator((s) -> {
+				try {
+					int val = Integer.parseInt(s);
+					return val >= 0 && val <= Integer.MAX_VALUE;
+				} catch (Exception e) {
+					return false;
+				}
+			});
+			this.criteriaField.setResponder((s) -> {
+				panel.setCount(Integer.valueOf(s));
+			});
+			
+			
+			parent.addButton(criteriaField);
 		}
 		
-		public void initGui(Minecraft mc, int guiLeft, int guiTop) {
+		public void init(Minecraft mc, int guiLeft, int guiTop) {
 			
-			opButton = new OpButton(1, guiLeft + panel.x + (panel.width - PANEL_BUTTON_WIDTH) / 2 - 1,
-					guiTop + panel.y + (panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin));
+			final int left = guiLeft + panel.x;
+			final int top = guiTop + panel.y;
+			
+			opButton = new OpButton(left + (panel.width - PANEL_BUTTON_WIDTH) / 2 - 1,
+					top + (panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin),
+					this);
 			parent.addButton(opButton);
 			
 			if (!panel.comp.isLogicOnly()) {
-				modeButton = new ModeButton(2, guiLeft + panel.x + (panel.width - PANEL_BUTTON_WIDTH) / 2 - 1,
-						guiTop + panel.y + (panel.margin));
+				modeButton = new ModeButton(left + (panel.width - PANEL_BUTTON_WIDTH) / 2 - 1,
+						top + (panel.margin),
+						this);
 				parent.addButton(modeButton);
 			}
 			
-			editSelected = false;
-			criteriaString = String.format("%d", panel.comp.getLogicCount());
+			final int barWidth = Math.min(panel.width - 12, 100);
+			final int barHeight = mc.fontRenderer.FONT_HEIGHT + 2;
+			final int barHOffset = left;
+			final int barVOffset = top + panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin + PANEL_BUTTON_HEIGHT + panel.margin;
+			
+			criteriaField.setWidth(barWidth);
+			criteriaField.setHeight(barHeight);
+			criteriaField.setX(barHOffset);
+			criteriaField.y = barVOffset;
 			
 			final boolean logicMode = (panel.comp.getLogicMode() == LogicMode.LOGIC);
 			opButton.visible = logicMode;
@@ -236,65 +268,65 @@ public class LogicPanel {
 		}
 		
 		protected void color() {
-			GlStateManager.color(colorRed, colorGreen, colorBlue, colorAlpha);
+			GlStateManager.color4f(colorRed, colorGreen, colorBlue, colorAlpha);
 		}
 		
 		public void draw(Minecraft mc, int guiLeft, int guiTop) {
 			final int left = guiLeft + panel.x;
 			final int top = guiTop + panel.y;
-			final boolean logicMode = (panel.comp.getLogicMode() == LogicMode.LOGIC);
+			//final boolean logicMode = (panel.comp.getLogicMode() == LogicMode.LOGIC);
 			
 			if (this.drawBackground) {
 				mc.getTextureManager().bindTexture(TEXT);
 				color();
-				Gui.drawScaledCustomSizeModalRect(left, top, 0, 0,
+				RenderFuncs.drawScaledCustomSizeModalRect(left, top, 0, 0,
 						GUI_PANEL_TEXT_WIDTH, GUI_PANEL_TEXT_HEIGHT, panel.width, panel.height, 256, 256);
 			}
 			
 			// Vertical offset and arrangement of stuff depends on whether we allow logic or not
 			GlStateManager.pushMatrix();
 			//GlStateManager.translate(guiLeft + panel.x - (GUI_INV_CELL_LENGTH / 2) - 1, guiTop + panel.y - 1, 0);
-			GlStateManager.translate(guiLeft + panel.templateSlot.xPos - 1, guiTop + panel.templateSlot.yPos - 1, 0);
+			GlStateManager.translated(guiLeft + panel.templateSlot.xPos - 1, guiTop + panel.templateSlot.yPos - 1, 0);
 			drawSlot(mc);
 			GlStateManager.popMatrix();
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			
-			if (logicMode) {
-				GlStateManager.pushMatrix();
-				GlStateManager.translate(left, top + (panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin + PANEL_BUTTON_HEIGHT + panel.margin), 0);
-				drawInputBar(mc);
-				GlStateManager.popMatrix();
-			}
+//			if (logicMode) {
+//				GlStateManager.pushMatrix();
+//				GlStateManager.translated(left, top + (panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin + PANEL_BUTTON_HEIGHT + panel.margin), 0);
+//				drawInputBar(mc);
+//				GlStateManager.popMatrix();
+//			}
 
 			GlStateManager.enableBlend();
-			GlStateManager.enableAlpha();
+			GlStateManager.enableAlphaTest();
 		}
 		
 		private void drawSlot(Minecraft mc) {
 			mc.getTextureManager().bindTexture(TEXT);
 			color();
-			Gui.drawScaledCustomSizeModalRect(0, 0, GUI_SLOT_TEXT_HOFFSET, GUI_SLOT_TEXT_VOFFSET, PANEL_SLOT_WIDTH, PANEL_SLOT_HEIGHT, PANEL_SLOT_WIDTH, PANEL_SLOT_HEIGHT, 256, 256);
+			RenderFuncs.drawScaledCustomSizeModalRect(0, 0, GUI_SLOT_TEXT_HOFFSET, GUI_SLOT_TEXT_VOFFSET, PANEL_SLOT_WIDTH, PANEL_SLOT_HEIGHT, PANEL_SLOT_WIDTH, PANEL_SLOT_HEIGHT, 256, 256);
 		}
 		
-		private void drawInputBar(Minecraft mc) {
-			final int barWidth = Math.min(panel.width - 12, 100);
-			final int centerX = (panel.width / 2);
-			Gui.drawRect(-1 + centerX - (barWidth / 2), -1, 1 + centerX + (barWidth / 2), mc.fontRenderer.FONT_HEIGHT + 3, 0xFF444444);
-			Gui.drawRect(centerX - (barWidth / 2), 0, centerX + (barWidth / 2), mc.fontRenderer.FONT_HEIGHT + 2, 0xFF000000);
-			
-			final int width = mc.fontRenderer.getStringWidth(criteriaString);
-			mc.fontRenderer.drawString(criteriaString, (panel.width - width) / 2, 2, 0xFFFFFFFF);
-			
-			if (editSelected) {
-				final long period = 600; // .5 seconds
-				if ((System.currentTimeMillis() % (2 * period)) / period == 1) {
-					final int x = ((panel.width + width) / 2) + 1;
-					//Gui.drawRect(x, 1, x + 1, this.fontRenderer.FONT_HEIGHT, 0xFFFFFFFF);
-					mc.fontRenderer.drawString("_", x, 2, 0xFFFFFFFF);
-				}
-			}
-		}
+//		private void drawInputBar(Minecraft mc) {
+//			final int barWidth = Math.min(panel.width - 12, 100);
+//			final int centerX = (panel.width / 2);
+//			RenderFuncs.drawRect(-1 + centerX - (barWidth / 2), -1, 1 + centerX + (barWidth / 2), mc.fontRenderer.FONT_HEIGHT + 3, 0xFF444444);
+//			RenderFuncs.drawRect(centerX - (barWidth / 2), 0, centerX + (barWidth / 2), mc.fontRenderer.FONT_HEIGHT + 2, 0xFF000000);
+//			
+//			final int width = mc.fontRenderer.getStringWidth(criteriaString);
+//			mc.fontRenderer.drawString(criteriaString, (panel.width - width) / 2, 2, 0xFFFFFFFF);
+//			
+//			if (editSelected) {
+//				final long period = 600; // .5 seconds
+//				if ((System.currentTimeMillis() % (2 * period)) / period == 1) {
+//					final int x = ((panel.width + width) / 2) + 1;
+//					//Gui.drawRect(x, 1, x + 1, this.font.FONT_HEIGHT, 0xFFFFFFFF);
+//					mc.fontRenderer.drawString("_", x, 2, 0xFFFFFFFF);
+//				}
+//			}
+//		}
 		
 		private void drawCriteriaMode(Minecraft mc, LogicMode mode) {
 			int textX = GUI_MODE_ICON_TEXT_HOFFSET;
@@ -315,10 +347,10 @@ public class LogicPanel {
 			
 			}
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1f);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1f);
 			mc.getTextureManager().bindTexture(TEXT);
 			GlStateManager.enableBlend();
-			Gui.drawScaledCustomSizeModalRect(1, 1,
+			RenderFuncs.drawScaledCustomSizeModalRect(1, 1,
 					textX, GUI_MODE_ICON_TEXT_VOFFSET,
 					PANEL_MODE_WIDTH, PANEL_MODE_HEIGHT,
 					PANEL_BUTTON_WIDTH - 2, PANEL_BUTTON_HEIGHT - 2,
@@ -344,90 +376,22 @@ public class LogicPanel {
 			fonter.drawString(s, (PANEL_BUTTON_WIDTH + -sWidth) / 2, 1 + (PANEL_BUTTON_HEIGHT - fonter.FONT_HEIGHT) / 2, 0xFFFFFFFF);
 		}
 		
-		public boolean actionPerformed(GuiButton button) {
-			if (button == opButton) {
-				LogicOp op = panel.comp.getLogicOp();
-				// Cycle up modes
-				op = (LogicOp.values()[(op.ordinal() + 1) % LogicOp.values().length]);
-				
-				panel.setOp(op);
-				return true;
-			}
-			
-			if (button == modeButton) {
-				LogicMode mode = panel.comp.getLogicMode();
-				// Cycle up modes
-				mode = (LogicMode.values()[(mode.ordinal() + 1) % LogicMode.values().length]);
-				
-				panel.setMode(mode);
-				
-				// Also refresh hidden buttons
-				final boolean logicMode = (mode == LogicMode.LOGIC);
-				opButton.visible = logicMode;
-				panel.templateSlot.hide(!logicMode);
-				
-				return true;
-			}
-			
-			return false;
-		}
-		
-		public boolean keyTyped(char typedChar, int keyCode) throws IOException {
-			if (this.editSelected) {
-				if (Character.isDigit(typedChar) || keyCode == 14) { // 14 = backspace
-					final String s;
-					if (keyCode == 14) {
-						if (!criteriaString.isEmpty()) {
-							s = criteriaString.substring(0, criteriaString.length() - 1);
-						} else {
-							s = "";
-						}
-					} else {
-						s = this.criteriaString + typedChar;
-					}
-					
-					int val;
-					try {
-						val = Integer.parseInt(s);
-					} catch (Exception e) {
-						if (s.length() > 2) {
-							// Overflowed
-							val = Integer.MAX_VALUE;
-						} else {
-							val = 0;
-						}
-					}
-					
-					this.criteriaString = String.format("%d", val);
-					panel.setCount(val);
-					return true;
-				} else if (keyCode == 28) { // ENTER/return
-					this.editSelected = false;
-					return true;
-				} 
-			}
-//			else if (editSelected && keyCode == 1) {
-//				editSelected = false;
-//				return;
-//			}
-			return false;
-		}
-		
 		protected boolean mouseClicked(int mouseX, int mouseY, int mouseButton, int guiLeft, int guiTop) throws IOException {
+			final Minecraft mc = parent.getMinecraft();
 			final int barWidth = Math.min(panel.width - 4, 100);
 			final int barVOffset = (panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin + PANEL_BUTTON_HEIGHT + panel.margin);
 			final int xHalf = (panel.width / 2);
 			final int minX = guiLeft + panel.x + xHalf - (barWidth / 2);
 			final int maxX = guiLeft + panel.x + xHalf + (barWidth / 2);
 			final int minY = guiTop + panel.y + barVOffset;
-			final int maxY = guiTop + panel.y + barVOffset + parent.mc.fontRenderer.FONT_HEIGHT + 2;
+			final int maxY = guiTop + panel.y + barVOffset + mc.fontRenderer.FONT_HEIGHT + 2;
 			
 			if (mouseX >= minX && mouseX <= maxX && mouseY >= minY && mouseY <= maxY) {
-				editSelected = true;
+				//editSelected = true;
 				return true;
 			}
 			
-			editSelected = false;
+			//editSelected = false;
 			return false;
 		}
 		
@@ -435,19 +399,31 @@ public class LogicPanel {
 
 			private boolean pressed;
 			
-			public ModeButton(int buttonId, int x, int y) {
-				super(buttonId, x, y, PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT, "");
+			public ModeButton(int x, int y, LogicPanelGui<?> gui) {
+				super(x, y, PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT, "", (b) -> {
+					LogicMode mode = gui.panel.comp.getLogicMode();
+					// Cycle up modes
+					mode = (LogicMode.values()[(mode.ordinal() + 1) % LogicMode.values().length]);
+					
+					gui.panel.setMode(mode);
+					
+					// Also refresh hidden buttons
+					final boolean logicMode = (mode == LogicMode.LOGIC);
+					gui.opButton.visible = logicMode;
+					gui.panel.templateSlot.hide(!logicMode);
+				});
 				pressed = false;
 			}
 			
 			@Override
-			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
-				this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+			public void render(int mouseX, int mouseY, float partialTicks) {
+				final Minecraft mc = Minecraft.getInstance();
+				this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 				
 				int textX = GUI_BUTTON_TEXT_HOFFSET;
 				if (pressed) {
 					textX += PANEL_BUTTON_WIDTH * 2;
-				} else if (hovered) {
+				} else if (isHovered) {
 					textX += PANEL_BUTTON_WIDTH;
 				}
 				
@@ -455,8 +431,8 @@ public class LogicPanel {
 				mc.getTextureManager().bindTexture(TEXT);
 				GlStateManager.enableBlend();
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x, y, 0);
-				this.drawTexturedModalRect(0, 0,
+				GlStateManager.translated(x, y, 0);
+				blit(0, 0,
 						textX, GUI_BUTTON_TEXT_VOFFSET,
 						PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT);
 				
@@ -467,40 +443,47 @@ public class LogicPanel {
 			}
 			
 			@Override
-			public void mouseReleased(int mouseX, int mouseY) {
+			public void onRelease(double mouseX, double mouseY) {
 				pressed = false;
-				super.mouseReleased(mouseX, mouseY);
+				super.onRelease(mouseX, mouseY);
 			}
 			
-			public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-				boolean ret = super.mousePressed(mc, mouseX, mouseY);
-				pressed = ret;
-				return ret;
+			@Override
+			public void onClick(double mouseX, double mouseY) {
+				pressed = true;
+				super.onClick(mouseX, mouseY);
 			}
 			
 		}
 		
-		protected class OpButton extends GuiButton {
+		protected class OpButton extends Button {
 
 			private boolean pressed;
 			
-			public OpButton(int buttonId, int x, int y) {
-				super(buttonId, x, y, PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT, "");
+			public OpButton(int x, int y, LogicPanelGui<?> gui) {
+				super(x, y, PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT, "", (b) -> {
+					LogicOp op = gui.panel.comp.getLogicOp();
+					// Cycle up modes
+					op = (LogicOp.values()[(op.ordinal() + 1) % LogicOp.values().length]);
+					
+					gui.panel.setOp(op);
+				});
 				pressed = false;
 			}
 			
 			@Override
-			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+			public void render(int mouseX, int mouseY, float partialTicks) {
 				if (!this.visible) {
 					return;
 				}
-				
-				this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+
+				final Minecraft mc = Minecraft.getInstance();
+				this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 				
 				int textX = GUI_BUTTON_TEXT_HOFFSET;
 				if (pressed) {
 					textX += PANEL_BUTTON_WIDTH * 2;
-				} else if (hovered) {
+				} else if (isHovered) {
 					textX += PANEL_BUTTON_WIDTH;
 				}
 				
@@ -508,8 +491,8 @@ public class LogicPanel {
 				mc.getTextureManager().bindTexture(TEXT);
 				GlStateManager.enableBlend();
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x, y, 0);
-				this.drawTexturedModalRect(0, 0,
+				GlStateManager.translated(x, y, 0);
+				blit(0, 0,
 						textX, GUI_BUTTON_TEXT_VOFFSET,
 						PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT);
 				
@@ -519,15 +502,15 @@ public class LogicPanel {
 			}
 			
 			@Override
-			public void mouseReleased(int mouseX, int mouseY) {
+			public void onRelease(double mouseX, double mouseY) {
 				pressed = false;
-				super.mouseReleased(mouseX, mouseY);
+				super.onRelease(mouseX, mouseY);
 			}
 			
-			public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-				boolean ret = super.mousePressed(mc, mouseX, mouseY);
-				pressed = ret;
-				return ret;
+			@Override
+			public void onClick(double mouseX, double mouseY) {
+				pressed = true;
+				super.onClick(mouseX, mouseY);
 			}
 			
 		}

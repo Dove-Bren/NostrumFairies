@@ -2,22 +2,28 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.tiles.BufferChestTileEntity;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
+import com.smanzana.nostrummagica.utils.ContainerUtil;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.ClickType;
-import net.minecraft.inventory.Container;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.ClickType;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class BufferChestGui {
 	
@@ -36,28 +42,31 @@ public class BufferChestGui {
 
 	public static class BufferChestContainer extends Container {
 		
+		public static final String ID = "buffer_chest";
+		
 		protected BufferChestTileEntity chest;
 		private int chestIDStart;
 		
-		public BufferChestContainer(IInventory playerInv, BufferChestTileEntity chest) {
+		public BufferChestContainer(int windowId, PlayerInventory playerInv, BufferChestTileEntity chest) {
+			super(FairyContainers.BufferChest, windowId);
 			this.chest = chest;
 						
 			// Construct player inventory
 			for (int y = 0; y < 3; y++) {
 				for (int x = 0; x < 9; x++) {
-					this.addSlotToContainer(new Slot(playerInv, x + y * 9 + 9, GUI_PLAYER_INV_HOFFSET + (x * 18), GUI_PLAYER_INV_VOFFSET + (y * 18)));
+					this.addSlot(new Slot(playerInv, x + y * 9 + 9, GUI_PLAYER_INV_HOFFSET + (x * 18), GUI_PLAYER_INV_VOFFSET + (y * 18)));
 				}
 			}
 			
 			// Construct player hotbar
 			for (int x = 0; x < 9; x++) {
-				this.addSlotToContainer(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
+				this.addSlot(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
 			}
 			
 			chestIDStart = this.inventorySlots.size();
 			for (int i = 0; i < chest.getSizeInventory(); i++) {
 				final int index = i;
-				this.addSlotToContainer(new Slot(chest, i, GUI_TOP_INV_HOFFSET + i * 18, GUI_TOP_INV_VOFFSET) {
+				this.addSlot(new Slot(chest, i, GUI_TOP_INV_HOFFSET + i * 18, GUI_TOP_INV_VOFFSET) {
 					@Override
 					public boolean isItemValid(@Nonnull ItemStack stack) {
 				        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
@@ -84,6 +93,19 @@ public class BufferChestGui {
 					}
 				});
 			}
+		}
+		
+		@OnlyIn(Dist.CLIENT)
+		public static BufferChestContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+			return new BufferChestContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
+		}
+		
+		public static IPackedContainerProvider Make(BufferChestTileEntity hopper) {
+			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
+				return new BufferChestContainer(windowId, playerInv, hopper);
+			}, (buffer) -> {
+				ContainerUtil.PackTE(buffer, hopper);
+			});
 		}
 		
 		@Override
@@ -155,12 +177,12 @@ public class BufferChestGui {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class BufferChestGuiContainer extends AutoGuiContainer {
+	public static class BufferChestGuiContainer extends AutoGuiContainer<BufferChestContainer> {
 
 		private BufferChestContainer container;
 		
-		public BufferChestGuiContainer(BufferChestContainer container) {
-			super(container);
+		public BufferChestGuiContainer(BufferChestContainer container, PlayerInventory playerInv, ITextComponent name) {
+			super(container, playerInv, name);
 			this.container = container;
 			
 			this.xSize = GUI_TEXT_WIDTH;
@@ -168,37 +190,37 @@ public class BufferChestGui {
 		}
 		
 		@Override
-		public void initGui() {
-			super.initGui();
+		public void init() {
+			super.init();
 		}
 		
 		private void drawStatus(float partialTicks, boolean available) {
 			float alpha = (float) (.5f + (.25f * Math.sin(Math.PI * (double)(System.currentTimeMillis() % 1000) / 1000.0)));
-			GlStateManager.color(1.0F,  1.0F, 1.0F, alpha);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, alpha);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			final int text_hoffset = (available ? GUI_TEXT_WORKING_ICON_HOFFSET : GUI_TEXT_MISSING_ICON_HOFFSET);
 			final int text_voffset = 0;
 			GlStateManager.enableBlend();
-			this.drawTexturedModalRect(0, 0, text_hoffset, text_voffset, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
+			this.blit(0, 0, text_hoffset, text_voffset, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
 		}
 		
 		private void drawTemplate(float partialTicks, @Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
 				GlStateManager.pushMatrix();
-				this.itemRender.renderItemIntoGUI(template, 0, 0);
-				GlStateManager.translate(0, 0, 110);
+				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
+				GlStateManager.translated(0, 0, 110);
 				if (template.getCount() > 1) {
 					final String count = "" + template.getCount();
 					
-					this.fontRenderer.drawStringWithShadow("" + template.getCount(),
-							GUI_INV_CELL_LENGTH - (this.fontRenderer.getStringWidth(count) + 1),
-							GUI_INV_CELL_LENGTH - (this.fontRenderer.FONT_HEIGHT),
+					this.font.drawStringWithShadow("" + template.getCount(),
+							GUI_INV_CELL_LENGTH - (this.font.getStringWidth(count) + 1),
+							GUI_INV_CELL_LENGTH - (this.font.FONT_HEIGHT),
 							0xFFFFFFFF);
 				} else {
-					GlStateManager.enableAlpha();
+					GlStateManager.enableAlphaTest();
 				}
-				drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
+				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
 				GlStateManager.popMatrix();
 			}
 		}
@@ -209,10 +231,10 @@ public class BufferChestGui {
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
-			Gui.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
+			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			
 			// Draw templates, if needed
 			for (int i = 0; i < container.chest.getSizeInventory(); i++) {
@@ -220,19 +242,19 @@ public class BufferChestGui {
 				ItemStack stack = container.chest.getStackInSlot(i);
 				
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(horizontalMargin + GUI_TOP_INV_HOFFSET + (i * GUI_INV_CELL_LENGTH),
+				GlStateManager.translated(horizontalMargin + GUI_TOP_INV_HOFFSET + (i * GUI_INV_CELL_LENGTH),
 						verticalMargin + GUI_TOP_INV_VOFFSET,
 						0);
 				
 				if (container.chest.getStackInSlot(i).isEmpty()) {
 					GlStateManager.pushMatrix();
-					GlStateManager.scale(1f, 1f, .05f);
+					GlStateManager.scalef(1f, 1f, .05f);
 					drawTemplate(partialTicks, container.chest.getTemplate(i));
 					GlStateManager.popMatrix();
 				}
 				
 				if (!template.isEmpty() && (stack.isEmpty() || stack.getCount() < template.getCount())) {
-					GlStateManager.translate(0, 0, 100);
+					GlStateManager.translated(0, 0, 100);
 					drawStatus(partialTicks, true);
 				}
 				
@@ -240,7 +262,7 @@ public class BufferChestGui {
 			}
 
 			GlStateManager.enableBlend();
-			GlStateManager.enableAlpha();
+			GlStateManager.enableAlphaTest();
 			
 		}
 		

@@ -86,13 +86,13 @@ public class HomeBlockGui {
 			// Construct player inventory
 			for (int y = 0; y < 3; y++) {
 				for (int x = 0; x < 9; x++) {
-					this.addSlotToContainer(new Slot(playerInv, x + y * 9 + 9, GUI_PLAYER_INV_HOFFSET + (x * 18), GUI_PLAYER_INV_VOFFSET + (y * 18)));
+					this.addSlot(new Slot(playerInv, x + y * 9 + 9, GUI_PLAYER_INV_HOFFSET + (x * 18), GUI_PLAYER_INV_VOFFSET + (y * 18)));
 				}
 			}
 			
 			// Construct player hotbar
 			for (int x = 0; x < 9; x++) {
-				this.addSlotToContainer(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
+				this.addSlot(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
 			}
 			
 			homeIDStart = this.inventorySlots.size();
@@ -104,7 +104,7 @@ public class HomeBlockGui {
 						GUI_UPGRADE_HOFFSET,
 						GUI_UPGRADE_VOFFSET + (i * (GUI_INV_CELL_LENGTH + 3)),
 						FeySlotType.EITHERGRADE);
-				this.addSlotToContainer(slot);
+				this.addSlot(slot);
 				upgradeSlots.add(slot);
 			}
 			
@@ -118,7 +118,7 @@ public class HomeBlockGui {
 				ResidentSlot slot = new ResidentSlot(home, i,
 						GUI_LIST_HOFFSET + ((GUI_LIST_ITEM_WIDTH - 16) / 2),
 						GUI_LIST_VOFFSET + (i * GUI_LIST_ITEM_HEIGHT));
-				this.addSlotToContainer(slot);
+				this.addSlot(slot);
 				residentSlots.add(slot);
 			}
 			
@@ -127,7 +127,7 @@ public class HomeBlockGui {
 				SpecializationSlot slot = new SpecializationSlot(home, i,
 						GUI_DETAILS_HOFFSET + (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH - 2)) / 2,
 						GUI_DETAILS_VOFFSET + GUI_DETAILS_HEIGHT - (GUI_INV_CELL_LENGTH * 2));
-				this.addSlotToContainer(slot);
+				this.addSlot(slot);
 				specializationSlots.add(slot);
 			}
 		}
@@ -200,8 +200,8 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		public void initGui() {
-			super.initGui();
+		public void init() {
+			super.init();
 		}
 		
 		private String getAetherDescription(float level) {
@@ -276,7 +276,7 @@ public class HomeBlockGui {
 				if (record == null) {
 					// Show a 'VACANT' notice lol
 					String str = "Vacant";
-					this.fontRenderer.drawStringWithShadow("Vacant",
+					this.font.drawStringWithShadow("Vacant",
 							x + (GUI_LIST_ITEM_WIDTH - fontRenderer.getStringWidth(str)) / 2,
 							y + 1 + ((GUI_LIST_ITEM_HEIGHT - fontRenderer.FONT_HEIGHT) / 2), 0xFFFFFFFF);
 				} else {
@@ -296,7 +296,7 @@ public class HomeBlockGui {
 					GlStateManager.pushMatrix();
 					GlStateManager.translate(x + 2, y + 1 + ((GUI_LIST_ITEM_HEIGHT - fontRenderer.FONT_HEIGHT) / 2) / .75f, 0);
 					GlStateManager.scale(.75f, .75f, .75f);
-					this.fontRenderer.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
+					this.font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 					GlStateManager.popMatrix();
 				}
 			}
@@ -346,7 +346,7 @@ public class HomeBlockGui {
 			GlStateManager.pushMatrix();
 			GlStateManager.translate(x + 2 + (nameSpace - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 5, 0);
 			GlStateManager.scale(nameScale, nameScale, nameScale);
-			this.fontRenderer.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
+			this.font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 			GlStateManager.popMatrix();
 			
 			if (record.cache != null) {
@@ -356,7 +356,7 @@ public class HomeBlockGui {
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(x + 2 + (nameSpace - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
 				GlStateManager.scale(nameScale, nameScale, nameScale);
-				this.fontRenderer.drawString(name, 0, 0, 0xFFF0A0FF);
+				this.font.drawString(name, 0, 0, 0xFFF0A0FF);
 				GlStateManager.popMatrix();
 				
 				// -> Status
@@ -364,7 +364,7 @@ public class HomeBlockGui {
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
 				GlStateManager.scale(nameScale, nameScale, nameScale);
-				this.fontRenderer.drawString(name, 0, 0, 0xFFE0E0E0);
+				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
 				GlStateManager.popMatrix();
 				
 				// -> Activity report
@@ -372,7 +372,7 @@ public class HomeBlockGui {
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
 				GlStateManager.scale(nameScale, nameScale, nameScale);
-				this.fontRenderer.drawString(name, 0, 0, 0xFFE0E0E0);
+				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
 				GlStateManager.popMatrix();
 				
 				// render preview
@@ -402,12 +402,12 @@ public class HomeBlockGui {
 							int cellX = x + offsetX + (i * GUI_INV_CELL_LENGTH);
 							int cellY = y + 62;
 							mc.getTextureManager().bindTexture(TEXT);
-							Gui.drawModalRectWithCustomSizedTexture(cellX, cellY,
+							RenderFuncs.drawModalRectWithCustomSizedTexture(cellX, cellY,
 									GUI_TEXT_LIST_ITEM_HOFFSET, GUI_TEXT_LIST_ITEM_vOFFSET + GUI_LIST_ITEM_HEIGHT,
 									GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH, 256, 256);
 							GlStateManager.enableDepth();
-				            this.itemRender.renderItemAndEffectIntoGUI(this.mc.player, items.get(i), cellX + 1, cellY + 1);
-				            this.itemRender.renderItemOverlayIntoGUI(this.fontRenderer, items.get(i), cellX + 1, cellY + 1, null);
+				            Minecraft.getInstance().getItemRenderer().renderItemAndEffectIntoGUI(this.mc.player, items.get(i), cellX + 1, cellY + 1);
+				            Minecraft.getInstance().getItemRenderer().renderItemOverlayIntoGUI(this.font, items.get(i), cellX + 1, cellY + 1, null);
 						}
 					}
 				}
@@ -416,7 +416,7 @@ public class HomeBlockGui {
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
 				GlStateManager.scale(nameScale, nameScale, nameScale);
-				this.fontRenderer.drawString(name, 0, 0, 0xFFE0E0E0);
+				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
 				GlStateManager.popMatrix();
 			}
 		}
@@ -471,7 +471,7 @@ public class HomeBlockGui {
 			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
-			Gui.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
+			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			
 			refreshFeyArray();
 			drawSummary(horizontalMargin + GUI_INFO_HOFFSET, verticalMargin + GUI_INFO_VOFFSET);

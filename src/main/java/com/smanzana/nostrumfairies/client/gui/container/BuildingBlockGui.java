@@ -2,21 +2,27 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
+import com.smanzana.nostrummagica.utils.ContainerUtil;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Container;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class BuildingBlockGui {
 	
@@ -32,29 +38,45 @@ public class BuildingBlockGui {
 
 	public static class BuildingBlockContainer extends Container {
 		
+		public static final String ID = "building_block";
+		
 		protected BuildingBlockTileEntity chest;
 		protected IInventory blockInv;
 		
-		public BuildingBlockContainer(IInventory playerInv, BuildingBlockTileEntity chest) {
+		public BuildingBlockContainer(int windowId, PlayerInventory playerInv, BuildingBlockTileEntity chest) {
+			super(FairyContainers.BuildingBlock, windowId);
 			this.chest = chest;
 			blockInv = chest.getInventory();
 						
 			// Construct player inventory
 			for (int y = 0; y < 3; y++) {
 				for (int x = 0; x < 9; x++) {
-					this.addSlotToContainer(new Slot(playerInv, x + y * 9 + 9, GUI_PLAYER_INV_HOFFSET + (x * 18), GUI_PLAYER_INV_VOFFSET + (y * 18)));
+					this.addSlot(new Slot(playerInv, x + y * 9 + 9, GUI_PLAYER_INV_HOFFSET + (x * 18), GUI_PLAYER_INV_VOFFSET + (y * 18)));
 				}
 			}
 			
 			// Construct player hotbar
 			for (int x = 0; x < 9; x++) {
-				this.addSlotToContainer(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
+				this.addSlot(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
 			}
 			
-			this.addSlotToContainer(new Slot(blockInv, 0, GUI_TOP_INV_HOFFSET, GUI_TOP_INV_VOFFSET) {
+			this.addSlot(new Slot(blockInv, 0, GUI_TOP_INV_HOFFSET, GUI_TOP_INV_VOFFSET) {
 				public boolean isItemValid(@Nonnull ItemStack stack) {
 			        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
 			    }
+			});
+		}
+		
+		@OnlyIn(Dist.CLIENT)
+		public static BuildingBlockContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+			return new BuildingBlockContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
+		}
+		
+		public static IPackedContainerProvider Make(BuildingBlockTileEntity hopper) {
+			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
+				return new BuildingBlockContainer(windowId, playerInv, hopper);
+			}, (buffer) -> {
+				ContainerUtil.PackTE(buffer, hopper);
 			});
 		}
 		
@@ -102,17 +124,17 @@ public class BuildingBlockGui {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class BuildingBlockGuiContainer extends AutoGuiContainer {
+	public static class BuildingBlockGuiContainer extends AutoGuiContainer<BuildingBlockContainer> {
 
-		public BuildingBlockGuiContainer(BuildingBlockContainer container) {
-			super(container);
+		public BuildingBlockGuiContainer(BuildingBlockContainer container, PlayerInventory playerInv, ITextComponent name) {
+			super(container, playerInv, name);
 			this.xSize = GUI_TEXT_WIDTH;
 			this.ySize = GUI_TEXT_HEIGHT;
 		}
 		
 		@Override
-		public void initGui() {
-			super.initGui();
+		public void init() {
+			super.init();
 		}
 		
 		@Override
@@ -121,10 +143,10 @@ public class BuildingBlockGui {
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
-			Gui.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
+			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			
 		}
 		

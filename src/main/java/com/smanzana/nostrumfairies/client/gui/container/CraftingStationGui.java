@@ -1,28 +1,32 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.client.gui.container.LogicPanel.LogicPanelGui;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.tiles.CraftingBlockTileEntity;
+import com.smanzana.nostrummagica.utils.ContainerUtil;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.ClickType;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.ClickType;
+import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.ICraftingRecipe;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * 3x3 regular sized crafting station
@@ -73,6 +77,8 @@ public class CraftingStationGui {
 
 	public static class CraftingStationContainer extends LogicContainer {
 		
+		public static final String ID = "crafting_station";
+		
 		protected CraftingBlockTileEntity station;
 		private int stationInputCount;
 		protected Slot outputSlot;
@@ -83,20 +89,24 @@ public class CraftingStationGui {
 		private int stationInputIDStart;
 		private int stationInputIDEnd;
 		
-		public CraftingStationContainer(IInventory playerInv, CraftingBlockTileEntity station) {
-			super(station);
+		public CraftingStationContainer(int windowId, PlayerInventory playerInv, CraftingBlockTileEntity station) {
+			this(FairyContainers.CraftingStation, windowId, playerInv, station);
+		}
+		
+		protected CraftingStationContainer(ContainerType<? extends CraftingStationContainer> type, int windowId, PlayerInventory playerInv, CraftingBlockTileEntity station) {
+			super(type, windowId, station);
 			this.station = station;
 						
 			// Construct player inventory
 			for (int y = 0; y < 3; y++) {
 				for (int x = 0; x < 9; x++) {
-					this.addSlotToContainer(new Slot(playerInv, x + y * 9 + 9, GUI_TEXT_SIDE_WIDTH + GUI_PLAYER_INV_HOFFSET + (x * 18), GUI_PLAYER_INV_VOFFSET + (y * 18)));
+					this.addSlot(new Slot(playerInv, x + y * 9 + 9, GUI_TEXT_SIDE_WIDTH + GUI_PLAYER_INV_HOFFSET + (x * 18), GUI_PLAYER_INV_VOFFSET + (y * 18)));
 				}
 			}
 			
 			// Construct player hotbar
 			for (int x = 0; x < 9; x++) {
-				this.addSlotToContainer(new Slot(playerInv, x, GUI_TEXT_SIDE_WIDTH + GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
+				this.addSlot(new Slot(playerInv, x, GUI_TEXT_SIDE_WIDTH + GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
 			}
 			
 			stationInputIDStart = this.inventorySlots.size();
@@ -105,7 +115,7 @@ public class CraftingStationGui {
 			for (int i = 0; i < dim; i++) {
 				for (int j = 0; j < dim; j++) {
 					final int index = (i * dim) + j;
-					this.addSlotToContainer(new Slot(station, index, GUI_TEXT_SIDE_WIDTH + getCraftGridStartX() + j * 18, getCraftGridStartY() + (i * 18)) {
+					this.addSlot(new Slot(station, index, GUI_TEXT_SIDE_WIDTH + getCraftGridStartX() + j * 18, getCraftGridStartY() + (i * 18)) {
 						@Override
 						public boolean isItemValid(@Nonnull ItemStack stack) {
 					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
@@ -138,16 +148,29 @@ public class CraftingStationGui {
 			
 			// Output slot
 			this.outputSlot = new Slot(station, stationInputCount, GUI_TEXT_SIDE_WIDTH + GUI_OUTPUT_INV_HOFFSET, GUI_OUTPUT_INV_VOFFSET);
-			this.addSlotToContainer(outputSlot);
+			this.addSlot(outputSlot);
 			
 			// Upgrade slot
 			this.upgradeSlot = new FeyStoneContainerSlot(station, stationInputCount + 2,
 					GUI_TEXT_SIDE_WIDTH + GUI_UPGRADE_INV_HOFFSET,
 					GUI_UPGRADE_INV_VOFFSET, FeySlotType.EITHERGRADE);
-			this.addSlotToContainer(upgradeSlot);
+			this.addSlot(upgradeSlot);
 			
 			// Do this here because this constructor adds another slot
 			this.panel = new LogicPanel(this, station, 0, 0, GUI_TEXT_SIDE_WIDTH, GUI_TEXT_SIDE_HEIGHT);
+		}
+		
+		@OnlyIn(Dist.CLIENT)
+		public static CraftingStationContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+			return new CraftingStationContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
+		}
+		
+		public static IPackedContainerProvider Make(CraftingBlockTileEntity hopper) {
+			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
+				return new CraftingStationContainer(windowId, playerInv, hopper);
+			}, (buffer) -> {
+				ContainerUtil.PackTE(buffer, hopper);
+			});
 		}
 		
 		protected int getCraftGridStartX() {
@@ -236,25 +259,27 @@ public class CraftingStationGui {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class CraftingStationGuiContainer extends LogicGuiContainer {
+	public static class CraftingStationGuiContainer extends LogicGuiContainer<CraftingStationContainer> {
 
 		private CraftingStationContainer container;
-		private final LogicPanelGui panelGui;
+		private final LogicPanelGui<CraftingStationGuiContainer> panelGui;
 		
-		public CraftingStationGuiContainer(CraftingStationContainer container) {
-			super(container);
+		public CraftingStationGuiContainer(CraftingStationContainer container, PlayerInventory playerInv, ITextComponent name) {
+			super(container, playerInv, name);
 			this.container = container;
-			this.panelGui = new LogicPanelGui(container.panel, this, 0xFFE5FFF8, true);
+			this.panelGui = new LogicPanelGui<>(container.panel, this, 0xFFE5FFF8, true);
 			
 			
 			this.xSize = GUI_TEXT_MAIN_WIDTH + GUI_TEXT_SIDE_WIDTH;
 			this.ySize = GUI_TEXT_MAIN_HEIGHT;
+			
+			this.addButton(panelGui);
 		}
 		
 		@Override
-		public void initGui() {
-			super.initGui();
-			panelGui.initGui(mc, guiLeft, guiTop);
+		public void init() {
+			super.init();
+			panelGui.init(mc, guiLeft, guiTop);
 		}
 		
 		protected ResourceLocation getBackgroundTexture() {
@@ -262,13 +287,13 @@ public class CraftingStationGui {
 		}
 		
 		private void drawProgress(float progress) {
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1f);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1f);
 			mc.getTextureManager().bindTexture(getBackgroundTexture());
 			
 			int width = (int) ((float) GUI_PROGRESS_ICON_WIDTH * progress);
 			
 			GlStateManager.enableBlend();
-			drawScaledCustomSizeModalRect(0, 0,
+			RenderFuncs.drawScaledCustomSizeModalRect(0, 0,
 					GUI_PROGRESS_ICON_HOFFSET, GUI_PROGRESS_ICON_VOFFSET,
 					width, GUI_PROGRESS_ICON_HEIGHT,
 					width, GUI_PROGRESS_ICON_HEIGHT,
@@ -280,11 +305,11 @@ public class CraftingStationGui {
 			float perc = (float) ((double) (System.currentTimeMillis() % period) / (double) period);
 			perc = (float) (.5 * (1 + Math.sin(perc * Math.PI * 2)));
 			float alpha = .2f + .3f * perc;
-			GlStateManager.color(1.0F,  1.0F, 1.0F, alpha);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, alpha);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			GlStateManager.enableBlend();
-			drawScaledCustomSizeModalRect(-1, -1,
+			RenderFuncs.drawScaledCustomSizeModalRect(-1, -1,
 					GUI_ERROR_ICON_HOFFSET, GUI_ERROR_ICON_VOFFSET,
 					GUI_ERROR_ICON_WIDTH, GUI_ERROR_ICON_HEIGHT,
 					GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH,
@@ -296,11 +321,11 @@ public class CraftingStationGui {
 			float perc = (float) ((double) (System.currentTimeMillis() % period) / (double) period);
 			perc = (float) (.5 * (1 + Math.sin(perc * Math.PI * 2)));
 			float alpha = .2f + .3f * perc;
-			GlStateManager.color(1.0F,  1.0F, 1.0F, alpha);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, alpha);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			GlStateManager.enableBlend();
-			drawScaledCustomSizeModalRect(-1 + ((GUI_INV_CELL_LENGTH * 3) / 4), -1 + ((GUI_INV_CELL_LENGTH * 3) / 4),
+			RenderFuncs.drawScaledCustomSizeModalRect(-1 + ((GUI_INV_CELL_LENGTH * 3) / 4), -1 + ((GUI_INV_CELL_LENGTH * 3) / 4),
 					GUI_BOOST_ICON_HOFFSET, GUI_BOOST_ICON_VOFFSET,
 					GUI_BOOST_ICON_WIDTH, GUI_BOOST_ICON_HEIGHT,
 					GUI_INV_CELL_LENGTH / 4, GUI_INV_CELL_LENGTH / 4,
@@ -310,23 +335,23 @@ public class CraftingStationGui {
 		private void drawTemplate(@Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
 				GlStateManager.pushMatrix();
-				this.itemRender.renderItemIntoGUI(template, 0, 0);
-				GlStateManager.translate(0, 0, 110);
-				GlStateManager.enableAlpha();
-				drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA05B6460);
+				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
+				GlStateManager.translatef(0, 0, 110);
+				GlStateManager.enableAlphaTest();
+				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA05B6460);
 				GlStateManager.popMatrix();
 			}
 		}
 		
 		private void drawRecipe() {
-			IRecipe recipe = container.station.getRecipe();
+			ICraftingRecipe recipe = container.station.getRecipe();
 			if (recipe != null) {
 				ItemStack outcome = recipe.getRecipeOutput();
 				GlStateManager.pushMatrix();
-				this.itemRender.renderItemIntoGUI(outcome, 0, 0);
-				GlStateManager.translate(0, 0, 110);
-				GlStateManager.enableAlpha();
-				drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA05B6460);
+				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(outcome, 0, 0);
+				GlStateManager.translatef(0, 0, 110);
+				GlStateManager.enableAlphaTest();
+				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA05B6460);
 				GlStateManager.popMatrix();
 			}
 		}
@@ -337,10 +362,10 @@ public class CraftingStationGui {
 			int horizontalMargin = this.guiLeft + GUI_TEXT_SIDE_WIDTH;
 			int verticalMargin = this.guiTop;
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(getBackgroundTexture());
 			
-			Gui.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_MAIN_WIDTH, GUI_TEXT_MAIN_HEIGHT, 256, 256);
+			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_MAIN_WIDTH, GUI_TEXT_MAIN_HEIGHT, 256, 256);
 			
 			// Draw templates and errors, if needed
 			for (int i = 0; i < container.stationInputCount; i++) {
@@ -353,22 +378,22 @@ public class CraftingStationGui {
 				final int y = (i / dim);
 				
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(horizontalMargin + container.getCraftGridStartX() + (x * GUI_INV_CELL_LENGTH),
+				GlStateManager.translatef(horizontalMargin + container.getCraftGridStartX() + (x * GUI_INV_CELL_LENGTH),
 						verticalMargin + container.getCraftGridStartY() + (y * GUI_INV_CELL_LENGTH),
 						0);
 				
 				if (stack.isEmpty()) {
 					GlStateManager.pushMatrix();
-					GlStateManager.scale(1f, 1f, .05f);
+					GlStateManager.scalef(1f, 1f, .05f);
 					drawTemplate(template);
 					GlStateManager.popMatrix();
 				}
 				
 				if (error) {
-					GlStateManager.translate(0, 0, 100);
+					GlStateManager.translatef(0, 0, 100);
 					drawError();
 				} else if (bonus) {
-					GlStateManager.translate(0, 0, 1000);
+					GlStateManager.translatef(0, 0, 1000);
 					drawBoost();
 				}
 				
@@ -378,7 +403,7 @@ public class CraftingStationGui {
 			// Draw upgrade slot
 			{
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(guiLeft,
+				GlStateManager.translatef(guiLeft,
 						verticalMargin,
 						0);
 				FeySlotIcon.draw(container.upgradeSlot, 1f);
@@ -389,7 +414,7 @@ public class CraftingStationGui {
 			// Draw progress
 			{
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(horizontalMargin + GUI_PROGRESS_HOFFSET, verticalMargin + GUI_PROGRESS_VOFFSET, 0);
+				GlStateManager.translatef(horizontalMargin + GUI_PROGRESS_HOFFSET, verticalMargin + GUI_PROGRESS_VOFFSET, 0);
 				
 				float progress = (float) container.station.getField(0) / 100f;
 				this.drawProgress(progress);
@@ -411,7 +436,7 @@ public class CraftingStationGui {
 			if (container.station.getOutputStack().isEmpty())
 			{
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(horizontalMargin + GUI_OUTPUT_INV_HOFFSET, verticalMargin + GUI_OUTPUT_INV_VOFFSET, 0);
+				GlStateManager.translatef(horizontalMargin + GUI_OUTPUT_INV_HOFFSET, verticalMargin + GUI_OUTPUT_INV_VOFFSET, 0);
 				
 				drawRecipe();
 				
@@ -419,40 +444,13 @@ public class CraftingStationGui {
 			}
 
 			GlStateManager.enableBlend();
-			GlStateManager.enableAlpha();
+			GlStateManager.enableAlphaTest();
 			
 		}
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 			;
-		}
-		
-		@Override
-		public void actionPerformed(GuiButton button) {
-			if (panelGui.actionPerformed(button)) {
-				return;
-			}
-			
-			; // No other buttons for sensor
-		}
-		
-		@Override
-		protected void keyTyped(char typedChar, int keyCode) throws IOException {
-			if (panelGui.keyTyped(typedChar, keyCode)) {
-				return;
-			}
-			
-			super.keyTyped(typedChar, keyCode);
-		}
-		
-		@Override
-		protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-			if (panelGui.mouseClicked(mouseX, mouseY, mouseButton, this.guiLeft, this.guiTop)) {
-				return;
-			}
-			
-			super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
 	}
 	

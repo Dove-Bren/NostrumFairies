@@ -1132,7 +1132,7 @@ public class CommonProxy {
 	public void pushCapabilityRefresh(PlayerEntity player) {
 		INostrumFeyCapability feyAttr = NostrumFairies.getFeyWrapper(player);
 		if (feyAttr != null) {
-			NetworkHandler.getSyncChannel().sendTo(new CapabilitySyncMessage(feyAttr), (ServerPlayerEntity) player);
+			NetworkHandler.sendTo(new CapabilitySyncMessage(feyAttr), (ServerPlayerEntity) player);
 		}
 	}
 }

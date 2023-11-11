@@ -52,19 +52,19 @@ public class OutputChestGui {
 			// Construct player inventory
 			for (int y = 0; y < 3; y++) {
 				for (int x = 0; x < 9; x++) {
-					this.addSlotToContainer(new Slot(playerInv, x + y * 9 + 9, GUI_PLAYER_INV_HOFFSET + (x * 18), GUI_PLAYER_INV_VOFFSET + (y * 18)));
+					this.addSlot(new Slot(playerInv, x + y * 9 + 9, GUI_PLAYER_INV_HOFFSET + (x * 18), GUI_PLAYER_INV_VOFFSET + (y * 18)));
 				}
 			}
 			
 			// Construct player hotbar
 			for (int x = 0; x < 9; x++) {
-				this.addSlotToContainer(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
+				this.addSlot(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
 			}
 			
 			chestIDStart = this.inventorySlots.size();
 			for (int i = 0; i < chest.getSizeInventory(); i++) {
 				final int index = i;
-				this.addSlotToContainer(new Slot(chest, i, GUI_TOP_INV_HOFFSET + i * 18, GUI_TOP_INV_VOFFSET) {
+				this.addSlot(new Slot(chest, i, GUI_TOP_INV_HOFFSET + i * 18, GUI_TOP_INV_VOFFSET) {
 					@Override
 					public boolean isItemValid(@Nonnull ItemStack stack) {
 				        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
@@ -183,9 +183,9 @@ public class OutputChestGui {
 		}
 		
 		@Override
-		public void initGui() {
-			super.initGui();
-			panelGui.initGui(mc, guiLeft, guiTop);
+		public void init() {
+			super.init();
+			panelGui.init(mc, guiLeft, guiTop);
 		}
 		
 		private void drawStatus(float partialTicks, boolean available) {
@@ -202,14 +202,14 @@ public class OutputChestGui {
 		private void drawTemplate(float partialTicks, @Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
 				GlStateManager.pushMatrix();
-				this.itemRender.renderItemIntoGUI(template, 0, 0);
+				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
 				GlStateManager.translate(0, 0, 110);
 				if (template.getCount() > 1) {
 					final String count = "" + template.getCount();
 					
-					this.fontRenderer.drawStringWithShadow("" + template.getCount(),
-							GUI_INV_CELL_LENGTH - (this.fontRenderer.getStringWidth(count) + 1),
-							GUI_INV_CELL_LENGTH - (this.fontRenderer.FONT_HEIGHT),
+					this.font.drawStringWithShadow("" + template.getCount(),
+							GUI_INV_CELL_LENGTH - (this.font.getStringWidth(count) + 1),
+							GUI_INV_CELL_LENGTH - (this.font.FONT_HEIGHT),
 							0xFFFFFFFF);
 				} else {
 					GlStateManager.enableAlpha();
@@ -228,7 +228,7 @@ public class OutputChestGui {
 			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
-			Gui.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
+			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			
 			// Draw templates, if needed
 			for (int i = 0; i < container.chest.getSizeInventory(); i++) {

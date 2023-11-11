@@ -101,7 +101,7 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 				LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) te;
 				LogisticsNetwork network = sensor.getNetwork();
 				if (network != null) {
-					NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest(network.getUUID()));
+					NetworkHandler.sendToServer(new LogisticsUpdateRequest(network.getUUID()));
 				}
 			}
 		}

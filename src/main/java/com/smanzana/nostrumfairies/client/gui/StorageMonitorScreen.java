@@ -1,13 +1,13 @@
 package com.smanzana.nostrumfairies.client.gui;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.lwjgl.input.Mouse;
-
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
+import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
@@ -16,18 +16,16 @@ import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.network.messages.StorageMonitorRequestMessage;
 import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.GlStateManager.DestFactor;
-import net.minecraft.client.renderer.GlStateManager.SourceFactor;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.StringTextComponent;
 
-public class StorageMonitorScreen extends GuiScreen {
+public class StorageMonitorScreen extends Screen {
 	
 	private static final ResourceLocation TEXT = new ResourceLocation(NostrumFairies.MODID + ":textures/gui/screen/storage_viewer.png");
 	private static final int GUI_TEXT_WIDTH = 183;
@@ -62,11 +60,12 @@ public class StorageMonitorScreen extends GuiScreen {
 	private boolean scrollClicked;
 	
 	public StorageMonitorScreen(StorageMonitorTileEntity monitor) {
+		super(new StringTextComponent("Storage Monitor"));
 		this.monitor = monitor;
 	}
 	
 	@Override	
-	public void updateScreen() {
+	public void tick() {
 		if (monitor.getNetwork() != null) {
 			// TODO toggle excluding 'buffer' chest items
 			final Collection<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
@@ -91,9 +90,9 @@ public class StorageMonitorScreen extends GuiScreen {
 		if (monitor.getWorld().getGameTime() % 20 == 0) {
 			LogisticsNetwork network = monitor.getNetwork();
 			if (network != null) {
-				NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest(network.getUUID()));
+				NetworkHandler.sendToServer(new LogisticsUpdateRequest(network.getUUID()));
 			} else {
-				NetworkHandler.getSyncChannel().sendToServer(new LogisticsUpdateRequest());
+				NetworkHandler.sendToServer(new LogisticsUpdateRequest(null));
 			}
 		}
 	}
@@ -102,31 +101,31 @@ public class StorageMonitorScreen extends GuiScreen {
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
 		GlStateManager.enableLighting();
 		GlStateManager.disableLighting();
-		GlStateManager.disableTexture2D();
-		GlStateManager.enableTexture2D();
+		GlStateManager.disableTexture();
+		GlStateManager.enableTexture();
 		GlStateManager.disableBlend();
 		GlStateManager.enableBlend();
-		GlStateManager.disableAlpha();
-		GlStateManager.enableAlpha();
+		GlStateManager.disableAlphaTest();
+		GlStateManager.enableAlphaTest();
 		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 
-		GlStateManager.color(1.0f, 1.0f, 1.0f, 0.9f);
+		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 0.9f);
 		final float value = (mouseOver ? .8f : 1f);
-		GlStateManager.color(value, value, value, 1.0f);
-		this.drawTexturedModalRect(x, y, GUI_TEXT_MENUITEM_HOFFSET, GUI_TEXT_MENUITEM_VOFFSET, GUI_TEXT_MENUITEM_WIDTH, GUI_TEXT_MENUITEM_HEIGHT);
-		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+		GlStateManager.color4f(value, value, value, 1.0f);
+		blit(x, y, GUI_TEXT_MENUITEM_HOFFSET, GUI_TEXT_MENUITEM_VOFFSET, GUI_TEXT_MENUITEM_WIDTH, GUI_TEXT_MENUITEM_HEIGHT);
+		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 1.0f);
 		if (!request.isEmpty()) {
 			RenderHelper.disableStandardItemLighting();
 			RenderHelper.enableGUIStandardItemLighting();
-			this.itemRender.renderItemIntoGUI(request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET);
-			this.itemRender.renderItemOverlayIntoGUI(fontRenderer, request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET, request.getCount() + "");
+			Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET);
+			Minecraft.getInstance().getItemRenderer().renderItemOverlayIntoGUI(this.font, request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET, request.getCount() + "");
 			RenderHelper.disableStandardItemLighting();
-			GlStateManager.disableTexture2D();
-			GlStateManager.enableTexture2D();
+			GlStateManager.disableTexture();
+			GlStateManager.enableTexture();
 			GlStateManager.disableBlend();
 			GlStateManager.enableBlend();
-			GlStateManager.disableAlpha();
-			GlStateManager.enableAlpha();
+			GlStateManager.disableAlphaTest();
+			GlStateManager.enableAlphaTest();
 			GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 			
 //			GlStateManager.pushMatrix();
@@ -137,8 +136,8 @@ public class StorageMonitorScreen extends GuiScreen {
 		
 		if (mouseOver) {
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(0, 0, 1000);
-			Gui.drawRect(x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET,
+			GlStateManager.translated(0, 0, 1000);
+			RenderFuncs.drawRect(x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET,
 					x + GUI_TEXT_MENUITEM_SLOT_HOFFSET + (GUI_INV_CELL_LENGTH - 1), y + GUI_TEXT_MENUITEM_SLOT_VOFFSET + (GUI_INV_CELL_LENGTH - 1),
 					0x60FFFFFF);
 			GlStateManager.popMatrix();
@@ -147,18 +146,18 @@ public class StorageMonitorScreen extends GuiScreen {
 	
 	private void drawCell(int x, int y, @Nullable ItemDeepStack stack, boolean mouseOver) {
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
-		GlStateManager.color(1.0f, 1.0f, 1.0f, 0.9f);
-		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 0.9f);
+		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 1.0f);
 		GlStateManager.enableLighting();
 		GlStateManager.disableLighting();
-		GlStateManager.disableTexture2D();
-		GlStateManager.enableTexture2D();
+		GlStateManager.disableTexture();
+		GlStateManager.enableTexture();
 		GlStateManager.disableBlend();
 		GlStateManager.enableBlend();
-		GlStateManager.disableAlpha();
-		GlStateManager.enableAlpha();
+		GlStateManager.disableAlphaTest();
+		GlStateManager.enableAlphaTest();
 		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-		this.drawTexturedModalRect(x, y, GUI_TEXT_CELL_HOFFSET, 0, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
+		blit(x, y, GUI_TEXT_CELL_HOFFSET, 0, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
 		if (stack != null) {
 			final long countNum = stack.getCount();
 			String count;
@@ -169,48 +168,48 @@ public class StorageMonitorScreen extends GuiScreen {
 			} else {
 				count = (countNum / 1000000) + "m";
 			}
-			final int width = this.fontRenderer.getStringWidth(count);
-			final int height = this.fontRenderer.FONT_HEIGHT;
+			final int width = this.font.getStringWidth(count);
+			final int height = this.font.FONT_HEIGHT;
 			RenderHelper.disableStandardItemLighting();
 			RenderHelper.enableGUIStandardItemLighting();
-			this.itemRender.renderItemIntoGUI(stack.getTemplate(), x + 1, y + 1);
+			Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(stack.getTemplate(), x + 1, y + 1);
 			RenderHelper.disableStandardItemLighting();
 			
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(0, 0, 1000);
-			Gui.drawRect(x + 1, y + (GUI_INV_CELL_LENGTH - 6) , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60000000);
-			GlStateManager.translate(x + GUI_INV_CELL_LENGTH + (-2) + (-width / 2), y + GUI_INV_CELL_LENGTH + (-height / 2) - 1, 0);
-			GlStateManager.scale(.5, .5, 1);
-			this.fontRenderer.drawStringWithShadow(count, 0, 0, 0xFFFFFFFF);
+			GlStateManager.translated(0, 0, 1000);
+			RenderFuncs.drawRect(x + 1, y + (GUI_INV_CELL_LENGTH - 6) , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60000000);
+			GlStateManager.translated(x + GUI_INV_CELL_LENGTH + (-2) + (-width / 2), y + GUI_INV_CELL_LENGTH + (-height / 2) - 1, 0);
+			GlStateManager.scaled(.5, .5, 1);
+			this.font.drawStringWithShadow(count, 0, 0, 0xFFFFFFFF);
 			GlStateManager.popMatrix();
 		}
 		
 		if (mouseOver) {
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(0, 0, 1000);
-			Gui.drawRect(x + 1, y + 1 , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60FFFFFF);
+			GlStateManager.translated(0, 0, 1000);
+			RenderFuncs.drawRect(x + 1, y + 1 , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60FFFFFF);
 			GlStateManager.popMatrix();
 		}
 	}
 	
 	private void drawSlider(int x, int y, boolean mouseOver) {
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
-		GlStateManager.color(1f, 1f, 1f, 1f);
-		this.drawTexturedModalRect(x, y, GUI_TEXT_SLIDER_HOFFSET, mouseOver ? GUI_INV_SLIDER_HEIGHT : 0, GUI_INV_SLIDER_WIDTH, GUI_INV_SLIDER_HEIGHT);
+		GlStateManager.color4f(1f, 1f, 1f, 1f);
+		blit(x, y, GUI_TEXT_SLIDER_HOFFSET, mouseOver ? GUI_INV_SLIDER_HEIGHT : 0, GUI_INV_SLIDER_WIDTH, GUI_INV_SLIDER_HEIGHT);
 	}
 	
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float p_73863_3_) {
+	public void render(int mouseX, int mouseY, float p_73863_3_) {
 		
 		final int leftOffset = (this.width - GUI_TEXT_WIDTH) / 2; //distance from left
 		final int topOffset = (this.height - GUI_TEXT_HEIGHT) / 2;
 
-		GlStateManager.color(1.0f, 1.0f, 1.0f, 0.9f);
-		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 0.9f);
+		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 1.0f);
 		GlStateManager.enableLighting();
 		GlStateManager.disableLighting();
-		GlStateManager.disableTexture2D();
-		GlStateManager.enableTexture2D();
+		GlStateManager.disableTexture();
+		GlStateManager.enableTexture();
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
 		
 		if (monitor.getNetwork() != null) {
@@ -231,7 +230,7 @@ public class StorageMonitorScreen extends GuiScreen {
 				final int wholes = (int) Math.floor(scrollLag * spilloverRows);
 				final double frac = (scrollLag * spilloverRows) - wholes;
 				invOffset = wholes;
-				GlStateManager.translate(0, -GUI_INV_CELL_LENGTH * frac, 0);
+				GlStateManager.translated(0, -GUI_INV_CELL_LENGTH * frac, 0);
 			}
 			
 			for (int i = 0; i < GUI_CELL_ROWS + 1; i++)
@@ -266,15 +265,15 @@ public class StorageMonitorScreen extends GuiScreen {
 		}
 		
 		GlStateManager.pushMatrix();
-		GlStateManager.translate(0, 0, 1000);
+		GlStateManager.translated(0, 0, 1000);
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
-		GlStateManager.color(1.0f, 1.0f, 1.0f, 0.9f);
-		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 0.9f);
+		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 1.0f);
 		GlStateManager.enableLighting();
 		GlStateManager.disableLighting();
-		GlStateManager.disableTexture2D();
-		GlStateManager.enableTexture2D();
-		this.drawTexturedModalRect(leftOffset, topOffset, 0, 0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT);
+		GlStateManager.disableTexture();
+		GlStateManager.enableTexture();
+		blit(leftOffset, topOffset, 0, 0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT);
 		int sliderX = leftOffset + GUI_INV_SLIDER_HOFFSET;
 		int sliderY = topOffset + GUI_INV_SLIDER_VOFFSET + (int) Math.ceil(GUI_INV_SLIDER_TOTAL_HEIGHT * scroll);
 		drawSlider(sliderX, sliderY,
@@ -282,16 +281,16 @@ public class StorageMonitorScreen extends GuiScreen {
 				&& mouseY >= sliderY && mouseY < sliderY + GUI_INV_SLIDER_HEIGHT);
 		GlStateManager.popMatrix();
 		
-		super.drawScreen(mouseX, mouseY, p_73863_3_);
+		super.render(mouseX, mouseY, p_73863_3_);
 	}
 	
 	@Override
-	public boolean doesGuiPauseGame() {
+	public boolean isPauseScreen() {
 		return false;
 	}
 	
 	@Override
-	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+	public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
 		final int leftOffset = (this.width - GUI_TEXT_WIDTH) / 2; //distance from left
 		final int topOffset = (this.height - GUI_TEXT_HEIGHT) / 2;
 		
@@ -301,8 +300,8 @@ public class StorageMonitorScreen extends GuiScreen {
 		if (mouseX >= leftOffset + GUI_INV_SLIDER_HOFFSET && mouseX <= leftOffset + GUI_INV_SLIDER_HOFFSET + GUI_INV_SLIDER_WIDTH
 				&& mouseY >= topOffset + sliderY && mouseY <= topOffset + sliderY + GUI_INV_SLIDER_HEIGHT) {
 			scrollClicked = true;
-			mouseClickOffsetY = mouseY - (topOffset + sliderY);
-			return;
+			mouseClickOffsetY = (int) (mouseY - (topOffset + sliderY));
+			return true;
 		}
 		
 		/*
@@ -324,9 +323,10 @@ public class StorageMonitorScreen extends GuiScreen {
 		if (mouseX >= leftOffset + -GUI_TEXT_MENUITEM_WIDTH && mouseX <= leftOffset
 				&& mouseY >= topOffset && mouseY <= topOffset + (GUI_TEXT_MENUITEM_HEIGHT * requests)) {
 			// Which?
-			final int index = (mouseY - topOffset) / GUI_TEXT_MENUITEM_HEIGHT;
+			final int index = (int) ((mouseY - topOffset) / GUI_TEXT_MENUITEM_HEIGHT);
 			ItemStack req = monitor.getItemRequests().get(index);
-			NetworkHandler.getSyncChannel().sendToServer(new StorageMonitorRequestMessage(monitor, req, true));
+			NetworkHandler.sendToServer(new StorageMonitorRequestMessage(monitor, req, true));
+			return true;
 		}
 		
 		// Slot?
@@ -334,7 +334,7 @@ public class StorageMonitorScreen extends GuiScreen {
 				&& mouseY >= topOffset + GUI_TOP_INV_VOFFSET && mouseY <= topOffset + GUI_TOP_INV_VOFFSET + (GUI_INV_CELL_LENGTH * GUI_CELL_ROWS)) {
 			// Only left and right mouse buttons
 			if (mouseButton != 0 && mouseButton != 1) {
-				return;
+				return false;
 			}
 			final List<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
 			final int len = items.size();
@@ -356,8 +356,8 @@ public class StorageMonitorScreen extends GuiScreen {
 			
 			// invOffset is how many rows y=0 is at. Figure how far into cells we've clicked too to get the final cell index
 			
-			int x = (mouseX - (leftOffset + GUI_TOP_INV_HOFFSET)) / GUI_INV_CELL_LENGTH;
-			int y = (mouseY - (topOffset + GUI_TOP_INV_VOFFSET)) / GUI_INV_CELL_LENGTH;
+			int x = (int) ((mouseX - (leftOffset + GUI_TOP_INV_HOFFSET)) / GUI_INV_CELL_LENGTH);
+			int y = (int) ((mouseY - (topOffset + GUI_TOP_INV_VOFFSET)) / GUI_INV_CELL_LENGTH);
 			final int index = (int) (x + (((y + invOffset) * GUI_CELL_COLS)));
 			if (index < len) {
 				ItemDeepStack clicked = items.get(index);
@@ -366,10 +366,12 @@ public class StorageMonitorScreen extends GuiScreen {
 						? (int) Math.min(Math.max(0, clicked.getCount()), clicked.getTemplate().getMaxStackSize())
 						: 1);
 				//monitor.addRequest(req); local
-				NetworkHandler.getSyncChannel().sendToServer(new StorageMonitorRequestMessage(monitor, req, false));
+				NetworkHandler.sendToServer(new StorageMonitorRequestMessage(monitor, req, false));
 			}
-			return;
+			return true;
 		}
+		
+		return false;
 	}
 	
 	private void calcScroll(int mouseY, boolean finalize) {
@@ -399,45 +401,48 @@ public class StorageMonitorScreen extends GuiScreen {
 	}
 	
 	@Override
-	protected void mouseReleased(int mouseX, int mouseY, int state) {
+	public boolean mouseReleased(double mouseX, double mouseY, int state) {
 		// Do final update
 		if (scrollClicked) {
-			calcScroll(mouseY, true);
+			calcScroll((int) mouseY, true);
+			return true;
 		}
 		
 		scrollClicked = false;
+		return false;
 	}
 	
 	@Override
-	protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
+	public boolean mouseDragged(double mouseX, double mouseY, int clickedMouseButton, double dx, double dy) {
 		if (scrollClicked) {
-			calcScroll(mouseY, false);
+			calcScroll((int) mouseY, false);
 			scrollLag = scroll; // Snap to when using the slider
+			return true;
 		}
+		
+		return false;
 	}
 	
 	@Override
-	public void handleMouseInput() throws IOException {
-		int wheel = Mouse.getEventDWheel();
-		if (wheel != 0) {
-			// 120 seems to be scroll bar rotation magnitude?
-			if (monitor.getNetwork() != null) {
-				final Collection<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
-				final int len = items.size();
-				final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
-				final int spilloverRows = rows - GUI_CELL_ROWS; // scroll bar represents this many rows of pixels
-				
-				if (spilloverRows > 0) {
-					final double amt = ((double) -wheel / 120.0) / (double) spilloverRows;
-					scroll = Math.min(1.0, Math.max(0.0, scroll + amt));
-					scrollLag = scroll;
-				}
-			} else {
-				scroll = 0.0;
-			}
+	public boolean mouseScrolled(double mouseX, double mouseY, double dx) {
+		if (monitor.getNetwork() != null) {
+			final Collection<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
+			final int len = items.size();
+			final int rows = (int) Math.ceil((double)len / (double) GUI_CELL_COLS);
+			final int spilloverRows = rows - GUI_CELL_ROWS; // scroll bar represents this many rows of pixels
 			
+			if (spilloverRows > 0) {
+				final double amt = dx / (double) spilloverRows;
+				scroll = Math.min(1.0, Math.max(0.0, scroll + amt));
+				scrollLag = scroll;
+			}
+		} else {
+			scroll = 0.0;
 		}
-		super.handleMouseInput();
+		
+		int unused; // Check this
+		
+		return true;
 	}
 	
 }

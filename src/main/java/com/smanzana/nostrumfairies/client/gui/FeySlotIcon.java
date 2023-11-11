@@ -3,16 +3,16 @@ package com.smanzana.nostrumfairies.client.gui;
 import java.util.EnumMap;
 import java.util.Map;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.container.FeyStoneContainerSlot;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public final class FeySlotIcon {
@@ -37,10 +37,10 @@ public final class FeySlotIcon {
 		GlStateManager.disableLighting();
 		
 		GlStateManager.pushMatrix();
-		GlStateManager.translate(offsetX, offsetY, 0);
-		GlStateManager.scale(scale, scale, scale);
-		GlStateManager.color(1f, 1f, 1f, 1f);
-        Gui.drawModalRectWithCustomSizedTexture(0, 0, 0, 0, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
+		GlStateManager.translated(offsetX, offsetY, 0);
+		GlStateManager.scalef(scale, scale, scale);
+		GlStateManager.color4f(1f, 1f, 1f, 1f);
+        RenderFuncs.drawModalRectWithCustomSizedTexture(0, 0, 0, 0, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
         GlStateManager.popMatrix();
         
         GlStateManager.enableLighting();
