@@ -17,6 +17,8 @@ import net.minecraft.world.World;
 
 public class EntityElfCrafter extends EntityElf {
 	
+	public static final String ID = "elf_crafter";
+	
 	public EntityElfCrafter(EntityType<? extends EntityElfCrafter> type, World world) {
 		super(type, world);
 		this.workDistanceSq = 24 * 24;

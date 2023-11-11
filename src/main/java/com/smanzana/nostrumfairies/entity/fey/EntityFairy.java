@@ -45,6 +45,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
+	
+	public static final String ID = "fairy";
 
 	private static final String NBT_ITEM = "helditem";
 	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityFairy.class, DataSerializers.ITEMSTACK);

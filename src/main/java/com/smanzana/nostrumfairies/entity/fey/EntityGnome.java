@@ -48,6 +48,8 @@ import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
+	public static final String ID = "gnome";
+	
 	protected static final DataParameter<ArmPoseGnome> POSE  = EntityDataManager.<ArmPoseGnome>createKey(EntityGnome.class, ArmPoseGnome.instance());
 	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityGnome.class, DataSerializers.ITEMSTACK);
 

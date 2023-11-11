@@ -54,6 +54,8 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRangedAttackMob {
+	
+	public static final String ID = "elf";
 
 	private static Spell SPELL_VINES = null;
 	private static Spell SPELL_POISON_WIND = null;

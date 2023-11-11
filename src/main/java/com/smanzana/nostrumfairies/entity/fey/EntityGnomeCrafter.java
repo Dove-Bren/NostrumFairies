@@ -15,6 +15,8 @@ import net.minecraft.world.World;
 
 public class EntityGnomeCrafter extends EntityGnome {
 	
+	public static final String ID = "gnome_crafter";
+	
 	public EntityGnomeCrafter(EntityType<? extends EntityGnomeCrafter> type, World world) {
 		super(type, world);
 		this.workDistanceSq = 24 * 24;

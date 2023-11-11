@@ -44,6 +44,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
+	
+	public static final String ID = "test_fairy";
 
 	private static final String NBT_ITEMS = "helditems";
 	private static final int INV_SIZE = 5;

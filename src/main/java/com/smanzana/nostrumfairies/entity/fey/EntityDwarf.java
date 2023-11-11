@@ -74,6 +74,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
+	
+	public static final String ID = "dwarf";
 
 	protected static final DataParameter<ArmPoseDwarf> POSE  = EntityDataManager.<ArmPoseDwarf>createKey(EntityDwarf.class, ArmPoseDwarf.instance());
 	protected static final DataParameter<ItemStack[]> ITEMS = EntityDataManager.<ItemStack[]>createKey(EntityDwarf.class, ItemArraySerializer.instance());

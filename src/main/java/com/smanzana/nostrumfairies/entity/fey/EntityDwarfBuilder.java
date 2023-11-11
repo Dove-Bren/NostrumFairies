@@ -19,6 +19,8 @@ import net.minecraft.world.World;
 
 public class EntityDwarfBuilder extends EntityDwarf {
 	
+	public static final String ID = "dwarf_builder";
+	
 	protected static Map<World, Map<BlockPos, BlockPos>> BuildSpots = new HashMap<>();
 	
 	protected static void AddBuildSpot(World world, BlockPos pos, BlockPos spot) {

@@ -69,6 +69,8 @@ import net.minecraft.world.server.ServerWorld;
 
 public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	
+	public static final String ID = "shadow_fey";
+	
 	protected static final DataParameter<BattleStanceShadowFey> STANCE  = EntityDataManager.<BattleStanceShadowFey>createKey(EntityShadowFey.class, BattleStanceShadowFey.instance());
 	protected static final DataParameter<Boolean> MORPHING = EntityDataManager.<Boolean>createKey(EntityShadowFey.class, DataSerializers.BOOLEAN);
 

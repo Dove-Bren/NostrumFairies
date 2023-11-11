@@ -11,6 +11,8 @@ import net.minecraft.world.World;
 
 public class EntityGnomeCollector extends EntityGnome {
 	
+	public static final String ID = "gnome_collector";
+	
 	public EntityGnomeCollector(EntityType<? extends EntityGnomeCollector> type, World world) {
 		super(type, world);
 		this.workDistanceSq = 24 * 24;

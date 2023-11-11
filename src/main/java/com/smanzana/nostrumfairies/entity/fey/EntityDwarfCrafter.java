@@ -16,6 +16,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class EntityDwarfCrafter extends EntityDwarf {
+	
+	public static final String ID = "dwarf_crafter";
 
 	public EntityDwarfCrafter(EntityType<? extends EntityDwarfCrafter> type, World world) {
 		super(type, world);

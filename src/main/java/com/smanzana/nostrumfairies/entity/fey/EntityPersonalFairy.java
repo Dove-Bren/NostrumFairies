@@ -68,6 +68,8 @@ import net.minecraft.world.World;
 
 public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITrackableEntity<EntityPersonalFairy>, IRangedAttackMob {
 	
+	public static final String ID = "personal_fairy";
+	
 	private static final String NBT_OWNER_ID = "owner_uuid";
 	private static final String NBT_JOB = "job";
 	private static final String NBT_ENERGY = "energy";

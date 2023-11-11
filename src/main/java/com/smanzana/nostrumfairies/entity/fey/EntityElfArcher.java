@@ -47,6 +47,8 @@ import net.minecraft.world.World;
 
 public class EntityElfArcher extends EntityElf {
 	
+	public static final String ID = "elf_archer";
+	
 	protected static final DataParameter<BattleStanceElfArcher> STANCE  = EntityDataManager.<BattleStanceElfArcher>createKey(EntityElfArcher.class, BattleStanceElfArcher.instance());
 
 	private static Spell SPELL_HASTE = null;
