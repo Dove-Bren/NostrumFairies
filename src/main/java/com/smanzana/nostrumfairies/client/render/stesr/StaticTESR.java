@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render.stesr;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;

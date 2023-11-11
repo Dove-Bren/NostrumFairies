@@ -3,26 +3,26 @@ package com.smanzana.nostrumfairies.client.render;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.lwjgl.util.vector.Vector3f;
+import javax.vecmath.Vector3f;
 
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESR;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.init.Blocks;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class TemplateBlockRenderer extends TileEntitySpecialRenderer<TemplateBlockTileEntity> implements StaticTESR<TemplateBlockTileEntity> {
+public class TemplateBlockRenderer extends TileEntityRenderer<TemplateBlockTileEntity> implements StaticTESR<TemplateBlockTileEntity> {
 
 	protected static final Map<IBakedModel, Integer> RenderListCache = new HashMap<>();
 	
@@ -55,7 +55,6 @@ public class TemplateBlockRenderer extends TileEntitySpecialRenderer<TemplateBlo
 //		return existing;
 //	}
 	
-	@Override
 	public void renderTileEntityFast(TemplateBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 		Minecraft mc = Minecraft.getInstance();
 		
@@ -84,7 +83,7 @@ public class TemplateBlockRenderer extends TileEntitySpecialRenderer<TemplateBlo
 //		GlStateManager.enableTexture2D();
 //		GlStateManager.enableLighting();
 //		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-		mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 		
 //		GlStateManager.pushAttrib();
 //		GlStateManager.callList(drawlist);

@@ -1,7 +1,7 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector3f;
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Vector3f;
 
 import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESR;
@@ -9,17 +9,17 @@ import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.init.Blocks;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> extends TileEntityLogisticsRenderer<T> implements StaticTESR<T> {
@@ -38,10 +38,14 @@ public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> 
 			new Vector3f(.5f + THICCNESS,		HEIGHT, .5f - (ICON_SIZE / 2)), // E
 	};
 	private static final Matrix4f TRANSFORMS[] = new Matrix4f[] {
-		new Matrix4f().rotate((float) (Math.PI * 1), new Vector3f(0, -1, 0)).scale(new Vector3f(ICON_SIZE, ICON_SIZE, .001f)), // S
-		new Matrix4f().rotate((float) (Math.PI * 1.5), new Vector3f(0, -1, 0)).scale(new Vector3f(ICON_SIZE, ICON_SIZE, .001f)), // W
-		new Matrix4f().rotate(0f, new Vector3f(0, -1, 0)).scale(new Vector3f(ICON_SIZE, ICON_SIZE, .001f)), // N
-		new Matrix4f().rotate((float) (Math.PI * .5), new Vector3f(0, -1, 0)).scale(new Vector3f(ICON_SIZE, ICON_SIZE, .001f)), // E
+		new Matrix4f(),
+		new Matrix4f(),
+		new Matrix4f(),
+		new Matrix4f(),
+		//new Matrix4f().rotate((float) (Math.PI * 1), new Vector3f(0, -1, 0)).scale(new Vector3f(ICON_SIZE, ICON_SIZE, .001f)), // S
+		//new Matrix4f().rotate((float) (Math.PI * 1.5), new Vector3f(0, -1, 0)).scale(new Vector3f(ICON_SIZE, ICON_SIZE, .001f)), // W
+		//new Matrix4f().rotate(0f, new Vector3f(0, -1, 0)).scale(new Vector3f(ICON_SIZE, ICON_SIZE, .001f)), // N
+		//new Matrix4f().rotate((float) (Math.PI * .5), new Vector3f(0, -1, 0)).scale(new Vector3f(ICON_SIZE, ICON_SIZE, .001f)), // E
 	};
 	
 	public FeySignRenderer() {
@@ -56,21 +60,21 @@ public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> 
 		return TRANSFORMS[facing.getHorizontalIndex()];
 	}
 	
-	@Override
+	//@Override
 	public void renderTileEntityFast(T te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 		Minecraft mc = Minecraft.getInstance();
 		
 		ItemStack icon = te.getSignIcon(te);
 		IBakedModel model = null;
 		if (!icon.isEmpty()) {
-			model = mc.getRenderItem().getItemModelMesher().getItemModel(icon);
+			model = mc.getItemRenderer().getItemModelMesher().getItemModel(icon);
 		}
 		
 		if (model == null || model == mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel()) {
 			model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());
 		}
 		
-		mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 		
 		final int color = 0xFFFFFFFF;
 		final Direction facing = te.getSignFacing(te);

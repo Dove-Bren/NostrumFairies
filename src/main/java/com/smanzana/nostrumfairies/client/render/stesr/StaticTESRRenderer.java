@@ -17,7 +17,7 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -110,7 +110,7 @@ public class StaticTESRRenderer {
 		}
 		
 		// Draw cached displays
-		mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 		for (RenderTarget targ : cache.values()) {
 			drawTarget(targ, mc, player, partialTicks);
 		}
@@ -122,7 +122,7 @@ public class StaticTESRRenderer {
 		BufferBuilder buffer = tess.getBuffer();
 		
 		
-		GlStateManager.glNewList(list, GL11.GL_COMPILE);
+		GlStateManager.newList(list, GL11.GL_COMPILE);
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
 		{
 			BlockPos pos = te.getPos();
@@ -131,14 +131,14 @@ public class StaticTESRRenderer {
 			render.render(te, pos.getX(), pos.getY(), pos.getZ(), state, world, buffer);
 		}
 		tess.draw();
-		GlStateManager.glEndList();
+		GlStateManager.endList();
 		
 		return list;
 	}
 	
 	private void drawTarget(RenderTarget target, Minecraft mc, ClientPlayerEntity player, float partialTicks) {
 		final double eyeY = player.getEyeHeight();
-		Vec3d playerPos = player.getPositionEyes(partialTicks).subtract(0, eyeY, 0);
+		Vec3d playerPos = player.getEyePosition(partialTicks).subtract(0, eyeY, 0);
 		BlockPos pos = target.te.getPos();
 		Vec3d offset = new Vec3d(pos.getX() - playerPos.x,
 				pos.getY() - playerPos.y,
@@ -146,10 +146,10 @@ public class StaticTESRRenderer {
 		
 		//GlStateManager.enableLighting();
 		GlStateManager.enableBlend();
-		GlStateManager.enableAlpha();
+		GlStateManager.enableAlphaTest();
 		
 		GlStateManager.pushMatrix();
-		GlStateManager.translate(offset.x, offset.y, offset.z);
+		GlStateManager.translated(offset.x, offset.y, offset.z);
 		GlStateManager.callList(target.drawlist);
 		GlStateManager.popMatrix();
 	}

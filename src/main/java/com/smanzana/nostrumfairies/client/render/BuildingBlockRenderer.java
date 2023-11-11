@@ -1,16 +1,16 @@
 package com.smanzana.nostrumfairies.client.render;
 
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector3f;
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Vector3f;
 
 import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.init.Blocks;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -57,20 +57,22 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 		if (!template.isEmpty()) {
 			Minecraft mc = Minecraft.getInstance();
 			IBakedModel model = null;
-			model = mc.getRenderItem().getItemModelMesher().getItemModel(template);
+			model = mc.getItemRenderer().getItemModelMesher().getItemModel(template);
 			
 			if (model == null || model == mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel()) {
 				model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());
 			}
 			
-			mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+			mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 			
 			final int color = 0xFFFFFFFF;
 			final Direction facing = te.getSignFacing(te);
 			final Vector3f offset = SCROLL_OFFSETS[facing.getHorizontalIndex()];
 			final Matrix4f transform = new Matrix4f(getTransform(te, facing))
-					.scale(new Vector3f(.5f, .5f, .5f));
+					//.scale(new Vector3f(.5f, .5f, .5f));
 					//.rotate(90f, new Vector3f(1f, 0, 0));
+					;
+			int unused; // review this; used to scale down by .5
 			
 			RenderFuncs.RenderModelWithColor(model, color, buffer, offset, transform);
 		}

@@ -5,7 +5,10 @@ import java.util.Collection;
 
 import org.lwjgl.opengl.GL11;
 
-import com.smanzana.nostrumfairies.effect.FeyVisibilityEffect;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
+import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
+import com.smanzana.nostrumfairies.effect.FeyEffects;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
@@ -13,34 +16,30 @@ import com.smanzana.nostrummagica.utils.Curves;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.GlStateManager.DestFactor;
-import net.minecraft.client.renderer.GlStateManager.SourceFactor;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.potion.PotionEffect;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity> extends TileEntitySpecialRenderer<T> {
+public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity> extends TileEntityRenderer<T> {
 
 	public TileEntityLogisticsRenderer() {
 		
 	}
 	
 	@Override
-	public void render(T te, double x, double y, double z, float partialTicks, int destroyStage, float alphaIn) {
-		super.render(te, x, y, z, partialTicks, destroyStage, alphaIn);
+	public void render(T te, double x, double y, double z, float partialTicks, int destroyStage) {
+		super.render(te, x, y, z, partialTicks, destroyStage);
 		
 		Minecraft mc = Minecraft.getInstance();
 		PlayerEntity player = mc.player;
-		PotionEffect effect = player.getActivePotionEffect(FeyVisibilityEffect.instance());
+		EffectInstance effect = player.getActivePotionEffect(FeyEffects.feyVisibility);
 		
 		if (player != null && effect != null) { // REPLACE ME
 			LogisticsNetwork network = te.getNetwork();
@@ -62,29 +61,29 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 					alpha = 1f;
 				}
 				
-				Vec3d origin = new Vec3d(BlockPos.ORIGIN);
+				Vec3d origin = new Vec3d(BlockPos.ZERO);
 				Tessellator tessellator = Tessellator.getInstance();
 				BufferBuilder buffer = tessellator.getBuffer();
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + .5, y + 1.05, z + .5);
+				GlStateManager.translated(x + .5, y + 1.05, z + .5);
 				//GlStateManager.disableColorMaterial();
-				GlStateManager.enableTexture2D();
-				GlStateManager.disableTexture2D();
+				GlStateManager.enableTexture();
+				GlStateManager.disableTexture();
 				GlStateManager.enableLighting();
 				GlStateManager.disableLighting();
 				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 				GlStateManager.disableBlend();
-				GlStateManager.disableAlpha();
+				GlStateManager.disableAlphaTest();
 				GlStateManager.enableBlend();
-				GlStateManager.enableAlpha();
-				GlStateManager.glLineWidth(3f);
-				GlStateManager.enableDepth();
+				GlStateManager.enableAlphaTest();
+				GlStateManager.lineWidth(3f);
+				GlStateManager.enableDepthTest();
 				GlStateManager.disableRescaleNormal();
 				GL11.glDisable(GL11.GL_LINE_STIPPLE);
 				GL11.glLineStipple(1, (short) 1);
-				GlStateManager.color(1f, 1f, 1f, .9f);
-				GlStateManager.color(1f, 1f, 1f, alpha);
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+				GlStateManager.color4f(1f, 1f, 1f, .9f);
+				GlStateManager.color4f(1f, 1f, 1f, alpha);
+				//OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 				
 				for (ILogisticsComponent component : neighbors) {
 					final Vec3d offset = new Vec3d(component.getPosition().toImmutable().subtract(te.getPos()));
@@ -130,7 +129,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				
 				GlStateManager.popMatrix();
 				GlStateManager.enableColorMaterial();
-				GlStateManager.enableTexture2D();
+				GlStateManager.enableTexture();
 			}
 		}
 	}

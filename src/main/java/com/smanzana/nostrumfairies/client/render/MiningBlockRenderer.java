@@ -5,14 +5,13 @@ import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.tiles.MiningBlockTileEntity;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -30,7 +29,7 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buffer = tessellator.getBuffer();
 		GlStateManager.pushMatrix();
-		GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
+		GlStateManager.translated(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
 		buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
 		
 		buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
@@ -67,8 +66,8 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 	}
 	
 	@Override
-	public void render(MiningBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float alphaIn) {
-		super.render(te, x, y, z, partialTicks, destroyStage, alphaIn);
+	public void render(MiningBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
+		super.render(te, x, y, z, partialTicks, destroyStage);
 		
 		Minecraft mc = Minecraft.getInstance();
 		PlayerEntity player = mc.player;
@@ -81,19 +80,19 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 				BlockPos origin = te.getPos();
 				
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x, y, z);
+				GlStateManager.translated(x, y, z);
 				
-				GlStateManager.glLineWidth(3f);
+				GlStateManager.lineWidth(3f);
 				GlStateManager.disableLighting();
-				GlStateManager.enableTexture2D();
-				GlStateManager.disableTexture2D();
-				GlStateManager.enableAlpha();
+				GlStateManager.enableTexture();
+				GlStateManager.disableTexture();
+				GlStateManager.enableAlphaTest();
 				GlStateManager.enableBlend();
-				GlStateManager.disableAlpha();
+				GlStateManager.disableAlphaTest();
 				GlStateManager.disableBlend();
-				GlStateManager.disableDepth();
+				GlStateManager.disableDepthTest();
 				
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+				//OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 				
 				Set<BlockPos> locs = new HashSet<>();
 				te.collectOreLocations(locs);
@@ -151,8 +150,8 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 //					GlStateManager.popMatrix();
 //				}
 				
-				GlStateManager.enableDepth();
-				GlStateManager.enableTexture2D();
+				GlStateManager.enableDepthTest();
+				GlStateManager.enableTexture();
 				
 //				GlStateManager.disableLighting();
 //				GlStateManager.disableTexture2D();
