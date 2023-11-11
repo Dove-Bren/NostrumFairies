@@ -43,7 +43,7 @@ import net.minecraft.block.BlockWall;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.IMobEntityData;
+import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAttackMelee;
 import net.minecraft.entity.ai.HurtByTargetGoal;
@@ -852,13 +852,13 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	protected void applyEntityAttributes() {
-		super.applyEntityAttributes();
-		this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.20D);
-		this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(24.0D);
+	protected void registerAttributes() {
+		super.registerAttributes();
+		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.20D);
+		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(24.0D);
 		this.getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(3.0D);
-		this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
-		this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
+		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
 	}
 	
 	private ListNBT inventoryToNBT() {
@@ -922,7 +922,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public IMobEntityData onInitialSpawn(DifficultyInstance difficulty, @Nullable IMobEntityData livingdata) {
+	public ILivingEntityData onInitialSpawn(IWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
 		livingdata = super.onInitialSpawn(difficulty, livingdata);
 		
 		// Dwarves are 40:60 lefthanded
@@ -988,8 +988,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	protected void entityInit() {
-		super.entityInit();
+	protected void registerData() {
+		super.registerData();
 		dataManager.register(POSE, ArmPoseDwarf.IDLE);
 		ItemStack[] arr = new ItemStack[INV_SIZE];
 		Arrays.fill(arr, ItemStack.EMPTY);
@@ -1024,8 +1024,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void onUpdate() {
-		super.onUpdate();
+	public void tick() {
+		super.tick();
 		
 		if (world.isRemote && isSwingInProgress) {
 			if (this.getPose() == ArmPoseDwarf.MINING) {

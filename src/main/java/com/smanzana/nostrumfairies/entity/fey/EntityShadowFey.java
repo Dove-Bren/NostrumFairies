@@ -1,15 +1,13 @@
 package com.smanzana.nostrumfairies.entity.fey;
 
+import java.util.function.Predicate;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.EntityArrowEx;
 import com.smanzana.nostrumfairies.items.FairyItems;
-import com.smanzana.nostrumfairies.items.FeyResource;
-import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
@@ -18,7 +16,6 @@ import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
 import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
-import com.smanzana.nostrummagica.items.NostrumSkillItem;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.spells.EAlteration;
@@ -31,11 +28,14 @@ import com.smanzana.nostrummagica.spells.components.triggers.SeekingBulletTrigge
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.LookAtGoal;
@@ -48,15 +48,21 @@ import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.play.server.SAnimateHandPacket;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
@@ -190,28 +196,28 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	}
 
 	@Override
-	protected void applyEntityAttributes() {
-		super.applyEntityAttributes();
-		this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.24D);
-		this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(14.0D);
-		this.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(4.0D);
-		this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
-		this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(20.0);
-		this.getEntityAttribute(AttributeMagicResist.instance()).setBaseValue(0.0D);
+	protected void registerAttributes() {
+		super.registerAttributes();
+		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.24D);
+		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(14.0D);
+		this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(4.0D);
+		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
+		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(20.0);
+		this.getAttribute(AttributeMagicResist.instance()).setBaseValue(0.0D);
 	}
 	
 	@Override
-	protected void entityInit() {
-		super.entityInit();
+	protected void registerData() {
+		super.registerData();
 		dataManager.register(STANCE, BattleStanceShadowFey.IDLE);
 		dataManager.register(MORPHING, false);
 	}
 	
 	@Override
-	public void onEntityUpdate() {
-		super.onEntityUpdate();
+	public void baseTick() {
+		super.baseTick();
 		
-		if (this.getAttackTarget() != null && this.getAttackTarget().isDead) {
+		if (this.getAttackTarget() != null && !this.getAttackTarget().isAlive()) {
 			this.setAttackTarget(null);
 		}
 		
@@ -256,9 +262,8 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		
 	}
 	
-	@SuppressWarnings("unchecked")
-	protected static final Predicate<Entity> SHADOW_FEY_ARROW_FILTER = Predicates.and(EntitySelectors.NOT_SPECTATING, EntitySelectors.IS_ALIVE, new Predicate<Entity>() {
-		public boolean apply(@Nullable Entity ent) {
+	protected static final Predicate<Entity> SHADOW_FEY_ARROW_FILTER = EntityPredicates.NOT_SPECTATING.and(EntityPredicates.IS_ALIVE).and(new Predicate<Entity>() {
+		public boolean test(@Nullable Entity ent) {
 			return ent.canBeCollidedWith() && !(ent instanceof EntityShadowFey);
 		}
 	});
@@ -267,7 +272,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		EntityArrowEx entitytippedarrow = new EntityArrowEx(this.world, this);
 		entitytippedarrow.setFilter(SHADOW_FEY_ARROW_FILTER);
 		double d0 = target.posX - this.posX;
-		double d1 = target.getEntityBoundingBox().minY + (double)(target.height / 3.0F) - entitytippedarrow.posY;
+		double d1 = target.getBoundingBox().minY + (double)(target.getHeight() / 3.0F) - entitytippedarrow.posY;
 		double d2 = target.posZ - this.posZ;
 		double d3 = (double)MathHelper.sqrt(d0 * d0 + d2 * d2);
 		entitytippedarrow.shoot(d0, d1 + d3 * 0.20000000298023224D, d2, 1.6F, .5f);
@@ -301,7 +306,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		}
 		else if (rand.nextBoolean() && rand.nextBoolean() && rand.nextBoolean())
 		{
-			entitytippedarrow.addEffect(new PotionEffect(MobEffects.POISON, 600));
+			entitytippedarrow.addEffect(new EffectInstance(Effects.POISON, 600));
 		}
 
 		//this.playSound(SoundEvents.ENTITY_SKELETON_SHOOT, 1.0F, 1.0F / (this.getRNG().nextFloat() * 0.4F + 0.8F));
@@ -329,18 +334,19 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	 * Note: Copied from vanilla where you can't override it :(
 	 */
 	protected int getArmSwingAnimationEnd() {
-		return this.isPotionActive(MobEffects.HASTE)
-				? getDefaultSwingAnimationDuration() - (1 + this.getActivePotionEffect(MobEffects.HASTE).getAmplifier())
-				: (this.isPotionActive(MobEffects.MINING_FATIGUE)
-						? getDefaultSwingAnimationDuration() + (1 + this.getActivePotionEffect(MobEffects.MINING_FATIGUE).getAmplifier()) * 2
+		return this.isPotionActive(Effects.HASTE)
+				? getDefaultSwingAnimationDuration() - (1 + this.getActivePotionEffect(Effects.HASTE).getAmplifier())
+				: (this.isPotionActive(Effects.MINING_FATIGUE)
+						? getDefaultSwingAnimationDuration() + (1 + this.getActivePotionEffect(Effects.MINING_FATIGUE).getAmplifier()) * 2
 						: getDefaultSwingAnimationDuration());
 	}
 
 	@Override
 	public void swingArm(Hand hand) {
+		int unused; //Why not just call super?
 		ItemStack stack = this.getHeldItem(hand);
 		if (!stack.isEmpty()) {
-			if (stack.getItem().onEntitySwing(this, stack)) {
+			if (stack.getItem().onEntitySwing(stack, this)) {
 				return;
 			}
 		}
@@ -351,7 +357,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			this.swingingHand = hand;
 
 			if (this.world instanceof ServerWorld) {
-				((ServerWorld)this.world).getEntityTracker().sendToTracking(this, new SPacketAnimation(this, hand == Hand.MAIN_HAND ? 0 : 3));
+				((ServerWorld)this.world).getChunkProvider().sendToAllTracking(this, new SAnimateHandPacket(this, hand == Hand.MAIN_HAND ? 0 : 3));
 			}
 		}
 	}
@@ -395,15 +401,15 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			break;
 		}
 		fey.copyLocationAndAnglesFrom(this);
-		fey.onInitialSpawn(this.world.getDifficultyForLocation(new BlockPos(fey)), (IMobEntityData)null);
+		fey.onInitialSpawn(world, world.getDifficultyForLocation(new BlockPos(fey)), SpawnReason.CONVERSION, (ILivingEntityData)null, null);
 		
-		world.removeEntity(this);
+		this.remove();
 		world.addEntity(fey);
 		fey.setCursed(true);
 		
 		this.world.playEvent((PlayerEntity)null, 1027, new BlockPos((int)this.posX, (int)this.posY, (int)this.posZ), 0);
 		
-		for (PlayerEntity player : world.playerEntities) {
+		for (PlayerEntity player : ((ServerWorld) world).getPlayers()) {
 			if (player.getDistanceSq(this) < 36) {
 				INostrumMagic attr = NostrumMagica.getMagicWrapper(player);
 				if (attr != null) {
@@ -414,15 +420,15 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	}
 	
 	@Override
-	public void onUpdate() {
-		super.onUpdate();
+	public void tick() {
+		super.tick();
 		
 		this.updateArmSwingProgress();
 		
 		// I'll just go ahead and loop this. Can't be that big.
 		if (!world.isRemote) {
 			boolean morphing = false;
-			for (PlayerEntity player : world.playerEntities) {
+			for (PlayerEntity player : ((ServerWorld) world).getPlayers()) {
 				if ((isDangerItem(player.getHeldItemMainhand()) || isDangerItem(player.getHeldItemOffhand()))
 						&& player.getDistanceSq(this) < 36) {
 					morphing = true;
@@ -452,8 +458,8 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	}
 	
 	@Override
-	public IMobEntityData onInitialSpawn(DifficultyInstance difficulty, @Nullable IMobEntityData livingdata) {
-		livingdata = super.onInitialSpawn(difficulty, livingdata);
+	public ILivingEntityData onInitialSpawn(IWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
+		livingdata = super.onInitialSpawn(world, difficulty, reason, livingdata, tag);
 		
 		this.setLeftHanded(this.rand.nextBoolean());
 		
@@ -461,36 +467,14 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	}
 	
 	@Override
-	protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
-		if (wasRecentlyHit && !world.isRemote) {
-			int chance = 1 + lootingModifier;
-			if (rand.nextInt(2) < chance) {
-				
-				this.entityDropItem(FeyResource.create(FeyResourceType.ESSENCE_CORRUPTED, 1 + rand.nextInt(1 + lootingModifier/2)), 0);
-				
-			}
-			
-			// Research scroll
-			int chances = 1 + lootingModifier;
-			if (rand.nextInt(150) < chances) {
-				this.entityDropItem(NostrumSkillItem.getItem(SkillItemType.RESEARCH_SCROLL_SMALL, 1), 0);
-			}
-		}
-	}
-	
-	@Override
-	protected boolean isValidLightLevel() {
-		return super.isValidLightLevel();
-	}
-	
-	@Override
-	public boolean getCanSpawnHere() {
+	public boolean canSpawn(IWorld worldIn, SpawnReason spawnReasonIn) {
 		// Shadow fey amass ar mies in the twilight forest. So let's make sure to only spawn them when other things can spawn.
-		if (this.world.getBiome(this.getPosition()).getSpawnableList(EnumCreatureType.MONSTER).size() <= 2) {
+		if ((spawnReasonIn == SpawnReason.NATURAL || spawnReasonIn == SpawnReason.CHUNK_GENERATION)
+				&& this.world.getBiome(this.getPosition()).getSpawns(EntityClassification.MONSTER).size() <= 2) {
 			return false;
 		}
 		
-		return super.getCanSpawnHere();
+		return super.canSpawn(worldIn, spawnReasonIn);
 	}
 	
 	@Override
@@ -537,10 +521,5 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		public InfoScreenTabs getTab() {
 			return InfoScreenTabs.INFO_ENTITY;
 		}
-	}
-
-	@Override
-	public void setSwingingArms(boolean swingingArms) {
-		;
 	}
 }

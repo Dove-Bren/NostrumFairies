@@ -153,7 +153,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	
 	@Override
 	public @Nullable LivingEntity getOwner() {
-		if (ownerCache == null || ownerCache.isDead) {
+		if (ownerCache == null || !ownerCache.isAlive()) {
 			ownerCache = null;
 			UUID id = getOwnerId();
 			if (id != null) {
@@ -443,7 +443,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	protected void onIdleTick() {
 		LivingEntity owner = this.getOwner();
 		
-		if (owner == null || owner.isDead) {
+		if (owner == null || !owner.isAlive()) {
 			this.setPetAction(PetAction.IDLING);
 			return;
 		}
@@ -738,8 +738,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 
 	@Override
-	protected void applyEntityAttributes() {
-		super.applyEntityAttributes();
+	protected void registerAttributes() {
+		super.registerAttributes();
 		this.getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(1.0D);
 		resetAttributes(this.getJob());
 	}
@@ -760,15 +760,15 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			health = 6.0;
 		}
 		
-		this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(speed);
-		this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(health);
-		this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(armor);
-		this.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(attack);
+		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(speed);
+		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(health);
+		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(armor);
+		this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(attack);
 	}
 	
 	@Override
-	protected void entityInit() {
-		super.entityInit();
+	protected void registerData() {
+		super.registerData();
 		this.dataManager.register(DATA_OWNER, Optional.absent());
 		this.dataManager.register(DATA_JOB, FairyJob.WARRIOR);
 		this.dataManager.register(DATA_ENERGY, 100f);
@@ -821,7 +821,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			return;
 		}
 		
-		if (this.getAttackTarget() != null && this.getAttackTarget().isDead) {
+		if (this.getAttackTarget() != null && !this.getAttackTarget().isAlive()) {
 			this.setAttackTarget(null);
 			return;
 		}

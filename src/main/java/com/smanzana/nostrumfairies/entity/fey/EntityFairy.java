@@ -544,18 +544,18 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	protected void applyEntityAttributes() {
-		super.applyEntityAttributes();
-		this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.4D);
-		this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(4.0D);
-		//this.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(0.0D);
-		this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(0.0D);
-		this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+	protected void registerAttributes() {
+		super.registerAttributes();
+		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.4D);
+		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(4.0D);
+		//this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(0.0D);
+		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(0.0D);
+		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
 	}
 	
 	@Override
-	protected void entityInit() {
-		super.entityInit();
+	protected void registerData() {
+		super.registerData();
 		this.dataManager.register(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
 	
@@ -634,7 +634,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 					lastDist = 0.0D;
 					this.action = EntityMoveHelper.Action.WAIT;
 				} else {
-					float speed = (float) this.parentEntity.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getAttributeValue();
+					float speed = (float) this.parentEntity.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue();
 					//speed *= 3f;
 					this.parentEntity.motionX = (d0 / d3) * speed;
 					this.parentEntity.motionY = (d1 / d3) * speed;
