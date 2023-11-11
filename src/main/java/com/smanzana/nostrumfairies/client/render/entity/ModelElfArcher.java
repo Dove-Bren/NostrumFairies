@@ -74,7 +74,7 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 		
 		if (entity instanceof EntityElfArcher) {
 			EntityElfArcher elf = (EntityElfArcher) entity;
-			isAttacking = elf.getPose() == ArmPoseElf.ATTACKING;
+			isAttacking = elf.getElfPose() == ArmPoseElf.ATTACKING;
 			useBow = elf.getStance() == BattleStanceElfArcher.RANGED;
 		} else if (entity instanceof EntityShadowFey) {
 			EntityShadowFey shadow = (EntityShadowFey) entity;

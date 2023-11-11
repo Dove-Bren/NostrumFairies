@@ -2,17 +2,17 @@ package com.smanzana.nostrumfairies.entity.fey;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Optional;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.entity.IEntityListener;
 import com.smanzana.nostrumfairies.entity.ITrackableEntity;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyCastTarget;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory.FairyPlacementTarget;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -21,17 +21,17 @@ import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.serializers.FairyJob;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
+import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
-import com.smanzana.nostrummagica.client.gui.petgui.PetGUI.PetContainer;
+import com.smanzana.nostrummagica.client.gui.petgui.IPetGUISheet;
 import com.smanzana.nostrummagica.client.gui.petgui.PetGUI.PetGUIStatAdapter;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
 import com.smanzana.nostrummagica.entity.IEntityPet;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIFlierDiveTask;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIOrbitEntityGeneric;
-import com.smanzana.nostrummagica.entity.tasks.EntityAIOwnerHurtByTargetGeneric;
-import com.smanzana.nostrummagica.entity.tasks.EntityAIOwnerHurtTargetGeneric;
 import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
+import com.smanzana.nostrummagica.entity.tasks.OwnerHurtByTargetGoalGeneric;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.pet.PetInfo;
 import com.smanzana.nostrummagica.pet.PetInfo.ManagedPetInfo;
@@ -39,33 +39,32 @@ import com.smanzana.nostrummagica.pet.PetInfo.PetAction;
 import com.smanzana.nostrummagica.pet.PetInfo.SecondaryFlavor;
 import com.smanzana.nostrummagica.serializers.PetJobSerializer;
 import com.smanzana.nostrummagica.spells.Spell;
+import com.smanzana.nostrummagica.utils.Entities;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.IEntityOwnable;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.IRangedAttackMob;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.HurtByTargetGoal;
+import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.ItemBow;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.BowItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemSword;
+import net.minecraft.item.SwordItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.IDataSerializers;
+import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.oredict.OreDictionary;
 
 public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITrackableEntity<EntityPersonalFairy>, IRangedAttackMob {
 	
@@ -73,14 +72,14 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	private static final String NBT_JOB = "job";
 	private static final String NBT_ENERGY = "energy";
 	private static final String NBT_MAX_ENERGY = "max_energy";
-	private static final DataParameter<Optional<UUID>> DATA_OWNER = EntityDataManager.<Optional<UUID>>createKey(EntityPersonalFairy.class, IDataSerializers.OPTIONAL_UNIQUE_ID);
+	private static final DataParameter<Optional<UUID>> DATA_OWNER = EntityDataManager.<Optional<UUID>>createKey(EntityPersonalFairy.class, DataSerializers.OPTIONAL_UNIQUE_ID);
 	private static final DataParameter<FairyJob> DATA_JOB = EntityDataManager.<FairyJob>createKey(EntityPersonalFairy.class, FairyJob.instance());
-	private static final DataParameter<Float> DATA_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, IDataSerializers.FLOAT);
-	private static final DataParameter<Float> DATA_MAX_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, IDataSerializers.FLOAT);
+	private static final DataParameter<Float> DATA_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
+	private static final DataParameter<Float> DATA_MAX_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
 	private static final DataParameter<PetAction> DATA_PET_ACTION = EntityDataManager.<PetAction>createKey(EntityPersonalFairy.class, PetJobSerializer.instance);
 	
 	// Transient data, and only useful for Builders
-	private static final DataParameter<Optional<BlockPos>> DATA_BUILDER_SPOT = EntityDataManager.<Optional<BlockPos>>createKey(EntityPersonalFairy.class, IDataSerializers.OPTIONAL_BLOCK_POS);
+	private static final DataParameter<Optional<BlockPos>> DATA_BUILDER_SPOT = EntityDataManager.<Optional<BlockPos>>createKey(EntityPersonalFairy.class, DataSerializers.OPTIONAL_BLOCK_POS);
 	
 	
 	private @Nullable BlockPos movePos;
@@ -99,10 +98,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	private IBuildPump buildPump;
 	private int buildTicks;
 	
-	public EntityPersonalFairy(World world) {
-		super(world);
-		this.height = .15f;
-		this.width = .15f;
+	public EntityPersonalFairy(EntityType<? extends EntityPersonalFairy> type, World world) {
+		super(type, world);
 		this.workDistanceSq = 20 * 20;
 		listeners = new LinkedList<>();
 		infoInst = PetInfo.createManaged();
@@ -126,11 +123,11 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 	
 	public void setBuildSpot(BlockPos pos) {
-		dataManager.set(DATA_BUILDER_SPOT, Optional.fromNullable(pos));
+		dataManager.set(DATA_BUILDER_SPOT, Optional.ofNullable(pos));
 	}
 	
 	public @Nullable BlockPos getBuildSpot() {
-		return dataManager.get(DATA_BUILDER_SPOT).orNull();
+		return dataManager.get(DATA_BUILDER_SPOT).orElse(null);
 	}
 	
 	public void cancelBuildTask() {
@@ -146,9 +143,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		dataManager.set(DATA_OWNER, Optional.of(ownerID));
 	}
 	
-	@Override
 	public UUID getOwnerId() {
-		return dataManager.get(DATA_OWNER).orNull();
+		return dataManager.get(DATA_OWNER).orElse(null);
 	}
 	
 	@Override
@@ -157,14 +153,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			ownerCache = null;
 			UUID id = getOwnerId();
 			if (id != null) {
-				for (World world : DimensionManager.getWorlds()) {
-					for (Entity e : world.loadedEntityList) {
-						if (e instanceof LivingEntity && e.getUniqueID().equals(id)) {
-							ownerCache = (LivingEntity) e;
-							break;
-						}
-					}
-				}
+				ownerCache = Entities.FindLiving(world, id);
 			}
 		}
 		return ownerCache;
@@ -382,9 +371,9 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			if (this.getHeldItem().isEmpty()) {
 				// Go pickup item
 				if (this.getDistanceSq(owner) > 3) {
-					if (!this.moveHelper.isUpdating() || this.ticksExisted % 10 == 0) {
+					if (!this.getMoveHelper().isUpdating() || this.ticksExisted % 10 == 0) {
 						// Move to pickup
-						moveHelper.setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
+						getMoveHelper().setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
 					}
 				} else {
 					// At owner. Pickup item for delivery!
@@ -392,10 +381,6 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 					if (owner instanceof PlayerEntity) {
 						PlayerEntity player = (PlayerEntity) owner;
 						if (Inventories.remove(player.inventory, stack).isEmpty()) {
-							if (stack.getMetadata() == OreDictionary.WILDCARD_VALUE) {
-								stack.setItemDamage(0);
-							}
-							
 							; // Fall through to be added to inventory
 						} else {
 							// Owner didn't have item after all!
@@ -412,9 +397,9 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				}
 			} else if (buildTicks == 0 && this.getDistanceSq(currentBuild) > 3) {
 				// Go to build spot
-				if (!this.moveHelper.isUpdating()) {
+				if (!this.getMoveHelper().isUpdating()) {
 					// Move to task
-					moveHelper.setMoveTo(currentBuild.getX(), currentBuild.getY(), currentBuild.getZ(), 1);
+					getMoveHelper().setMoveTo(currentBuild.getX(), currentBuild.getY(), currentBuild.getZ(), 1);
 				}
 			} else {
 				// Build
@@ -426,7 +411,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 					buildTicks = 0;
 				} else {
 					// Animate
-					if (!this.moveHelper.isUpdating()) {
+					if (!this.getMoveHelper().isUpdating()) {
 						EntityFeyBase.FeyWander(this, currentBuild, 1, 3);
 					}
 				}
@@ -468,7 +453,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		if (distOwnerSq > 1600) {
 			// Teleport. Too far.
 			this.setPosition(owner.posX, owner.posY, owner.posZ);
-			this.moveHelper.setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
+			this.getMoveHelper().setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
 		}
 		
 		// We could play some idle animation or something
@@ -478,7 +463,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		if (!heldItem.isEmpty()) {
 			// Move towards owner
 			if (distOwnerSq > 2) {
-				this.moveHelper.setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
+				this.getMoveHelper().setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
 			} else {
 				if (owner instanceof PlayerEntity) {
 					if (((PlayerEntity) owner).inventory.addItemStackToInventory(heldItem.copy())) {
@@ -498,7 +483,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		idleTicks++;
 		
 		// See if we're too far away from our owner
-		if (!this.moveHelper.isUpdating()) {
+		if (!this.getMoveHelper().isUpdating()) {
 			if (owner.getDistanceSq(this) > this.wanderDistanceSq
 					|| (idleTicks % 100 == 0 && rand.nextBoolean() && rand.nextBoolean())) {
 				
@@ -528,7 +513,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 					
 					// We've hit a non-air block. Make sure there's space above it
 					BlockPos airBlock = null;
-					for (int i = 0; i < Math.ceil(this.height); i++) {
+					for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 						if (airBlock == null) {
 							airBlock = targ.up();
 						} else {
@@ -546,7 +531,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 					targ = center.up();
 				}
 				//if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-					this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY() + .5, targ.getZ() + .5, 1.0f);
+					this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY() + .5, targ.getZ() + .5, 1.0f);
 				//}
 				
 			}
@@ -616,9 +601,9 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 						ItemStack held = ((PlayerEntity) owner).getHeldItemMainhand();
 						weaponDrawn = false;
 						if (!held.isEmpty()) {
-							if (held.getItem() instanceof ItemSword || held.getItem() instanceof ItemBow) {
+							if (held.getItem() instanceof SwordItem || held.getItem() instanceof BowItem) {
 								weaponDrawn = true;
-							} else if (held.getAttributeModifiers(EntityEquipmentSlot.MAINHAND).containsKey(
+							} else if (held.getAttributeModifiers(EquipmentSlotType.MAINHAND).containsKey(
 									SharedMonsterAttributes.ATTACK_DAMAGE.getName())) {
 								weaponDrawn = true;
 							}
@@ -645,9 +630,9 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 						ItemStack held = ((PlayerEntity) owner).getHeldItemMainhand();
 						weaponDrawn = false;
 						if (!held.isEmpty()) {
-							if (held.getItem() instanceof ItemSword || held.getItem() instanceof ItemBow) {
+							if (held.getItem() instanceof SwordItem || held.getItem() instanceof BowItem) {
 								weaponDrawn = true;
-							} else if (held.getAttributeModifiers(EntityEquipmentSlot.MAINHAND).containsKey(
+							} else if (held.getAttributeModifiers(EquipmentSlotType.MAINHAND).containsKey(
 									SharedMonsterAttributes.ATTACK_DAMAGE.getName())) {
 								weaponDrawn = true;
 							}
@@ -705,7 +690,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		});
 		
 		priority = 1;
-        this.targetSelector.addGoal(priority++, new EntityAIOwnerHurtByTargetGeneric<EntityPersonalFairy>(this) {
+        this.targetSelector.addGoal(priority++, new OwnerHurtByTargetGoalGeneric<EntityPersonalFairy>(this) {
 			@Override
 			public boolean shouldExecute() {
 				if (getJob() != FairyJob.WARRIOR) {
@@ -715,7 +700,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				return super.shouldExecute();
 			}
 		});
-        this.targetSelector.addGoal(priority++, new EntityAIOwnerHurtTargetGeneric<EntityPersonalFairy>(this) {
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this) {
 			@Override
 			public boolean shouldExecute() {
 				if (getJob() != FairyJob.WARRIOR) {
@@ -724,23 +709,13 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				
 				return super.shouldExecute();
 			}
-		});
-		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this, true, new Class[0]) {
-			@Override
-			public boolean shouldExecute() {
-				if (getJob() != FairyJob.WARRIOR) {
-					return false;
-				}
-				
-				return super.shouldExecute();
-			}
-		});
+		}.setCallsForHelp(EntityPersonalFairy.class));
 	}
 
 	@Override
 	protected void registerAttributes() {
 		super.registerAttributes();
-		this.getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(1.0D);
+		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(1.0D);
 		resetAttributes(this.getJob());
 	}
 	
@@ -769,35 +744,35 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	@Override
 	protected void registerData() {
 		super.registerData();
-		this.dataManager.register(DATA_OWNER, Optional.absent());
+		this.dataManager.register(DATA_OWNER, Optional.empty());
 		this.dataManager.register(DATA_JOB, FairyJob.WARRIOR);
 		this.dataManager.register(DATA_ENERGY, 100f);
 		this.dataManager.register(DATA_MAX_ENERGY, 100f);
 		this.dataManager.register(DATA_PET_ACTION, PetAction.IDLING);
-		this.dataManager.register(DATA_BUILDER_SPOT, Optional.absent());
+		this.dataManager.register(DATA_BUILDER_SPOT, Optional.empty());
 	}
 	
 	@Override
-	public void writeEntityToNBT(CompoundNBT compound) {
-		super.writeEntityToNBT(compound);
+	public void writeAdditional(CompoundNBT compound) {
+		super.writeAdditional(compound);
 		
 		if (getOwnerId() != null) {
-			compound.setString(NBT_OWNER_ID, getOwnerId().toString());
+			compound.putString(NBT_OWNER_ID, getOwnerId().toString());
 		}
 		
-		compound.setString(NBT_JOB, this.getJob().name());
-		compound.setFloat(NBT_ENERGY, getEnergy());
-		compound.setFloat(NBT_MAX_ENERGY, this.getMaxEnergy());
+		compound.putString(NBT_JOB, this.getJob().name());
+		compound.putFloat(NBT_ENERGY, getEnergy());
+		compound.putFloat(NBT_MAX_ENERGY, this.getMaxEnergy());
 	}
 	
 	@Override
-	public void readEntityFromNBT(CompoundNBT compound) {
-		super.readEntityFromNBT(compound);
+	public void readAdditional(CompoundNBT compound) {
+		super.readAdditional(compound);
 		
-		if (compound.hasKey(NBT_OWNER_ID)) {
+		if (compound.contains(NBT_OWNER_ID)) {
 			try {
 				UUID id = UUID.fromString(compound.getString(NBT_OWNER_ID));
-				this.dataManager.set(DATA_OWNER, Optional.fromNullable(id));
+				this.dataManager.set(DATA_OWNER, Optional.ofNullable(id));
 			} catch (Exception e) {
 				;
 			}
@@ -809,7 +784,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 	
 	@Override
-	public boolean writeToNBTOptional(CompoundNBT compound) {
+	public boolean writeUnlessRemoved(CompoundNBT compound) {
 		// Do not save in world
 		return false;
 	}
@@ -841,12 +816,12 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			
 			if (rand.nextFloat() < .4f) {
 				// Building particles
-				world.spawnParticle(EnumParticleTypes.CLOUD,
+				world.addParticle(ParticleTypes.CLOUD,
 						pos.getX() + rand.nextFloat(),
 						pos.getY() + .5,
 						pos.getZ() + rand.nextFloat(),
-						(rand.nextFloat() - .5f) * .4, 0, (rand.nextFloat() - .5f) * .4,
-						new int[0]);
+						(rand.nextFloat() - .5f) * .4, 0, (rand.nextFloat() - .5f) * .4
+						);
 			}
 			if (this.ticksExisted % 5 == 0 && rand.nextBoolean()) {
 				// Building noises
@@ -873,7 +848,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		}
 		
 		NostrumParticles.GLOW_ORB.spawn(world, new SpawnParams(
-				1, posX, posY + height/2f, posZ, 0, 40, 0,
+				1, posX, posY + getHeight()/2f, posZ, 0, 40, 0,
 				new Vec3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), null
 				).color(color));
 	}
@@ -898,12 +873,12 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		if (this.getOwner() != null) {
 			this.changeStatus(FairyGeneralStatus.IDLE);
 		} else if (this.ticksExisted > 20) {
-			world.removeEntity(this);
+			this.remove();
 			//TODO cleanup
-			System.out.println("REMOVING CAUSE OWNERLESS (" + this.getOwnerId() + ")");
-			if (this.ownerCache != null) {
-				System.out.println("\t Had cached, but is dead? " + ownerCache);
-			}
+//			System.out.println("REMOVING CAUSE OWNERLESS (" + this.getOwnerId() + ")");
+//			if (this.ownerCache != null) {
+//				System.out.println("\t Had cached, but is dead? " + ownerCache);
+//			}
 		}
 	}
 
@@ -1019,7 +994,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		if (this.getOwner() == null) {
 			return false;
 		}
-		return getOwner().getDistanceSq(pos) < (work ? workDistanceSq : wanderDistanceSq);
+		return getOwner().getDistanceSq(pos.getX() + .5, pos.getY(), pos.getZ() + .5) < (work ? workDistanceSq : wanderDistanceSq);
 	}
 
 	@Override
@@ -1043,23 +1018,24 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	
 	@Override
 	public boolean isOnSameTeam(Entity entityIn) {
-		if (this.isEntityTamed()) {
-			LivingEntity myOwner = this.getOwner();
-
-			if (entityIn == myOwner) {
-				return true;
-			}
-
-			if (myOwner != null) {
-				
-				if (entityIn instanceof IEntityOwnable) {
-					if (((IEntityOwnable) entityIn).getOwner() == myOwner) {
-						return true;
-					}
-				}
-				
-				return myOwner.isOnSameTeam(entityIn);
-			}
+		if (this.isEntityTamed() && entityIn instanceof LivingEntity) {
+//			LivingEntity myOwner = this.getOwner();
+//
+//			if (entityIn == myOwner) {
+//				return true;
+//			}
+//
+//			if (myOwner != null) {
+//				
+//				if (entityIn instanceof IEntityOwnable) {
+//					if (((IEntityOwnable) entityIn).getOwner() == myOwner) {
+//						return true;
+//					}
+//				}
+//				
+//				return myOwner.isOnSameTeam(entityIn);
+//			}
+			return NostrumMagica.IsSameTeam(this, (LivingEntity) entityIn);
 		}
 
 		return super.isOnSameTeam(entityIn);
@@ -1077,12 +1053,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 
 	@Override
-	public void setSwingingArms(boolean swingingArms) {
-		;
-	}
-
-	@Override
-	public PetContainer<? extends IEntityPet> getGUIContainer(PlayerEntity player) {
+	public IPetGUISheet<? extends IEntityPet>[] getContainerSheets(PlayerEntity player) {
 		return null;
 	}
 

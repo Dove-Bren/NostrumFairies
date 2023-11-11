@@ -1184,6 +1184,14 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 	
 	protected abstract @Nullable NostrumFairiesSounds getIdleSound();
 	
+	public final double getDistanceSq(BlockPos pos) {
+		return this.getDistanceSq(pos.getX(), pos.getY(), pos.getZ());
+	}
+	
+	public final double getDistanceSqToCenter(BlockPos pos) {
+		return this.getDistanceSq(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
+	}
+	
 	protected static boolean FeyWander(EntityFeyBase fey, BlockPos center, double minDist, double maxDist) {
 		BlockPos targ = null;
 		int attempts = 20;

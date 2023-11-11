@@ -2,11 +2,10 @@ package com.smanzana.nostrumfairies.entity.fey;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.smanzana.nostrumfairies.entity.EntityArrowEx;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -24,23 +23,24 @@ import com.smanzana.nostrummagica.spells.components.shapes.SingleShape;
 import com.smanzana.nostrummagica.spells.components.triggers.SelfTrigger;
 
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.HurtByTargetGoal;
-import net.minecraft.entity.ai.NearestAttackableTargetGoal;
+import net.minecraft.entity.ai.goal.HurtByTargetGoal;
+import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.Enchantments;
-import net.minecraft.init.Items;
-import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.potion.PotionEffect;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.Hand;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -63,9 +63,8 @@ public class EntityElfArcher extends EntityElf {
 	protected BlockPos patrolTarget;
 	protected int patrolTargetTicks; // time at the target pos
 	
-	public EntityElfArcher(World world) {
-		super(world);
-		this.height = 0.90f;
+	public EntityElfArcher(EntityType<? extends EntityElfArcher> type, World world) {
+		super(type, world);
 		this.workDistanceSq = 24 * 24;
 		
 		initSpells();
@@ -214,11 +213,11 @@ public class EntityElfArcher extends EntityElf {
 		}, new Spell[]{SPELL_HASTE}));
 		
 		priority = 1;
-		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this, true, new Class[0]));
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setCallsForHelp(EntityElfArcher.class));
 		
 		// Note this means we'll stop doing a logistics ATTACK task to do this. Perhaps I should make a 'logistics target' task here
 		// which you can slot with higher priority so that the following stuff only happens when no task is present?
-		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<MonsterEntity>(this, MonsterEntity.class, 5, true, true, MonsterEntity.VISIBLE_MOB_SELECTOR));
+		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<MonsterEntity>(this, MonsterEntity.class, 5, true, true, this::canEntityBeSeen));
 	}
 
 	@Override
@@ -226,7 +225,7 @@ public class EntityElfArcher extends EntityElf {
 		super.registerAttributes();
 		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.28D);
 		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(10.0D);
-		this.getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(4.0D);
+		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(4.0D);
 		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
 		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
 	}
@@ -262,7 +261,7 @@ public class EntityElfArcher extends EntityElf {
 	
 	@Override
 	protected void onCientTick() {
-		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPoseElf.WORKING) {
+		if (this.ticksExisted % 10 == 0 && this.getElfPose() == ArmPoseElf.WORKING) {
 			
 			double angle = this.rotationYawHead + ((this.isLeftHanded() ? -1 : 1) * 22.5);
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;
@@ -270,13 +269,12 @@ public class EntityElfArcher extends EntityElf {
 			
 			double x = posX - xdiff;
 			double z = posZ + zdiff;
-			world.spawnParticle(EnumParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0, new int[0]);
+			world.addParticle(ParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0);
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	protected static final Predicate<Entity> ELF_ARCHER_ARROW_FILTER = Predicates.and(EntityPredicates.NOT_SPECTATING, EntityPredicates.IS_ALIVE, new Predicate<Entity>() {
-		public boolean apply(@Nullable Entity ent) {
+	protected static final Predicate<Entity> ELF_ARCHER_ARROW_FILTER = EntityPredicates.NOT_SPECTATING.and(EntityPredicates.IS_ALIVE).and(new Predicate<Entity>() {
+		public boolean test(@Nullable Entity ent) {
 			return ent.canBeCollidedWith() && !(ent instanceof EntityFeyBase) && !(ent instanceof PlayerEntity);
 		}
 	});
@@ -285,7 +283,7 @@ public class EntityElfArcher extends EntityElf {
 		EntityArrowEx entitytippedarrow = new EntityArrowEx(this.world, this);
 		entitytippedarrow.setFilter(ELF_ARCHER_ARROW_FILTER);
 		double d0 = target.posX - this.posX;
-		double d1 = target.getEntityBoundingBox().minY + (double)(target.height / 3.0F) - entitytippedarrow.posY;
+		double d1 = target.getBoundingBox().minY + (double)(target.getHeight() / 3.0F) - entitytippedarrow.posY;
 		double d2 = target.posZ - this.posZ;
 		double d3 = (double)MathHelper.sqrt(d0 * d0 + d2 * d2);
 		entitytippedarrow.shoot(d0, d1 + d3 * 0.20000000298023224D, d2, 1.6F, .5f);
@@ -319,7 +317,7 @@ public class EntityElfArcher extends EntityElf {
 		}
 		else if (rand.nextBoolean() && rand.nextBoolean() && rand.nextBoolean())
 		{
-			entitytippedarrow.addEffect(new PotionEffect(MobEffects.POISON, 600));
+			entitytippedarrow.addEffect(new EffectInstance(Effects.POISON, 600));
 		}
 
 		//this.playSound(SoundEvents.ENTITY_SKELETON_SHOOT, 1.0F, 1.0F / (this.getRNG().nextFloat() * 0.4F + 0.8F));

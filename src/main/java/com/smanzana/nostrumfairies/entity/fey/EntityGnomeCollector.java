@@ -4,16 +4,15 @@ import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class EntityGnomeCollector extends EntityGnome {
 	
-	public EntityGnomeCollector(World world) {
-		super(world);
-		this.height = .45f;
-		this.width = .3f;
+	public EntityGnomeCollector(EntityType<? extends EntityGnomeCollector> type, World world) {
+		super(type, world);
 		this.workDistanceSq = 24 * 24;
 	}
 

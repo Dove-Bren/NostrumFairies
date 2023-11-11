@@ -117,8 +117,8 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 		
 		if (entity instanceof EntityElf) {
 			EntityElf elf = (EntityElf) entity;
-			isWorking = elf.getPose() == ArmPoseElf.WORKING;
-			isIdle = elf.getPose() == ArmPoseElf.IDLE;
+			isWorking = elf.getElfPose() == ArmPoseElf.WORKING;
+			isIdle = elf.getElfPose() == ArmPoseElf.IDLE;
 			leftHanded = elf.isLeftHanded();
 		} else if (entity instanceof EntityShadowFey) {
 			EntityShadowFey shadow = (EntityShadowFey) entity;

@@ -3,7 +3,8 @@ package com.smanzana.nostrumfairies.entity.fey;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.entity.FairyEntities;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -24,15 +25,16 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.SwimGoal;
+import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.IDataSerializers;
+import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.DamageSource;
@@ -47,17 +49,15 @@ import net.minecraftforge.common.util.Constants.NBT;
 public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
 	protected static final DataParameter<ArmPoseGnome> POSE  = EntityDataManager.<ArmPoseGnome>createKey(EntityGnome.class, ArmPoseGnome.instance());
-	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityGnome.class, IDataSerializers.ITEM_STACK);
+	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityGnome.class, DataSerializers.ITEMSTACK);
 
 	private static final String NBT_ITEM = "helditem";
 	
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	
-	public EntityGnome(World world) {
-		super(world);
-		this.height = .6f;
-		this.width = .3f;
+	public EntityGnome(EntityType<? extends EntityGnome> type, World world) {
+		super(type, world);
 		this.workDistanceSq = 24 * 24;
 	}
 
@@ -351,7 +351,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 					
 					// We've hit a non-air block. Make sure there's space above it
 					BlockPos airBlock = null;
-					for (int i = 0; i < Math.ceil(this.height); i++) {
+					for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 						if (airBlock == null) {
 							airBlock = targ.up();
 						} else {
@@ -369,7 +369,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 					targ = center.up();
 				}
 				if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-					this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+					this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 				}
 				
 			}
@@ -443,7 +443,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 							
 							// We've hit a non-air block. Make sure there's space above it
 							BlockPos airBlock = null;
-							for (int i = 0; i < Math.ceil(this.height); i++) {
+							for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 								if (airBlock == null) {
 									airBlock = targ.up();
 								} else {
@@ -461,7 +461,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 							targ = center.up();
 						}
 						if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-							this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+							this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 						}
 						this.movePos = targ;
 					} else {
@@ -495,8 +495,8 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
-								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+								this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
 							movePos = findEmptySpot(movePos, false);
@@ -504,7 +504,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 							// Is the block we shifted to where we are?
 							if (!this.getPosition().equals(movePos) && this.getDistanceSqToCenter(movePos) > 1) {
 								if (!this.getNavigator().tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f)) {
-									this.moveHelper.setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
+									this.getMoveHelper().setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
 								}
 							}
 						}
@@ -533,8 +533,8 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void writeEntityToNBT(CompoundNBT compound) {
-		super.writeEntityToNBT(compound);
+	public void writeAdditional(CompoundNBT compound) {
+		super.writeAdditional(compound);
 		
 		ItemStack held = getCarriedItem();
 		if (!held.isEmpty()) {
@@ -543,11 +543,11 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void readEntityFromNBT(CompoundNBT compound) {
-		super.readEntityFromNBT(compound);
+	public void readAdditional(CompoundNBT compound) {
+		super.readAdditional(compound);
 		
-		if (compound.hasKey(NBT_ITEM, NBT.TAG_COMPOUND)) {
-			dataManager.set(DATA_HELD_ITEM, new ItemStack(compound.getCompoundTag(NBT_ITEM)));
+		if (compound.contains(NBT_ITEM, NBT.TAG_COMPOUND)) {
+			dataManager.set(DATA_HELD_ITEM, ItemStack.read(compound.getCompound(NBT_ITEM)));
 		}
 	}
 
@@ -615,7 +615,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		dataManager.register(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
 	
-	public ArmPoseGnome getPose() {
+	public ArmPoseGnome getGnomePose() {
 		return dataManager.get(POSE);
 	}
 	
@@ -700,19 +700,19 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		if (material != this.getCurrentSpecialization()) {
 			if (material == FeyStoneMaterial.EMERALD) {
 				// Gathering
-				replacement = new EntityGnomeCollector(world);
+				replacement = new EntityGnomeCollector(FairyEntities.GnomeCollector, world);
 			} else if (material == FeyStoneMaterial.GARNET) {
 				// Crafting
-				replacement = new EntityGnomeCrafter(world);
+				replacement = new EntityGnomeCrafter(FairyEntities.GnomeCrafter, world);
 			} else {
-				replacement = new EntityGnome(world);
+				replacement = new EntityGnome(FairyEntities.Gnome, world);
 			}
 		}
 		
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			world.removeEntityDangerously(this);
+			this.remove();
 			world.addEntity(replacement);
 		}
 		

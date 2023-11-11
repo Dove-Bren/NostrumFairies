@@ -6,20 +6,20 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class EntityDwarfCrafter extends EntityDwarf {
 
-	public EntityDwarfCrafter(World world) {
-		super(world);
+	public EntityDwarfCrafter(EntityType<? extends EntityDwarfCrafter> type, World world) {
+		super(type, world);
 		
-		this.height = 0.8f;
 		this.workDistanceSq = 24 * 24;
 	}
 	

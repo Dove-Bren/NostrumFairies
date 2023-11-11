@@ -6,8 +6,10 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
+import com.smanzana.nostrumfairies.entity.FairyEntities;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.entity.navigation.PathFinderPublic;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
@@ -35,21 +37,18 @@ import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockDoor;
-import net.minecraft.block.BlockFence;
-import net.minecraft.block.BlockFenceGate;
-import net.minecraft.block.BlockRailBase;
-import net.minecraft.block.BlockWall;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityAIAttackMelee;
-import net.minecraft.entity.ai.HurtByTargetGoal;
-import net.minecraft.entity.ai.SwimGoal;
+import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.ai.goal.HurtByTargetGoal;
+import net.minecraft.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -69,8 +68,8 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -85,11 +84,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	protected @Nullable BlockPos movePos;
 	protected @Nullable Entity moveEntity;
 	
-	public EntityDwarf(World world) {
-		super(world);
-		this.height = .95f;
+	public EntityDwarf(EntityType<? extends EntityDwarf> type, World world) {
+		super(type, world);
 		this.workDistanceSq = 24 * 24;
-		this.isImmuneToFire = true;
 		
 		this.navigator = new PathNavigatorLogistics(this, world) {
 			@Override
@@ -210,7 +207,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	protected void updateItems(ItemStack items[]) {
 		dataManager.set(ITEMS, items);
-		dataManager.setDirty(ITEMS);
+		//dataManager.setDirty(ITEMS);
 	}
 
 	@Override
@@ -275,7 +272,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		// for non-repair
 		
 		if (repair || ((!world.isAirBlock(targetPos) && world.getBlockState(targetPos).getMaterial().blocksMovement() && world.getBlockState(targetPos).getMaterial() != Material.LAVA)
-						|| !world.isSideSolid(targetPos.down(), Direction.UP))) {
+						|| !isSolid(world, targetPos.down(), Direction.UP))) {
 			// could get enum facing from diffs in dir to start at the side closest!
 			BlockPos[] initOffsets = {targetPos.north(), targetPos.east(), targetPos.south(), targetPos.west()};
 			BlockPos[] offsets;
@@ -628,7 +625,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 					
 					// We've hit a non-air block. Make sure there's space above it
 					BlockPos airBlock = null;
-					for (int i = 0; i < Math.ceil(this.height); i++) {
+					for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 						if (airBlock == null) {
 							airBlock = targ.up();
 						} else {
@@ -646,7 +643,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 					targ = center.up();
 				}
 				if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-					this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+					this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 				}
 				
 			}
@@ -669,17 +666,17 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 					cursor.setPos(posX + x, posY + y, posZ + z);
 					state = world.getBlockState(cursor);
 					if (state != null && state.getBlock() instanceof MagicLight) {
-						MagicLight.Bright().refresh(world, cursor.toImmutable());
+						FairyBlocks.magicLightBright.refresh(world, cursor.toImmutable());
 					}
 				}
 				
-				if (this.world.getLightFor(EnumSkyBlock.BLOCK, this.getPosition()) < 8) {
+				if (this.world.getLightFor(LightType.BLOCK, this.getPosition()) < 8) {
 					if (!this.world.isAirBlock(this.getPosition().up().up().up())
 							&& this.world.isAirBlock(this.getPosition().up().up())) {
-						world.setBlockState(this.getPosition().up().up(), MagicLight.Bright().getDefaultState());
+						world.setBlockState(this.getPosition().up().up(), FairyBlocks.magicLightBright.getDefaultState());
 					} else if (!this.world.isAirBlock(this.getPosition().up().up())
 							&& this.world.isAirBlock(this.getPosition().up())) {
-						world.setBlockState(this.getPosition().up(), MagicLight.Bright().getDefaultState());
+						world.setBlockState(this.getPosition().up(), FairyBlocks.magicLightBright.getDefaultState());
 					}
 				}
 			}
@@ -752,7 +749,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 							
 							// We've hit a non-air block. Make sure there's space above it
 							BlockPos airBlock = null;
-							for (int i = 0; i < Math.ceil(this.height); i++) {
+							for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 								if (airBlock == null) {
 									airBlock = targ.up();
 								} else {
@@ -770,7 +767,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 							targ = center.up();
 						}
 						if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-							this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+							this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 						}
 						this.movePos = targ;
 					} else {
@@ -800,8 +797,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
-								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+								this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
 							movePos = findEmptySpot(movePos, false, (task instanceof LogisticsTaskPlaceBlock));
@@ -809,7 +806,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 							// Is the block we shifted to where we are?
 							if (!this.getPosition().equals(movePos) && this.getDistanceSqToCenter(movePos) > 1) {
 								if (!this.getNavigator().tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f)) {
-									this.moveHelper.setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
+									this.getMoveHelper().setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
 								}
 							}
 						}
@@ -833,10 +830,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				return super.shouldExecute();
 			}
 		});
-		this.goalSelector.addGoal(priority++, new EntityAIAttackMelee(this, 1.0, true)); // also gated on target, like 'combat tick' on fey mechs
+		this.goalSelector.addGoal(priority++, new MeleeAttackGoal(this, 1.0, true)); // also gated on target, like 'combat tick' on fey mechs
 		
 		priority = 1;
-		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this, true, new Class[0]));
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setCallsForHelp(EntityDwarf.class));
 		
 		// Could hunt mobs
 //		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<MonsterEntity>(this, MonsterEntity.class, 10, true, false, (mob) -> {
@@ -856,7 +853,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		super.registerAttributes();
 		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.20D);
 		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(24.0D);
-		this.getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(3.0D);
+		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(3.0D);
 		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
 		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
 	}
@@ -876,8 +873,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void writeEntityToNBT(CompoundNBT compound) {
-		super.writeEntityToNBT(compound);
+	public void writeAdditional(CompoundNBT compound) {
+		super.writeAdditional(compound);
 		
 		compound.put(NBT_ITEMS, inventoryToNBT());
 	}
@@ -887,7 +884,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		
 		for (int i = 0; i < INV_SIZE; i++) {
 			if (i < list.size()) {
-				items[i] = new ItemStack(list.getCompound(i));
+				items[i] = ItemStack.read(list.getCompound(i));
 			} else {
 				items[i] = ItemStack.EMPTY;
 			}
@@ -897,8 +894,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void readEntityFromNBT(CompoundNBT compound) {
-		super.readEntityFromNBT(compound);
+	public void readAdditional(CompoundNBT compound) {
+		super.readAdditional(compound);
 		
 		loadInventoryFromNBT(compound.getList(NBT_ITEMS, NBT.TAG_COMPOUND));
 	}
@@ -923,7 +920,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	public ILivingEntityData onInitialSpawn(IWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
-		livingdata = super.onInitialSpawn(difficulty, livingdata);
+		livingdata = super.onInitialSpawn(world, difficulty, reason, livingdata, tag);
 		
 		// Dwarves are 40:60 lefthanded
 		if (this.rand.nextFloat() < .4f) {
@@ -996,7 +993,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		dataManager.register(ITEMS, arr);
 	}
 	
-	public ArmPoseDwarf getPose() {
+	public ArmPoseDwarf getDwarfPose() {
 		return dataManager.get(POSE);
 	}
 	
@@ -1028,7 +1025,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		super.tick();
 		
 		if (world.isRemote && isSwingInProgress) {
-			if (this.getPose() == ArmPoseDwarf.MINING) {
+			if (this.getDwarfPose() == ArmPoseDwarf.MINING) {
 				// 20% into animation is the hit
 				if (this.swingProgressInt == Math.floor(this.getArmSwingAnimationEnd() * .2)) {
 					playWorkSound();
@@ -1128,7 +1125,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	protected void teleportFromStuck() {
 		if (this.getCurrentTask() != null && this.getCurrentTask() instanceof LogisticsTaskMineBlock) {
 			BlockPos target = findEmptySpot(((LogisticsTaskMineBlock) this.getCurrentTask()).getTargetMineLoc(), false);
-			this.attemptTeleport(target.getX() + .5, target.getY() + .05, target.getZ() + .5);
+			this.attemptTeleport(target.getX() + .5, target.getY() + .05, target.getZ() + .5, false);
 		} else {
 			super.teleportFromStuck();
 		}
@@ -1145,19 +1142,20 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		if (material != this.getCurrentSpecialization()) {
 			if (material == FeyStoneMaterial.GARNET) {
 				// Crafting
-				replacement = new EntityDwarfCrafter(world);
+				replacement = new EntityDwarfCrafter(FairyEntities.DwarfCrafter, world);
 			} else if (material == FeyStoneMaterial.EMERALD) {
 				// Builder
-				replacement = new EntityDwarfBuilder(world);
+				replacement = new EntityDwarfBuilder(FairyEntities.DwarfBuilder, world);
 			} else {
-				replacement = new EntityDwarf(world);
+				replacement = new EntityDwarf(FairyEntities.Dwarf, world);
 			}
 		}
 		
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			world.removeEntityDangerously(this);
+			this.remove();
+			//world.removeEntityDangerously(this);
 			world.addEntity(replacement);
 		}
 		

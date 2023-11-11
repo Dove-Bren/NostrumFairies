@@ -11,6 +11,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
 import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -48,10 +49,9 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		map.remove(pos);
 	}
 
-	public EntityDwarfBuilder(World world) {
-		super(world);
+	public EntityDwarfBuilder(EntityType<? extends EntityDwarfBuilder> type, World world) {
+		super(type, world);
 		
-		this.height = 0.85f;
 		this.workDistanceSq = 24 * 24;
 	}
 	
@@ -199,8 +199,8 @@ public class EntityDwarfBuilder extends EntityDwarf {
 				movePos = sub.getPos();
 				if (movePos == null) {
 					moveEntity = sub.getEntity();
-					if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
-						this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+					if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+						this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 					}
 				} else {
 					BlockPos betterSpot = findBuildSpot(movePos);
@@ -211,7 +211,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 					
 					if (this.getNavigator().noPath()) {
 						if (!navigator.tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0)) {
-							//this.moveHelper.setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
+							//this.getMoveHelper().setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
 							this.setPosition(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5);
 						}
 					}

@@ -2,7 +2,8 @@ package com.smanzana.nostrumfairies.entity.fey;
 
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.entity.FairyEntities;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
@@ -25,28 +26,31 @@ import com.smanzana.nostrummagica.spells.components.shapes.SingleShape;
 import com.smanzana.nostrummagica.spells.components.triggers.AITargetTrigger;
 import com.smanzana.nostrummagica.spells.components.triggers.MagicCutterTrigger;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.IRangedAttackMob;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.HurtByTargetGoal;
-import net.minecraft.entity.ai.SwimGoal;
-import net.minecraft.init.SoundEvents;
+import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.ai.goal.HurtByTargetGoal;
+import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRangedAttackMob {
@@ -73,9 +77,8 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	
-	public EntityElf(World world) {
-		super(world);
-		this.height = 0.99f;
+	public EntityElf(EntityType<? extends EntityElf> type, World world) {
+		super(type, world);
 		this.workDistanceSq = 32 * 32;
 		
 		initSpells();
@@ -257,7 +260,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 					
 					// We've hit a non-air block. Make sure there's space above it
 					BlockPos airBlock = null;
-					for (int i = 0; i < Math.ceil(this.height); i++) {
+					for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 						if (airBlock == null) {
 							airBlock = targ.up();
 						} else {
@@ -275,7 +278,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 					targ = center.up();
 				}
 				if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-					this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+					this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 				}
 				
 			}
@@ -302,13 +305,13 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 				//this.rotationPitch = 1;
 				if (this.isSwingInProgress) {
 					// On the client, spawn some particles if we're using our wand
-					if (ticksExisted % 5 == 0 && getPose() == ArmPoseElf.WORKING) {
-						world.spawnParticle(EnumParticleTypes.DRAGON_BREATH,
+					if (ticksExisted % 5 == 0 && getElfPose() == ArmPoseElf.WORKING) {
+						world.addParticle(ParticleTypes.DRAGON_BREATH,
 								posX, posY, posZ,
-								0, 0.3, 0,
-								new int[0]);
+								0, 0.3, 0
+								);
 					}
-					if (taskTickCount % 15 == 0 && getPose() == ArmPoseElf.WORKING && rand.nextBoolean()) {
+					if (taskTickCount % 15 == 0 && getElfPose() == ArmPoseElf.WORKING && rand.nextBoolean()) {
 						world.playSound(null, posX, posY, posZ, SoundEvents.BLOCK_WOOD_HIT, SoundCategory.NEUTRAL, 1f, 1.6f);
 					}
 				} else {
@@ -346,7 +349,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 							
 							// We've hit a non-air block. Make sure there's space above it
 							BlockPos airBlock = null;
-							for (int i = 0; i < Math.ceil(this.height); i++) {
+							for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 								if (airBlock == null) {
 									airBlock = targ.up();
 								} else {
@@ -364,7 +367,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 							targ = center.up();
 						}
 						if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-							this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+							this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 						}
 						this.movePos = targ;
 					} else {
@@ -394,8 +397,8 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
-								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+								this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
 							movePos = findEmptySpot(movePos, false);
@@ -403,7 +406,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 							// Is the block we shifted to where we are?
 							if (!this.getPosition().equals(movePos) && this.getDistanceSqToCenter(movePos) > 1) {
 								if (!this.getNavigator().tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f)) {
-									this.moveHelper.setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
+									this.getMoveHelper().setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
 								}
 							}
 						}
@@ -439,7 +442,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 //		}, new Spell[]{SPELL_POISON_WIND}));
 		
 		priority = 1;
-		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this, true, new Class[0]));
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setCallsForHelp(EntityElf.class));
 	}
 
 	@Override
@@ -453,13 +456,13 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 	
 	@Override
-	public void writeEntityToNBT(CompoundNBT compound) {
-		super.writeEntityToNBT(compound);
+	public void writeAdditional(CompoundNBT compound) {
+		super.writeAdditional(compound);
 	}
 	
 	@Override
-	public void readEntityFromNBT(CompoundNBT compound) {
-		super.readEntityFromNBT(compound);
+	public void readAdditional(CompoundNBT compound) {
+		super.readAdditional(compound);
 	}
 
 	@Override
@@ -522,7 +525,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	
 	@Override
 	public ILivingEntityData onInitialSpawn(IWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
-		livingdata = super.onInitialSpawn(difficulty, livingdata);
+		livingdata = super.onInitialSpawn(world, difficulty, reason, livingdata, tag);
 		
 		// Elves are 70:30 lefthanded
 		if (this.rand.nextFloat() < .7f) {
@@ -532,7 +535,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		return livingdata;
 	}
 	
-	public ArmPoseElf getPose() {
+	public ArmPoseElf getElfPose() {
 		return dataManager.get(POSE);
 	}
 	
@@ -547,7 +550,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	
 	@Override
 	protected void onCientTick() {
-		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPoseElf.WORKING) {
+		if (this.ticksExisted % 10 == 0 && this.getElfPose() == ArmPoseElf.WORKING) {
 			
 			double angle = this.rotationYawHead + ((this.isLeftHanded() ? -1 : 1) * 22.5);
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;
@@ -555,7 +558,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			
 			double x = posX - xdiff;
 			double z = posZ + zdiff;
-			world.spawnParticle(EnumParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0, new int[0]);
+			world.addParticle(ParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0);
 		}
 	}
 
@@ -626,19 +629,19 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		if (material != this.getCurrentSpecialization()) {
 			if (material == FeyStoneMaterial.GARNET) {
 				// Crafting
-				replacement = new EntityElfCrafter(world);
+				replacement = new EntityElfCrafter(FairyEntities.ElfCrafter, world);
 			} else if (material == FeyStoneMaterial.AQUAMARINE) {
 				// Archery
-				replacement = new EntityElfArcher(world);
+				replacement = new EntityElfArcher(FairyEntities.ElfArcher, world);
 			} else {
-				replacement = new EntityElf(world);
+				replacement = new EntityElf(FairyEntities.Elf, world);
 			}
 		}
 		
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			world.removeEntityDangerously(this);
+			this.remove();
 			world.addEntity(replacement);
 		}
 		
@@ -663,10 +666,5 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	@Override
 	protected @Nullable NostrumFairiesSounds getIdleSound() {
 		return NostrumFairiesSounds.ELF_IDLE;
-	}
-
-	@Override
-	public void setSwingingArms(boolean swingingArms) {
-		;
 	}
 }

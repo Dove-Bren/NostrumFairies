@@ -6,7 +6,8 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
@@ -14,10 +15,8 @@ import net.minecraft.world.World;
 
 public class EntityGnomeCrafter extends EntityGnome {
 	
-	public EntityGnomeCrafter(World world) {
-		super(world);
-		this.height = .45f;
-		this.width = .3f;
+	public EntityGnomeCrafter(EntityType<? extends EntityGnomeCrafter> type, World world) {
+		super(type, world);
 		this.workDistanceSq = 24 * 24;
 	}
 

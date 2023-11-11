@@ -3,7 +3,8 @@ package com.smanzana.nostrumfairies.entity.fey;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.entity.FairyEntities;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -21,16 +22,17 @@ import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityMoveHelper;
+import net.minecraft.entity.ai.controller.MovementController;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.IDataSerializers;
+import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.NonNullList;
@@ -39,25 +41,23 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 
 	private static final String NBT_ITEM = "helditem";
-	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityFairy.class, IDataSerializers.ITEM_STACK);
+	private static final DataParameter<ItemStack> DATA_HELD_ITEM = EntityDataManager.<ItemStack>createKey(EntityFairy.class, DataSerializers.ITEMSTACK);
 	
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	
-	public EntityFairy(World world) {
-		super(world);
-		this.height = .25f;
-		this.width = .25f;
+	public EntityFairy(EntityType<? extends EntityFairy> type, World world) {
+		super(type, world);
 		this.workDistanceSq = 100 * 100;
 		this.noClip = true;
-
-		this.moveHelper = new FairyFlyMoveHelper(this);
+		
+		this.moveController = new FairyFlyMoveHelper(this);
 	}
 
 	@Override
@@ -327,7 +327,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		}
 		
 		// See if we're too far away from our home block
-		if (!this.moveHelper.isUpdating()) {
+		if (!this.getMoveHelper().isUpdating()) {
 			BlockPos home = this.getHome();
 			if (home != null && !this.canReach(this.getPosition(), false)) {
 				
@@ -357,7 +357,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 					
 					// We've hit a non-air block. Make sure there's space above it
 					BlockPos airBlock = null;
-					for (int i = 0; i < Math.ceil(this.height); i++) {
+					for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 						if (airBlock == null) {
 							airBlock = targ.up();
 						} else {
@@ -375,7 +375,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 					targ = center.up();
 				}
 				//if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-					this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY() + .5, targ.getZ() + .5, 1.0f);
+					this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY() + .5, targ.getZ() + .5, 1.0f);
 				//}
 				
 			}
@@ -396,7 +396,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 				}
 				break;
 			case IDLE:
-				if (movePos == null || !this.moveHelper.isUpdating()) {
+				if (movePos == null || !this.getMoveHelper().isUpdating()) {
 					if (movePos == null) {
 						final BlockPos center = sub.getPos();
 						BlockPos targ = null;
@@ -420,7 +420,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 							
 							// We've hit a non-air block. Make sure there's space above it
 							BlockPos airBlock = null;
-							for (int i = 0; i < Math.ceil(this.height); i++) {
+							for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 								if (airBlock == null) {
 									airBlock = targ.up();
 								} else {
@@ -438,7 +438,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 							targ = center.up();
 						}
 						//if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-							this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY() + .5, targ.getZ() + .5, 1.0f);
+							this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY() + .5, targ.getZ() + .5, 1.0f);
 						//}
 						this.movePos = targ;
 					} else {
@@ -452,7 +452,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 				break;
 			case MOVE:
 				{
-					if (movePos == null || !this.moveHelper.isUpdating()) {
+					if (movePos == null || !this.getMoveHelper().isUpdating()) {
 						// First time through?
 						if ((movePos != null && this.getDistanceSqToCenter(movePos) < .5)
 							|| (moveEntity != null && this.getDistance(moveEntity) < .5)) {
@@ -467,8 +467,8 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							//if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
-								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+							//if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+								this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							//}
 						} else {
 							if (!world.isAirBlock(movePos)) {
@@ -485,7 +485,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 								}
 							}
 							//if (!this.getNavigator().tryMoveToXYZ(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5, 1.0f)) {
-								this.moveHelper.setMoveTo(movePos.getX() + .5, movePos.getY() + .5, movePos.getZ() + .5, 1.0f);
+								this.getMoveHelper().setMoveTo(movePos.getX() + .5, movePos.getY() + .5, movePos.getZ() + .5, 1.0f);
 							//}
 						}
 					}
@@ -522,9 +522,9 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 //						// TODO FIXME I think this is constantly making new paths?
 //						if (getPosition().distanceSq(pos) < .2) {
 //							task.markSubtaskComplete();
-//						} else if (!moveHelper.isUpdating()) {
+//						} else if (!getMoveHelper().isUpdating()) {
 //							if (!this.getNavigator().tryMoveToXYZ(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f)) {
-//								this.moveHelper.setMoveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f);
+//								this.getMoveHelper().setMoveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 1.0f);
 //							}
 //						}
 //					}
@@ -576,20 +576,20 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void writeEntityToNBT(CompoundNBT compound) {
-		super.writeEntityToNBT(compound);
+	public void writeAdditional(CompoundNBT compound) {
+		super.writeAdditional(compound);
 		
 		if (!getHeldItem().isEmpty()) {
-			compound.put(NBT_ITEM, getHeldItem().writeToNBT(new CompoundNBT()));
+			compound.put(NBT_ITEM, getHeldItem().write(new CompoundNBT()));
 		}
 	}
 	
 	@Override
-	public void readEntityFromNBT(CompoundNBT compound) {
-		super.readEntityFromNBT(compound);
+	public void readAdditional(CompoundNBT compound) {
+		super.readAdditional(compound);
 		
-		if (compound.hasKey(NBT_ITEM)) {
-			this.dataManager.set(DATA_HELD_ITEM, new ItemStack(compound.getCompoundTag(NBT_ITEM)));
+		if (compound.contains(NBT_ITEM)) {
+			this.dataManager.set(DATA_HELD_ITEM, ItemStack.read(compound.getCompound(NBT_ITEM)));
 		}
 	}
 
@@ -598,7 +598,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		return this.getHeldItem().isEmpty();
 	}
 	
-	static class FairyFlyMoveHelper extends EntityMoveHelper {
+	static class FairyFlyMoveHelper extends MovementController {
 		private final MobEntity parentEntity;
 		private double lastDist;
 		private int courseChangeCooldown;
@@ -609,7 +609,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		}
 
 		public void onUpdateMoveHelper() {
-			if (this.action == EntityMoveHelper.Action.MOVE_TO) {
+			if (this.action == MovementController.Action.MOVE_TO) {
 				double d0 = this.posX - this.parentEntity.posX;
 				double d1 = this.posY - this.parentEntity.posY;
 				double d2 = this.posZ - this.parentEntity.posZ;
@@ -619,10 +619,8 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 				
 				if (Math.abs(d3) < .25) {
 					lastDist = 0.0D;
-					this.parentEntity.motionX = 0;
-					this.parentEntity.motionY = 0;
-					this.parentEntity.motionZ = 0;
-					this.action = EntityMoveHelper.Action.WAIT;
+					this.parentEntity.setMotion(Vec3d.ZERO);
+					this.action = MovementController.Action.WAIT;
 					return;
 				} else if (lastDist != 0.0D && Math.abs(lastDist - d3) < 0.05) {
 					courseChangeCooldown--;
@@ -632,22 +630,23 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 
 				if (courseChangeCooldown <= 0) {
 					lastDist = 0.0D;
-					this.action = EntityMoveHelper.Action.WAIT;
+					this.action = MovementController.Action.WAIT;
 				} else {
 					float speed = (float) this.parentEntity.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue();
 					//speed *= 3f;
-					this.parentEntity.motionX = (d0 / d3) * speed;
-					this.parentEntity.motionY = (d1 / d3) * speed;
-					this.parentEntity.motionZ = (d2 / d3) * speed;
+					this.parentEntity.setMotion(
+							(d0 / d3) * speed,
+							(d1 / d3) * speed,
+							(d2 / d3) * speed);
 					
 					lastDist = d3;
 					
 					float f9 = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
-					this.entity.rotationYaw = this.limitAngle(this.entity.rotationYaw, f9, 90.0F);
+					this.parentEntity.rotationYaw = this.limitAngle(this.parentEntity.rotationYaw, f9, 90.0F);
 				}
-			} else if (this.action == EntityMoveHelper.Action.STRAFE) {
-				this.entity.setMoveStrafing(moveStrafe);
-				this.entity.setMoveForward(moveForward);
+			} else if (this.action == MovementController.Action.STRAFE) {
+				this.parentEntity.setMoveStrafing(moveStrafe);
+				this.parentEntity.setMoveForward(moveForward);
 			}
 		}
 	}
@@ -698,7 +697,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	protected void onCientTick() {
 		int color = 0x40CCFFDD;
 		NostrumParticles.GLOW_ORB.spawn(world, new SpawnParams(
-				1, posX, posY + height/2f, posZ, 0, 40, 0,
+				1, posX, posY + getHeight()/2f, posZ, 0, 40, 0,
 				new Vec3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), null
 				).color(color));
 	}
@@ -751,14 +750,14 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 			return null;
 		}
 		
-		EntityPersonalFairy replacement = new EntityPersonalFairy(world);
+		EntityPersonalFairy replacement = new EntityPersonalFairy(FairyEntities.PersonalFairy, world);
 		
 		// Kill this entity and add the other one
 		if (this.getHome() != null) {
 			this.setHome(null);
 		}
 		replacement.copyFrom(this);
-		world.removeEntityDangerously(this);
+		this.remove();
 		world.addEntity(replacement);
 		
 		return replacement;

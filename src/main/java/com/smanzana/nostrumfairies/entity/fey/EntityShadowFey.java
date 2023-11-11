@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.EntityArrowEx;
+import com.smanzana.nostrumfairies.entity.FairyEntities;
 import com.smanzana.nostrumfairies.items.FairyItems;
 import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
@@ -384,20 +385,20 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		final EntityFeyBase fey;
 		switch (rand.nextInt(5)) {
 		case 0:
-			fey = new EntityFairy(world);
+			fey = new EntityFairy(FairyEntities.Fairy, world);
 			break;
 		case 1:
-			fey = new EntityDwarf(world);
+			fey = new EntityDwarf(FairyEntities.Dwarf, world);
 			break;
 		case 2:
-			fey = new EntityGnome(world);
+			fey = new EntityGnome(FairyEntities.Gnome, world);
 			break;
 		case 3:
-			fey = new EntityElf(world);
+			fey = new EntityElf(FairyEntities.Elf, world);
 			break;
 		case 4:
 		default:
-			fey = new EntityElfArcher(world);
+			fey = new EntityElfArcher(FairyEntities.ElfArcher, world);
 			break;
 		}
 		fey.copyLocationAndAnglesFrom(this);

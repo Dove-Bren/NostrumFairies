@@ -7,18 +7,18 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
 import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class EntityElfCrafter extends EntityElf {
 	
-	public EntityElfCrafter(World world) {
-		super(world);
-		this.height = 0.90f;
+	public EntityElfCrafter(EntityType<? extends EntityElfCrafter> type, World world) {
+		super(type, world);
 		this.workDistanceSq = 24 * 24;
 	}
 
@@ -88,7 +88,7 @@ public class EntityElfCrafter extends EntityElf {
 		super.registerAttributes();
 		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.24D);
 		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(4.0D);
-		this.getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(1.0D);
+		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(1.0D);
 		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(0.0D);
 		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
 	}
@@ -110,7 +110,7 @@ public class EntityElfCrafter extends EntityElf {
 	
 	@Override
 	protected void onCientTick() {
-		if (this.ticksExisted % 10 == 0 && this.getPose() == ArmPoseElf.WORKING) {
+		if (this.ticksExisted % 10 == 0 && this.getElfPose() == ArmPoseElf.WORKING) {
 			
 			double angle = this.rotationYawHead + ((this.isLeftHanded() ? -1 : 1) * 22.5);
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;
@@ -118,7 +118,7 @@ public class EntityElfCrafter extends EntityElf {
 			
 			double x = posX - xdiff;
 			double z = posZ + zdiff;
-			world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, posY + 1.25, z, 0, .015, 0, new int[0]);
+			world.addParticle(ParticleTypes.SMOKE, x, posY + 1.25, z, 0, .015, 0);
 		}
 	}
 	

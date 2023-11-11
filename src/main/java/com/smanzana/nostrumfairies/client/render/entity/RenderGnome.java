@@ -47,7 +47,7 @@ public class RenderGnome extends MobRenderer<EntityGnome, ModelGnome> {
 		super.doRender(entity, 0, 0, 0, entityYaw, partialTicks);
 		
 		
-		if (entity.getPose() == ArmPoseGnome.CARRYING) {
+		if (entity.getGnomePose() == ArmPoseGnome.CARRYING) {
 			ItemStack held = entity.getCarriedItem();
 			if (!held.isEmpty()) {
 				GlStateManager.pushMatrix();

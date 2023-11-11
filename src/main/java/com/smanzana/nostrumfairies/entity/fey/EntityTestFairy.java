@@ -3,8 +3,9 @@ package com.smanzana.nostrumfairies.entity.fey;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.smanzana.nostrumfairies.blocks.FeyHomeBlock.ResidentType;
+import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
+import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -23,11 +24,12 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -37,7 +39,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -46,15 +48,14 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	private static final String NBT_ITEMS = "helditems";
 	private static final int INV_SIZE = 5;
 	
-	private InventoryBasic inventory;
+	private Inventory inventory;
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	
-	public EntityTestFairy(World world) {
-		super(world);
-		this.height = .6f;
+	public EntityTestFairy(EntityType<? extends EntityTestFairy> type, World world) {
+		super(type, world);
 		this.workDistanceSq = 24 * 24;
-		this.inventory = new InventoryBasic("Fairy Inv", false, INV_SIZE);
+		this.inventory = new Inventory(INV_SIZE);
 	}
 
 	@Override
@@ -269,7 +270,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			}
 			
 			// Check for pathing
-			if (this.getDistanceSq(target) < .2) {
+			if (this.getDistanceSq(target.getX() + .5, target.getY(), target.getZ() + .5) < .2) {
 				return true;
 			}
 			Path currentPath = navigator.getPath();
@@ -286,7 +287,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			}
 			if (success) {
 				return true;
-			} else if (this.getDistanceSq(target) < 1) {
+			} else if (target.distanceSq(getPosition()) < 1) {
 				// extra case for if the navigator refuses cause we're too close
 				return true;
 			}
@@ -387,7 +388,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 					
 					// We've hit a non-air block. Make sure there's space above it
 					BlockPos airBlock = null;
-					for (int i = 0; i < Math.ceil(this.height); i++) {
+					for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 						if (airBlock == null) {
 							airBlock = targ.up();
 						} else {
@@ -405,7 +406,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 					targ = center.up();
 				}
 				if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-					this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+					this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 				}
 				
 			}
@@ -428,15 +429,15 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 					cursor.setPos(x, y, z);
 					state = world.getBlockState(cursor);
 					if (state != null && state.getBlock() instanceof MagicLight) {
-						MagicLight.Bright().refresh(world, cursor.toImmutable());
+						FairyBlocks.magicLightBright.refresh(world, cursor.toImmutable());
 					}
 				}
 				
-				if (this.world.getLightFor(EnumSkyBlock.BLOCK, this.getPosition()) < 8) {
+				if (this.world.getLightFor(LightType.BLOCK, this.getPosition()) < 8) {
 					if (this.world.isAirBlock(this.getPosition().up().up())) {
-						world.setBlockState(this.getPosition().up().up(), MagicLight.Bright().getDefaultState());
+						world.setBlockState(this.getPosition().up().up(), FairyBlocks.magicLightBright.getDefaultState());
 					} else if (this.world.isAirBlock(this.getPosition().up())) {
-						world.setBlockState(this.getPosition().up(), MagicLight.Bright().getDefaultState());
+						world.setBlockState(this.getPosition().up(), FairyBlocks.magicLightBright.getDefaultState());
 					}
 				}
 			}
@@ -490,7 +491,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 							
 							// We've hit a non-air block. Make sure there's space above it
 							BlockPos airBlock = null;
-							for (int i = 0; i < Math.ceil(this.height); i++) {
+							for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
 								if (airBlock == null) {
 									airBlock = targ.up();
 								} else {
@@ -508,7 +509,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 							targ = center.up();
 						}
 						if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-							this.moveHelper.setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+							this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 						}
 						this.movePos = targ;
 					} else {
@@ -524,8 +525,8 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				{
 					if (this.navigator.noPath()) {
 						// First time through?
-						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
-							|| (moveEntity != null && this.getDistance(moveEntity) < 1)) {
+						if ((movePos != null && this.getDistanceSq(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5) < 1)
+							|| (moveEntity != null && this.getDistanceSq(moveEntity) < 1)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;
@@ -537,16 +538,16 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							if (!this.getNavigator().tryMoveToMobEntity(moveEntity,  1)) {
-								this.moveHelper.setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+								this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
 							}
 						} else {
 							movePos = findEmptySpot(movePos, false);
 							
 							// Is the block we shifted to where we are?
-							if (!this.getPosition().equals(movePos) && this.getDistanceSqToCenter(movePos) > 1) {
+							if (!this.getPosition().equals(movePos) && movePos.distanceSq(getPosition()) > 1) {
 								if (!this.getNavigator().tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f)) {
-									this.moveHelper.setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
+									this.getMoveHelper().setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
 								}
 							}
 						}
@@ -590,8 +591,8 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void writeEntityToNBT(CompoundNBT compound) {
-		super.writeEntityToNBT(compound);
+	public void writeAdditional(CompoundNBT compound) {
+		super.writeAdditional(compound);
 		
 		compound.put(NBT_ITEMS, inventoryToNBT());
 	}
@@ -600,13 +601,13 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		inventory.clear();
 		
 		for (int i = 0; i < list.size(); i++) {
-			inventory.setInventorySlotContents(i, new ItemStack(list.getCompound(i)));
+			inventory.setInventorySlotContents(i, ItemStack.read(list.getCompound(i)));
 		}
 	}
 	
 	@Override
-	public void readEntityFromNBT(CompoundNBT compound) {
-		super.readEntityFromNBT(compound);
+	public void readAdditional(CompoundNBT compound) {
+		super.readAdditional(compound);
 		
 		loadInventoryFromNBT(compound.getList(NBT_ITEMS, NBT.TAG_COMPOUND));
 	}

@@ -159,11 +159,11 @@ public class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 		legRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
 		legLeft.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
 		
-		if (dwarf.isSwingInProgress || dwarf.getPose() != ArmPoseDwarf.IDLE) {
+		if (dwarf.isSwingInProgress || dwarf.getDwarfPose() != ArmPoseDwarf.IDLE) {
 			int sign = 1;//(dwarf.isLeftHanded() ? -1 : 1);
 			RendererModel hand = (dwarf.isLeftHanded() ? armLeft : armRight);
 			
-			if (dwarf.getPose() == ArmPoseDwarf.MINING) {
+			if (dwarf.getDwarfPose() == ArmPoseDwarf.MINING) {
 				double lowX = -sign * (Math.PI * .75);
 				double diffX = sign * (Math.PI * .4);
 				float periodFirst = .4f;
@@ -178,7 +178,7 @@ public class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 					hand.rotateAngleX = (float) lowX;
 					hand.rotateAngleY = 0;
 				}
-			} else if (dwarf.getPose() == ArmPoseDwarf.ATTACKING) {
+			} else if (dwarf.getDwarfPose() == ArmPoseDwarf.ATTACKING) {
 				// Have pick raised and do full swings
 				double lowX = -sign * (Math.PI * .95);
 				double diffX = sign * (Math.PI * .8);
