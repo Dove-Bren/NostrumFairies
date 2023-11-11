@@ -1,8 +1,8 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.client.gui.container.OutputPanelGui;
 import com.smanzana.nostrumfairies.tiles.OutputPanelTileEntity;
+import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -142,10 +142,8 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	
 	@Override
 	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
-		
-		playerIn.openGui(NostrumFairies.instance,
-				NostrumFairyGui.outputPanelID, worldIn,
-				pos.getX(), pos.getY(), pos.getZ());
+		OutputPanelTileEntity panel = (OutputPanelTileEntity) worldIn.getTileEntity(pos);
+		NostrumMagica.instance.proxy.openContainer(playerIn, OutputPanelGui.OutputPanelContainer.Make(panel));
 		
 		return true;
 	}

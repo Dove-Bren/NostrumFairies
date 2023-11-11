@@ -1,6 +1,5 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +7,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
 import com.smanzana.nostrumfairies.client.gui.FeySoulIcon;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
@@ -19,26 +20,30 @@ import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity.FeyAwayRecord;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity.HomeBlockSlotInventory;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
+import com.smanzana.nostrummagica.utils.ContainerUtil;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.block.state.BlockState;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.inventory.GuiInventory;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screen.inventory.InventoryScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.ClickType;
-import net.minecraft.inventory.Container;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.ClickType;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class HomeBlockGui {
 	
@@ -74,13 +79,16 @@ public class HomeBlockGui {
 
 	public static class HomeBlockContainer extends Container {
 		
+		public static final String ID = "home_block";
+		
 		protected HomeBlockTileEntity home;
 		private final int homeIDStart;
 		private final List<ResidentSlot> residentSlots;
 		private final List<SpecializationSlot> specializationSlots;
 		private final List<FeyStoneContainerSlot> upgradeSlots;
 		
-		public HomeBlockContainer(IInventory playerInv, HomeBlockTileEntity home) {
+		public HomeBlockContainer(int windowId, PlayerInventory playerInv, HomeBlockTileEntity home) {
+			super(FairyContainers.HomeBlock, windowId);
 			this.home = home;
 						
 			// Construct player inventory
@@ -130,6 +138,19 @@ public class HomeBlockGui {
 				this.addSlot(slot);
 				specializationSlots.add(slot);
 			}
+		}
+		
+		@OnlyIn(Dist.CLIENT)
+		public static HomeBlockContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+			return new HomeBlockContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
+		}
+		
+		public static IPackedContainerProvider Make(HomeBlockTileEntity home) {
+			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
+				return new HomeBlockContainer(windowId, playerInv, home);
+			}, (buffer) -> {
+				ContainerUtil.PackTE(buffer, home);
+			});
 		}
 		
 		@Override
@@ -182,7 +203,7 @@ public class HomeBlockGui {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class HomeBlockGuiContainer extends AutoGuiContainer {
+	public static class HomeBlockGuiContainer extends AutoGuiContainer<HomeBlockContainer> {
 
 		private HomeBlockContainer container;
 		protected int selection = -1;
@@ -190,8 +211,8 @@ public class HomeBlockGui {
 		protected FeyAwayRecord feyArray[];
 		private long feyArrayCacheTimer;
 		
-		public HomeBlockGuiContainer(HomeBlockContainer container) {
-			super(container);
+		public HomeBlockGuiContainer(HomeBlockContainer container, PlayerInventory playerInv, ITextComponent name) {
+			super(container, playerInv, name);
 			this.container = container;
 			
 			this.xSize = GUI_TEXT_WIDTH;
@@ -237,30 +258,30 @@ public class HomeBlockGui {
 				slot.isItemDisplay = true;
 			}
 			
-			GlStateManager.color(1f, 1f, 1f, 1f);
+			GlStateManager.color4f(1f, 1f, 1f, 1f);
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(x + 5, y + 2, 0);
+			GlStateManager.translated(x + 5, y + 2, 0);
 			
-			fontRenderer.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
+			font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 			
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(0, 14, 0);
-			GlStateManager.scale(scale, scale, scale);
-			fontRenderer.drawString(String.format("%.0f%% Growth", (container.home.getGrowth() * 100)),
+			GlStateManager.translated(0, 14, 0);
+			GlStateManager.scalef(scale, scale, scale);
+			font.drawString(String.format("%.0f%% Growth", (container.home.getGrowth() * 100)),
 					0, 0, 0xFFA0A0A0);
 			GlStateManager.popMatrix();
 			
 			
 			GlStateManager.pushMatrix();
 			
-			GlStateManager.translate(0, 26, 0);
-			GlStateManager.scale(scale, scale, scale);
-			fontRenderer.drawString(count + "/" + maxcount + " Residents",
+			GlStateManager.translated(0, 26, 0);
+			GlStateManager.scalef(scale, scale, scale);
+			font.drawString(count + "/" + maxcount + " Residents",
 					0, 0, 0xFFA0A0A0);
 			
 			String str = getAetherDescription(container.home.getAetherLevel());
-			fontRenderer.drawString(str,
-					215 - (fontRenderer.getStringWidth(str)), 0, 0xFFA0A0A0);
+			font.drawString(str,
+					215 - (font.getStringWidth(str)), 0, 0xFFA0A0A0);
 			GlStateManager.popMatrix();
 
 			GlStateManager.popMatrix();
@@ -268,8 +289,8 @@ public class HomeBlockGui {
 		
 		private void drawListItem(int x, int y, boolean hasStone, boolean mouseOver, @Nullable FeyAwayRecord record) {
 			mc.getTextureManager().bindTexture(TEXT);
-			GlStateManager.color(1f, 1f, 1f, 1f);
-			this.drawTexturedModalRect(x, y, GUI_TEXT_LIST_ITEM_HOFFSET + (mouseOver ? GUI_LIST_ITEM_WIDTH : 0), GUI_TEXT_LIST_ITEM_vOFFSET,
+			GlStateManager.color4f(1f, 1f, 1f, 1f);
+			blit(x, y, GUI_TEXT_LIST_ITEM_HOFFSET + (mouseOver ? GUI_LIST_ITEM_WIDTH : 0), GUI_TEXT_LIST_ITEM_vOFFSET,
 					GUI_LIST_ITEM_WIDTH, GUI_LIST_ITEM_HEIGHT);
 			
 			if (hasStone) {
@@ -277,25 +298,25 @@ public class HomeBlockGui {
 					// Show a 'VACANT' notice lol
 					String str = "Vacant";
 					this.font.drawStringWithShadow("Vacant",
-							x + (GUI_LIST_ITEM_WIDTH - fontRenderer.getStringWidth(str)) / 2,
-							y + 1 + ((GUI_LIST_ITEM_HEIGHT - fontRenderer.FONT_HEIGHT) / 2), 0xFFFFFFFF);
+							x + (GUI_LIST_ITEM_WIDTH - font.getStringWidth(str)) / 2,
+							y + 1 + ((GUI_LIST_ITEM_HEIGHT - font.FONT_HEIGHT) / 2), 0xFFFFFFFF);
 				} else {
 					// display information about the fey for selection
 					String name = record.name;
-					if (fontRenderer.getStringWidth(name) * .75f > GUI_LIST_ITEM_WIDTH - 4) {
+					if (font.getStringWidth(name) * .75f > GUI_LIST_ITEM_WIDTH - 4) {
 						int len = 0;
 						int index = 0;
-						len += fontRenderer.getStringWidth("..."); // offset to include ellipses
-						while ((len + fontRenderer.getCharWidth(name.charAt(index))) * .75f < (GUI_LIST_ITEM_WIDTH - 4)) {
-							len += fontRenderer.getCharWidth(name.charAt(index));
+						len += font.getStringWidth("..."); // offset to include ellipses
+						while ((len + font.getCharWidth(name.charAt(index))) * .75f < (GUI_LIST_ITEM_WIDTH - 4)) {
+							len += font.getCharWidth(name.charAt(index));
 							index++;
 						}
 						name = name.substring(0, index) + "...";
 					}
 					
 					GlStateManager.pushMatrix();
-					GlStateManager.translate(x + 2, y + 1 + ((GUI_LIST_ITEM_HEIGHT - fontRenderer.FONT_HEIGHT) / 2) / .75f, 0);
-					GlStateManager.scale(.75f, .75f, .75f);
+					GlStateManager.translated(x + 2, y + 1 + ((GUI_LIST_ITEM_HEIGHT - font.FONT_HEIGHT) / 2) / .75f, 0);
+					GlStateManager.scalef(.75f, .75f, .75f);
 					this.font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 					GlStateManager.popMatrix();
 				}
@@ -317,7 +338,7 @@ public class HomeBlockGui {
 			int previewSize = 24;
 			int previewMargin = 2;
 			float nameScale = .75f;
-			GlStateManager.color(1f, 1f, 1f, 1f);
+			GlStateManager.color4f(1f, 1f, 1f, 1f);
 			
 			// Details
 			int nameSpace;
@@ -328,24 +349,24 @@ public class HomeBlockGui {
 			}
 			
 			// -> Backplate
-			drawRect(x, y, x + GUI_DETAILS_WIDTH, y + previewSize + previewMargin + previewMargin, 0x40000000);
+			RenderFuncs.drawRect(x, y, x + GUI_DETAILS_WIDTH, y + previewSize + previewMargin + previewMargin, 0x40000000);
 
 			// -> Name
 			String name = record.name;
-			if (fontRenderer.getStringWidth(name) * nameScale > nameSpace) {
+			if (font.getStringWidth(name) * nameScale > nameSpace) {
 				int len = 0;
 				int index = 0;
-				len += fontRenderer.getStringWidth("..."); // offset to include ellipses
-				while ((len + fontRenderer.getCharWidth(name.charAt(index))) * nameScale < nameSpace) {
-					len += fontRenderer.getCharWidth(name.charAt(index));
+				len += font.getStringWidth("..."); // offset to include ellipses
+				while ((len + font.getCharWidth(name.charAt(index))) * nameScale < nameSpace) {
+					len += font.getCharWidth(name.charAt(index));
 					index++;
 				}
 				name = name.substring(0, index) + "...";
 			}
 			
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(x + 2 + (nameSpace - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 5, 0);
-			GlStateManager.scale(nameScale, nameScale, nameScale);
+			GlStateManager.translated(x + 2 + (nameSpace - (font.getStringWidth(name) * nameScale)) / 2, y + 5, 0);
+			GlStateManager.scalef(nameScale, nameScale, nameScale);
 			this.font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 			GlStateManager.popMatrix();
 			
@@ -354,38 +375,38 @@ public class HomeBlockGui {
 				// -> Title
 				name = fey.getSpecializationName();
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + 2 + (nameSpace - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
-				GlStateManager.scale(nameScale, nameScale, nameScale);
+				GlStateManager.translated(x + 2 + (nameSpace - (font.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
+				GlStateManager.scalef(nameScale, nameScale, nameScale);
 				this.font.drawString(name, 0, 0, 0xFFF0A0FF);
 				GlStateManager.popMatrix();
 				
 				// -> Status
 				name = I18n.format(fey.getMoodSummary());
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
-				GlStateManager.scale(nameScale, nameScale, nameScale);
+				GlStateManager.translated(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
+				GlStateManager.scalef(nameScale, nameScale, nameScale);
 				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
 				GlStateManager.popMatrix();
 				
 				// -> Activity report
 				name = I18n.format(fey.getActivitySummary());
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
-				GlStateManager.scale(nameScale, nameScale, nameScale);
+				GlStateManager.translated(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
+				GlStateManager.scalef(nameScale, nameScale, nameScale);
 				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
 				GlStateManager.popMatrix();
 				
 				// render preview
-				drawRect(x + GUI_DETAILS_WIDTH - (previewMargin + previewSize), y + previewMargin,
+				RenderFuncs.drawRect(x + GUI_DETAILS_WIDTH - (previewMargin + previewSize), y + previewMargin,
 						x + GUI_DETAILS_WIDTH - (previewMargin), y + (previewMargin + previewSize),
 						0xFFAAAAAA);
 				//RenderHelper.disableStandardItemLighting();
 				// in render terms, 24 is one block, and scale seems to be how big a block is. So figure out how many blocks
 				// the fey is, and then make that fit in 24 units.
-				float length = Math.max(fey.height, fey.width);
+				float length = Math.max(fey.getHeight(), fey.getWidth());
 				int scale = (int) Math.floor((previewSize - 2) / (length));
-				GlStateManager.color(1f, 1f, 1f, 1f);
-				GuiInventory.drawEntityOnScreen(x + GUI_DETAILS_WIDTH - ((previewSize / 2) + previewMargin),
+				GlStateManager.color4f(1f, 1f, 1f, 1f);
+				InventoryScreen.drawEntityOnScreen(x + GUI_DETAILS_WIDTH - ((previewSize / 2) + previewMargin),
 						y + (previewMargin + previewSize),
 						scale, 0, 0, fey);
 				
@@ -397,7 +418,7 @@ public class HomeBlockGui {
 						int cells = Math.min(5, items.size());
 						int offsetX = (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH * cells)) / 2;
 						RenderHelper.enableGUIStandardItemLighting();
-						GlStateManager.color(1f, 1f, 1f, 1f);
+						GlStateManager.color4f(1f, 1f, 1f, 1f);
 						for (int i = 0; i < cells; i++) {
 							int cellX = x + offsetX + (i * GUI_INV_CELL_LENGTH);
 							int cellY = y + 62;
@@ -405,7 +426,7 @@ public class HomeBlockGui {
 							RenderFuncs.drawModalRectWithCustomSizedTexture(cellX, cellY,
 									GUI_TEXT_LIST_ITEM_HOFFSET, GUI_TEXT_LIST_ITEM_vOFFSET + GUI_LIST_ITEM_HEIGHT,
 									GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH, 256, 256);
-							GlStateManager.enableDepth();
+							GlStateManager.enableDepthTest();
 				            Minecraft.getInstance().getItemRenderer().renderItemAndEffectIntoGUI(this.mc.player, items.get(i), cellX + 1, cellY + 1);
 				            Minecraft.getInstance().getItemRenderer().renderItemOverlayIntoGUI(this.font, items.get(i), cellX + 1, cellY + 1, null);
 						}
@@ -414,8 +435,8 @@ public class HomeBlockGui {
 			} else {
 				name = "Away";
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(x + (GUI_DETAILS_WIDTH - (fontRenderer.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
-				GlStateManager.scale(nameScale, nameScale, nameScale);
+				GlStateManager.translated(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
+				GlStateManager.scalef(nameScale, nameScale, nameScale);
 				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
 				GlStateManager.popMatrix();
 			}
@@ -425,24 +446,24 @@ public class HomeBlockGui {
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(horizontalMargin, verticalMargin, 0);
+			GlStateManager.translated(horizontalMargin, verticalMargin, 0);
 			for (ResidentSlot slot : container.residentSlots) {
 				if (slot.isActive()) {
 					float scale = (12f / 16f) ;
-					GlStateManager.color(1f, 1f, 1f, 1f);
+					GlStateManager.color4f(1f, 1f, 1f, 1f);
 					FeySoulIcon.draw(slot, scale);
 				}
 			}
 			for (SpecializationSlot slot : container.specializationSlots) {
 				if (slot.isActive()) {
 					float scale = 1f;
-					GlStateManager.color(1f, 1f, 1f, 1f);
+					GlStateManager.color4f(1f, 1f, 1f, 1f);
 					FeySlotIcon.draw(slot, scale);
 				}
 			}
 			for (FeyStoneContainerSlot slot : container.upgradeSlots) {
 				float scale = 1f;
-				GlStateManager.color(1f, 1f, 1f, 1f);
+				GlStateManager.color4f(1f, 1f, 1f, 1f);
 				FeySlotIcon.draw(slot, scale);
 			}
 			GlStateManager.popMatrix();
@@ -453,7 +474,7 @@ public class HomeBlockGui {
 			//215 - string length x
 			
 			if (mouseY > (GUI_LIST_VOFFSET + -5 + -10) && mouseX > 115 && mouseX < (GUI_UPGRADE_HOFFSET - 5) && mouseY < (GUI_LIST_VOFFSET - 5)) {
-				this.drawHoveringText(Lists.newArrayList(
+				this.renderTooltip(Lists.newArrayList(
 						container.home.getAether() + "/" + container.home.getAetherCapacity()
 						), mouseX, mouseY);
 			}
@@ -468,7 +489,7 @@ public class HomeBlockGui {
 			
 			setIsItemRender(true);
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
@@ -480,7 +501,7 @@ public class HomeBlockGui {
 			drawSlots();
 
 			GlStateManager.enableBlend();
-			GlStateManager.enableAlpha();
+			GlStateManager.enableAlphaTest();
 		}
 		
 		@Override
@@ -499,9 +520,9 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+		public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
 			if (mouseButton == 0) {
-				int index = getListIndexFromMouse(mouseX, mouseY);
+				int index = getListIndexFromMouse((int) mouseX, (int) mouseY);
 				if (index != -1) {
 					SpecializationSlot slot;
 					if (selection != -1) {
@@ -513,11 +534,11 @@ public class HomeBlockGui {
 					slot.isSelected = true;
 					slot.xPos = GUI_DETAILS_HOFFSET + (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH - 2)) / 2;
 					this.selection = index;
-					return;
+					return true;
 				}
 			}
 			
-			super.mouseClicked(mouseX, mouseY, mouseButton);
+			return super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
 		
 		/**
@@ -645,7 +666,7 @@ public class HomeBlockGui {
 			EntityFeyBase spawned = null;
 			
 			if (!stack.isEmpty() && te.getWorld() != null && !te.getWorld().isRemote) {
-				if (FeySoulStone.hasStoredFey(stack)) {
+				if (FeySoulStone.HasStoredFey(stack)) {
 					// They put in a soul stone and it has a fey in it. Automatically spawn them and add them
 					// to the entity list
 					World world = te.getWorld();
@@ -687,7 +708,7 @@ public class HomeBlockGui {
 			super(te.getSlotInventory(), slot, x, y, FeySlotType.SPECIALIZATION);
 			this.inventory = te.getSlotInventory();
 			this.te = te;
-			isSelected = (te.getWorld().isRemote ? false : true);
+			isSelected = (te.getWorld().isRemote() ? false : true);
 		}
 		
 		protected static boolean isSlotValid(boolean isSelected, HomeBlockTileEntity te, HomeBlockSlotInventory inventoryIn, int slot) {

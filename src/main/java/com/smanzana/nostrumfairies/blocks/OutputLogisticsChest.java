@@ -1,8 +1,8 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui;
 import com.smanzana.nostrumfairies.tiles.OutputChestTileEntity;
+import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -33,10 +33,8 @@ public class OutputLogisticsChest extends FeyContainerBlock {
 	
 	@Override
 	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
-		
-		playerIn.openGui(NostrumFairies.instance,
-				NostrumFairyGui.outputChestID, worldIn,
-				pos.getX(), pos.getY(), pos.getZ());
+		OutputChestTileEntity chest = (OutputChestTileEntity) worldIn.getTileEntity(pos);
+		NostrumMagica.instance.proxy.openContainer(playerIn, OutputChestGui.OutputChestContainer.Make(chest));
 		
 		return true;
 	}

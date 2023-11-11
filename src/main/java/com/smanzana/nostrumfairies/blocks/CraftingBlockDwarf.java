@@ -1,8 +1,8 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.client.gui.container.CraftingStationGui;
 import com.smanzana.nostrumfairies.tiles.CraftingBlockDwarfTileEntity;
+import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -94,9 +94,8 @@ public class CraftingBlockDwarf extends FeyContainerBlock {
 			worldIn.notifyBlockUpdate(pos, state, state, 2);
 		}
 		
-		playerIn.openGui(NostrumFairies.instance,
-				NostrumFairyGui.craftDwarfID, worldIn,
-				pos.getX(), pos.getY(), pos.getZ());
+		CraftingBlockDwarfTileEntity craftBlock = (CraftingBlockDwarfTileEntity) worldIn.getTileEntity(pos);
+		NostrumMagica.instance.proxy.openContainer(playerIn, CraftingStationGui.CraftingStationContainer.Make(craftBlock));
 		
 		return true;
 	}

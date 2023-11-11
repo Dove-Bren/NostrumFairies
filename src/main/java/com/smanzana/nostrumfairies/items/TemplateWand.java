@@ -10,7 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapability;
-import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.client.gui.container.TemplateWandGui;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.TemplateWandUpdate;
 import com.smanzana.nostrumfairies.network.messages.TemplateWandUpdate.WandUpdateType;
@@ -392,8 +392,13 @@ public class TemplateWand extends Item implements ILoreTagged {
 		final WandMode mode = GetWandMode(stack);
 		if (mode == WandMode.SPAWN) {
 			if (!playerIn.isSneaking()) {
-				playerIn.openGui(NostrumFairies.instance, NostrumFairyGui.templateWandGuiID, worldIn,
-						(int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ);
+				int pos = Inventories.getPlayerHandSlotIndex(playerIn.inventory, Hand.MAIN_HAND);
+				ItemStack inHand = playerIn.getHeldItemMainhand();
+				if (inHand.isEmpty()) {
+					inHand = playerIn.getHeldItemOffhand();
+					pos = Inventories.getPlayerHandSlotIndex(playerIn.inventory, Hand.OFF_HAND);
+				}
+				NostrumMagica.instance.proxy.openContainer(playerIn, TemplateWandGui.TemplateWandContainer.Make(pos));
 				return ActionResult.<ItemStack>newResult(ActionResultType.SUCCESS, stack);
 			}
 		}
@@ -494,7 +499,6 @@ public class TemplateWand extends Item implements ILoreTagged {
 
 			private LazyOptional<TemplateViewerCapability> def = LazyOptional.of(()-> new TemplateViewerCapability());
 			
-			@SuppressWarnings("unchecked")
 			@Override
 			public <T> LazyOptional<T> getCapability(Capability<T> capability, Direction facing) {
 				if (capability == TemplateViewerCapability.CAPABILITY) {

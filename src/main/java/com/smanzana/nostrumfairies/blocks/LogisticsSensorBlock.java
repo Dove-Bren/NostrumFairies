@@ -1,11 +1,11 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.client.gui.container.LogisticsSensorGui;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.tiles.LogisticsSensorTileEntity;
+import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -108,9 +108,8 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 		
 		
 		// Don't wait, though, and show the UI
-		playerIn.openGui(NostrumFairies.instance,
-				NostrumFairyGui.logisticsSensorID, worldIn,
-				pos.getX(), pos.getY(), pos.getZ());
+		LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) worldIn.getTileEntity(pos);
+		NostrumMagica.instance.proxy.openContainer(playerIn, LogisticsSensorGui.LogisticsSensorContainer.Make(sensor));
 		
 		return true;
 	}

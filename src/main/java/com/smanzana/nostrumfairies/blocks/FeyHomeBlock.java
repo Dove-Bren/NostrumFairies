@@ -3,13 +3,13 @@ package com.smanzana.nostrumfairies.blocks;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.client.gui.container.HomeBlockGui;
 import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
+import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -127,9 +127,7 @@ public class FeyHomeBlock extends FeyContainerBlock {
 			return false;
 		}
 		
-		playerIn.openGui(NostrumFairies.instance,
-				NostrumFairyGui.homeBlockID, worldIn,
-				center.getX(), center.getY(), center.getZ());
+		NostrumMagica.instance.proxy.openContainer(playerIn, HomeBlockGui.HomeBlockContainer.Make((HomeBlockTileEntity) te));
 		
 		return true;
 	}

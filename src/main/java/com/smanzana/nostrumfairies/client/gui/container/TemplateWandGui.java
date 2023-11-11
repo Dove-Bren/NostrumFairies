@@ -1,25 +1,32 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
+import com.smanzana.nostrumfairies.items.FairyItems;
+import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
+import com.smanzana.nostrummagica.items.NostrumItems;
+import com.smanzana.nostrummagica.items.ReagentBag;
+import com.smanzana.nostrummagica.utils.ContainerUtil;
+import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.ClickType;
-import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.ClickType;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class TemplateWandGui {
 	
@@ -32,14 +39,17 @@ public class TemplateWandGui {
 	private static final int BAG_INV_HOFFSET = 63;
 	private static final int BAG_INV_VOFFSET = 9;
 	
-	public static class BagContainer extends Container {
+	public static class TemplateWandContainer extends Container {
+		
+		public static final String ID = "template_wand";
 		
 		protected IInventory wandInv;
 		protected int wandPos;
 		
 		//private int wandIDStart;
 		
-		public BagContainer(IInventory playerInv, IInventory wandInv, int wandPos) {
+		public TemplateWandContainer(int windowId, PlayerInventory playerInv, IInventory wandInv, int wandPos) {
+			super(FairyContainers.TemplateWand, windowId);
 			this.wandInv = wandInv;
 			this.wandPos = wandPos;
 			
@@ -66,6 +76,30 @@ public class TemplateWandGui {
 					});
 				}
 			}
+		}
+		
+		@OnlyIn(Dist.CLIENT)
+		public static TemplateWandContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+			final int slot = buf.readVarInt();
+			ItemStack stack = playerInv.getStackInSlot(slot);
+			if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand)) {
+				stack = new ItemStack(FairyItems.templateWand);
+			}
+			IInventory wandInv = TemplateWand.GetTemplateInventory(stack);
+			return new TemplateWandContainer(windowId, playerInv, wandInv, slot);
+		}
+		
+		public static IPackedContainerProvider Make(int slot) {
+			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
+				ItemStack stack = playerInv.getStackInSlot(slot);
+				if (stack.isEmpty() || !(stack.getItem() instanceof ReagentBag)) {
+					stack = new ItemStack(NostrumItems.reagentBag);
+				}
+				IInventory wandInv = TemplateWand.GetTemplateInventory(stack);
+				return new TemplateWandContainer(windowId, playerInv, wandInv, slot);
+			}, (buffer) -> {
+				buffer.writeVarInt(slot);
+			});
 		}
 		
 		@Override
@@ -160,7 +194,7 @@ public class TemplateWandGui {
 								l2 = slot7.getItemStackLimit(itemstack12);
 							}
 
-							slot7.putStack(itemstack12.splitStack(l2));
+							slot7.putStack(itemstack12.split(l2));
 
 							if (itemstack12.isEmpty()) {
 								inventoryplayer.setItemStack(ItemStack.EMPTY);
@@ -182,7 +216,7 @@ public class TemplateWandGui {
 								inventoryplayer.setItemStack(ItemStack.EMPTY);
 							}
 						} else if (slot7.isItemValid(itemstack12)) {
-							if (itemstack9.getItem() == itemstack12.getItem() && itemstack9.getMetadata() == itemstack12.getMetadata() && ItemStack.areItemStackTagsEqual(itemstack9, itemstack12)) {
+							if (itemstack9.getItem() == itemstack12.getItem() && ItemStack.areItemStackTagsEqual(itemstack9, itemstack12)) {
 								int j2 = dragType == 0 ? itemstack12.getCount() : 1;
 
 								if (j2 > slot7.getItemStackLimit(itemstack12) - itemstack9.getCount()) {
@@ -193,7 +227,7 @@ public class TemplateWandGui {
 								//	j2 = itemstack12.getMaxStackSize() - itemstack9.getCount();
 								//}
 
-								itemstack12.splitStack(j2);
+								itemstack12.split(j2);
 
 								if (itemstack12.isEmpty()) {
 									inventoryplayer.setItemStack(ItemStack.EMPTY);
@@ -204,7 +238,7 @@ public class TemplateWandGui {
 								slot7.putStack(itemstack12);
 								inventoryplayer.setItemStack(itemstack9);
 							}
-						} else if (itemstack9.getItem() == itemstack12.getItem() && itemstack12.getMaxStackSize() > 1 && (!itemstack9.getHasSubtypes() || itemstack9.getMetadata() == itemstack12.getMetadata()) && ItemStack.areItemStackTagsEqual(itemstack9, itemstack12)) {
+						} else if (itemstack9.getItem() == itemstack12.getItem() && itemstack12.getMaxStackSize() > 1 && ItemStack.areItemStackTagsEqual(itemstack9, itemstack12)) {
 							int i2 = itemstack9.getCount();
 
 							if (i2 > 0 && i2 + itemstack12.getCount() <= itemstack12.getMaxStackSize()) {
@@ -244,12 +278,12 @@ public class TemplateWandGui {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class BagGui extends AutoGuiContainer {
+	public static class TemplateWandGuiContainer extends AutoGuiContainer<TemplateWandContainer> {
 
-		//private BagContainer bag;
+		//private TemplateWandContainer bag;
 		
-		public BagGui(BagContainer bag) {
-			super(bag);
+		public TemplateWandGuiContainer(TemplateWandContainer bag, PlayerInventory playerInv, ITextComponent name) {
+			super(bag, playerInv, name);
 			//this.bag = bag;
 			this.xSize = GUI_WIDTH;
 			this.ySize = GUI_HEIGHT;
@@ -261,15 +295,10 @@ public class TemplateWandGui {
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
 			
-			GlStateManager.color(1.0F,  1.0F, 1.0F, 1.0F);
+			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_WIDTH, GUI_HEIGHT, 256, 256);
-		}
-			
-		@Override
-		protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-			super.mouseClicked(mouseX, mouseY, mouseButton);
 		}
 	}
 	

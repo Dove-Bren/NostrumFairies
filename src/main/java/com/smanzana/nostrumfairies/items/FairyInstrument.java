@@ -4,10 +4,9 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.mojang.realmsclient.gui.ChatFormatting;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
-import com.smanzana.nostrumfairies.client.gui.NostrumFairyGui;
+import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
@@ -15,7 +14,6 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -170,7 +168,7 @@ public class FairyInstrument extends Item implements ILoreTagged {
 				
 				NostrumMagica.playerListener.registerTimer((t, entity, data) -> {
 					if (playerIn.isAlive() && playerIn.getHeldItem(hand) == stack) {
-						playerIn.openGui(NostrumFairies.instance, NostrumFairyGui.fairyGuiID, worldIn, (int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ);
+						NostrumMagica.instance.proxy.openContainer(playerIn, FairyScreenGui.FairyScreenContainer.Make());
 					}
 					return true;
 				}, 30, 0);
