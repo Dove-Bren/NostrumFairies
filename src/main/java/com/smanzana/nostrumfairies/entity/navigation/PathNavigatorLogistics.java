@@ -5,11 +5,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -18,10 +22,13 @@ import com.smanzana.nostrumfairies.utils.Location;
 import com.smanzana.nostrumfairies.utils.Paths;
 
 import net.minecraft.entity.MobEntity;
+import net.minecraft.pathfinding.FlaggedPathPoint;
+import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 
 /**
@@ -31,7 +38,8 @@ import net.minecraft.world.World;
  * @author Skyler
  *
  */
-public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
+public class PathNavigatorLogistics extends GroundPathNavigator { // extends PathNavigatorGroundFixed {
+	private int unused; // Can we just use ground path navigator now? Fixed?
 
 	final double MAX_BEACON_DIST = 30 * 30;
 	
@@ -53,9 +61,9 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	}
 	
 	@Override
-	protected PathFinder getPathFinder() {
-		super.getPathFinder(); // dumbly sets up stuff so we have to call it still
-		this.pathFinder = new PathFinderPublic(this.nodeProcessor);
+	protected PathFinder getPathFinder(int maxAttempts) {
+		super.getPathFinder(maxAttempts); // dumbly sets up stuff so we have to call it still
+		this.pathFinder = new PathFinderPublic(this.nodeProcessor, maxAttempts);
 		return this.pathFinder;
 	}
 	
@@ -139,11 +147,31 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 		return cost;
 	}
 	
-	private @Nullable Path getMinorPathTo(BlockPos src, BlockPos dest, float range) {
-		Path path = pathFinder.findPath(entity.world, entity,
-			src.getX() + .5, src.getY() + .5, src.getZ() + .5,
-			dest.getX() + .5, dest.getY() + .5, dest.getZ() + .5,
-			range);
+	private @Nullable Path getMinorPathTo(IWorldReader world, MobEntity entity, BlockPos src, BlockPos dest, float range) {
+		
+		final int notsure = 0;
+		
+		Path path;
+//		Path path = pathFinder.findPath(entity.world, entity,
+//			src.getX() + .5, src.getY() + .5, src.getZ() + .5,
+//			dest.getX() + .5, dest.getY() + .5, dest.getZ() + .5,
+//			range);
+		
+		// Copied out of func_224775_a which I think is the 'find a path to point X' func.
+		// That func by default 'inits' the node processor and then gets the starting point out of it.
+		// But we need to set a custom start point.
+		{
+			this.nodeProcessor.init(world, entity);
+			PathPoint pathpoint = new PathPoint(src.getX(), src.getY(), src.getZ());//this.nodeProcessor.getStart();
+			Map<FlaggedPathPoint, BlockPos> map = ImmutableSet.of(dest).stream().collect(Collectors.toMap((p_224782_1_) -> {
+				return this.nodeProcessor.func_224768_a((double)p_224782_1_.getX(), (double)p_224782_1_.getY(), (double)p_224782_1_.getZ());
+			}, Function.identity()));
+			path = pathFinder.func_224779_a(pathpoint, map, range, notsure);
+			this.nodeProcessor.postProcess();
+		}
+		
+		
+		
 		
 		if (path != null && !Paths.IsComplete(path, dest, 2)) {
 			path = null;
@@ -161,20 +189,22 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 		List<Location> beacons = Lists.newArrayList(network.getAllBeacons());
 		
 		beacons.removeIf((loc) -> {
-			return (loc.getDimension() != entity.world.provider.getDimension());
+			return (loc.getDimension() != entity.world.getDimension().getType());
 		});
 		
 		if (!beacons.isEmpty()) {
 			Collections.sort(beacons, (l, r) -> {
-				final double ldist = entity.getDistanceSq(l.getPos());
-				final double rdist = entity.getDistanceSq(r.getPos());
+				final BlockPos lPos = l.getPos();
+				final BlockPos rPos = r.getPos();
+				final double ldist = entity.getDistanceSq(lPos.getX(), lPos.getY(), lPos.getZ());
+				final double rdist = entity.getDistanceSq(rPos.getX(), rPos.getY(), rPos.getZ());
 				
 				return (int) (ldist - rdist);
 			});
 			
 			for (Location beacon : beacons) {
 				//Path subpath = super.getPathToPos(beacon.getPos());
-				Path subpath = getMinorPathTo(beacon.getPos(), target, range);
+				Path subpath = getMinorPathTo(entity.world, entity, beacon.getPos(), target, range);
 				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), entity.world.isAirBlock(beacon.getPos()) ? 0 : 1)) {
 					LogisticsNode node = new LogisticsNode(beacon.getPos(), null, subpath, 0, getH(target, beacon.getPos()));
 					return node;
@@ -247,7 +277,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 			}
 			
 			// Is this the final node???? AKA can we path from it straight to the destination?
-			finalPath = getMinorPathTo(node.pos, target, range);
+			finalPath = getMinorPathTo(entity.world, entity, node.pos, target, range);
 			if (finalPath != null) {
 				lastNode = node;
 				break;
@@ -279,7 +309,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 					if (network.hasCachedPath(locStart, locEnd)) {
 						path = network.getCachedPathRaw(locStart, locEnd); 
 					} else {
-						path = getMinorPathTo(node.pos, comp.getPosition(), range);
+						path = getMinorPathTo(entity.world, entity, node.pos, comp.getPosition(), range);
 						newPath = true;
 					}
 					
@@ -317,7 +347,7 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 				if (network.hasCachedPath(locStart, locEnd)) {
 					path = network.getCachedPathRaw(locStart, locEnd); 
 				} else {
-					path = getMinorPathTo(node.pos, beacon.getPos(), range);
+					path = getMinorPathTo(entity.world, entity, node.pos, beacon.getPos(), range);
 					newPath = true;
 				}
 				
@@ -345,8 +375,8 @@ public class PathNavigatorLogistics extends PathNavigatorGroundFixed {
 	}
 	
 	@Override
-	public Path getPathToPos(BlockPos target) {
-		@Nullable Path path = super.getPathToPos(target);
+	public Path getPathToPos(BlockPos target, int maxIterations) {
+		@Nullable Path path = super.getPathToPos(target, maxIterations);
 		
 		// If we've failed too recently on the same request, don't even try
 		if (!shouldAttempt(target)) {

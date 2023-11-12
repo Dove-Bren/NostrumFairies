@@ -1,18 +1,21 @@
 package com.smanzana.nostrumfairies.entity.navigation;
 
+import java.util.List;
+
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.util.math.BlockPos;
 
 public class PathPublic extends Path {
 
-	protected PathPoint[] pathpoints;
+	protected List<PathPoint> pathpoints;
 	
-	public PathPublic(PathPoint[] pathpoints) {
-		super(pathpoints);
+	public PathPublic(List<PathPoint> pathpoints, BlockPos target, boolean flagged) {
+		super(pathpoints, target, flagged);
 		this.pathpoints = pathpoints;
 	}
 	
-	public PathPoint[] getPathPoints() {
+	public List<PathPoint> getPathPoints() {
 		return pathpoints;
 	}
 

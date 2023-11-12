@@ -68,16 +68,16 @@ public final class Paths {
 		}
 		
 		if (path instanceof PathPublic) {
-			return new PathPublic(((PathPublic) path).getPathPoints());
+			return new PathPublic(((PathPublic) path).getPathPoints(), path.func_224770_k(), path.func_224771_h());
 		}
 		
 		int size = path.getCurrentPathLength();
-		PathPoint[] points = new PathPoint[size];
+		List<PathPoint> points = new ArrayList<>(size);
 		for (int i = 0; i < size; i++) {
-			points[i] = path.getPathPointFromIndex(i);
+			points.add(path.getPathPointFromIndex(i));
 		}
 		
-		return new PathPublic(points);
+		return new PathPublic(points, path.func_224770_k(), path.func_224771_h());
 	}
 	
 }

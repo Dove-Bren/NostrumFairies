@@ -1,7 +1,10 @@
 package com.smanzana.nostrumfairies.entity.navigation;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.utils.Paths;
 
 import net.minecraft.entity.Entity;
@@ -9,12 +12,12 @@ import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class CompositePath extends Path {
 
-	private final Path[] paths;
+	private final List<Path> paths;
 	private int compoundPathIndex;
 	
 	// Path cached stuff
@@ -23,22 +26,22 @@ public class CompositePath extends Path {
 	private Path cachedCurrPath;
 	private int cachedCurrPathIndex;
 	
-	public CompositePath(Path...paths) {
-		super(new PathPoint[0]);
+	public CompositePath(List<Path> paths) {
+		super(new ArrayList<>(), paths.get(paths.size() - 1).func_224770_k(), paths.get(paths.size() - 1).func_224771_h());
 		this.paths = fixPaths(paths);
 		compoundPathIndex = 0;
 		
 		refreshCache(true);
 	}
 	
-	private Path[] fixPaths(Path[] inputs) {
+	private List<Path> fixPaths(List<Path> inputs) {
 		// The pathfinding code treats two points next to eachother as blashphemous.
 		// Each path should have a end point that matches the start point of the previous.
-		Path[] output = new Path[inputs.length];
-		output[0] = inputs[0];
+		List<Path> output = new ArrayList<>(inputs.size());
+		output.add(inputs.get(0));
 		int i = 1;
-		while (i < inputs.length) {
-			output[i] = Paths.TrimStart(inputs[i]);
+		while (i < inputs.size()) {
+			output.add(Paths.TrimStart(inputs.get(i)));
 			i++;
 		}
 		
@@ -46,7 +49,7 @@ public class CompositePath extends Path {
 	}
 	
 	public CompositePath(Collection<Path> paths) {
-		this(paths.toArray(new Path[paths.size()]));
+		this(Lists.newArrayList(paths));
 	}
 	
 	protected void refreshCache(boolean changedLength) {
@@ -62,10 +65,10 @@ public class CompositePath extends Path {
 		}
 	}
 	
-	protected static PathAndIndex calcPathForIndex(Path[] paths, int compoundIndex) {
+	protected static PathAndIndex calcPathForIndex(List<Path> paths, int compoundIndex) {
 		int pathIndex = 0;
-		while (pathIndex < paths.length) {
-			Path path = paths[pathIndex];
+		while (pathIndex < paths.size()) {
+			Path path = paths.get(pathIndex);
 			if (path.getCurrentPathLength() > compoundIndex) {
 				return new PathAndIndex(path, compoundIndex, pathIndex);
 			}
@@ -76,7 +79,7 @@ public class CompositePath extends Path {
 		return null;
 	}
 	
-	protected static int calcTotalPathLength(Path[] paths) {
+	protected static int calcTotalPathLength(List<Path> paths) {
 		int totalLength = 0;
 		
 		for (Path path : paths) {
@@ -95,7 +98,7 @@ public class CompositePath extends Path {
 		// We trim off the start, so we have to reconstruct it
 		refreshCache(false);
 		if (cachedCurrPathIndex - 1 >= 0) {
-			PathPoint point = paths[cachedCurrPathIndex-1].getPathPointFromIndex(0);
+			PathPoint point = paths.get(cachedCurrPathIndex-1).getPathPointFromIndex(0);
 			return new BlockPos(point.x, point.y, point.z);
 		}
 		
@@ -135,7 +138,7 @@ public class CompositePath extends Path {
 	 * returns the last PathPoint of the Array
 	 */
 	public PathPoint getFinalPathPoint() {
-		return this.paths.length > 0 ? paths[paths.length - 1].getFinalPathPoint() : null;
+		return this.paths.size() > 0 ? paths.get(paths.size() - 1).getFinalPathPoint() : null;
 	}
 
 	/**
@@ -237,12 +240,12 @@ public class CompositePath extends Path {
 		}
 		
 		CompositePath other = (CompositePath) pathentityIn;
-		if (other.paths.length != this.paths.length) {
+		if (other.paths.size() != this.paths.size()) {
 			return false;
 		}
 		
-		for (int i = 0; i < paths.length; i++) {
-			if (!paths[i].isSamePath(other.paths[i])) {
+		for (int i = 0; i < paths.size(); i++) {
+			if (!paths.get(i).isSamePath(other.paths.get(i))) {
 				return false;
 			}
 		}
@@ -251,21 +254,24 @@ public class CompositePath extends Path {
 	}
 
 	@OnlyIn(Dist.CLIENT)
+	@Override
 	public PathPoint[] getOpenSet() {
 		refreshCache(false);
 		return this.cachedCurrPath.getOpenSet();
 	}
 
 	@OnlyIn(Dist.CLIENT)
+	@Override
 	public PathPoint[] getClosedSet() {
 		refreshCache(false);
 		return this.cachedCurrPath.getClosedSet();
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	public PathPoint getTarget() {
+	@Override
+	public BlockPos func_224770_k() { // getTarget
 		refreshCache(false);
-		return this.cachedCurrPath.getTarget();
+		return this.cachedCurrPath.func_224770_k();
 	}
 	
 	
