@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.items;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FairyBlocks;
+import com.smanzana.nostrumfairies.entity.FairyEntities;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
@@ -144,20 +145,20 @@ public class FeyResource extends Item implements ILoreTagged {
 		final EntityFeyBase fey;
 		switch (NostrumFairies.random.nextInt(5)) {
 		case 0:
-			fey = new EntityFairy(worldIn);
+			fey = new EntityFairy(FairyEntities.Fairy, worldIn);
 			break;
 		case 1:
-			fey = new EntityDwarf(worldIn);
+			fey = new EntityDwarf(FairyEntities.Dwarf, worldIn);
 			break;
 		case 2:
-			fey = new EntityGnome(worldIn);
+			fey = new EntityGnome(FairyEntities.Gnome, worldIn);
 			break;
 		case 3:
-			fey = new EntityElf(worldIn);
+			fey = new EntityElf(FairyEntities.Elf, worldIn);
 			break;
 		case 4:
 		default:
-			fey = new EntityElfArcher(worldIn);
+			fey = new EntityElfArcher(FairyEntities.ElfArcher, worldIn);
 			break;
 		}
 		fey.setPosition(at.getX() + .5, at.getY(), at.getZ() + .5);

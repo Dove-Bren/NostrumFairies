@@ -205,7 +205,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 				return ItemStack.EMPTY;
 			}
 			nbt = fey.serializeNBT();
-			name = fey.getName();
+			name = fey.getName().getFormattedText();
 		}
 		
 		return create(type, name, feyType, nbt);

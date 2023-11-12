@@ -24,6 +24,7 @@ import com.smanzana.nostrumaetheria.api.proxy.APIProxy;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyBush;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
+import com.smanzana.nostrumfairies.entity.FairyEntities;
 import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
@@ -496,7 +497,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		
 		HomeBlockTileEntity.FeyAwayRecord record = new FeyAwayRecord();
 		record.tickLastSeen = ticksExisted;
-		record.name = fey.getName();
+		record.name = fey.getName().getFormattedText();
 		record.cache = fey;
 		
 		this.feyCacheMap.put(fey.getUniqueID(), record);
@@ -533,7 +534,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		
 		HomeBlockTileEntity.FeyAwayRecord record = new FeyAwayRecord();
 		record.tickLastSeen = ticksExisted;
-		record.name = replacement.getName();
+		record.name = replacement.getName().getFormattedText();
 		record.cache = replacement;
 		
 		this.feyCacheMap.put(replacement.getUniqueID(), record);
@@ -993,23 +994,23 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		final int type = NostrumFairies.random.nextInt(3);
 		switch (this.type) {
 		case DWARF:
-			if (type == 0) fey = new EntityDwarf(world);
-			else if (type == 1) fey = new EntityDwarfBuilder(world);
-			else fey = new EntityDwarfCrafter(world);
+			if (type == 0) fey = new EntityDwarf(FairyEntities.Dwarf, world);
+			else if (type == 1) fey = new EntityDwarfBuilder(FairyEntities.DwarfBuilder, world);
+			else fey = new EntityDwarfCrafter(FairyEntities.DwarfCrafter, world);
 			break;
 		case ELF:
-			if (type == 0) fey = new EntityElf(world);
-			else if (type == 1) fey = new EntityElfArcher(world);
-			else fey = new EntityElfCrafter(world);
+			if (type == 0) fey = new EntityElf(FairyEntities.Elf, world);
+			else if (type == 1) fey = new EntityElfArcher(FairyEntities.ElfArcher, world);
+			else fey = new EntityElfCrafter(FairyEntities.ElfCrafter, world);
 			break;
 		case FAIRY:
 		default:
-			fey = new EntityFairy(world);
+			fey = new EntityFairy(FairyEntities.Fairy, world);
 			break;
 		case GNOME:
-			if (type == 0) fey = new EntityGnome(world);
-			else if (type == 1) fey = new EntityGnomeCrafter(world);
-			else fey = new EntityGnomeCollector(world);
+			if (type == 0) fey = new EntityGnome(FairyEntities.Gnome, world);
+			else if (type == 1) fey = new EntityGnomeCrafter(FairyEntities.GnomeCrafter, world);
+			else fey = new EntityGnomeCollector(FairyEntities.GnomeCollector, world);
 			break;
 		}
 		

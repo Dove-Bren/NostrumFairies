@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumaetheria.api.proxy.APIProxy;
 import com.smanzana.nostrumaetheria.api.recipes.IAetherRepairerRecipe;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.entity.FairyEntities;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrumfairies.serializers.FairyJob;
@@ -140,7 +141,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		// For some easy creative intergration
 		if (!stack.hasTag()) {
 			FairyGaelType type = getTypeOf(stack);
-			EntityPersonalFairy fairy = new EntityPersonalFairy(world);
+			EntityPersonalFairy fairy = new EntityPersonalFairy(FairyEntities.PersonalFairy, world);
 			switch (type) {
 			case ATTACK:
 			default:
@@ -194,7 +195,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	public static void setStoredEntity(ItemStack stack, EntityPersonalFairy fey) {
 		if (fey != null) {
 			CompoundNBT tag = new CompoundNBT();
-			tag.putString("name", fey.getName());
+			tag.putString("name", fey.getName().getFormattedText());
 			tag.putDouble("healthD", (double) fey.getHealth() / Math.max(1, (double) fey.getMaxHealth()));
 			tag.putDouble("energyD", (double) fey.getEnergy() / Math.max(1, (double) fey.getMaxEnergy()));
 			tag.put("data", fey.serializeNBT());
