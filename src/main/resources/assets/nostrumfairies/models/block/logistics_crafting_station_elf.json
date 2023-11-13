@@ -2,10 +2,10 @@
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"textures": {
-		"particle": "blocks/log_big_oak",
-		"table": "blocks/log_big_oak",
-		"base": "blocks/stone",
-        "leaves": "nostrumfairies:blocks/leaves"
+		"particle": "block/log_big_oak",
+		"table": "block/log_big_oak",
+		"base": "block/stone",
+        "leaves": "nostrumfairies:block/leaves"
 	},
 	"elements": [
 		{

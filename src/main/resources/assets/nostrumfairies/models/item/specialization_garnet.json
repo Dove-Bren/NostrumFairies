@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "nostrumfairies:items/specialization_garnet"
+        "layer0": "nostrumfairies:item/specialization_garnet"
     }
 }

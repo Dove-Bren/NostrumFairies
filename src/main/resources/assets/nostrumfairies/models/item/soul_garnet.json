@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "nostrumfairies:items/soul_garnet"
+        "layer0": "nostrumfairies:item/soul_garnet"
     }
 }

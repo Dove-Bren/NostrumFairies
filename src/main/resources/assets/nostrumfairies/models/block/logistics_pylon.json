@@ -1,9 +1,9 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "blocks/stone",
-		"1": "nostrumfairies:blocks/pylon_gem",
-		"particle": "nostrumfairies:blocks/pylon_gem"
+		"0": "block/stone",
+		"1": "nostrumfairies:block/pylon_gem",
+		"particle": "nostrumfairies:block/pylon_gem"
 	},
 	"elements": [
 		{

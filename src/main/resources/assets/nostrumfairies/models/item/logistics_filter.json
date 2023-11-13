@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "nostrumfairies:items/logistics_filter"
+        "layer0": "nostrumfairies:item/logistics_filter"
     }
 }

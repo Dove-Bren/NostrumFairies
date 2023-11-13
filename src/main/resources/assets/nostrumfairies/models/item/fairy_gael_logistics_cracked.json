@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "nostrumfairies:items/fairy_gael_logistics_cracked"
+        "layer0": "nostrumfairies:item/fairy_gael_logistics_cracked"
     }
 }

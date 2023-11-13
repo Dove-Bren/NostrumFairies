@@ -1,7 +1,7 @@
 {
     "parent": "nostrumfairies:block/lantern",
     "textures": {
-        "particle": "nostrumfairies:blocks/lantern_unlit",
-        "all": "nostrumfairies:blocks/lantern_unlit"
+        "particle": "nostrumfairies:block/lantern_unlit",
+        "all": "nostrumfairies:block/lantern_unlit"
     }
 }

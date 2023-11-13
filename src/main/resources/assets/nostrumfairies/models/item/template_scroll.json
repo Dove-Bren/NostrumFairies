@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "nostrumfairies:items/template_scroll"
+        "layer0": "nostrumfairies:item/template_scroll"
     }
 }

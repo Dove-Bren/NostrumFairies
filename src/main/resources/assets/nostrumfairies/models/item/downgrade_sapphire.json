@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "nostrumfairies:items/downgrade_sapphire"
+        "layer0": "nostrumfairies:item/downgrade_sapphire"
     }
 }

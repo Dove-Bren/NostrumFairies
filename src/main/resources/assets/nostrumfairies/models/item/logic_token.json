@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "nostrumfairies:items/logic_token"
+        "layer0": "nostrumfairies:item/logic_token"
     }
 }

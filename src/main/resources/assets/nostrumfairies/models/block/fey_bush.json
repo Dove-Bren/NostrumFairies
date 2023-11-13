@@ -1,6 +1,6 @@
 {
     "parent": "block/cross",
     "textures": {
-        "cross": "nostrumfairies:blocks/fey_bush"
+        "cross": "nostrumfairies:block/fey_bush"
     }
 }

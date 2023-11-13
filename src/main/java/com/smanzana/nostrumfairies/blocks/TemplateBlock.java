@@ -121,6 +121,7 @@ public class TemplateBlock extends MimicBlock {
 		super(Block.Properties.create(Material.PLANTS)
 				.hardnessAndResistance(.2f)
 				.doesNotBlockMovement()
+				.noDrops()
 				);
 		
 		MinecraftForge.EVENT_BUS.register(this);

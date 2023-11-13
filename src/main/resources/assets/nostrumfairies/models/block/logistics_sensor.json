@@ -1,12 +1,12 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"particle": "blocks/log_big_oak",
-        "stone": "blocks/stone",
-		"leaves": "nostrumfairies:blocks/leaves",
-		"gem": "nostrumfairies:blocks/pylon_gem",
-		"log": "blocks/log_big_oak",
-		"top": "nostrumfairies:blocks/sensor_slab_off"
+		"particle": "block/log_big_oak",
+        "stone": "block/stone",
+		"leaves": "nostrumfairies:block/leaves",
+		"gem": "nostrumfairies:block/pylon_gem",
+		"log": "block/log_big_oak",
+		"top": "nostrumfairies:block/sensor_slab_off"
 	},
 	"elements": [
 		{

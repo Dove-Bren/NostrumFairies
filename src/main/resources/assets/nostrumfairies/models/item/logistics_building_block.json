@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "nostrumfairies:items/logistics_sign_building"
+        "layer0": "nostrumfairies:item/logistics_sign_building"
     }
 }

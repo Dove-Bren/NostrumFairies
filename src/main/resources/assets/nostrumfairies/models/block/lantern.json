@@ -1,8 +1,8 @@
 {
     "parent": "block/block",
     "textures": {
-        "particle": "nostrumfairies:blocks/lantern",
-        "all": "nostrumfairies:blocks/lantern"
+        "particle": "nostrumfairies:block/lantern",
+        "all": "nostrumfairies:block/lantern"
     },
     "elements": [
         {   "from": [ 5, 6, 5 ],

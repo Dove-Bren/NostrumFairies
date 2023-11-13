@@ -2,11 +2,11 @@
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"textures": {
-		"particle": "blocks/crafting_table_top",
-		"base": "blocks/stone",
-		"front": "blocks/crafting_table_front",
-		"side": "blocks/crafting_table_side",
-		"top": "blocks/crafting_table_top"
+		"particle": "block/crafting_table_top",
+		"base": "block/stone",
+		"front": "block/crafting_table_front",
+		"side": "block/crafting_table_side",
+		"top": "block/crafting_table_top"
 	},
 	"elements": [
 		{

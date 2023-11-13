@@ -1,6 +1,6 @@
 {
     "parent": "block/cube_all",
     "textures": {
-        "all": "nostrumfairies:blocks/logistics_storage_monitor"
+        "all": "nostrumfairies:block/logistics_storage_monitor"
     }
 }

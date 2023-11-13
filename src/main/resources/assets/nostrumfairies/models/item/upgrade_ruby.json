@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "nostrumfairies:items/upgrade_ruby"
+        "layer0": "nostrumfairies:item/upgrade_ruby"
     }
 }

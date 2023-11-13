@@ -15,8 +15,8 @@
 				},
 				{
 					"condition": "minecraft:random_chance_with_looting",
-					"chance": 0.0025,
-					"looting_multiplier": 0.005
+					"chance": 0.0075,
+					"looting_multiplier": 0.0075
 				}
 			]
 		},
@@ -25,6 +25,15 @@
 			"entries": [
 				{
 					"type": "minecraft:item",
+					"functions": [
+                        {
+                            "function": "minecraft:looting_enchant",
+                            "count": {
+                                "min": 0,
+                                "max": 1
+                            }
+                        }
+                    ],
 					"name": "nostrummagica:wisp_pebble"
 				}
 			],
@@ -34,8 +43,8 @@
 				},
 				{
 					"condition": "minecraft:random_chance_with_looting",
-					"chance": 0.01,
-					"looting_multiplier": 0.02
+					"chance": 0.25,
+					"looting_multiplier": 0.25
 				}
 			]
 		}

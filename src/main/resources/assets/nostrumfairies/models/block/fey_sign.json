@@ -2,8 +2,8 @@
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"textures": {
-		"1": "nostrumfairies:blocks/fey_sign",
-		"particle": "nostrumfairies:blocks/fey_sign"
+		"1": "nostrumfairies:block/fey_sign",
+		"particle": "nostrumfairies:block/fey_sign"
 	},
 	"elements": [
 		{
