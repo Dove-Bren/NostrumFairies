@@ -2,13 +2,6 @@ package com.smanzana.nostrumfairies.client.render.tile;
 
 import com.smanzana.nostrumfairies.tiles.FarmingBlockTileEntity;
 
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-
 public class FarmingBlockRenderer extends FeySignRenderer<FarmingBlockTileEntity> {
 	
-	public static void init() {
-		FeySignRenderer.init(FarmingBlockTileEntity.class, new FarmingBlockRenderer());
-		ClientRegistry.bindTileEntitySpecialRenderer(FarmingBlockTileEntity.class,
-				new FarmingBlockRenderer());
-	}
 }

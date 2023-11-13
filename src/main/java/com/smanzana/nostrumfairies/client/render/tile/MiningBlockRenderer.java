@@ -15,15 +15,8 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> {
-	
-	public static void init() {
-		ClientRegistry.bindTileEntitySpecialRenderer(MiningBlockTileEntity.class,
-				new MiningBlockRenderer());
-		FeySignRenderer.init(MiningBlockTileEntity.class, new MiningBlockRenderer());
-	}
 	
 	protected void renderCube(BlockPos origin, BlockPos target, float red, float green, float blue, float alpha) {
 		Tessellator tessellator = Tessellator.getInstance();

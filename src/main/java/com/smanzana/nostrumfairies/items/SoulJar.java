@@ -22,6 +22,7 @@ import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
@@ -41,6 +42,10 @@ public class SoulJar extends Item implements ILoreTagged {
 	
 	public SoulJar() {
 		super(FairyItems.PropUnstackable());
+		
+		this.addPropertyOverride(new ResourceLocation("filled"), (stack, world, entity) -> {
+			return isFilled(stack) ? 1.0F : 0.0F;
+		});
 	}
 	
 	protected static ItemStack createInternal(LivingEntity entity) {

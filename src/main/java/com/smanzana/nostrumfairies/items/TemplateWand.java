@@ -37,6 +37,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -76,6 +77,26 @@ public class TemplateWand extends Item implements ILoreTagged {
 	
 	public TemplateWand() {
 		super(FairyItems.PropUnstackable());
+		
+		this.addPropertyOverride(new ResourceLocation("mode"), (stack, world, entity) -> {
+			final WandMode mode = GetWandMode(stack);
+			float val = 0.0F;
+			if (mode != null) {
+				switch (mode) {
+				case SELECTION:
+					val = 1.0F;
+					break;
+				case CAPTURE:
+					val = 2.0F;
+					break;
+				case SPAWN:
+					val = 3.0F;
+					break;
+				}
+			}
+			
+			return val;
+		});
 	}
 	
 	@Override

@@ -6,8 +6,4 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 public class CraftingBlockElfRenderer extends TileEntityLogisticsRenderer<CraftingBlockElfTileEntity> {
 	
-	public static void init() {
-		ClientRegistry.bindTileEntitySpecialRenderer(CraftingBlockElfTileEntity.class,
-				new CraftingBlockElfRenderer());
-	}
 }

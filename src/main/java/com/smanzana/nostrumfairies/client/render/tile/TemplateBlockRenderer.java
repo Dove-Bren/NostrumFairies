@@ -6,7 +6,6 @@ import java.util.Map;
 import javax.vecmath.Vector3f;
 
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESR;
-import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
@@ -25,13 +24,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class TemplateBlockRenderer extends TileEntityRenderer<TemplateBlockTileEntity> implements StaticTESR<TemplateBlockTileEntity> {
 
 	protected static final Map<IBakedModel, Integer> RenderListCache = new HashMap<>();
-	
-	public static void init() {
-//		ClientRegistry.bindTileEntitySpecialRenderer(TemplateBlockTileEntity.class,
-//				new TemplateBlockRenderer());
-		
-		StaticTESRRenderer.instance.registerRender(TemplateBlockTileEntity.class, new TemplateBlockRenderer());
-	}
 	
 	public TemplateBlockRenderer() {
 		

@@ -13,15 +13,8 @@ import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEntity> {
-	
-	public static void init() {
-		FeySignRenderer.init(BuildingBlockTileEntity.class, new BuildingBlockRenderer());
-		ClientRegistry.bindTileEntitySpecialRenderer(BuildingBlockTileEntity.class,
-				new BuildingBlockRenderer());
-	}
 	
 	private static final float ICON_INNEROFFSETX = (2f / 16f);
 	private static final float ICON_INNEROFFSETX2 = (1f / 16f);

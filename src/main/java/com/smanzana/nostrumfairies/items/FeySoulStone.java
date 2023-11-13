@@ -23,6 +23,7 @@ import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
@@ -77,6 +78,35 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	public FeySoulStone(SoulStoneType type) {
 		super(FairyItems.PropUnstackable());
 		this.type = type;
+		
+		this.addPropertyOverride(new ResourceLocation("filled"), (stack, world, entity) -> {
+			return HasStoredFey(stack) ? 1.0F : 0.0F;
+		});
+		
+		this.addPropertyOverride(new ResourceLocation("type_idx"), (stack, world, entity) -> {
+			float val = 0.0F;
+			final ResidentType feyType = getStoredFeyType(stack);
+			if (feyType == null) {
+				val = 0.0F;
+			} else {
+				switch (feyType) {
+				case DWARF:
+					val = 1.0F;
+					break;
+				case ELF:
+					val = 2.0F;
+					break;
+				case FAIRY:
+					val = 3.0F;
+					break;
+				case GNOME:
+					val = 4.0F;
+					break;
+				}
+			}
+			
+			return val;
+		});
 	}
 	
 	public static FeySoulStone getItem(SoulStoneType type) {
