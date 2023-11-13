@@ -28,7 +28,7 @@ import net.minecraftforge.common.ToolType;
 
 public class OutputLogisticsPanel extends FeyContainerBlock {
 	
-	private static final DirectionProperty FACING = DirectionProperty.create("facing");
+	private static final DirectionProperty FACING = DirectionProperty.create("facing", Direction.values());
 	private static final double BB_MINOR = 1.0;
 	private static final double BB_MAJOR = 2.0;
 	private static final VoxelShape AABB_N = Block.makeCuboidShape(BB_MAJOR, BB_MAJOR, 0, 16 - BB_MAJOR, 16 - BB_MAJOR, BB_MINOR);

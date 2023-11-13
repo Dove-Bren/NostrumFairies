@@ -1,6 +1,6 @@
 {
     "variants": {
-        "facing=up": { "model": "nostrumfairies:logistics_pylon" },
-        "facing=down": { "model": "nostrumfairies:logistics_pylon", "x": 180 }
+        "facing=up": { "model": "nostrumfairies:block/logistics_pylon" },
+        "facing=down": { "model": "nostrumfairies:block/logistics_pylon", "x": 180 }
     }
 }

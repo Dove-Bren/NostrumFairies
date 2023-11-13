@@ -2,11 +2,11 @@
     "parent": "block/cube",
 	"textures": {
         "north": "nostrumfairies:block/fey_home_fairy_side1",
-        "south": "block/log_big_oak",
+        "south": "block/dark_oak_log",
         "east": "nostrumfairies:block/fey_home_fairy_side4",
         "west": "nostrumfairies:block/fey_home_fairy_side2",
-        "up": "block/log_big_oak",
-        "down": "block/log_big_oak",
-		"particle": "block/log_big_oak"
+        "up": "block/dark_oak_log",
+        "down": "block/dark_oak_log",
+		"particle": "block/dark_oak_log"
 	}
 }

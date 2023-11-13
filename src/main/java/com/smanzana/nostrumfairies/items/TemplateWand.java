@@ -526,7 +526,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 					return def.cast();
 				}
 				
-				return null;
+				return LazyOptional.empty();
 			}
 			
 		};

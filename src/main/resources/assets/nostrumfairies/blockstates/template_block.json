@@ -1,5 +1,5 @@
 {
-    "variants": {
+	"variants": {
         "": { "model": "nostrumfairies:block/logistics_input_chest" }
     }
 }

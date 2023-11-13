@@ -3,10 +3,10 @@
 	"textures": {
         "north": "nostrumfairies:block/fey_home_fairy_side1",
         "south": "nostrumfairies:block/fey_home_fairy_side4",
-        "east": "block/log_big_oak",
-        "west": "block/log_big_oak",
-        "up": "block/log_big_oak",
-        "down": "block/log_big_oak",
-		"particle": "block/log_big_oak"
+        "east": "block/dark_oak_log",
+        "west": "block/dark_oak_log",
+        "up": "block/dark_oak_log",
+        "down": "block/dark_oak_log",
+		"particle": "block/dark_oak_log"
 	}
 }

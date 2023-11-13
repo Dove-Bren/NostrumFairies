@@ -1,9 +1,9 @@
 {
     "parent": "block/orientable",
 	"textures": {
-        "top": "block/log_big_oak",
-		"side": "block/log_big_oak",
-		"particle": "block/log_big_oak",
+        "top": "block/dark_oak_log",
+		"side": "block/dark_oak_log",
+		"particle": "block/dark_oak_log",
 		"front": "nostrumfairies:block/fey_home_fairy_front"
 	}
 }

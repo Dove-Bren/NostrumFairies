@@ -2,10 +2,10 @@
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"textures": {
-		"particle": "block/anvil_base",
-		"body": "block/anvil_base",
+		"particle": "block/anvil",
+		"body": "block/anvil",
 		"base": "block/stone",
-		"table": "block/planks_big_oak"
+		"table": "block/dark_oak_planks"
 	},
 	"elements": [
 		{

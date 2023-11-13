@@ -31,7 +31,7 @@ public class AttributeProvider implements ICapabilitySerializable<INBT> {
 			return LazyOptional.of(() -> this.instance).cast();
 		}
 		
-		return null;
+		return LazyOptional.empty();
 	}
 
 	@Override

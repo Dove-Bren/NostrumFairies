@@ -53,11 +53,11 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 		case DOWNGRADE:
 			switch (material) {
 			case AQUAMARINE:
-				return FairyItems.stoneDowngradeAquamarine;
+				return null;//FairyItems.stoneDowngradeAquamarine;
 			case EMERALD:
-				return FairyItems.stoneDowngradeEmerald;
+				return null;//FairyItems.stoneDowngradeEmerald;
 			case GARNET:
-				return FairyItems.stoneDowngradeGarnet;
+				return null;//FairyItems.stoneDowngradeGarnet;
 			case RUBY:
 				return FairyItems.stoneDowngradeRuby;
 			case SAPPHIRE:
@@ -73,19 +73,19 @@ public class FeyStone extends Item implements ILoreTagged, IFeySlotted {
 			case GARNET:
 				return FairyItems.stoneSpecGarnet;
 			case RUBY:
-				return FairyItems.stoneSpecRuby;
+				return null;//FairyItems.stoneSpecRuby;
 			case SAPPHIRE:
-				return FairyItems.stoneSpecSapphire;
+				return null;//FairyItems.stoneSpecSapphire;
 			}
 			break;
 		case UPGRADE:
 			switch (material) {
 			case AQUAMARINE:
-				return FairyItems.stoneUpgradeAquamarine;
+				return null;//FairyItems.stoneUpgradeAquamarine;
 			case EMERALD:
-				return FairyItems.stoneUpgradeEmerald;
+				return null;//FairyItems.stoneUpgradeEmerald;
 			case GARNET:
-				return FairyItems.stoneUpgradeGarnet;
+				return null;//FairyItems.stoneUpgradeGarnet;
 			case RUBY:
 				return FairyItems.stoneUpgradeRuby;
 			case SAPPHIRE:

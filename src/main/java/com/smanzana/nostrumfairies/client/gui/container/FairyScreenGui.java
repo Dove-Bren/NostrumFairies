@@ -15,7 +15,6 @@ import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.FairyGuiActionMessage;
 import com.smanzana.nostrumfairies.network.messages.FairyGuiActionMessage.GuiAction;
-import com.smanzana.nostrummagica.client.gui.container.AutoContainer;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
 import com.smanzana.nostrummagica.utils.ContainerUtil;
 import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
@@ -156,7 +155,9 @@ public class FairyScreenGui {
 	private static final int ICON_CURSOR_MINOR_WIDTH = 18 + 2;
 	private static final int ICON_CURSOR_MINOR_HEIGHT = 18 + 2;
 	
-	public static class FairyScreenContainer extends AutoContainer {
+	// Note: full path to AutoContainer because whatever I put here doesn't resolve when building outside eclipse, for
+	// some reason?
+	public static class FairyScreenContainer extends com.smanzana.nostrummagica.client.gui.container.AutoContainer {
 		
 		public static final String ID = "fairy_screen";
 		

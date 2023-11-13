@@ -1,9 +1,8 @@
 {
     "variants": {
-        "inventory": { "model": "nostrumfairies:fey_sign" },
-        "facing=north": { "model": "nostrumfairies:fey_sign", "y": 0 },
-        "facing=east": { "model": "nostrumfairies:fey_sign", "y": 90 },
-        "facing=south": { "model": "nostrumfairies:fey_sign", "y": 180 },
-        "facing=west": { "model": "nostrumfairies:fey_sign", "y": 270 }
+        "facing=north": { "model": "nostrumfairies:block/fey_sign", "y": 0 },
+        "facing=east": { "model": "nostrumfairies:block/fey_sign", "y": 90 },
+        "facing=south": { "model": "nostrumfairies:block/fey_sign", "y": 180 },
+        "facing=west": { "model": "nostrumfairies:block/fey_sign", "y": 270 }
     }
 }

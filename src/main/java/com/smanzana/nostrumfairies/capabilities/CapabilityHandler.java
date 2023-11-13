@@ -29,7 +29,7 @@ public class CapabilityHandler {
 			event.addCapability(FEY_CAP_LOC, new AttributeProvider(event.getObject()));
 			
 			if (event.getObject().world != null && event.getObject().world.isRemote) {
-				NostrumFairies.proxy.requestCapabilityRefresh();
+				//NostrumFairies.proxy.requestCapabilityRefresh();
 			}
 		}
 	}

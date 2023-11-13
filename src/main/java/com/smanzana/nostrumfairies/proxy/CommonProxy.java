@@ -131,8 +131,8 @@ public class CommonProxy {
     }
     
     // Aetheria items
-	@ObjectHolder(AetheriaIDs.GINSENG_FLOWER) public static Item ginsengFlower;
-	@ObjectHolder(AetheriaIDs.MANDRAKE_FLOWER) public static Item mandrakeFlower;
+	@ObjectHolder("nostrumaetheria:" + AetheriaIDs.GINSENG_FLOWER) public static Item ginsengFlower;
+	@ObjectHolder("nostrumaetheria:" + AetheriaIDs.MANDRAKE_FLOWER) public static Item mandrakeFlower;
     
     private void registerRituals() {
     	

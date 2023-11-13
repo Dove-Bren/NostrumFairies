@@ -2,8 +2,8 @@
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"textures": {
-		"particle": "block/log_big_oak",
-		"table": "block/log_big_oak",
+		"particle": "block/dark_oak_log",
+		"table": "block/dark_oak_log",
 		"base": "block/stone",
         "leaves": "nostrumfairies:block/leaves"
 	},

@@ -1,5 +1,5 @@
 {
     "variants": {
-        "normal": { "model": "nostrumfairies:logistics_reinforced_chest_iron" }
+        "": { "model": "nostrumfairies:block/logistics_reinforced_chest_iron" }
     }
 }

@@ -1,33 +1,32 @@
 {
     "variants": {
-        "inventory": { "model": "nostrumfairies:fey_home_elf_base" },
-        "facing=north,func=center": { "model": "nostrumfairies:fey_home_elf_base", "y": 0 },
-        "facing=east,func=center": { "model": "nostrumfairies:fey_home_elf_base", "y": 90 },
-        "facing=south,func=center": { "model": "nostrumfairies:fey_home_elf_base", "y": 180 },
-        "facing=west,func=center": { "model": "nostrumfairies:fey_home_elf_base", "y": 270 },
+        "facing=north,func=center": { "model": "nostrumfairies:block/fey_home_elf_base", "y": 0 },
+        "facing=east,func=center": { "model": "nostrumfairies:block/fey_home_elf_base", "y": 90 },
+        "facing=south,func=center": { "model": "nostrumfairies:block/fey_home_elf_base", "y": 180 },
+        "facing=west,func=center": { "model": "nostrumfairies:block/fey_home_elf_base", "y": 270 },
         "facing=north,func=top": [
-            { "model": "nostrumfairies:fey_home_elf_trunk_1", "y": 0 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_2", "y": 0 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_3", "y": 0 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_4", "y": 0 }
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_1", "y": 0 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_2", "y": 0 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_3", "y": 0 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_4", "y": 0 }
         ],
         "facing=east,func=top": [
-            { "model": "nostrumfairies:fey_home_elf_trunk_1", "y": 90 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_2", "y": 90 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_3", "y": 90 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_4", "y": 90 }
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_1", "y": 90 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_2", "y": 90 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_3", "y": 90 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_4", "y": 90 }
         ],
         "facing=south,func=top": [
-            { "model": "nostrumfairies:fey_home_elf_trunk_1", "y": 180 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_2", "y": 180 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_3", "y": 180 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_4", "y": 180 }
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_1", "y": 180 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_2", "y": 180 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_3", "y": 180 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_4", "y": 180 }
         ],
         "facing=west,func=top": [
-            { "model": "nostrumfairies:fey_home_elf_trunk_1", "y": 270 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_2", "y": 270 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_3", "y": 270 },
-            { "model": "nostrumfairies:fey_home_elf_trunk_4", "y": 270 }
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_1", "y": 270 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_2", "y": 270 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_3", "y": 270 },
+            { "model": "nostrumfairies:block/fey_home_elf_trunk_4", "y": 270 }
         ]
     }
 }

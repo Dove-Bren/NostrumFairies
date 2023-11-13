@@ -1,5 +1,5 @@
 {
     "variants": {
-        "normal": { "model": "nostrumfairies:fey_bush" }
+        "": { "model": "nostrumfairies:block/fey_bush" }
     }
 }

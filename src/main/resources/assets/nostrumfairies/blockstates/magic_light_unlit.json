@@ -1,9 +1,9 @@
 {
     "variants": {
-        "age=0": { "model": "nostrumfairies:lantern_unlit" },
-        "age=1": { "model": "nostrumfairies:lantern_unlit" },
-        "age=2": { "model": "nostrumfairies:lantern_unlit" },
-        "age=3": { "model": "nostrumfairies:lantern_unlit" },
-        "age=4": { "model": "nostrumfairies:lantern_unlit" }
+        "age=0": { "model": "nostrumfairies:block/lantern_unlit" },
+        "age=1": { "model": "nostrumfairies:block/lantern_unlit" },
+        "age=2": { "model": "nostrumfairies:block/lantern_unlit" },
+        "age=3": { "model": "nostrumfairies:block/lantern_unlit" },
+        "age=4": { "model": "nostrumfairies:block/lantern_unlit" }
     }
 }

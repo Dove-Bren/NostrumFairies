@@ -1,9 +1,8 @@
 {
     "variants": {
-        "inventory": { "model": "nostrumfairies:logistics_crafting_station_dwarf" },
-        "facing=north": { "model": "nostrumfairies:logistics_crafting_station_dwarf", "y": 90 },
-        "facing=east": { "model": "nostrumfairies:logistics_crafting_station_dwarf", "y": 180},
-        "facing=south": { "model": "nostrumfairies:logistics_crafting_station_dwarf", "y": 270 },
-        "facing=west": { "model": "nostrumfairies:logistics_crafting_station_dwarf", "y": 0 }
+        "facing=north": { "model": "nostrumfairies:block/logistics_crafting_station_dwarf", "y": 90 },
+        "facing=east": { "model": "nostrumfairies:block/logistics_crafting_station_dwarf", "y": 180},
+        "facing=south": { "model": "nostrumfairies:block/logistics_crafting_station_dwarf", "y": 270 },
+        "facing=west": { "model": "nostrumfairies:block/logistics_crafting_station_dwarf", "y": 0 }
     }
 }

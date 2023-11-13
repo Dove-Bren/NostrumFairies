@@ -81,10 +81,10 @@ public class FairyBlocks {
 		registerBlockItem(inputChest, inputChest.getRegistryName(), registry);
 		registerBlockItem(logisticsPylon, logisticsPylon.getRegistryName(), registry);
 		registerBlockItem(logisticsSensor, logisticsSensor.getRegistryName(), registry);
-		registerBlockItem(magicLightBright, magicLightBright.getRegistryName(), registry);
-		registerBlockItem(magicLightMedium, magicLightMedium.getRegistryName(), registry);
-		registerBlockItem(magicLightDim, magicLightDim.getRegistryName(), registry);
-		registerBlockItem(magicLightUnlit, magicLightUnlit.getRegistryName(), registry);
+//		registerBlockItem(magicLightBright, magicLightBright.getRegistryName(), registry);
+//		registerBlockItem(magicLightMedium, magicLightMedium.getRegistryName(), registry);
+//		registerBlockItem(magicLightDim, magicLightDim.getRegistryName(), registry);
+//		registerBlockItem(magicLightUnlit, magicLightUnlit.getRegistryName(), registry);
 		registerBlockItem(miningBlock, miningBlock.getRegistryName(), registry);
 		registerBlockItem(outputChest, outputChest.getRegistryName(), registry);
 		registerBlockItem(outputPanel, outputPanel.getRegistryName(), registry);
@@ -93,7 +93,7 @@ public class FairyBlocks {
 		registerBlockItem(reinforcedDiamondChest, reinforcedDiamondChest.getRegistryName(), registry);
 		registerBlockItem(storageChest, storageChest.getRegistryName(), registry);
 		registerBlockItem(storageMonitor, storageMonitor.getRegistryName(), registry);
-		registerBlockItem(templateBlock, templateBlock.getRegistryName(), registry);
+//		registerBlockItem(templateBlock, templateBlock.getRegistryName(), registry);
 		registerBlockItem(woodcuttingBlock, woodcuttingBlock.getRegistryName(), registry);
 	}
 	

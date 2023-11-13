@@ -1,8 +1,8 @@
 {
     "variants": {
-        "facing=north": { "model": "nostrumfairies:logistics_storage_monitor", "y": 0 },
-        "facing=east": { "model": "nostrumfairies:logistics_storage_monitor", "y": 90 },
-        "facing=south": { "model": "nostrumfairies:logistics_storage_monitor", "y": 180 },
-        "facing=west": { "model": "nostrumfairies:logistics_storage_monitor", "y": 270 }
+        "facing=north": { "model": "nostrumfairies:block/logistics_storage_monitor", "y": 0 },
+        "facing=east": { "model": "nostrumfairies:block/logistics_storage_monitor", "y": 90 },
+        "facing=south": { "model": "nostrumfairies:block/logistics_storage_monitor", "y": 180 },
+        "facing=west": { "model": "nostrumfairies:block/logistics_storage_monitor", "y": 270 }
     }
 }

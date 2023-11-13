@@ -130,11 +130,13 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		}
 		
 		CompoundNBT tag = stack.getTag();
-		ResidentType type;
-		try {
-			type = ResidentType.valueOf(tag.getString(NBT_FEY_TYPE).toUpperCase());
-		} catch (Exception e) {
-			type = null;
+		ResidentType type = null;
+		if (tag.contains(NBT_FEY_TYPE)) {
+			try {
+				type = ResidentType.valueOf(tag.getString(NBT_FEY_TYPE).toUpperCase());
+			} catch (Exception e) {
+				type = null;
+			}
 		}
 		
 		return type;
@@ -146,7 +148,9 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			tag = new CompoundNBT();
 		}
 		
-		tag.putString(NBT_FEY_TYPE, type.name());
+		if (type != null) {
+			tag.putString(NBT_FEY_TYPE, type.name());
+		}
 		
 		stack.setTag(tag);
 	}

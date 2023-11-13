@@ -1,7 +1,6 @@
 package com.smanzana.nostrumfairies.effect;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.potion.Effect;
 import net.minecraftforge.event.RegistryEvent;
@@ -10,7 +9,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.ObjectHolder;
 
-@Mod.EventBusSubscriber(modid = NostrumMagica.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@Mod.EventBusSubscriber(modid = NostrumFairies.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 @ObjectHolder(NostrumFairies.MODID)
 public class FeyEffects {
 
