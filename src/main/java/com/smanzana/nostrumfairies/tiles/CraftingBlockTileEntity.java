@@ -27,7 +27,6 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
-import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
@@ -37,13 +36,14 @@ import net.minecraft.item.crafting.ICraftingRecipe;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
-											implements ILogisticsTaskListener, ITickable, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
+											implements ILogisticsTaskListener, ITickableTileEntity, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
 
 	private static final String NBT_TEMPLATES = "templates";
 	private static final String NBT_BUILD_POINTS = "build_points";

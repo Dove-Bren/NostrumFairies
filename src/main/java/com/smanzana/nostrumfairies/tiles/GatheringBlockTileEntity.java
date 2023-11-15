@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
@@ -16,14 +17,13 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrummagica.items.NostrumItems;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
@@ -32,7 +32,7 @@ import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.ItemPickupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsTaskListener, IFeySign {
+public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity, ILogisticsTaskListener, IFeySign {
 	
 	protected static final ILogisticsTaskUniqueData<ItemEntity> GATHERING_ITEM = new ILogisticsTaskUniqueData<ItemEntity>() { };
 
@@ -202,10 +202,10 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		}
 	}
 	
-	private static final ItemStack SIGN_ICON = new ItemStack(NostrumItems.reagentBag);
+	private static final ResourceLocation SIGN_ICON = new ResourceLocation(NostrumFairies.MODID, "textures/block/logistics_gathering_block_icon.png");
 
 	@Override
-	public ItemStack getSignIcon(IFeySign sign) {
+	public ResourceLocation getSignIcon(IFeySign sign) {
 		return SIGN_ICON;
 	}
 	

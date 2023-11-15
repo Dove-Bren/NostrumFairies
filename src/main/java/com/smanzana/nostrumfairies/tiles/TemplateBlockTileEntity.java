@@ -10,6 +10,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
+import net.minecraft.world.World;
 
 public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	
@@ -43,9 +44,20 @@ public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	}
 	
 	@Override
+	public void setWorld(World worldIn) {
+		super.setWorld(worldIn);
+	}
+	
+	@Override
 	protected @Nonnull BlockState refreshState() {
 		// Don't detect any world blocks and just send ours
 		return getTemplateState() == null ? Blocks.STONE.getDefaultState() : getTemplateState();
+	}
+	
+	// Notably, this makes sending chunked updates AND discrete updates send the whole TE instead of a trimmed version
+	@Override
+	public CompoundNBT getUpdateTag() {
+		return this.write(new CompoundNBT());
 	}
 	
 	@Override

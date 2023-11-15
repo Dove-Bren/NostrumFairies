@@ -2,5 +2,19 @@
     "parent": "item/handheld",
     "textures": {
         "layer0": "nostrumfairies:item/template_wand"
-    }
+    },
+	"overrides": [
+		{
+			"predicate": {
+				"mode": 2
+			},
+			"model": "nostrumfairies:item/template_wand_write"
+		},
+		{
+			"predicate": {
+				"mode": 3
+			},
+			"model": "nostrumfairies:item/template_wand_read"
+		}
+	]
 }

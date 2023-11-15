@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.client.render.stesr;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -33,5 +34,14 @@ public interface StaticTESR<T extends TileEntity> {
 	 * @param world
 	 */
 	public void render(T tileEntity, double x, double y, double z, BlockState state, World world, BufferBuilder buffer);
+	
+	/**
+	 * Return the vertex format (the order the rendering data is going to be added) that this static TESR wants to use.
+	 * Some good options are DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL if using RenderFunc's drawSpaceQuad, or
+	 * .Item/.Block if rendering item or block models.
+	 * @param tileEntity
+	 * @return
+	 */
+	public VertexFormat getRenderFormat(T tileEntity);
 	
 }

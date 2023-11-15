@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FarmingBlock;
 import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
@@ -25,18 +26,19 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CropsBlock;
-import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IItemProvider;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
-public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITickable,  ILogisticsTaskListener, IFeySign {
+public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity,  ILogisticsTaskListener, IFeySign {
 
 	private static final Map<Integer, ItemStack> SeedMap = new HashMap<>(); // int id of blockstate to itemstack seed
 	
@@ -281,10 +283,10 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 		}
 	}
 	
-	private static final ItemStack SIGN_ICON = new ItemStack(Items.IRON_HOE);
+	private static final ResourceLocation SIGN_ICON = new ResourceLocation(NostrumFairies.MODID, "textures/block/logistics_farming_block_icon.png");
 
 	@Override
-	public ItemStack getSignIcon(IFeySign sign) {
+	public ResourceLocation getSignIcon(IFeySign sign) {
 		return SIGN_ICON;
 	}
 	

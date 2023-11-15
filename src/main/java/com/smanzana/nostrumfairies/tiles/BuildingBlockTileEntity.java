@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.Sets;
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BuildingBlock;
 import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
@@ -25,20 +26,20 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITickable,  ILogisticsTaskListener, IFeySign {
+public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity,  ILogisticsTaskListener, IFeySign {
 
 	private static final String NBT_SLOT = "itemslot";
 	
@@ -304,10 +305,10 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		return inv;
 	}
 	
-	private static final ItemStack SIGN_ICON = new ItemStack(Blocks.BRICKS);
+	private static final ResourceLocation SIGN_ICON = new ResourceLocation(NostrumFairies.MODID, "textures/block/logistics_building_block_icon.png");
 
 	@Override
-	public ItemStack getSignIcon(IFeySign sign) {
+	public ResourceLocation getSignIcon(IFeySign sign) {
 		return SIGN_ICON;
 	}
 	

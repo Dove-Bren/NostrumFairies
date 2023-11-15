@@ -5,6 +5,7 @@ import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.state.IntegerProperty;
@@ -64,7 +65,7 @@ public class MagicLight extends Block {
 	
 	@Override
 	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		if (!Block.hasSolidSide(worldIn.getBlockState(pos.down()), worldIn, pos.down(), Direction.UP)
+		if (!Block.hasSolidSide(worldIn.getBlockState(pos.up()), worldIn, pos.up(), Direction.DOWN)
 				|| worldIn.getBlockState(pos.up()).getMaterial() != Material.ROCK) {
 			return false;
 		}
@@ -75,8 +76,8 @@ public class MagicLight extends Block {
 	
 	@Override
 	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
-		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
-			return null;
+		if (facing == Direction.UP && !isValidPosition(stateIn, world, pos)) {
+			return Blocks.AIR.getDefaultState();
 		}
 		return stateIn;
 	}

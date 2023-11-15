@@ -52,6 +52,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 
 public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRangedAttackMob {
 	
@@ -643,7 +644,8 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			this.remove();
+			//this.remove();
+			((ServerWorld) world).removeEntity(this);
 			world.addEntity(replacement);
 		}
 		

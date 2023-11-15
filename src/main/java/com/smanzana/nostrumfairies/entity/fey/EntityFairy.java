@@ -610,7 +610,8 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 			this.parentEntity = entity;
 		}
 
-		public void onUpdateMoveHelper() {
+		@Override
+		public void tick() {
 			if (this.action == MovementController.Action.MOVE_TO) {
 				double d0 = this.posX - this.parentEntity.posX;
 				double d1 = this.posY - this.parentEntity.posY;

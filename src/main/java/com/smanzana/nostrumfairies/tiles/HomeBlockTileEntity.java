@@ -44,16 +44,18 @@ import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
+import com.smanzana.nostrummagica.utils.Entities;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.texture.ITickable;
+import net.minecraft.entity.Entity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -63,7 +65,7 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickable, IAetherHandlerProvider, IAetherComponentListener {
+public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity, IAetherHandlerProvider, IAetherComponentListener {
 	
 	public static class HomeBlockSlotInventory extends Inventory {
 
@@ -378,20 +380,23 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	protected void refreshFeyList() {
 		for (Entry<UUID, HomeBlockTileEntity.FeyAwayRecord> entry : feyCacheMap.entrySet()) {
 			entry.getValue().cache = null;
-		}
-		
-		if (world.isRemote) {
-			return;
-		}
-		
-		((ServerWorld) world).getEntities().forEach((ent) -> {
-			if (ent instanceof EntityFeyBase && feyCacheMap.containsKey(ent.getUniqueID())) {
-				HomeBlockTileEntity.FeyAwayRecord record = feyCacheMap.get(ent.getUniqueID());
+			
+			Entity ent = Entities.FindEntity(world, entry.getKey());
+			if (ent != null) {
 				int idx = findFeySlot(ent.getUniqueID());
-				record.cache = refreshFey(idx, (EntityFeyBase) ent);
-				record.tickLastSeen = ticksExisted;
+				entry.getValue().cache = refreshFey(idx, (EntityFeyBase) ent);
+				entry.getValue().tickLastSeen = ticksExisted;
 			}
-		});
+		}
+		
+//		((ServerWorld) world).getEntities().forEach((ent) -> {
+//			if (ent instanceof EntityFeyBase && feyCacheMap.containsKey(ent.getUniqueID())) {
+//				HomeBlockTileEntity.FeyAwayRecord record = feyCacheMap.get(ent.getUniqueID());
+//				int idx = findFeySlot(ent.getUniqueID());
+//				record.cache = refreshFey(idx, (EntityFeyBase) ent);
+//				record.tickLastSeen = ticksExisted;
+//			}
+//		});
 	}
 	
 	protected void purgeFeyList() {

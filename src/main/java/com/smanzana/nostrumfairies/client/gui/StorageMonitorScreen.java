@@ -432,15 +432,13 @@ public class StorageMonitorScreen extends Screen {
 			final int spilloverRows = rows - GUI_CELL_ROWS; // scroll bar represents this many rows of pixels
 			
 			if (spilloverRows > 0) {
-				final double amt = dx / (double) spilloverRows;
+				final double amt = -dx / (double) spilloverRows;
 				scroll = Math.min(1.0, Math.max(0.0, scroll + amt));
 				scrollLag = scroll;
 			}
 		} else {
 			scroll = 0.0;
 		}
-		
-		int unused; // Check this
 		
 		return true;
 	}

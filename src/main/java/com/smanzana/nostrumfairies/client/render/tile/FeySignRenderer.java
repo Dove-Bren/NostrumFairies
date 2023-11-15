@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.client.render.tile;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESR;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
@@ -10,13 +11,13 @@ import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.texture.AtlasTexture;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -60,33 +61,70 @@ public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> 
 		return TRANSFORMS[facing.getHorizontalIndex()];
 	}
 	
+	@Override
+	public VertexFormat getRenderFormat(T te) {
+		return DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL;
+	}
+	
 	//@Override
 	public void renderTileEntityFast(T te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 		Minecraft mc = Minecraft.getInstance();
 		
-		ItemStack icon = te.getSignIcon(te);
-		IBakedModel model = null;
-		if (!icon.isEmpty()) {
-			model = mc.getItemRenderer().getItemModelMesher().getItemModel(icon);
-		}
+		ResourceLocation signIcon = te.getSignIcon(te);
+		mc.getTextureManager().bindTexture(signIcon);
 		
-		if (model == null || model == mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel()) {
-			model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());
-		}
-		
-		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-		
-		final int color = 0xFFFFFFFF;
+		//final int color = 0xFFFFFFFF;
 		final Direction facing = te.getSignFacing(te);
 		final Vector3f offset = getOffset(te, facing);
-		final Matrix4f transform = getTransform(te, facing);
+		//final Matrix4f transform = getTransform(te, facing);
 		
-		RenderFuncs.RenderModelWithColor(model, color, buffer, offset, transform);
+		final float yaw = facing.getOpposite().getHorizontalAngle();
+		final float pitch = 0;
+		float rX = MathHelper.cos(yaw * ((float)Math.PI / 180F));
+		float rYZ = MathHelper.sin(yaw * ((float)Math.PI / 180F));
+		float rXY = -rYZ * MathHelper.sin(pitch * ((float)Math.PI / 180F));
+		float rXZ = rX * MathHelper.sin(pitch * ((float)Math.PI / 180F));
+		float rZ = MathHelper.cos(pitch * ((float)Math.PI / 180F));
+		
+		rYZ += .5f;
+		
+		//f, f4, f1, f2, f3
+		//float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ
+		
+		GlStateManager.pushMatrix();
+		GlStateManager.color4f(1f, 1f, 1f, 1f);
+		RenderFuncs.renderSpaceQuad(buffer, offset.x, offset.y, offset.z,
+				rX, rXZ, rZ, rYZ, rXY,
+				ICON_SIZE, 1f, 1f, 1f, 1f);
+		GlStateManager.popMatrix();
+		
+//		IBakedModel model = null;
+//		if (!icon.isEmpty()) {
+//			model = mc.getItemRenderer().getItemModelMesher().getItemModel(icon);
+//		}
+//		
+//		if (model == null || model == mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel()) {
+//			model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());
+//		}
+		
+//		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
+//		
+//		final int color = 0xFFFFFFFF;
+//		final Direction facing = te.getSignFacing(te);
+//		final Vector3f offset = getOffset(te, facing);
+//		final Matrix4f transform = getTransform(te, facing);
+//		
+//		GlStateManager.pushMatrix();
+//		GlStateManager.scalef(ICON_SIZE / 2, ICON_SIZE, .001f);
+//		RenderFuncs.ItemRenderer(icon);
+		//RenderFuncs.RenderModelWithColor(model, color, buffer, offset, transform);
+//		GlStateManager.popMatrix();
 	}
 
 	@Override
 	public void render(T tileEntity, double x, double y, double z, BlockState state, World world,
 			BufferBuilder buffer) {
-		renderTileEntityFast(tileEntity, x, y, z, 0, 0, 0, buffer);
+		//renderTileEntityFast(tileEntity, x, y, z, 0, 0, 0, buffer);
+		int unused; // TODO: Remove this whole thing!
 	}
 }

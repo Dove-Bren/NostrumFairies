@@ -9,6 +9,7 @@ import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -36,11 +37,11 @@ public class StorageMonitor extends FeyContainerBlock {
 	
 	// TODO what about viewing tasks? Condensed tasks that is.
 	private static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
-	private static final double BB_MINOR = 2.0 / 16.0;
-	private static final VoxelShape AABB_N = Block.makeCuboidShape(0, 0, 1 - BB_MINOR, 1, 1, 1);
-	private static final VoxelShape AABB_E = Block.makeCuboidShape(0, 0, 0, BB_MINOR, 1, 1);
-	private static final VoxelShape AABB_S = Block.makeCuboidShape(0, 0, 0, 1, 1, BB_MINOR);
-	private static final VoxelShape AABB_W = Block.makeCuboidShape(1 - BB_MINOR, 0, 0, 1, 1, 1);
+	private static final double BB_MINOR = 2.0;
+	private static final VoxelShape AABB_N = Block.makeCuboidShape(0, 0, 16 - BB_MINOR, 16, 16, 16);
+	private static final VoxelShape AABB_E = Block.makeCuboidShape(0, 0, 0, BB_MINOR, 16, 16);
+	private static final VoxelShape AABB_S = Block.makeCuboidShape(0, 0, 0, 16, 16, BB_MINOR);
+	private static final VoxelShape AABB_W = Block.makeCuboidShape(16 - BB_MINOR, 0, 0, 16, 16, 16);
 	public static final String ID = "logistics_storage_monitor";
 	
 	public StorageMonitor() {
@@ -61,7 +62,7 @@ public class StorageMonitor extends FeyContainerBlock {
 	}
 	
 	protected boolean canPlaceAt(IWorldReader worldIn, BlockPos pos, Direction side) {
-		if (!Block.hasSolidSide(worldIn.getBlockState(pos.down()), worldIn, pos.down(), Direction.UP)) {
+		if (!Block.hasSolidSide(worldIn.getBlockState(pos.offset(side.getOpposite())), worldIn, pos.offset(side.getOpposite()), side)) {
 			return false;
 		}
 		
@@ -119,7 +120,7 @@ public class StorageMonitor extends FeyContainerBlock {
 	@Override
 	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
 		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
-			return null;
+			return Blocks.AIR.getDefaultState();
 		}
 		return stateIn;
 	}

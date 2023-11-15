@@ -23,12 +23,12 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants.NBT;
 
 /**
@@ -152,7 +152,6 @@ public class SoulJar extends Item implements ILoreTagged {
 		final World worldIn = context.getWorld();
 		final PlayerEntity playerIn = context.getPlayer();
 		final Hand hand = context.getHand();
-		final BlockPos pos = context.getPos();
 		final Vec3d hitPos = context.getHitVec();
 		
 		if (worldIn.isRemote) {
@@ -162,7 +161,7 @@ public class SoulJar extends Item implements ILoreTagged {
 		ItemStack stack = playerIn.getHeldItem(hand);
 		if (isFilled(stack)) {
 			// Drop entity at the provided spot
-			LivingEntity ent = spawnStoredEntity(stack, worldIn, pos.getX() + hitPos.x, pos.getY() + hitPos.y, pos.getZ() + hitPos.z);
+			LivingEntity ent = spawnStoredEntity(stack, worldIn, hitPos.x, hitPos.y, hitPos.z);
 			if (ent != null) {
 				stack = clearEntity(stack);
 				playerIn.setHeldItem(hand, stack);
@@ -207,8 +206,8 @@ public class SoulJar extends Item implements ILoreTagged {
 			
 			if (!filled.isEmpty()) {
 				playerIn.setHeldItem(hand, filled);
-				target.remove();
-				//playerIn.world.removeEntityDangerously(target);
+				//target.remove();
+				((ServerWorld) playerIn.world).removeEntity(target);
 				return true;
 			}
 		}

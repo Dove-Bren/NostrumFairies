@@ -6,6 +6,7 @@ import com.smanzana.nostrumfairies.tiles.PylonTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
@@ -68,12 +69,12 @@ public class LogisticsPylon extends FeyContainerBlock {
 	@Override
 	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
 		if (facing != getFacing(stateIn).getOpposite()) {
-			return null; // Not what we're attached to
+			return stateIn; // Not what we're attached to
 		}
 		
 		BlockPos attachedPos = pos.offset(facing.getOpposite());
 		if (!Block.hasSolidSide(world.getBlockState(attachedPos), world, attachedPos, facing.getOpposite())) {
-			return null;
+			return Blocks.AIR.getDefaultState();
 		}
 		
 		return stateIn;

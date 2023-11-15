@@ -44,6 +44,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
@@ -714,7 +715,8 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			this.remove();
+			//this.remove();
+			((ServerWorld) world).removeEntity(this);
 			world.addEntity(replacement);
 		}
 		

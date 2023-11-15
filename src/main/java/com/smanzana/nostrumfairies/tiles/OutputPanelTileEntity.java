@@ -21,13 +21,13 @@ import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
@@ -37,7 +37,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class OutputPanelTileEntity extends LogisticsTileEntity implements ITickable, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
+public class OutputPanelTileEntity extends LogisticsTileEntity implements ITickableTileEntity, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
 
 	private static final int SLOTS = 3;
 	private static final String NBT_TEMPLATES = "templates";

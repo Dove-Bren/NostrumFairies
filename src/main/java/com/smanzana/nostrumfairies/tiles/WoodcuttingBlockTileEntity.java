@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.blocks.WoodcuttingBlock;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
@@ -22,16 +23,17 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 
-public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements ITickable,  ILogisticsTaskListener, IFeySign {
+public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity,  ILogisticsTaskListener, IFeySign {
 	
 	protected static final ILogisticsTaskUniqueData<BlockPos> WOODCUTTING_POSITION = new ILogisticsTaskUniqueData<BlockPos>() { };
 
@@ -331,10 +333,10 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 		}
 	}
 	
-	private static final ItemStack SIGN_ICON = new ItemStack(Items.IRON_AXE);
+	private static final ResourceLocation SIGN_ICON = new ResourceLocation(NostrumFairies.MODID, "textures/block/logistics_woodcutting_block_icon.png");
 
 	@Override
-	public ItemStack getSignIcon(IFeySign sign) {
+	public ResourceLocation getSignIcon(IFeySign sign) {
 		return SIGN_ICON;
 	}
 	

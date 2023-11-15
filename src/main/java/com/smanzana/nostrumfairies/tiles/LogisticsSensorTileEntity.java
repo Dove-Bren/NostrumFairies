@@ -4,11 +4,11 @@ import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 
-import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.world.World;
 
-public class LogisticsSensorTileEntity extends LogisticsTileEntity implements ITickable, ILogicListener, ILogisticsLogicProvider {
+public class LogisticsSensorTileEntity extends LogisticsTileEntity implements ITickableTileEntity, ILogicListener, ILogisticsLogicProvider {
 	
 	private boolean logicLastWorld;
 	

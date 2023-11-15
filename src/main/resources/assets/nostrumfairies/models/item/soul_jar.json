@@ -2,5 +2,13 @@
     "parent": "item/handheld",
     "textures": {
         "layer0": "nostrumfairies:item/soul_jar"
-    }
+    },
+	"overrides": [
+        {
+            "predicate": {
+                "filled": 1
+            },
+            "model": "nostrumfairies:item/soul_jar_filled"
+        }
+    ]
 }

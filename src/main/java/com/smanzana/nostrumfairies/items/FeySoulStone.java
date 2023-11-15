@@ -24,7 +24,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -344,7 +343,6 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		final World worldIn = context.getWorld();
 		final PlayerEntity playerIn = context.getPlayer();
 		final Hand hand = context.getHand();
-		final BlockPos pos = context.getPos();
 		final Vec3d hitPos = context.getHitVec();
 		
 		if (worldIn.isRemote) {
@@ -354,7 +352,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		ItemStack stack = playerIn.getHeldItem(hand);
 		if (this.hasStoredFey(stack)) {
 			// Drop entity at the provided spot
-			EntityFeyBase fey = spawnStoredEntity(stack, worldIn, pos.getX() + hitPos.x, pos.getY() + hitPos.y, pos.getZ() + hitPos.z);
+			EntityFeyBase fey = spawnStoredEntity(stack, worldIn, hitPos.x, hitPos.y, hitPos.z);
 			if (fey != null) {
 				stack = clearEntity(stack);
 				playerIn.setHeldItem(hand, stack);

@@ -162,6 +162,11 @@ public class TemplateBlock extends MimicBlock {
 	}
 	
 	@Override
+	public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+		return VoxelShapes.empty();
+	}
+	
+	@Override
 	public boolean propagatesSkylightDown(BlockState state, IBlockReader world, BlockPos pos) {
 		return true;
 	}
@@ -190,7 +195,7 @@ public class TemplateBlock extends MimicBlock {
 	@Override
 	@OnlyIn(Dist.CLIENT)
 	public BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+		return BlockRenderType.INVISIBLE;
 	}
 	
 	protected static @Nullable TemplateBlockTileEntity GetEntity(IBlockReader world, BlockPos pos) {

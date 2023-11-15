@@ -18,7 +18,7 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.AtlasTexture;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -87,7 +87,8 @@ public class StaticTESRRenderer {
 			}
 			System.out.println("Clearing " + cache.size() + " cached renders");
 			cache.clear();
-		} else if (updatesCopy != null) {
+		}
+		if (updatesCopy != null) {
 			for (Location loc : updatesCopy.keySet()) {
 				RenderTarget put = updatesCopy.get(loc);
 				RenderTarget existing = cache.get(loc);
@@ -117,13 +118,14 @@ public class StaticTESRRenderer {
 	}
 	
 	private <T extends TileEntity> int compile(T te, StaticTESR<T> render) {
+		final VertexFormat format = render.getRenderFormat(te);
 		int list = GLAllocation.generateDisplayLists(1);
 		Tessellator tess = Tessellator.getInstance();
 		BufferBuilder buffer = tess.getBuffer();
 		
 		
 		GlStateManager.newList(list, GL11.GL_COMPILE);
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+		buffer.begin(GL11.GL_QUADS, format);
 		{
 			BlockPos pos = te.getPos();
 			World world = te.getWorld();
@@ -137,14 +139,14 @@ public class StaticTESRRenderer {
 	}
 	
 	private void drawTarget(RenderTarget target, Minecraft mc, ClientPlayerEntity player, float partialTicks) {
-		final double eyeY = player.getEyeHeight();
-		Vec3d playerPos = player.getEyePosition(partialTicks).subtract(0, eyeY, 0);
+		Vec3d playerPos = mc.gameRenderer.getActiveRenderInfo().getProjectedView();//player.getEyePosition(partialTicks).subtract(0, eyeY, 0);
 		BlockPos pos = target.te.getPos();
 		Vec3d offset = new Vec3d(pos.getX() - playerPos.x,
 				pos.getY() - playerPos.y,
 				pos.getZ() - playerPos.z);
 		
 		//GlStateManager.enableLighting();
+		GlStateManager.color4f(1f, 1f, 1f, 1f);
 		GlStateManager.enableBlend();
 		GlStateManager.enableAlphaTest();
 		

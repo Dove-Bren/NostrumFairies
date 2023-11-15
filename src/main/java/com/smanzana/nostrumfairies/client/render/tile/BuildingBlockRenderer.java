@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.client.render.tile;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
@@ -65,9 +66,11 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 					//.scale(new Vector3f(.5f, .5f, .5f));
 					//.rotate(90f, new Vector3f(1f, 0, 0));
 					;
-			int unused; // review this; used to scale down by .5
-			
+
+			GlStateManager.pushMatrix();
+			GlStateManager.scalef(.5f, .5f, .5f);
 			RenderFuncs.RenderModelWithColor(model, color, buffer, offset, transform);
+			GlStateManager.popMatrix();
 		}
 	}
 }

@@ -88,6 +88,7 @@ import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
 import net.minecraftforge.client.event.InputEvent.MouseScrollEvent;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -269,6 +270,23 @@ public class ClientProxy extends CommonProxy {
 			ModelResourceLocation loc = BlockModelShapes.getModelLocation(state);
 			registry.put(loc, new MimicBlockBakedModel(registry.get(loc))); // Put a new mimic model wrapped around the default one
 		}
+	}
+	
+	@SubscribeEvent
+	public void stitchEventPre(TextureStitchEvent.Pre event) {
+		// Note: called multiple times for different texture atlases.
+		// Using what Botania does
+		if(event.getMap() != Minecraft.getInstance().getTextureMap()) {
+			return;
+		}
+		
+		// We have to request loading textures that aren't explicitly loaded by any of the normal registered models.
+		// That means entity OBJ models, or textures we load on the fly, etc.
+		event.addSprite(new ResourceLocation(NostrumFairies.MODID, "block/logistics_gathering_block_icon"));
+		event.addSprite(new ResourceLocation(NostrumFairies.MODID, "block/logistics_farming_block_icon"));
+		event.addSprite(new ResourceLocation(NostrumFairies.MODID, "block/logistics_building_block_icon"));
+		event.addSprite(new ResourceLocation(NostrumFairies.MODID, "block/logistics_mining_block_icon"));
+		event.addSprite(new ResourceLocation(NostrumFairies.MODID, "block/logistics_woodcutting_block_icon"));
 	}
 	
 	@SubscribeEvent

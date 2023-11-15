@@ -80,6 +80,7 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
@@ -1211,8 +1212,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			this.remove();
-			//world.removeEntityDangerously(this);
+			((ServerWorld) world).removeEntity(this);
 			world.addEntity(replacement);
 		}
 		

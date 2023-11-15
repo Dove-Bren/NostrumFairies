@@ -10,6 +10,7 @@ import com.smanzana.nostrummagica.NostrumMagica;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
@@ -86,7 +87,7 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 	@Override
 	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
 		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
-			return null;
+			return Blocks.AIR.getDefaultState();
 		}
 		return stateIn;
 	}

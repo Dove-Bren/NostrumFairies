@@ -5,6 +5,7 @@ import com.smanzana.nostrumfairies.tiles.WoodcuttingBlockTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -83,7 +84,7 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	@Override
 	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
 		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
-			return null;
+			return Blocks.AIR.getDefaultState();
 		}
 		return stateIn;
 	}

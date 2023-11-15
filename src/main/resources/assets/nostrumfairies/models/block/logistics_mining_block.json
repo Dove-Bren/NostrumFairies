@@ -1,6 +1,6 @@
 {
-    "parent": "block/cube_all",
+    "parent": "nostrumfairies:block/fey_sign",
     "textures": {
-        "all": "nostrumfairies:block/logistics_mining_block"
+        "icon": "nostrumfairies:block/logistics_mining_block_icon"
     }
 }

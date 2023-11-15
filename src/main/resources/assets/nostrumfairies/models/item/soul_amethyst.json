@@ -1,6 +1,29 @@
 {
-    "parent": "item/handheld",
-    "textures": {
-        "layer0": "nostrumfairies:item/soul_amethyst"
-    }
+	"parent": "item/handheld",
+	"textures": {
+		"layer0": "nostrumfairies:item/soul_amethyst"
+	},
+	"overrides": [
+		{
+			"predicate": {
+				"filled": 1,
+				"type_idx": 1
+			},
+			"model": "nostrumfairies:item/soul_aquamarine_filled"
+		},
+		{
+			"predicate": {
+				"filled": 1,
+				"type_idx": 2
+			},
+			"model": "nostrumfairies:item/soul_emerald_filled"
+		},
+		{
+			"predicate": {
+				"filled": 1,
+				"type_idx": 4
+			},
+			"model": "nostrumfairies:item/soul_garnet_filled"
+		}
+	]
 }

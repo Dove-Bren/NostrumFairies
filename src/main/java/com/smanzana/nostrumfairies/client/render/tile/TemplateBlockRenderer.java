@@ -16,6 +16,8 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -46,6 +48,11 @@ public class TemplateBlockRenderer extends TileEntityRenderer<TemplateBlockTileE
 //		System.out.println("New cache entry");
 //		return existing;
 //	}
+	
+	@Override
+	public VertexFormat getRenderFormat(TemplateBlockTileEntity te) {
+		return DefaultVertexFormats.BLOCK;
+	}
 	
 	public void renderTileEntityFast(TemplateBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 		Minecraft mc = Minecraft.getInstance();
