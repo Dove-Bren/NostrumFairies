@@ -166,7 +166,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		initGael(stack, world);
 		
 		CompoundNBT nbt = stack.getTag();
-		Entity entity = EntitySpawning.readEntity(world, nbt, new Vec3d(x, y, z));
+		Entity entity = EntitySpawning.readEntity(world, nbt.getCompound("data"), new Vec3d(x, y, z));
 		if (entity != null) {
 			world.addEntity(entity);
 			
@@ -234,7 +234,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	 * @param gael
 	 * @param potency Relative efficiency. 1f is standard.
 	 */
-	public static void regenFairy(ItemStack gael, float potency) {
+	public static void regenFairy(World world, ItemStack gael, float potency) {
 		if (gael.isEmpty() || ((FairyGael) gael.getItem()).isCracked(gael)) {
 			return;
 		}
@@ -243,7 +243,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		double health = getStoredHealth(gael) + (NostrumFairies.random.nextDouble() * .0002 * potency);
 		CompoundNBT tag = gael.getTag();
 		if (tag == null) {
-			initGael(gael, null);
+			initGael(gael, world);
 			tag = gael.getTag();
 		}
 		tag.putDouble("energyD", Math.min(1, energy));

@@ -188,7 +188,7 @@ public class CraftingStationGui {
 			
 			if (slot != null && slot.getHasStack()) {
 				ItemStack cur = slot.getStack();
-				prev = cur.copy();
+				prev = cur;
 				
 				if (slot.inventory == this.station) {
 					// Trying to take one of our items.

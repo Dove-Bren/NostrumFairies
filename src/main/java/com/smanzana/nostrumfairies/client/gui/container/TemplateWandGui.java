@@ -9,7 +9,6 @@ import com.smanzana.nostrumfairies.items.FairyItems;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
 import com.smanzana.nostrummagica.items.NostrumItems;
-import com.smanzana.nostrummagica.items.ReagentBag;
 import com.smanzana.nostrummagica.utils.ContainerUtil;
 import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.utils.Inventories;
@@ -92,7 +91,7 @@ public class TemplateWandGui {
 		public static IPackedContainerProvider Make(int slot) {
 			return ContainerUtil.MakeProvider(ID, (windowId, playerInv, player) -> {
 				ItemStack stack = playerInv.getStackInSlot(slot);
-				if (stack.isEmpty() || !(stack.getItem() instanceof ReagentBag)) {
+				if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand)) {
 					stack = new ItemStack(NostrumItems.reagentBag);
 				}
 				IInventory wandInv = TemplateWand.GetTemplateInventory(stack);

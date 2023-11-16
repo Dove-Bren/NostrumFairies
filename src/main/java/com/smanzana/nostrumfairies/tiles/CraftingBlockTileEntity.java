@@ -218,7 +218,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			}
 		}
 		
-		Optional<ICraftingRecipe> match = world.getServer().getRecipeManager().getRecipe(IRecipeType.CRAFTING, inv, world);
+		Optional<ICraftingRecipe> match = world.getRecipeManager().getRecipe(IRecipeType.CRAFTING, inv, world);
 		if (match.isPresent() && canCraft(match.get())) {
 			return match.get();
 		}
@@ -675,15 +675,17 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	protected void checkTasks() {
-		if (this.validateRecipe() && this.validateIngredients() && this.getNetwork() != null && this.world != null && logicComp.isActivated()) {
-			while (this.tasks.size() < getMaxWorkJobs()) {
-				createTask();
+		if (this.world != null && !this.world.isRemote()) {
+			if (this.validateRecipe() && this.validateIngredients() && this.getNetwork() != null && this.world != null && logicComp.isActivated()) {
+				while (this.tasks.size() < getMaxWorkJobs()) {
+					createTask();
+				}
+			} else {
+				for (LogisticsTaskWorkBlock task : this.tasks) {
+					cleanTask(task);
+				}
+				tasks.clear();
 			}
-		} else {
-			for (LogisticsTaskWorkBlock task : this.tasks) {
-				cleanTask(task);
-			}
-			tasks.clear();
 		}
 	}
 	
@@ -792,7 +794,9 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	public void notifyNeighborChanged() {
 		logicComp.onWorldUpdate();
-		this.checkTasks();
+		if (!this.world.isRemote()) {
+			this.checkTasks();
+		}
 	}
 	
 	@Override

@@ -495,7 +495,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						continue;
 					}
 					
-					FairyGael.regenFairy(gael, 1f);
+					FairyGael.regenFairy(owner.world, gael, 1f);
 				}
 			}
 		}

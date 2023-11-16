@@ -456,8 +456,8 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 				{
 					if (movePos == null || !this.getMoveHelper().isUpdating()) {
 						// First time through?
-						if ((movePos != null && this.getDistanceSqToCenter(movePos) < .5)
-							|| (moveEntity != null && this.getDistance(moveEntity) < .5)) {
+						if ((movePos != null && this.getDistanceSqToCenter(movePos) < .75)
+							|| (moveEntity != null && this.getDistance(moveEntity) < .75)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;

@@ -14,7 +14,7 @@ public interface IFeyWorker {
 	// Note: If this is larger, path finding starts to break down since MC limits
 	// the amount of iterations in patch finding code to 200, which things start to bump into
 	// the further away they are.
-	public static final double MAX_FAIRY_DISTANCE_SQ = 24 * 24;
+	public static final double MAX_FAIRY_DISTANCE_SQ = 32 * 32;
 	
 	/**
 	 * Get current fairy worker status

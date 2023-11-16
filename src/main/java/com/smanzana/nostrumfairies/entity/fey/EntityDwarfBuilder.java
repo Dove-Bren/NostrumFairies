@@ -53,8 +53,6 @@ public class EntityDwarfBuilder extends EntityDwarf {
 
 	public EntityDwarfBuilder(EntityType<? extends EntityDwarfBuilder> type, World world) {
 		super(type, world);
-		
-		this.workDistanceSq = 24 * 24;
 	}
 	
 	protected @Nullable BlockPos findBuildSpot(BlockPos buildCell) {

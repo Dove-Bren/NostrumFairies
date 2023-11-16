@@ -82,7 +82,7 @@ public class LogicPanel {
 		final int minHeight = (comp.isLogicOnly() ? 0 : PANEL_BUTTON_HEIGHT) + PANEL_SLOT_HEIGHT + PANEL_BUTTON_HEIGHT + (fontHeight + 6);
 		final int leftover = Math.max(0, height - minHeight);
 		this.margin = (leftover / sections);
-		this.upperSpace = (comp.isLogicOnly() ? margin : (margin + PANEL_BUTTON_HEIGHT + margin)); // mode button, but uses BUTTON height
+		this.upperSpace = 5 + (comp.isLogicOnly() ? margin : (margin + PANEL_BUTTON_HEIGHT + margin)); // mode button, but uses BUTTON height
 		
 		final int slotY = 1 + upperSpace;
 		
@@ -218,8 +218,13 @@ public class LogicPanel {
 			colorBlue = (float) ((color >> 0) & 255) / 255f;
 			
 			final Minecraft mc = Minecraft.getInstance();
-			this.criteriaField = new TextFieldWidget(mc.fontRenderer, 0, 0, 5, 5, "logic panel value field");
+			this.criteriaField = new TextFieldWidget(mc.fontRenderer, 0, 0, 30, 5, "logic panel value field");
+			this.criteriaField.setText(panel.comp.getLogicCount() + "");
 			this.criteriaField.setValidator((s) -> {
+				if (s.isEmpty()) {
+					return true;
+				}
+				
 				try {
 					int val = Integer.parseInt(s);
 					return val >= 0 && val <= Integer.MAX_VALUE;
@@ -228,7 +233,7 @@ public class LogicPanel {
 				}
 			});
 			this.criteriaField.setResponder((s) -> {
-				panel.setCount(Integer.valueOf(s));
+				panel.setCount(s.isEmpty() ? 0 : Integer.valueOf(s));
 			});
 			
 			
@@ -247,24 +252,26 @@ public class LogicPanel {
 			
 			if (!panel.comp.isLogicOnly()) {
 				modeButton = new ModeButton(left + (panel.width - PANEL_BUTTON_WIDTH) / 2 - 1,
-						top + (panel.margin),
+						top + (panel.margin) + 5,
 						this);
 				parent.addButton(modeButton);
 			}
 			
 			final int barWidth = Math.min(panel.width - 12, 100);
 			final int barHeight = mc.fontRenderer.FONT_HEIGHT + 2;
-			final int barHOffset = left;
+			final int barHOffset = left + Math.max(0, ((panel.width - barWidth) / 2));
 			final int barVOffset = top + panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin + PANEL_BUTTON_HEIGHT + panel.margin;
 			
 			criteriaField.setWidth(barWidth);
 			criteriaField.setHeight(barHeight);
 			criteriaField.setX(barHOffset);
 			criteriaField.y = barVOffset;
+			parent.addButton(criteriaField);
 			
 			final boolean logicMode = (panel.comp.getLogicMode() == LogicMode.LOGIC);
 			opButton.visible = logicMode;
 			panel.templateSlot.hide(!logicMode);
+			criteriaField.setVisible(logicMode);
 		}
 		
 		protected void color() {
@@ -411,6 +418,7 @@ public class LogicPanel {
 					final boolean logicMode = (mode == LogicMode.LOGIC);
 					gui.opButton.visible = logicMode;
 					gui.panel.templateSlot.hide(!logicMode);
+					gui.criteriaField.setVisible(logicMode);
 				});
 				pressed = false;
 			}

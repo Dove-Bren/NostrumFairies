@@ -21,8 +21,6 @@ public class EntityDwarfCrafter extends EntityDwarf {
 
 	public EntityDwarfCrafter(EntityType<? extends EntityDwarfCrafter> type, World world) {
 		super(type, world);
-		
-		this.workDistanceSq = 24 * 24;
 	}
 	
 	@Override

@@ -8,8 +8,12 @@ import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.LoreRegistry;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -72,7 +76,12 @@ public class FairyBlocks {
 		registerBlockItem(elfCraftingBlock, elfCraftingBlock.getRegistryName(), registry);
 		registerBlockItem(gnomeCraftingBlock, gnomeCraftingBlock.getRegistryName(), registry);
 		registerBlockItem(farmingBlock, farmingBlock.getRegistryName(), registry);
-		registerBlockItem(feyBush, feyBush.getRegistryName(), registry);
+		registry.register(new BlockItem(feyBush, FairyItems.PropBase()) {
+			@Override
+			public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
+				return feyBush.getEntityInteraction(stack, playerIn, target, hand);
+			}
+		}.setRegistryName(feyBush.getRegistryName()));
 		registerBlockItem(dwarfHome, dwarfHome.getRegistryName(), registry);
 		registerBlockItem(elfHome, elfHome.getRegistryName(), registry);
 		registerBlockItem(fairyHome, fairyHome.getRegistryName(), registry);

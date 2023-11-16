@@ -6,6 +6,8 @@ import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class LogisticsSensorTileEntity extends LogisticsTileEntity implements ITickableTileEntity, ILogicListener, ILogisticsLogicProvider {
@@ -95,6 +97,17 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 					//world.notifyNeighborsOfStateChange(pos, world.getBlockState(pos).getBlock());
 					world.setBlockState(pos, FairyBlocks.logisticsSensor.getStateWithActive(activated), 3);
 					logicLastWorld = activated;
+					
+					// Copied from comparator
+					{
+						for (Direction direction : Direction.values()) {
+							BlockPos blockpos = pos.offset(direction);
+							if (net.minecraftforge.event.ForgeEventFactory.onNeighborNotify(world, pos, world.getBlockState(pos), java.util.EnumSet.of(direction), false).isCanceled())
+								return;
+							world.neighborChanged(blockpos, this.getBlockState().getBlock(), pos);
+							world.notifyNeighborsOfStateExcept(blockpos, this.getBlockState().getBlock(), direction.getOpposite());
+						}
+					}
 				}
 			}
 			

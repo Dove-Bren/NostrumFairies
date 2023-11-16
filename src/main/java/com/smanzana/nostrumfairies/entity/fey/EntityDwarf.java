@@ -95,7 +95,6 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	public EntityDwarf(EntityType<? extends EntityDwarf> type, World world) {
 		super(type, world);
-		this.workDistanceSq = 24 * 24;
 		
 		this.navigator = new PathNavigatorLogistics(this, world) {
 			@Override

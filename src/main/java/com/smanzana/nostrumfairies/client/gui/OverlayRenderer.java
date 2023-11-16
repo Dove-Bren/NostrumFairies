@@ -222,8 +222,7 @@ public class OverlayRenderer extends AbstractGui {
 	
 	private void renderAnchorBlock(BlockPos pos, float partialTicks) {
 		Minecraft mc = Minecraft.getInstance();
-		ClientPlayerEntity player = mc.player;
-		Vec3d playerPos = player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
+		Vec3d playerPos = mc.gameRenderer.getActiveRenderInfo().getProjectedView();//player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
 		Vec3d offset = new Vec3d(pos.getX() - playerPos.x,
 				pos.getY() - playerPos.y,
 				pos.getZ() - playerPos.z);
@@ -286,7 +285,7 @@ public class OverlayRenderer extends AbstractGui {
 	private void renderSelectionBox(BlockPos min, BlockPos max, float partialTicks) {
 		Minecraft mc = Minecraft.getInstance();
 		ClientPlayerEntity player = mc.player;
-		Vec3d playerPos = player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
+		Vec3d playerPos = mc.gameRenderer.getActiveRenderInfo().getProjectedView();//player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
 		Vec3d offset = new Vec3d(min.getX() - playerPos.x,
 				min.getY() - playerPos.y,
 				min.getZ() - playerPos.z);
@@ -377,8 +376,7 @@ public class OverlayRenderer extends AbstractGui {
 	
 	private void renderBlueprintPreview(BlockPos center, BlueprintBlock[][][] preview, Direction rotation, float partialTicks) {
 		Minecraft mc = Minecraft.getInstance();
-		ClientPlayerEntity player = mc.player;
-		Vec3d playerPos = player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
+		Vec3d playerPos = mc.gameRenderer.getActiveRenderInfo().getProjectedView();//player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
 		Vec3d offset = new Vec3d(center.getX() - playerPos.x,
 				center.getY() - playerPos.y,
 				center.getZ() - playerPos.z);
