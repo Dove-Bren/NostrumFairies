@@ -109,22 +109,6 @@ public class CommonProxy {
 		
 	}
 
-    
-	private int unused; // check this
-//	// Custom item interaction so do it manually
-//	{
-//		ItemBlock item = new ItemBlock(FeyBush.instance()) {
-//			@Override
-//			public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
-//				return ((FeyBush) this.block).getEntityInteraction(stack, playerIn, target, hand);
-//			}
-//		};
-//    	item.setRegistryName(FeyBush.ID);
-//    	item.setUnlocalizedName(FeyBush.ID);
-//    	item.setCreativeTab(NostrumFairies.creativeTab);
-//    	registry.register(item);
-//	}
-	
     private void registerLore() {
     	LoreRegistry.instance().register(EntityShadowFey.ShadowFeyConversionLore.instance());
     	LoreRegistry.instance().register(FeyResource.FeyFriendLore.instance());

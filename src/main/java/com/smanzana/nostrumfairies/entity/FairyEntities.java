@@ -1,5 +1,8 @@
 package com.smanzana.nostrumfairies.entity;
 
+import java.util.Collection;
+import java.util.List;
+
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
@@ -17,6 +20,9 @@ import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.world.biome.Biome;
+import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -56,9 +62,23 @@ public class FairyEntities {
 		registry.register(EntityType.Builder.<EntityGnomeCollector>create(EntityGnomeCollector::new, EntityClassification.CREATURE).size(0.45F, .4F).setTrackingRange(128).setUpdateInterval(1).setShouldReceiveVelocityUpdates(false).build("").setRegistryName(EntityGnomeCollector.ID));
 		registry.register(EntityType.Builder.<EntityGnomeCrafter>create(EntityGnomeCrafter::new, EntityClassification.CREATURE).size(0.45F, .5F).setTrackingRange(128).setUpdateInterval(1).setShouldReceiveVelocityUpdates(false).build("").setRegistryName(EntityGnomeCrafter.ID));
 		registry.register(EntityType.Builder.<EntityPersonalFairy>create(EntityPersonalFairy::new, EntityClassification.CREATURE).size(0.15F, .15F).setTrackingRange(128).setUpdateInterval(1).setShouldReceiveVelocityUpdates(false).build("").setRegistryName(EntityPersonalFairy.ID));
-		registry.register(EntityType.Builder.<EntityShadowFey>create(EntityShadowFey::new, EntityClassification.MONSTER).size(0.6F, .75F).setTrackingRange(128).setUpdateInterval(1).setShouldReceiveVelocityUpdates(false).build("").setRegistryName(EntityShadowFey.ID));
 		registry.register(EntityType.Builder.<EntityTestFairy>create(EntityTestFairy::new, EntityClassification.CREATURE).size(0.6F, .6F).setTrackingRange(128).setUpdateInterval(1).setShouldReceiveVelocityUpdates(false).build("").setRegistryName(EntityTestFairy.ID));
 		registry.register(EntityType.Builder.<EntityArrowEx>create(EntityArrowEx::new, EntityClassification.MISC).size(.5F, .5F).setTrackingRange(128).setUpdateInterval(1).setShouldReceiveVelocityUpdates(false).build("").setRegistryName(EntityArrowEx.ID));
+		
+		EntityType<EntityShadowFey> feyType = EntityType.Builder.<EntityShadowFey>create(EntityShadowFey::new, EntityClassification.MONSTER).size(0.6F, .75F).setTrackingRange(128).setUpdateInterval(1).setShouldReceiveVelocityUpdates(false).build("");
+		feyType.setRegistryName(EntityShadowFey.ID);
+		registry.register(feyType);
+		addSpawn(feyType, EntityClassification.MONSTER, 35, 1, 2, BiomeDictionary.getBiomes(BiomeDictionary.Type.MAGICAL));
+		addSpawn(feyType, EntityClassification.MONSTER, 25, 1, 3, BiomeDictionary.getBiomes(BiomeDictionary.Type.FOREST));
+		addSpawn(feyType, EntityClassification.MONSTER, 18, 2, 2, BiomeDictionary.getBiomes(BiomeDictionary.Type.SPOOKY));
+		addSpawn(feyType, EntityClassification.MONSTER, 20, 1, 2, BiomeDictionary.getBiomes(BiomeDictionary.Type.DENSE));
+	}
+	
+	private static void addSpawn(EntityType<? extends MobEntity> entityType, EntityClassification classification, int itemWeight, int minGroupCount, int maxGroupCount, Collection<Biome> biomes) {
+		for (Biome biome : biomes) {
+			List<Biome.SpawnListEntry> spawns = biome.getSpawns(classification);
+			spawns.add(new Biome.SpawnListEntry(entityType, itemWeight, minGroupCount, maxGroupCount));
+		}
 	}
 	
 }
