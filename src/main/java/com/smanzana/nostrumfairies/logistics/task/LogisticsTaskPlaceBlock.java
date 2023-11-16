@@ -13,6 +13,7 @@ import org.apache.commons.lang3.Validate;
 
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -415,7 +416,8 @@ public class LogisticsTaskPlaceBlock implements ILogisticsTask {
 	
 	protected boolean isSpotValid(World world, BlockPos pos) {
 		if (world.isAirBlock(pos)
-				|| world.getBlockState(pos).getMaterial().isReplaceable()) {
+				|| world.getBlockState(pos).getMaterial().isReplaceable()
+				|| world.getBlockState(pos).getBlock() instanceof TemplateBlock) {
 			return (state.isValidPosition(world, pos));
 		}
 		

@@ -1082,37 +1082,41 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 		if (!world.isAirBlock(targetPos)) {
 			do {
 				if (world.isAirBlock(targetPos.north())) {
-					if (Block.hasSolidSide(world.getBlockState(targetPos.north().down()), world, targetPos.north().down(), Direction.UP)) {
+					final boolean belowIsAir = world.isAirBlock(targetPos.north().down());
+					if (!belowIsAir && Block.hasSolidSide(world.getBlockState(targetPos.north().down()), world, targetPos.north().down(), Direction.UP)) {
 						targetPos = targetPos.north();
 						break;
-					} else if (isSolid(world, targetPos.north().down().down(), Direction.UP)) {
+					} else if (belowIsAir && isSolid(world, targetPos.north().down().down(), Direction.UP)) {
 						targetPos = targetPos.north().down();
 						break;
 					}
 				}
 				if (world.isAirBlock(targetPos.south())) {
-					if (isSolid(world, targetPos.south().down(), Direction.UP)) {
+					final boolean belowIsAir = world.isAirBlock(targetPos.south().down());
+					if (!belowIsAir && isSolid(world, targetPos.south().down(), Direction.UP)) {
 						targetPos = targetPos.south();
 						break;
-					} else if (isSolid(world, targetPos.south().down().down(), Direction.UP)) {
+					} else if (belowIsAir && isSolid(world, targetPos.south().down().down(), Direction.UP)) {
 						targetPos = targetPos.south().down();
 						break;
 					}
 				}
 				if (world.isAirBlock(targetPos.east())) {
-					if (isSolid(world, targetPos.east().down(), Direction.UP)) {
+					final boolean belowIsAir = world.isAirBlock(targetPos.east().down());
+					if (!belowIsAir && isSolid(world, targetPos.east().down(), Direction.UP)) {
 						targetPos = targetPos.east();
 						break;
-					} else if (isSolid(world, targetPos.east().down().down(), Direction.UP)) {
+					} else if (belowIsAir && isSolid(world, targetPos.east().down().down(), Direction.UP)) {
 						targetPos = targetPos.east().down();
 						break;
 					}
 				}
 				if (world.isAirBlock(targetPos.west())) {
-					if (isSolid(world, targetPos.west().down(), Direction.UP)) {
+					final boolean belowIsAir = world.isAirBlock(targetPos.west().down());
+					if (!belowIsAir && isSolid(world, targetPos.west().down(), Direction.UP)) {
 						targetPos = targetPos.west();
 						break;
-					} else if (isSolid(world, targetPos.west().down().down(), Direction.UP)) {
+					} else if (belowIsAir && isSolid(world, targetPos.west().down().down(), Direction.UP)) {
 						targetPos = targetPos.west().down();
 						break;
 					}
@@ -1190,6 +1194,65 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 	
 	public final double getDistanceSqToCenter(BlockPos pos) {
 		return this.getDistanceSq(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
+	}
+	
+	protected boolean isAtMoveTarget(BlockPos target) {
+		return this.getDistanceSq(target) <= 3;
+	}
+	
+	protected boolean isAtMoveTarget(Entity ent) {
+		return this.getDistanceSq(ent) <= 3;
+	}
+	
+	protected @Nullable BlockPos movePos;
+	protected @Nullable Entity moveEntity;
+	
+	protected void feyMoveToTask(ILogisticsTask task) {
+		feyMoveToTask(task, false);
+	}
+	
+	/**
+	 * Try to move to the current subtask of the task using pathfinding.
+	 * This just was copied into every fey type and was frustrating to fix bugs in so I moved it here.
+	 * @param task
+	 */
+	protected void feyMoveToTask(ILogisticsTask task, boolean allOrNothingMovement) {
+		final LogisticsSubTask sub = task.getActiveSubtask();
+		if (sub == null || sub.getType() != LogisticsSubTask.Type.MOVE) {
+			return;
+		}
+		
+		if (this.navigator.noPath()) {
+			// First time through?
+			if ((movePos != null && isAtMoveTarget(movePos))
+				|| (moveEntity != null && isAtMoveTarget(moveEntity))) {
+				task.markSubtaskComplete();
+				movePos = null;
+				moveEntity = null;
+				return;
+			}
+			movePos = null;
+			moveEntity = null;
+			
+			movePos = sub.getPos();
+			if (movePos == null) {
+				moveEntity = sub.getEntity();
+				if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
+					this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+				}
+			} else {
+				movePos = findEmptySpot(movePos, allOrNothingMovement);
+				
+				// Is the block we shifted to where we are?
+				if (!this.getPosition().equals(movePos) && this.getDistanceSq(movePos) > 1) {
+					// Note: tryMoveToXYZ always give slack of 1 which is pretty big!
+					if (!this.getNavigator().setPath(this.getNavigator().getPathToPos(movePos, 0), 1.0f)) {
+					//if (!this.getNavigator().tryMoveToXYZ(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5, 1.0f)) {
+						this.getMoveHelper().setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
+					}
+				}
+			}
+		}
 	}
 	
 	protected static boolean FeyWander(EntityFeyBase fey, BlockPos center, double minDist, double maxDist) {

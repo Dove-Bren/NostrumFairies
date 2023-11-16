@@ -385,35 +385,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			case MOVE:
 				{
 					setPose(ArmPoseElf.IDLE);
-					if (this.navigator.noPath()) {
-						// First time through?
-						if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
-							|| (moveEntity != null && this.getDistance(moveEntity) < 1)) {
-							task.markSubtaskComplete();
-							movePos = null;
-							moveEntity = null;
-							return;
-						}
-						movePos = null;
-						moveEntity = null;
-						
-						movePos = sub.getPos();
-						if (movePos == null) {
-							moveEntity = sub.getEntity();
-							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
-								this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
-							}
-						} else {
-							movePos = findEmptySpot(movePos, false);
-							
-							// Is the block we shifted to where we are?
-							if (!this.getPosition().equals(movePos) && this.getDistanceSqToCenter(movePos) > 1) {
-								if (!this.getNavigator().tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f)) {
-									this.getMoveHelper().setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
-								}
-							}
-						}
-					}
+					this.feyMoveToTask(task);
 				}
 				break;
 			}

@@ -66,8 +66,8 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 	}
 	
 	@Override
-	public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX, float scaleFactor, Entity entity) {
-		super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, headAngleY, headAngleX, scaleFactor, entity);
+	public void setRotationAngles(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX, float scaleFactor) {
+		super.setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, headAngleY, headAngleX, scaleFactor);
 		
 		final boolean isAttacking;
 		final boolean useBow;

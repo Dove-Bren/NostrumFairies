@@ -9,10 +9,12 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.ProjectileHelper;
+import net.minecraft.network.IPacket;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.network.NetworkHooks;
 
 /**
  * Just a more generalized version of EntityTippedArrow lol. Stupid vanilla.
@@ -49,6 +51,9 @@ public class EntityArrowEx extends ArrowEntity {
 	public EntityArrowEx(World worldIn, LivingEntity shooter) {
 		this(worldIn);
 		this.setShooter(shooter);
+		
+		// This is baked in to parent versions that we can't call
+		this.setPosition(shooter.posX, shooter.posY + (double)shooter.getEyeHeight() - 0.10000000149011612D, shooter.posZ);
 	}
 	
 	public void setFilter(Predicate<Entity> filter) {
@@ -61,5 +66,11 @@ public class EntityArrowEx extends ArrowEntity {
 		return ProjectileHelper.func_221271_a(this.world, this, start, end, this.getBoundingBox().expand(this.getMotion()).grow(1.0D), (ent) -> {
 			return this.filter.test(ent);
 		});
+	}
+	
+	@Override
+	public IPacket<?> createSpawnPacket() {
+		// Have to override and use forge to use with non-living Entity types even though parent defines
+		return NetworkHooks.getEntitySpawningPacket(this);
 	}
 }

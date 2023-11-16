@@ -109,8 +109,8 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 		
 	}
 	
-	public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX, float scaleFactor, Entity entity) {
-		
+	@Override
+	public void setRotationAngles(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX, float scaleFactor) {
 		final boolean isWorking;
 		final boolean isIdle;
 		final boolean leftHanded;

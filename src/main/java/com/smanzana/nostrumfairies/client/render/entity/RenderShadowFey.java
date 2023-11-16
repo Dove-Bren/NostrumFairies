@@ -1,6 +1,8 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
+import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 
@@ -47,6 +49,7 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelElf<Entit
 		GlStateManager.disableAlphaTest();
 		GlStateManager.enableBlend();
 		GlStateManager.enableAlphaTest();
+		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 		GlStateManager.color4f(1f, 1f, 1f, .7f);
 		GlStateManager.scalef(scale + scaleModX, scale + scaleModY, scale + scaleModZ);
 		super.doRender(entity, 0, 0, 0, entityYaw, partialTicks);

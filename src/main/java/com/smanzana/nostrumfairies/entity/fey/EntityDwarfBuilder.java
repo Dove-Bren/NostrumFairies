@@ -185,8 +185,8 @@ public class EntityDwarfBuilder extends EntityDwarf {
 			this.setPose(ArmPoseDwarf.IDLE);
 			if (this.navigator.noPath()) {
 				// First time through?
-				if ((movePos != null && this.getDistanceSqToCenter(movePos) < 1)
-					|| (moveEntity != null && this.getDistance(moveEntity) < 1)) {
+				if ((movePos != null && this.isAtMoveTarget(movePos))
+					|| (moveEntity != null && this.isAtMoveTarget(moveEntity))) {
 					task.markSubtaskComplete();
 					if (movePos != null) {
 						ClearBuildSpot(world, movePos);

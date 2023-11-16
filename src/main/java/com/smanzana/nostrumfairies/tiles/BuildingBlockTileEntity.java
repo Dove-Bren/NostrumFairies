@@ -193,7 +193,12 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		
 		this.tickCount++;
 		if (this.tickCount % (20 * 2) == 0) {
-			final int y = (int) ((scanCounter++ % (radius * 2)) - radius);
+			// want to scan y -radius to radius, but want to start at 0, 1, -1, 2, -3...
+			// Hits 0 twice and is <radius, not <= radius...
+			final int idx = (int) (scanCounter++ % (radius * 2));
+			final int y = (idx / 2) * (idx % 2 == 1 ? -1 : 1);
+			//final int y = (int) ((scanCounter++ % (radius * 2)) - radius);
+			
 			scan(y);
 		}
 		if (!this.slot.isEmpty() && this.tickCount % 10 == 0) {
