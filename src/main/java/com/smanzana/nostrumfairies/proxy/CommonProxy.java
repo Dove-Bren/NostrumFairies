@@ -59,6 +59,8 @@ import net.minecraft.item.Items;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.event.RegistryEvent;
@@ -845,5 +847,9 @@ public class CommonProxy {
 		if (feyAttr != null) {
 			NetworkHandler.sendTo(new CapabilitySyncMessage(feyAttr), (ServerPlayerEntity) player);
 		}
+	}
+	
+	public void openStorageMonitor(World world, BlockPos pos) {
+		; // Nothing on server
 	}
 }

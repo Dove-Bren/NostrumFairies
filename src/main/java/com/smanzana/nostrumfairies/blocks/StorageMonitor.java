@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import com.smanzana.nostrumfairies.client.gui.StorageMonitorScreen;
+import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
@@ -13,7 +13,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.DirectionProperty;
@@ -30,8 +29,6 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
 
 public class StorageMonitor extends FeyContainerBlock {
 	
@@ -141,12 +138,7 @@ public class StorageMonitor extends FeyContainerBlock {
 				}
 			}
 			
-			// Don't wait, though, and show the UI
-			DistExecutor.callWhenOn(Dist.CLIENT, () -> () -> {
-				StorageMonitorTileEntity monitor = (StorageMonitorTileEntity) worldIn.getTileEntity(pos);
-				Minecraft.getInstance().displayGuiScreen(new StorageMonitorScreen(monitor));
-				return 0;
-			});
+			NostrumFairies.proxy.openStorageMonitor(worldIn, pos);
 		}
 		
 		return true;

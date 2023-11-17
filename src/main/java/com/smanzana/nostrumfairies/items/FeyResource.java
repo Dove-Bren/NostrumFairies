@@ -42,8 +42,9 @@ import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = NostrumFairies.MODID)
 public class FeyResource extends Item implements ILoreTagged {
 
 	public static enum FeyResourceType {
@@ -81,7 +82,6 @@ public class FeyResource extends Item implements ILoreTagged {
 	public FeyResource(FeyResourceType type) {
 		super(FairyItems.PropBase());
 		this.type = type;
-		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	public static Item getItem(FeyResourceType type) {
@@ -267,8 +267,7 @@ public class FeyResource extends Item implements ILoreTagged {
 		return new ActionResult<ItemStack>(ActionResultType.PASS, stack);
 	}
 	
-	@SubscribeEvent
-	public void onMobDrop(LivingDropsEvent event) {
+	public static void onMobDrop(LivingDropsEvent event) {
 		final float chance;
 		if (event.getEntityLiving() instanceof IronGolemEntity) {
 			chance = .2f;

@@ -8,6 +8,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.OverlayRenderer;
+import com.smanzana.nostrumfairies.client.gui.StorageMonitorScreen;
 import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.BuildingBlockGui;
 import com.smanzana.nostrumfairies.client.gui.container.CraftingStationGui;
@@ -97,6 +98,9 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
 import net.minecraftforge.client.event.InputEvent.MouseScrollEvent;
@@ -106,6 +110,7 @@ import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -340,6 +345,15 @@ public class ClientProxy extends CommonProxy {
 			super.pushCapabilityRefresh(player);
 		}
 		; // Nothing on client
+	}
+	
+	@Override
+	public void openStorageMonitor(World world, BlockPos pos) {
+		if (world.isRemote())
+		{
+			StorageMonitorTileEntity monitor = (StorageMonitorTileEntity) world.getTileEntity(pos);
+			Minecraft.getInstance().displayGuiScreen(new StorageMonitorScreen(monitor));
+		}
 	}
 	
 	@SubscribeEvent
