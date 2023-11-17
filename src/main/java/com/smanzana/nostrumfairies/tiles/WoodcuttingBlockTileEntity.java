@@ -20,6 +20,7 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -158,7 +159,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 		for (int y = startY; y < endY; y++) {
 			
 			pos.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);
-			if (!world.isBlockLoaded(pos)) {
+			if (!NostrumMagica.isBlockLoaded(world, pos)) {
 				break; // skip this whole column
 			}
 			

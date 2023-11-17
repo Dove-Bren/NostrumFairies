@@ -152,7 +152,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		for (int x = (int) Math.floor(-radius); x <= Math.ceil(radius); x++)
 		for (int z = (int) Math.floor(-radius); z <= Math.ceil(radius); z++) {
 			cursor.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);
-			if (!world.isBlockLoaded(cursor)) {
+			if (!NostrumMagica.isBlockLoaded(world, cursor)) {
 				break; // skip this whole column
 			}
 			

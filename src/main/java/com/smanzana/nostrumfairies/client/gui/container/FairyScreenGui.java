@@ -292,7 +292,6 @@ public class FairyScreenGui {
 		
 		//FairyScreenContainer(int windowId, PlayerInventory playerInv, FairyHolderInventory chest, INostrumFeyCapability capability)
 		
-		@OnlyIn(Dist.CLIENT)
 		public static FairyScreenContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerInv.player);
 			return new FairyScreenContainer(windowId, playerInv, attr.getFairyInventory(), attr);

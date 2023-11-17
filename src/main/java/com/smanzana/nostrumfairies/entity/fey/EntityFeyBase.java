@@ -27,6 +27,7 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
+import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 
 import net.minecraft.block.Block;
@@ -203,7 +204,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 	}
 	
 	protected @Nullable HomeBlockTileEntity getHomeEnt(BlockPos pos) {
-		if (!world.isBlockLoaded(pos)) {
+		if (!NostrumMagica.isBlockLoaded(world, pos)) {
 			return null;
 		}
 		
@@ -491,7 +492,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 
 	@Override
 	public void swingArm(Hand hand) {
-		int unused; //Why not just call super?
+		//int unused; //Why not just call super?
 		ItemStack stack = this.getHeldItem(hand);
 		if (!stack.isEmpty()) {
 			if (stack.getItem().onEntitySwing(stack, this)) {
@@ -685,7 +686,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 				for (int z = -radius; z <= radius; z++)
 				for (int y = -radius; y <= radius; y++) {
 					cursor.setPos(posX + x, posY + y, posZ + z);
-					if (!world.isBlockLoaded(cursor)) {
+					if (!NostrumMagica.isBlockLoaded(world, cursor)) {
 						continue;
 					}
 					
@@ -860,7 +861,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 	}
 	
 	protected void verifyHome() {
-		if (this.getHome() != null && !world.isBlockLoaded(this.getHome())) {
+		if (this.getHome() != null && !NostrumMagica.isBlockLoaded(world, this.getHome())) {
 			// Can't actually verify, so just pretend it's fine.
 			return;
 		}

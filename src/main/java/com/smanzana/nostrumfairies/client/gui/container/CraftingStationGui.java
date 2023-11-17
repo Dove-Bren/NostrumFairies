@@ -160,7 +160,6 @@ public class CraftingStationGui {
 			this.panel = new LogicPanel(this, station, 0, 0, GUI_TEXT_SIDE_WIDTH, GUI_TEXT_SIDE_HEIGHT);
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static CraftingStationContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			return new CraftingStationContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}

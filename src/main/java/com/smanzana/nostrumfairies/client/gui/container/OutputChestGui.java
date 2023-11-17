@@ -100,7 +100,6 @@ public class OutputChestGui {
 			logicPanel = new LogicPanel(this, chest, -GUI_PANEL_WIDTH, 0, GUI_PANEL_WIDTH, GUI_PANEL_HEIGHT);
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static OutputChestContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			return new OutputChestContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}

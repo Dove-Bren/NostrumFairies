@@ -34,7 +34,6 @@ public class CraftingStationSmallGui {
 			super(FairyContainers.CraftingStationSmall, windowId, playerInv, station);
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static CraftingStationSmallContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			return new CraftingStationSmallContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}

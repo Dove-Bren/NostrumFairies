@@ -73,7 +73,6 @@ public class InputChestGui {
 			}
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static InputChestContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			return new InputChestContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}

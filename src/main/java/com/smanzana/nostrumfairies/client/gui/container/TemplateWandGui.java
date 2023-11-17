@@ -77,7 +77,6 @@ public class TemplateWandGui {
 			}
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static TemplateWandContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			final int slot = buf.readVarInt();
 			ItemStack stack = playerInv.getStackInSlot(slot);

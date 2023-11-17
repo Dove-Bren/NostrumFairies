@@ -125,6 +125,5 @@ public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> 
 	public void render(T tileEntity, double x, double y, double z, BlockState state, World world,
 			BufferBuilder buffer) {
 		//renderTileEntityFast(tileEntity, x, y, z, 0, 0, 0, buffer);
-		int unused; // TODO: Remove this whole thing!
 	}
 }

@@ -67,7 +67,6 @@ public class BuildingBlockGui {
 			});
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static BuildingBlockContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			return new BuildingBlockContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}

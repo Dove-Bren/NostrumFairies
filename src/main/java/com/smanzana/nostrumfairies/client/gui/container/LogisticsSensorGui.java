@@ -67,7 +67,6 @@ public class LogisticsSensorGui {
 			this.panel = new LogicPanel(this, sensor, 0, 0, GUI_TEXT_MAIN_WIDTH, 90);
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static LogisticsSensorContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			return new LogisticsSensorContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}

@@ -96,7 +96,6 @@ public class OutputPanelGui {
 			logicPanel = new LogicPanel(this, panel, 0, 0, GUI_LPANEL_WIDTH, GUI_LPANEL_HEIGHT);
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static OutputPanelContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			return new OutputPanelContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}

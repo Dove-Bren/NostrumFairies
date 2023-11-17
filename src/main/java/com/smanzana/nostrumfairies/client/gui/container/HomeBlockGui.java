@@ -140,7 +140,6 @@ public class HomeBlockGui {
 			}
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static HomeBlockContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			return new HomeBlockContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}

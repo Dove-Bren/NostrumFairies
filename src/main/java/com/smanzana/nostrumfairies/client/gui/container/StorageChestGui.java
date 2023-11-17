@@ -73,7 +73,6 @@ public class StorageChestGui {
 			}
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static StorageChestContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			return new StorageChestContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}

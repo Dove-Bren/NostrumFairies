@@ -95,7 +95,6 @@ public class BufferChestGui {
 			}
 		}
 		
-		@OnlyIn(Dist.CLIENT)
 		public static BufferChestContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
 			return new BufferChestContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}

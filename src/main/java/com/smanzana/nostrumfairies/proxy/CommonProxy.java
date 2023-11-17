@@ -46,7 +46,6 @@ import com.smanzana.nostrummagica.loretag.LoreRegistry;
 import com.smanzana.nostrummagica.research.NostrumResearch;
 import com.smanzana.nostrummagica.research.NostrumResearch.Size;
 import com.smanzana.nostrummagica.rituals.RitualRecipe;
-import com.smanzana.nostrummagica.rituals.RitualRegistry;
 import com.smanzana.nostrummagica.rituals.outcomes.OutcomeSpawnItem;
 import com.smanzana.nostrummagica.rituals.requirements.RRequirementResearch;
 import com.smanzana.nostrummagica.spells.EMagicElement;
@@ -93,7 +92,7 @@ public class CommonProxy {
 		CapabilityManager.INSTANCE.register(ITemplateViewerCapability.class, new TemplateViewerCapabilityStorage(), TemplateViewerCapability::new);
 		capabilityHandler = new CapabilityHandler();
 		
-    	registerRituals();
+    	//registerRituals();
     	registerLore();
     	registerResearch();
     	
@@ -118,9 +117,11 @@ public class CommonProxy {
 	@ObjectHolder("nostrumaetheria:" + AetheriaIDs.GINSENG_FLOWER) public static Item ginsengFlower;
 	@ObjectHolder("nostrumaetheria:" + AetheriaIDs.MANDRAKE_FLOWER) public static Item mandrakeFlower;
     
-    private void registerRituals() {
+	@SubscribeEvent
+    public void registerRituals(RegistryEvent.Register<RitualRecipe> event) {
+		final IForgeRegistry<RitualRecipe> registry = event.getRegistry();
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("purify_essence",
 				FeyResource.create(FeyResourceType.ESSENCE, 1),
 				EMagicElement.ICE,
@@ -131,7 +132,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.ESSENCE, 3)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fey_bell",
 				FeyResource.create(FeyResourceType.BELL, 1),
 				EMagicElement.WIND,
@@ -142,7 +143,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.BELL, 1)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fey_flower",
 				FeyResource.create(FeyResourceType.FLOWER, 1),
 				EMagicElement.EARTH,
@@ -153,7 +154,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.FLOWER, 4)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("soul_stone",
 				FeySoulStone.create(SoulStoneType.GEM),
 				EMagicElement.ICE,
@@ -164,7 +165,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("soul_gael",
 				FeySoulStone.create(SoulStoneType.GAEL),
 				EMagicElement.ICE,
@@ -175,7 +176,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeySoulStone.create(SoulStoneType.GAEL)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fairy_instrument_flute",
 				FairyInstrument.create(InstrumentType.FLUTE),
 				EMagicElement.WIND,
@@ -186,7 +187,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FairyInstrument.create(InstrumentType.FLUTE)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fairy_instrument_lyre",
 				FairyInstrument.create(InstrumentType.HARP),
 				EMagicElement.WIND,
@@ -197,7 +198,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FairyInstrument.create(InstrumentType.HARP)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fairy_instrument_ocarina",
 				FairyInstrument.create(InstrumentType.OCARINA),
 				EMagicElement.WIND,
@@ -208,7 +209,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FairyInstrument.create(InstrumentType.OCARINA)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fairy_gael_aggressive",
 				FairyGael.create(FairyGaelType.ATTACK, null),
 				EMagicElement.LIGHTNING,
@@ -219,7 +220,7 @@ public class CommonProxy {
 				new OutcomeConstructGael(FairyGaelType.ATTACK))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fairy_gael_logistics",
 				FairyGael.create(FairyGaelType.LOGISTICS, null),
 				EMagicElement.LIGHTNING,
@@ -230,7 +231,7 @@ public class CommonProxy {
 				new OutcomeConstructGael(FairyGaelType.LOGISTICS))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fairy_gael_construction",
 				FairyGael.create(FairyGaelType.BUILD, null),
 				EMagicElement.LIGHTNING,
@@ -241,7 +242,7 @@ public class CommonProxy {
 				new OutcomeConstructGael(FairyGaelType.BUILD))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("logistics_tokens",
 				FeyResource.create(FeyResourceType.LOGIC_TOKEN, 4),
 				EMagicElement.FIRE,
@@ -252,7 +253,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.LOGIC_TOKEN, 4)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("gnome_home",
 				new ItemStack(FairyBlocks.gnomeHome),
 				null,
@@ -263,7 +264,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.gnomeHome), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("elf_home",
 				new ItemStack(FairyBlocks.elfHome),
 				null,
@@ -274,7 +275,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.elfHome), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("dwarf_home",
 				new ItemStack(FairyBlocks.dwarfHome),
 				null,
@@ -285,7 +286,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.dwarfHome), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fairy_home",
 				new ItemStack(FairyBlocks.fairyHome),
 				null,
@@ -296,7 +297,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.fairyHome), FeySoulStone.create(SoulStoneType.GAEL)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fey_specialization.emerald",
 				FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.EMERALD, 1),
 				null,
@@ -307,7 +308,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.EMERALD, 1), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fey_specialization.garnet",
 				FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.GARNET, 1),
 				null,
@@ -318,7 +319,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.GARNET, 1), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fey_specialization.aquamarine",
 				FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.AQUAMARINE, 1),
 				null,
@@ -329,7 +330,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.AQUAMARINE, 1), FeySoulStone.create(SoulStoneType.GEM)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fey_upgrade.up.ruby",
 				FeyStone.create(FeySlotType.UPGRADE, FeyStoneMaterial.RUBY, 1),
 				null,
@@ -340,7 +341,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.UPGRADE, FeyStoneMaterial.RUBY, 1)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fey_upgrade.down.ruby",
 				FeyStone.create(FeySlotType.DOWNGRADE, FeyStoneMaterial.RUBY, 1),
 				null,
@@ -351,7 +352,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.DOWNGRADE, FeyStoneMaterial.RUBY, 1)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fey_upgrade.up.sapphire",
 				FeyStone.create(FeySlotType.UPGRADE, FeyStoneMaterial.SAPPHIRE, 1),
 				null,
@@ -362,7 +363,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.UPGRADE, FeyStoneMaterial.SAPPHIRE, 1)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("fey_upgrade.down.sapphire",
 				FeyStone.create(FeySlotType.DOWNGRADE, FeyStoneMaterial.SAPPHIRE, 1),
 				null,
@@ -373,7 +374,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.DOWNGRADE, FeyStoneMaterial.SAPPHIRE, 1)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("template_wand",
 				new ItemStack(FairyItems.templateWand),
 				null,
@@ -384,7 +385,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyItems.templateWand)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("lchest_storage",
 				new ItemStack(FairyBlocks.storageChest),
 				null,
@@ -395,7 +396,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.storageChest)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("lchest_buffer",
 				new ItemStack(FairyBlocks.bufferChest),
 				null,
@@ -406,7 +407,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.bufferChest)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("lchest_output",
 				new ItemStack(FairyBlocks.outputChest),
 				null,
@@ -417,7 +418,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.outputChest)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("lchest_input",
 				new ItemStack(FairyBlocks.inputChest),
 				null,
@@ -428,7 +429,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.inputChest)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("lpanel_output",
 				new ItemStack(FairyBlocks.outputPanel),
 				null,
@@ -439,7 +440,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.outputPanel, 4)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("logistics_pylon",
 				new ItemStack(FairyBlocks.logisticsPylon),
 				null,
@@ -450,7 +451,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.logisticsPylon, 2)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("storage_monitor",
 				new ItemStack(FairyBlocks.storageMonitor),
 				null,
@@ -461,7 +462,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.storageMonitor)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("storage_sensor",
 				new ItemStack(FairyBlocks.logisticsSensor),
 				null,
@@ -472,7 +473,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.logisticsSensor)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("farming_block",
 				new ItemStack(FairyBlocks.farmingBlock),
 				null,
@@ -483,7 +484,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.farmingBlock)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("gathering_block",
 				new ItemStack(FairyBlocks.gatheringBlock),
 				null,
@@ -494,7 +495,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.gatheringBlock)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("woodcutting_block",
 				new ItemStack(FairyBlocks.woodcuttingBlock),
 				null,
@@ -505,7 +506,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.woodcuttingBlock)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("mining_block",
 				new ItemStack(FairyBlocks.miningBlock),
 				null,
@@ -516,7 +517,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.miningBlock)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("building_block",
 				new ItemStack(FairyBlocks.buildingBlock),
 				null,
@@ -527,7 +528,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.buildingBlock)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("crafting_block.gnome",
 				new ItemStack(FairyBlocks.gnomeCraftingBlock),
 				null,
@@ -538,7 +539,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.gnomeCraftingBlock)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("crafting_block.elf",
 				new ItemStack(FairyBlocks.elfCraftingBlock),
 				null,
@@ -549,7 +550,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.elfCraftingBlock)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("crafting_block.dwarf",
 				new ItemStack(FairyBlocks.dwarfCraftingBlock),
 				null,
@@ -560,7 +561,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.dwarfCraftingBlock)))
 			);
     	
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("soul_jar",
 				new ItemStack(FairyItems.soulJar),
 				null,
@@ -571,8 +572,8 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyItems.soulJar)))
 			);
 
-    	RitualRegistry.instance().addRitual(
-			RitualRecipe.createTier3("lchest_reinforced_iron",
+    	registry.register(
+			RitualRecipe.createTier3("lchest_reinforced_iron_upgrade", "lchest_reinforced_iron",
 				new ItemStack(FairyBlocks.reinforcedIronChest),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
@@ -583,7 +584,7 @@ public class CommonProxy {
 			);
 
     	// shortcut iron recipe
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("lchest_reinforced_iron",
 				new ItemStack(FairyBlocks.reinforcedIronChest),
 				null,
@@ -594,7 +595,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.reinforcedIronChest)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("lchest_reinforced_gold",
 				new ItemStack(FairyBlocks.reinforcedGoldChest),
 				null,
@@ -605,7 +606,7 @@ public class CommonProxy {
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.reinforcedGoldChest)))
 			);
 
-    	RitualRegistry.instance().addRitual(
+    	registry.register(
 			RitualRecipe.createTier3("lchest_reinforced_diamond",
 				new ItemStack(FairyBlocks.reinforcedDiamondChest),
 				null,

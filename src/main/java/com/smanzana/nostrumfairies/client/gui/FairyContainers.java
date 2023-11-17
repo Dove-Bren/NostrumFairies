@@ -59,20 +59,4 @@ public class FairyContainers {
 		registry.register(IForgeContainerType.create(StorageChestGui.StorageChestContainer::FromNetwork).setRegistryName(StorageChestGui.StorageChestContainer.ID));
 		registry.register(IForgeContainerType.create(TemplateWandGui.TemplateWandContainer::FromNetwork).setRegistryName(TemplateWandGui.TemplateWandContainer.ID));
 	}
-	
-	@SubscribeEvent
-	public static void registerContainerScreens(FMLClientSetupEvent event) {
-		ScreenManager.registerFactory(BufferChest, BufferChestGui.BufferChestGuiContainer::new);
-		ScreenManager.registerFactory(BuildingBlock, BuildingBlockGui.BuildingBlockGuiContainer::new);
-		ScreenManager.registerFactory(CraftingStation, CraftingStationGui.CraftingStationGuiContainer::new);
-		ScreenManager.registerFactory(CraftingStationSmall, CraftingStationSmallGui.CraftingStationSmallGuiContainer::new);
-		ScreenManager.registerFactory(FairyScreen, FairyScreenGui.FairyScreenGuiContainer::new);
-		ScreenManager.registerFactory(HomeBlock, HomeBlockGui.HomeBlockGuiContainer::new);
-		ScreenManager.registerFactory(InputChest, InputChestGui.InputChestGuiContainer::new);
-		ScreenManager.registerFactory(LogisticsSensor, LogisticsSensorGui.LogisticsSensorGuiContainer::new);
-		ScreenManager.registerFactory(OutputChest, OutputChestGui.OutputChestGuiContainer::new);
-		ScreenManager.registerFactory(OutputPanel, OutputPanelGui.OutputPanelGuiContainer::new);
-		ScreenManager.registerFactory(StorageChest, StorageChestGui.StorageChestGuiContainer::new);
-		ScreenManager.registerFactory(TemplateWand, TemplateWandGui.TemplateWandGuiContainer::new);
-	}
 }

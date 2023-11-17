@@ -6,7 +6,20 @@ import org.lwjgl.glfw.GLFW;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FairyBlocks;
+import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.OverlayRenderer;
+import com.smanzana.nostrumfairies.client.gui.container.BufferChestGui;
+import com.smanzana.nostrumfairies.client.gui.container.BuildingBlockGui;
+import com.smanzana.nostrumfairies.client.gui.container.CraftingStationGui;
+import com.smanzana.nostrumfairies.client.gui.container.CraftingStationSmallGui;
+import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
+import com.smanzana.nostrumfairies.client.gui.container.HomeBlockGui;
+import com.smanzana.nostrumfairies.client.gui.container.InputChestGui;
+import com.smanzana.nostrumfairies.client.gui.container.LogisticsSensorGui;
+import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui;
+import com.smanzana.nostrumfairies.client.gui.container.OutputPanelGui;
+import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui;
+import com.smanzana.nostrumfairies.client.gui.container.TemplateWandGui;
 import com.smanzana.nostrumfairies.client.render.entity.RenderDwarf;
 import com.smanzana.nostrumfairies.client.render.entity.RenderDwarfBuilder;
 import com.smanzana.nostrumfairies.client.render.entity.RenderDwarfCrafter;
@@ -74,6 +87,7 @@ import com.smanzana.nostrummagica.client.model.MimicBlockBakedModel;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
@@ -157,6 +171,19 @@ public class ClientProxy extends CommonProxy {
 		ClientRegistry.bindTileEntitySpecialRenderer(CraftingBlockElfTileEntity.class, new CraftingBlockElfRenderer());
 		ClientRegistry.bindTileEntitySpecialRenderer(CraftingBlockGnomeTileEntity.class, new CraftingBlockGnomeRenderer());
 		ClientRegistry.bindTileEntitySpecialRenderer(LogisticsSensorTileEntity.class, new LogisticsSensorRenderer());
+		
+		ScreenManager.registerFactory(FairyContainers.BufferChest, BufferChestGui.BufferChestGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.BuildingBlock, BuildingBlockGui.BuildingBlockGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.CraftingStation, CraftingStationGui.CraftingStationGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.CraftingStationSmall, CraftingStationSmallGui.CraftingStationSmallGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.FairyScreen, FairyScreenGui.FairyScreenGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.HomeBlock, HomeBlockGui.HomeBlockGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.InputChest, InputChestGui.InputChestGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.LogisticsSensor, LogisticsSensorGui.LogisticsSensorGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.OutputChest, OutputChestGui.OutputChestGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.OutputPanel, OutputPanelGui.OutputPanelGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.StorageChest, StorageChestGui.StorageChestGuiContainer::new);
+		ScreenManager.registerFactory(FairyContainers.TemplateWand, TemplateWandGui.TemplateWandGuiContainer::new);
 	}
 	
 	@SubscribeEvent
