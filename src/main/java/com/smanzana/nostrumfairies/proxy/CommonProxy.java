@@ -82,11 +82,6 @@ public class CommonProxy {
 	
 	public void preinit() {
 		NetworkHandler.getInstance();
-    	
-    	NostrumMagica.instance.registerResearchReloadHook((i) -> {
-    		registerResearch();
-    		return 0;
-    	});
 	}
 	
 	public void init() {
@@ -97,6 +92,11 @@ public class CommonProxy {
     	//registerRituals();
     	registerLore();
     	registerResearch();
+    	
+    	NostrumMagica.instance.registerResearchReloadHook((i) -> {
+    		registerResearch();
+    		return 0;
+    	});
     	
     	FairyGael.registerRecipes();
 	}
