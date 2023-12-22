@@ -1063,4 +1063,9 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	public PetGUIStatAdapter<? extends IEntityPet> getGUIAdapter() {
 		return null;
 	}
+
+	@Override
+	public UUID getPetID() {
+		return this.getUniqueID();
+	}
 }

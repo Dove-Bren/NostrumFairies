@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "entries": [
+    "nostrumfairies:physical_golem",
+    "nostrumfairies:lightning_golem",
+    "nostrumfairies:fire_golem",
+    "nostrumfairies:earth_golem",
+    "nostrumfairies:ice_golem",
+    "nostrumfairies:wind_golem",
+    "nostrumfairies:ender_golem",
+    "nostrumfairies:iron_golem"
+  ]
+}
