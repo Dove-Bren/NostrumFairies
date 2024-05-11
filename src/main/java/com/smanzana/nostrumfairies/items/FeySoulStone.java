@@ -23,12 +23,13 @@ import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Carries fey.
@@ -65,6 +66,37 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		}
 	}
 	
+	@OnlyIn(Dist.CLIENT)
+	public static final float ModelFilled(ItemStack stack, @Nullable World worldIn, @Nullable LivingEntity entityIn) {
+		return HasStoredFey(stack) ? 1.0F : 0.0F;
+	}
+	
+	@OnlyIn(Dist.CLIENT)
+	public static final float ModelType(ItemStack stack, @Nullable World worldIn, @Nullable LivingEntity entityIn) {
+		float val = 0.0F;
+		final ResidentType feyType = getStoredFeyType(stack);
+		if (feyType == null) {
+			val = 0.0F;
+		} else {
+			switch (feyType) {
+			case DWARF:
+				val = 1.0F;
+				break;
+			case ELF:
+				val = 2.0F;
+				break;
+			case FAIRY:
+				val = 3.0F;
+				break;
+			case GNOME:
+				val = 4.0F;
+				break;
+			}
+		}
+		
+		return val;
+	}
+	
 	public static final String ID_SOUL_GEM = "soul_amethyst";
 	public static final String ID_SOUL_GAEL = "fairy_gael_basic";
 	
@@ -77,35 +109,6 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	public FeySoulStone(SoulStoneType type) {
 		super(FairyItems.PropUnstackable());
 		this.type = type;
-		
-		this.addPropertyOverride(new ResourceLocation("filled"), (stack, world, entity) -> {
-			return HasStoredFey(stack) ? 1.0F : 0.0F;
-		});
-		
-		this.addPropertyOverride(new ResourceLocation("type_idx"), (stack, world, entity) -> {
-			float val = 0.0F;
-			final ResidentType feyType = getStoredFeyType(stack);
-			if (feyType == null) {
-				val = 0.0F;
-			} else {
-				switch (feyType) {
-				case DWARF:
-					val = 1.0F;
-					break;
-				case ELF:
-					val = 2.0F;
-					break;
-				case FAIRY:
-					val = 3.0F;
-					break;
-				case GNOME:
-					val = 4.0F;
-					break;
-				}
-			}
-			
-			return val;
-		});
 	}
 	
 	public static FeySoulStone getItem(SoulStoneType type) {
@@ -238,7 +241,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 				return ItemStack.EMPTY;
 			}
 			nbt = fey.serializeNBT();
-			name = fey.getName().getFormattedText();
+			name = fey.getName().getString();
 		}
 		
 		return create(type, name, feyType, nbt);
@@ -261,7 +264,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		EntityFeyBase fey = null;
 		CompoundNBT feyData = ((FeySoulStone) stack.getItem()).getFeyData(stack);
 		if (feyData != null) {
-			Entity entity = EntitySpawning.readEntity(world, feyData, new Vec3d(x, y, z));
+			Entity entity = EntitySpawning.readEntity(world, feyData, new Vector3d(x, y, z));
 			//Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompound("data"), world, x, y, z, true);
 			if (entity == null) {
 				;
@@ -343,7 +346,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		final World worldIn = context.getWorld();
 		final PlayerEntity playerIn = context.getPlayer();
 		final Hand hand = context.getHand();
-		final Vec3d hitPos = context.getHitVec();
+		final Vector3d hitPos = context.getHitVec();
 		
 		if (worldIn.isRemote) {
 			return ActionResultType.SUCCESS;
@@ -365,19 +368,19 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
+	public ActionResultType itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
 		if (playerIn.world.isRemote) {
-			return true;
+			return ActionResultType.SUCCESS;
 		}
 		
 		if (!this.hasStoredFey(stack)) {
 			// Pick up fey, if it is one
 			if (!(target instanceof EntityFeyBase)) {
-				return false;
+				return ActionResultType.FAIL;
 			}
 			
 			if (target instanceof EntityPersonalFairy) {
-				return false;
+				return ActionResultType.FAIL;
 			}
 			
 			ItemStack newStack = storeEntity(stack, (EntityFeyBase) target);
@@ -385,10 +388,10 @@ public class FeySoulStone extends Item implements ILoreTagged {
 				playerIn.setHeldItem(hand, newStack);
 				target.remove();
 				//playerIn.world.removeEntity(target);
-				return true;
+				return ActionResultType.SUCCESS;
 			}
 		}
-		return false;
+		return ActionResultType.FAIL;
 	}
 	
 	@Override
@@ -398,11 +401,11 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			if (name == null || name.isEmpty()) {
 				name = "An unknown entity";
 			}
-			tooltip.add(new StringTextComponent(name).applyTextStyle(TextFormatting.AQUA));
+			tooltip.add(new StringTextComponent(name).mergeStyle(TextFormatting.AQUA));
 			
 			ResidentType type = getStoredFeyType(stack);
 			if (type != null) {
-				tooltip.add(new StringTextComponent(type.getName()).applyTextStyle(TextFormatting.DARK_AQUA));
+				tooltip.add(new StringTextComponent(type.getName()).mergeStyle(TextFormatting.DARK_AQUA));
 			}
 		}
 	}

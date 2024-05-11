@@ -60,7 +60,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -952,7 +952,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			float angle = (float) (rand.nextDouble() * (2 * Math.PI));
 			float tilt = (float) (rand.nextDouble() * (2 * Math.PI)) * .5f;
 			
-			targ = new BlockPos(new Vec3d(
+			targ = new BlockPos(new Vector3d(
 					pos.getX() + (Math.cos(angle) * dist),
 					pos.getY() + (Math.cos(tilt) * dist),
 					pos.getZ() + (Math.sin(angle) * dist)));

@@ -12,7 +12,7 @@ import net.minecraft.entity.projectile.ProjectileHelper;
 import net.minecraft.network.IPacket;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkHooks;
 
@@ -62,7 +62,7 @@ public class EntityArrowEx extends ArrowEntity {
 	
 	@Nullable
 	@Override
-	protected EntityRayTraceResult func_213866_a(Vec3d start, Vec3d end) { //findEntityOnPath
+	protected EntityRayTraceResult func_213866_a(Vector3d start, Vector3d end) { //findEntityOnPath
 		return ProjectileHelper.func_221271_a(this.world, this, start, end, this.getBoundingBox().expand(this.getMotion()).grow(1.0D), (ent) -> {
 			return this.filter.test(ent);
 		});

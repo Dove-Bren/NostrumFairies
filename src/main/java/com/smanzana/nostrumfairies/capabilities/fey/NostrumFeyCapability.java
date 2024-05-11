@@ -54,7 +54,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.common.MinecraftForge;
@@ -348,7 +348,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 								BlockPos pos = PositionCrystal.getBlockPosition(fairyInventory.getLogisticsGem());
 								int dim = PositionCrystal.getDimension(fairyInventory.getLogisticsGem());
 								
-								if (dim == owner.dimension.getId() && owner.getDistanceSq(new Vec3d(pos)) < 1024) {
+								if (dim == owner.dimension.getId() && owner.getDistanceSq(new Vector3d(pos)) < 1024) {
 									World world = NostrumFairies.getWorld(DimensionType.getById(dim));
 									LogisticsNetwork network = NostrumFairies.instance.getLogisticsRegistry().findNetwork(world, pos);
 									if (network != null) {

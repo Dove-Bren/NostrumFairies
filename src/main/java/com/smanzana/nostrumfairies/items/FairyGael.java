@@ -30,12 +30,13 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -137,7 +138,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		return stack;
 	}
 	
-	public static void initGael(ItemStack stack, @Nonnull World world) {
+	public static void initGael(ItemStack stack, @Nonnull ServerWorld world) {
 		// For some easy creative intergration
 		if (!stack.hasTag()) {
 			FairyGaelType type = getTypeOf(stack);
@@ -160,13 +161,13 @@ public class FairyGael extends Item implements ILoreTagged {
 		}
 	}
 	
-	public static @Nullable EntityPersonalFairy spawnStoredEntity(ItemStack stack, World world, double x, double y, double z) {
+	public static @Nullable EntityPersonalFairy spawnStoredEntity(ItemStack stack, ServerWorld world, double x, double y, double z) {
 		EntityPersonalFairy fey = null;
 		
 		initGael(stack, world);
 		
 		CompoundNBT nbt = stack.getTag();
-		Entity entity = EntitySpawning.readEntity(world, nbt.getCompound("data"), new Vec3d(x, y, z));
+		Entity entity = EntitySpawning.readEntity(world, nbt.getCompound("data"), new Vector3d(x, y, z));
 		if (entity != null) {
 			world.addEntity(entity);
 			
@@ -195,7 +196,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	public static void setStoredEntity(ItemStack stack, EntityPersonalFairy fey) {
 		if (fey != null) {
 			CompoundNBT tag = new CompoundNBT();
-			tag.putString("name", fey.getName().getFormattedText());
+			tag.putString("name", fey.getName().getString());
 			tag.putDouble("healthD", (double) fey.getHealth() / Math.max(1, (double) fey.getMaxHealth()));
 			tag.putDouble("energyD", (double) fey.getEnergy() / Math.max(1, (double) fey.getMaxEnergy()));
 			tag.put("data", fey.serializeNBT());
@@ -234,7 +235,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	 * @param gael
 	 * @param potency Relative efficiency. 1f is standard.
 	 */
-	public static void regenFairy(World world, ItemStack gael, float potency) {
+	public static void regenFairy(ServerWorld world, ItemStack gael, float potency) {
 		if (gael.isEmpty() || ((FairyGael) gael.getItem()).isCracked(gael)) {
 			return;
 		}
@@ -303,21 +304,21 @@ public class FairyGael extends Item implements ILoreTagged {
 	
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand hand) {
-		return ActionResult.newResult(ActionResultType.PASS, playerIn.getHeldItem(hand));
+		return ActionResult.resultPass(playerIn.getHeldItem(hand));
 	}
 	
 	@OnlyIn(Dist.CLIENT)
 	@Override
 	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
 		if (isCracked(stack)) {
-			tooltip.add(new TranslationTextComponent("info.fairy_gael.cracked").applyTextStyle(TextFormatting.DARK_RED));
+			tooltip.add(new TranslationTextComponent("info.fairy_gael.cracked").mergeStyle(TextFormatting.DARK_RED));
 		}
 		if (stack.hasTag()) {
 			String name = getStoredName(stack);
 			if (name == null || name.isEmpty()) {
 				name = "An unknown entity";
 			}
-			tooltip.add(new StringTextComponent(name).applyTextStyle(TextFormatting.AQUA));
+			tooltip.add(new StringTextComponent(name).mergeStyle(TextFormatting.AQUA));
 		}
 	}
 	

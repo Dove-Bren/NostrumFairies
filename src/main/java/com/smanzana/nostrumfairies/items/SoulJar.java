@@ -22,8 +22,7 @@ import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -37,15 +36,15 @@ import net.minecraftforge.common.util.Constants.NBT;
  *
  */
 public class SoulJar extends Item implements ILoreTagged {
+	
+	public static final float ModelFilled(ItemStack stack, @Nullable World worldIn, @Nullable LivingEntity entityIn) {
+		return isFilled(stack) ? 1f : 0f;
+	}
 
 	public static final String ID = "soul_jar";
 	
 	public SoulJar() {
 		super(FairyItems.PropUnstackable());
-		
-		this.addPropertyOverride(new ResourceLocation("filled"), (stack, world, entity) -> {
-			return isFilled(stack) ? 1.0F : 0.0F;
-		});
 	}
 	
 	protected static ItemStack createInternal(LivingEntity entity) {
@@ -80,7 +79,7 @@ public class SoulJar extends Item implements ILoreTagged {
 	
 	protected static void setStoredEntity(ItemStack stack, @Nullable LivingEntity entity) {
 		final CompoundNBT data = entity == null ? null : entity.serializeNBT();
-		final String name = entity == null ? null : entity.getDisplayName().getFormattedText();
+		final String name = entity == null ? null : entity.getDisplayName().getString();
 		setStoredEntityData(stack, data, name);
 	}
 	
@@ -88,7 +87,7 @@ public class SoulJar extends Item implements ILoreTagged {
 		LivingEntity ent = null;
 		CompoundNBT nbt = stack.getTag();
 		if (nbt != null && nbt.contains("entity", NBT.TAG_COMPOUND)) {
-			Entity entity = EntitySpawning.readEntity(world, nbt.getCompound("entity"), new Vec3d(x, y, z));
+			Entity entity = EntitySpawning.readEntity(world, nbt.getCompound("entity"), new Vector3d(x, y, z));
 			if (entity == null) {
 				;
 			} else if (entity instanceof LivingEntity) {
@@ -152,7 +151,7 @@ public class SoulJar extends Item implements ILoreTagged {
 		final World worldIn = context.getWorld();
 		final PlayerEntity playerIn = context.getPlayer();
 		final Hand hand = context.getHand();
-		final Vec3d hitPos = context.getHitVec();
+		final Vector3d hitPos = context.getHitVec();
 		
 		if (worldIn.isRemote) {
 			return ActionResultType.SUCCESS;
@@ -174,15 +173,15 @@ public class SoulJar extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
+	public ActionResultType itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
 		if (playerIn.world.isRemote) {
-			return true;
+			return ActionResultType.SUCCESS;
 		}
 		
 		if (!isFilled(stack)) {
 			// Pick up fey, if it is one
 			if (!(target instanceof LivingEntity)) {
-				return false;
+				return ActionResultType.FAIL;
 			}
 			
 			final ItemStack filled;
@@ -208,10 +207,10 @@ public class SoulJar extends Item implements ILoreTagged {
 				playerIn.setHeldItem(hand, filled);
 				//target.remove();
 				((ServerWorld) playerIn.world).removeEntity(target);
-				return true;
+				return ActionResultType.SUCCESS;
 			}
 		}
-		return false;
+		return ActionResultType.FAIL;
 	}
 	
 	@Override
@@ -221,7 +220,7 @@ public class SoulJar extends Item implements ILoreTagged {
 			if (name == null || name.isEmpty()) {
 				name = "An unknown entity";
 			}
-			tooltip.add(new StringTextComponent(name).applyTextStyle(TextFormatting.AQUA));
+			tooltip.add(new StringTextComponent(name).mergeStyle(TextFormatting.AQUA));
 		}
 	}
 	

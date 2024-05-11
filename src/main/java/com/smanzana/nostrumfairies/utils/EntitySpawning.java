@@ -7,7 +7,7 @@ import com.smanzana.nostrummagica.NostrumMagica;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
 public class EntitySpawning {
@@ -19,7 +19,7 @@ public class EntitySpawning {
 	 * @param pos
 	 * @return
 	 */
-	public static @Nullable Entity readEntity(World world, CompoundNBT tag, Vec3d pos) {
+	public static @Nullable Entity readEntity(World world, CompoundNBT tag, Vector3d pos) {
 		Entity ent;
 		try {
 			ent = EntityType.loadEntityUnchecked(tag, world).orElse(null);

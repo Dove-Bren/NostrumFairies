@@ -22,7 +22,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -61,7 +61,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 					alpha = 1f;
 				}
 				
-				Vec3d origin = new Vec3d(BlockPos.ZERO);
+				Vector3d origin = new Vector3d(BlockPos.ZERO);
 				Tessellator tessellator = Tessellator.getInstance();
 				BufferBuilder buffer = tessellator.getBuffer();
 				GlStateManager.pushMatrix();
@@ -86,10 +86,10 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				//OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 				
 				for (ILogisticsComponent component : neighbors) {
-					final Vec3d offset = new Vec3d(component.getPosition().toImmutable().subtract(te.getPos()));
-					final Vec3d dist = offset.scale(.25);
-					final Vec3d control1 = dist.add(dist.rotateYaw((float) (Math.PI * .5)));
-					final Vec3d control2 = offset.subtract(dist).subtract(dist.rotateYaw((float) (Math.PI * .5)));
+					final Vector3d offset = new Vector3d(component.getPosition().toImmutable().subtract(te.getPos()));
+					final Vector3d dist = offset.scale(.25);
+					final Vector3d control1 = dist.add(dist.rotateYaw((float) (Math.PI * .5)));
+					final Vector3d control2 = offset.subtract(dist).subtract(dist.rotateYaw((float) (Math.PI * .5)));
 					buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
 					for (int i = 0; i <= intervals; i++) {
 						
@@ -100,7 +100,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 //								(pos.getZ() - origin.getZ()) + .5).color(1f, .2f, .4f, .8f).endVertex();
 						
 						float prog = (float) i / (float) intervals;
-						Vec3d point = Curves.bezier(prog, origin, control1, control2, offset);
+						Vector3d point = Curves.bezier(prog, origin, control1, control2, offset);
 						
 //						float dotAmt = Math.max(0f, 1f - (perI * Math.abs(dotI - (float) i)));
 //						if (dotAmt == 0f) {

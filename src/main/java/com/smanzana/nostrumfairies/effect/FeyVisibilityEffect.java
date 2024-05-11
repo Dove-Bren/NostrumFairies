@@ -1,5 +1,7 @@
 package com.smanzana.nostrumfairies.effect;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.DisplayEffectsScreen;
@@ -35,14 +37,14 @@ public class FeyVisibilityEffect extends Effect {
 	
 	@OnlyIn(Dist.CLIENT)
 	@Override
-    public void renderInventoryEffect(EffectInstance effect, DisplayEffectsScreen<?> gui, int x, int y, float z) {
-		PotionIcon.FEY_VISIBILITY.draw(Minecraft.getInstance(), x + 6, y + 7);
+    public void renderInventoryEffect(EffectInstance effect, DisplayEffectsScreen<?> gui, MatrixStack matrixStackIn, int x, int y, float z) {
+		PotionIcon.FEY_VISIBILITY.draw(matrixStackIn, Minecraft.getInstance(), x + 6, y + 7);
 	}
 	
 	@OnlyIn(Dist.CLIENT)
 	@Override
-    public void renderHUDEffect(EffectInstance effect, AbstractGui gui, int x, int y, float z, float alpha) {
-		PotionIcon.FEY_VISIBILITY.draw(Minecraft.getInstance(), x + 3, y + 3);
+    public void renderHUDEffect(EffectInstance effect, AbstractGui gui, MatrixStack matrixStackIn, int x, int y, float z, float alpha) {
+		PotionIcon.FEY_VISIBILITY.draw(matrixStackIn, Minecraft.getInstance(), x + 3, y + 3);
 	}
 	
 }

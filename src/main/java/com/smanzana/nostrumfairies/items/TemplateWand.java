@@ -37,7 +37,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -68,6 +68,26 @@ public class TemplateWand extends Item implements ILoreTagged {
 		SPAWN
 	}
 	
+	public static final float ModelMode(ItemStack stack, @Nullable World worldIn, @Nullable LivingEntity entityIn) {
+		final WandMode mode = GetWandMode(stack);
+		float val = 0.0F;
+		if (mode != null) {
+			switch (mode) {
+			case SELECTION:
+				val = 1.0F;
+				break;
+			case CAPTURE:
+				val = 2.0F;
+				break;
+			case SPAWN:
+				val = 3.0F;
+				break;
+			}
+		}
+		
+		return val;
+	}
+	
 	public static final String ID = "template_wand";
 	private static final int MAX_TEMPLATES = 10;
 	public static final int MAX_TEMPLATE_BLOCKS = 16 * 16 * 128;
@@ -77,30 +97,10 @@ public class TemplateWand extends Item implements ILoreTagged {
 	
 	public TemplateWand() {
 		super(FairyItems.PropUnstackable());
-		
-		this.addPropertyOverride(new ResourceLocation("mode"), (stack, world, entity) -> {
-			final WandMode mode = GetWandMode(stack);
-			float val = 0.0F;
-			if (mode != null) {
-				switch (mode) {
-				case SELECTION:
-					val = 1.0F;
-					break;
-				case CAPTURE:
-					val = 2.0F;
-					break;
-				case SPAWN:
-					val = 3.0F;
-					break;
-				}
-			}
-			
-			return val;
-		});
 	}
 	
 	@Override
-	public String getHighlightTip(ItemStack item, String displayName ) {
+	public ITextComponent getHighlightTip(ItemStack item, ITextComponent displayName ) {
 		return displayName;
 	}
 	
@@ -343,8 +343,8 @@ public class TemplateWand extends Item implements ILoreTagged {
 		// Check for blank map and create template scroll
 		Pair<BlockPos, BlockPos> selection = attr.getTemplateSelection();
 		if (selection == null || selection.getLeft() == null || selection.getRight() == null) {
-			playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.nopos"));
-			return ActionResult.<ItemStack>newResult(ActionResultType.FAIL, stack);
+			playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.nopos"), Util.DUMMY_UUID);
+			return ActionResult.resultFail(stack);
 		}
 		
 		// Figure out dimensions
@@ -362,8 +362,8 @@ public class TemplateWand extends Item implements ILoreTagged {
 					* Math.abs(min.getZ() - max.getZ());
 			
 			if (size > MAX_TEMPLATE_BLOCKS) {
-				playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.toobig"));
-				return ActionResult.<ItemStack>newResult(ActionResultType.FAIL, stack);
+				playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.toobig"), Util.DUMMY_UUID);
+				return ActionResult.resultFail(stack);
 			}
 		}
 		
@@ -373,8 +373,8 @@ public class TemplateWand extends Item implements ILoreTagged {
 			// Find blank map
 			ItemStack map = new ItemStack(Items.MAP);
 			if (!Inventories.remove(playerIn.inventory, map).isEmpty()) {
-				playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.nomap"));
-				return ActionResult.<ItemStack>newResult(ActionResultType.FAIL, stack);
+				playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.nomap"), Util.DUMMY_UUID);
+				return ActionResult.resultFail(stack);
 			}
 		}
 			
@@ -382,7 +382,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		Direction face = null;
 		if (clickedPos != null) {
 			// Figure out facing by looking at clicked pos vs our pos
-			face = Direction.getFacingFromVector((float) (clickedPos.getX() - playerIn.posX), 0f, (float) (clickedPos.getZ() - playerIn.posZ));
+			face = Direction.getFacingFromVector((float) (clickedPos.getX() - playerIn.getPosX()), 0f, (float) (clickedPos.getZ() - playerIn.getPosZ()));
 		}
 		BlockPos offset = (clickedPos == null ? null : clickedPos.subtract(min));
 		ItemStack scroll = TemplateScroll.Capture(worldIn, min, max, offset, face);
@@ -393,7 +393,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		}
 		
 		if (scroll.isEmpty()) {
-			playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.towand"));
+			playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.towand"), Util.DUMMY_UUID);
 		} else {
 			scroll = Inventories.addItem(playerIn.inventory, scroll); 
 			if (!scroll.isEmpty()) {
@@ -404,7 +404,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		// Conveniently switch to selection mode to prevent wasting maps
 		attr.clearTemplateSelection();
 		NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
-		return ActionResult.<ItemStack>newResult(ActionResultType.SUCCESS, stack);
+		return ActionResult.resultSuccess(stack);
 	}
 	
 	@Override
@@ -420,17 +420,17 @@ public class TemplateWand extends Item implements ILoreTagged {
 					pos = Inventories.getPlayerHandSlotIndex(playerIn.inventory, Hand.OFF_HAND);
 				}
 				NostrumMagica.instance.proxy.openContainer(playerIn, TemplateWandGui.TemplateWandContainer.Make(pos));
-				return ActionResult.<ItemStack>newResult(ActionResultType.SUCCESS, stack);
+				return ActionResult.resultSuccess(stack);
 			}
 		}
 		
 		if (worldIn.isRemote) {
-			return ActionResult.<ItemStack>newResult(ActionResultType.SUCCESS, stack);
+			return ActionResult.resultSuccess(stack);
 		}
 		
 		final INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
 		if (attr == null || !(attr.builderFairyUnlocked())) {
-			return ActionResult.<ItemStack>newResult(ActionResultType.FAIL, stack);
+			return ActionResult.resultFail(stack);
 		}
 		
 		if (mode == WandMode.SELECTION) {
@@ -438,15 +438,15 @@ public class TemplateWand extends Item implements ILoreTagged {
 			if (playerIn.isSneaking()) {
 				attr.clearTemplateSelection();
 				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
-				return ActionResult.<ItemStack>newResult(ActionResultType.SUCCESS, stack);
+				return ActionResult.resultSuccess(stack);
 			}
 			
-			return ActionResult.<ItemStack>newResult(ActionResultType.PASS, stack);
+			return ActionResult.resultPass(stack);
 		} else if (mode == WandMode.CAPTURE) {
 			return capture(stack, worldIn, playerIn, null);
 		}
 		
-		return ActionResult.<ItemStack>newResult(ActionResultType.PASS, stack);
+		return ActionResult.resultPass(stack);
 	}
 	
 	@Override
@@ -491,7 +491,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 				if (!templateScroll.isEmpty() && templateScroll.getItem() instanceof TemplateScroll) {
 					TemplateBlueprint blueprint = TemplateScroll.GetTemplate(templateScroll);
 					if (blueprint != null) {
-						Direction rotate = Direction.getFacingFromVector((float) (pos.getX() - playerIn.posX), 0f, (float) (pos.getZ() - playerIn.posZ));
+						Direction rotate = Direction.getFacingFromVector((float) (pos.getX() - playerIn.getPosX()), 0f, (float) (pos.getZ() - playerIn.getPosZ()));
 						List<BlockPos> blocks = blueprint.spawn(worldIn, pos.offset(context.getFace()), rotate);
 						for (BlockPos buildSpot : blocks) {
 							attr.addBuildSpot(buildSpot);
@@ -505,7 +505,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
+	public ActionResultType itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
 		return super.itemInteractionForEntity(stack, playerIn, target, hand);
 	}
 	

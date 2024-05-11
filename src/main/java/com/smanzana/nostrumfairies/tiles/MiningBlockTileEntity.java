@@ -291,7 +291,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 						BlockItem itemBlock = (BlockItem) buildingMaterial.getItem();
 						try {
 //							// Note: saying raytrace was up one block on the bottom face, so the PLACE loc is the right spot
-//							BlockRayTraceResult trace = new BlockRayTraceResult(new Vec3d(pos.up()).add(.5, 0, .5), Direction.DOWN, pos.up(), false);
+//							BlockRayTraceResult trace = new BlockRayTraceResult(new Vector3d(pos.up()).add(.5, 0, .5), Direction.DOWN, pos.up(), false);
 //							BlockItemUseContext context = new BlockItemUseContext(
 //									new ItemUseContext(world, null, Hand.MAIN_HAND, buildingMaterial, trace));
 //							int meta = itemBlock.getMetadata(buildingMaterial.getMetadata());

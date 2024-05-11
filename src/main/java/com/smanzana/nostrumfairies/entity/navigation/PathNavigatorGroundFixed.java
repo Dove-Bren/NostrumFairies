@@ -16,7 +16,7 @@ public class PathNavigatorGroundFixed extends GroundPathNavigator {
 //	}
 //
 //	@Override
-//	protected void checkForStuck(Vec3d positionVec3) {
+//	protected void checkForStuck(Vector3d positionVec3) {
 //		//Field totalTicksField = ReflectionHelper.findField(PathNavigate.class, "totalTicks");
 //		final int totalTicks = ObfuscationReflectionHelper.getPrivateValue(PathNavigate.class, this, "field_75510_g");//"totalTicks");
 //		Field ticksAtLastPosField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_75520_h");//"ticksAtLastPos");
@@ -28,7 +28,7 @@ public class PathNavigatorGroundFixed extends GroundPathNavigator {
 //		
 //		try {
 //			if (totalTicks - ticksAtLastPosField.getInt(this) > 100) {
-//				if (positionVec3.squareDistanceTo((Vec3d) lastPosCheckField.get(this)) < 2.25D) {
+//				if (positionVec3.squareDistanceTo((Vector3d) lastPosCheckField.get(this)) < 2.25D) {
 //					this.clearPath();
 //				}
 //	
@@ -37,20 +37,20 @@ public class PathNavigatorGroundFixed extends GroundPathNavigator {
 //			}
 //	
 //			if (this.currentPath != null && !this.currentPath.isFinished()) {
-//				Vec3d vec3d = this.currentPath.getCurrentPos();
+//				Vector3d Vector3d = this.currentPath.getCurrentPos();
 //	
-//				if (vec3d.equals(timeoutCachedNodeField.get(this))) {
+//				if (Vector3d.equals(timeoutCachedNodeField.get(this))) {
 //					timeoutTimerField.setLong(this, timeoutTimerField.getLong(this) + (System.currentTimeMillis() - lastTimeoutCheckField.getLong(this)));
 //					//timeoutTimer += System.currentTimeMillis() - lastTimeoutCheckField.getInt(this);
 //				} else {
-//					timeoutCachedNodeField.set(this, vec3d);
-//					double d0 = positionVec3.distanceTo((Vec3d) timeoutCachedNodeField.get(this));
+//					timeoutCachedNodeField.set(this, Vector3d);
+//					double d0 = positionVec3.distanceTo((Vector3d) timeoutCachedNodeField.get(this));
 //					timeoutLimitField.setDouble(this, this.entity.getAIMoveSpeed() > 0.0F ? d0 / (double)this.entity.getAIMoveSpeed() * 1000.0D : 0.0D);
 //					timeoutTimerField.setLong(this, 0);
 //				}
 //	
 //				if (timeoutLimitField.getDouble(this) > 0.0D && (double)timeoutTimerField.getLong(this) > timeoutLimitField.getDouble(this) * 3.0D) {
-//					timeoutCachedNodeField.set(this, Vec3d.ZERO);
+//					timeoutCachedNodeField.set(this, Vector3d.ZERO);
 //					timeoutTimerField.setLong(this, 0L);
 //					timeoutLimitField.setDouble(this, 0.0D);
 //					clearStuckEntity();

@@ -21,7 +21,7 @@ import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -139,9 +139,9 @@ public class StaticTESRRenderer {
 	}
 	
 	private void drawTarget(RenderTarget target, Minecraft mc, ClientPlayerEntity player, float partialTicks) {
-		Vec3d playerPos = mc.gameRenderer.getActiveRenderInfo().getProjectedView();//player.getEyePosition(partialTicks).subtract(0, eyeY, 0);
+		Vector3d playerPos = mc.gameRenderer.getActiveRenderInfo().getProjectedView();//player.getEyePosition(partialTicks).subtract(0, eyeY, 0);
 		BlockPos pos = target.te.getPos();
-		Vec3d offset = new Vec3d(pos.getX() - playerPos.x,
+		Vector3d offset = new Vector3d(pos.getX() - playerPos.x,
 				pos.getY() - playerPos.y,
 				pos.getZ() - playerPos.z);
 		

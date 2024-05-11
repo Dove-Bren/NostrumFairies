@@ -8,7 +8,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.IForgeRegistry;
 
@@ -64,7 +64,7 @@ public enum NostrumFairiesSounds {
 		play(at, at.world, at.getPositionVector());
 	}
 	
-	public void play(PlayerEntity player, World world, Vec3d at) {
+	public void play(PlayerEntity player, World world, Vector3d at) {
 		play(player, world, at.x, at.y, at.z);
 	}
 	

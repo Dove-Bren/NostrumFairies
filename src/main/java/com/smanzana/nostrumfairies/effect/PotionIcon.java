@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.effect;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
@@ -28,10 +29,9 @@ public enum PotionIcon {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public void draw(Minecraft mc, int posX, int posY) {
+	public void draw(MatrixStack matrixStackIn, Minecraft mc, int posX, int posY) {
 		mc.textureManager.bindTexture(text);
-		
-		RenderFuncs.drawScaledCustomSizeModalRect(posX, posY,
+		RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, posX, posY,
 				TEXT_OFFSETU + (u * 32), TEXT_OFFSETV + (v * 32),
 				32, 32,
 				16, 16,

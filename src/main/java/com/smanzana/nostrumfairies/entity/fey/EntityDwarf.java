@@ -74,7 +74,7 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
@@ -666,7 +666,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 					float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
 					float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
 					
-					targ = new BlockPos(new Vec3d(
+					targ = new BlockPos(new Vector3d(
 							center.getX() + (Math.cos(angle) * dist),
 							center.getY() + (Math.cos(tilt) * dist),
 							center.getZ() + (Math.sin(angle) * dist)));
@@ -790,7 +790,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 							float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
 							float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
 							
-							targ = new BlockPos(new Vec3d(
+							targ = new BlockPos(new Vector3d(
 									center.getX() + (Math.cos(angle) * dist),
 									center.getY() + (Math.cos(tilt) * dist),
 									center.getZ() + (Math.sin(angle) * dist)));

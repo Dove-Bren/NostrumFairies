@@ -23,6 +23,7 @@ import net.minecraft.item.Rarity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Util;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -138,8 +139,8 @@ public class FairyInstrument extends Item implements ILoreTagged {
 				// toggle enable
 				attr.setEnabled(!attr.isEnabled());
 				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
-				NostrumFairiesSounds.BELL.play(playerIn.world, playerIn.posX, playerIn.posY, playerIn.posZ);
-				return ActionResult.newResult(ActionResultType.PASS, stack);
+				NostrumFairiesSounds.BELL.play(playerIn.world, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ());
+				return ActionResult.resultPass(stack);
 			}
 				
 			
@@ -157,7 +158,7 @@ public class FairyInstrument extends Item implements ILoreTagged {
 				break;
 			}
 			
-			sound.play(worldIn, playerIn.posX, playerIn.posY, playerIn.posZ);
+			sound.play(worldIn, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ());
 			
 			if (attr != null && attr.isUnlocked()) {
 				// Open gui
@@ -173,11 +174,11 @@ public class FairyInstrument extends Item implements ILoreTagged {
 					return true;
 				}, 30, 0);
 			} else {
-				playerIn.sendMessage(new TranslationTextComponent("info.instrument.locked"));
+				playerIn.sendMessage(new TranslationTextComponent("info.instrument.locked"), Util.DUMMY_UUID);
 			}
 		}
 		
-		return ActionResult.newResult(ActionResultType.PASS, stack);
+		return ActionResult.resultPass(stack);
 	}
 	
 	@Override
@@ -187,7 +188,7 @@ public class FairyInstrument extends Item implements ILoreTagged {
 		
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(NostrumFairies.proxy.getPlayer());
 		if (attr != null && !attr.isEnabled()) {
-			tooltip.add(new TranslationTextComponent("info.instrument.disabled").applyTextStyle(TextFormatting.DARK_RED));
+			tooltip.add(new TranslationTextComponent("info.instrument.disabled").mergeStyle(TextFormatting.DARK_RED));
 		}
 	}
 	

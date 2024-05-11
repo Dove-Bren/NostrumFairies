@@ -5,7 +5,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.Lists;
-import com.mojang.realmsclient.gui.ChatFormatting;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.items.FairyGael;
 import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
@@ -20,6 +19,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class FairyHolderInventory implements IInventory, IAutoContainerInventory {
@@ -49,10 +49,10 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 		
 		public List<String> getDescription() {
 			if (this.desc == null) {
-				String raw = I18n.format("fairytarget." + getUnlocName() + ".desc", "" + ChatFormatting.DARK_GREEN + ChatFormatting.BOLD, ChatFormatting.RESET);
+				String raw = I18n.format("fairytarget." + getUnlocName() + ".desc", "" + TextFormatting.DARK_GREEN + TextFormatting.BOLD, TextFormatting.RESET);
 				String[] lines = raw.split("\\|");
 				
-				this.desc = Lists.asList("" + ChatFormatting.BLUE + ChatFormatting.BOLD + getName() + ChatFormatting.RESET, lines);
+				this.desc = Lists.asList("" + TextFormatting.BLUE + TextFormatting.BOLD + getName() + TextFormatting.RESET, lines);
 			}
 			return desc;
 		}
@@ -82,10 +82,10 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 		
 		public List<String> getDescription() {
 			if (this.desc == null) {
-				String raw = I18n.format("fairyplacement." + getUnlocName() + ".desc", "" + ChatFormatting.DARK_GREEN + ChatFormatting.BOLD, ChatFormatting.RESET);
+				String raw = I18n.format("fairyplacement." + getUnlocName() + ".desc", "" + TextFormatting.DARK_GREEN + TextFormatting.BOLD, TextFormatting.RESET);
 				String[] lines = raw.split("\\|");
 				
-				this.desc = Lists.asList("" + ChatFormatting.BLUE + ChatFormatting.BOLD + getName() + ChatFormatting.RESET, lines);
+				this.desc = Lists.asList("" + TextFormatting.BLUE + TextFormatting.BOLD + getName() + TextFormatting.RESET, lines);
 			}
 			return desc;
 		}

@@ -11,7 +11,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -210,7 +210,7 @@ public class CompositePath extends Path {
 	/**
 	 * Gets the vector of the PathPoint associated with the given index.
 	 */
-	public Vec3d getVectorFromIndex(Entity entityIn, int index) {
+	public Vector3d getVectorFromIndex(Entity entityIn, int index) {
 		if (index == cachedCurrIndex) {
 			return cachedCurrPath.getVectorFromIndex(entityIn, cachedCurrPath.getCurrentPathIndex());
 		}
@@ -220,15 +220,15 @@ public class CompositePath extends Path {
 	}
 
 	/**
-	 * returns the current PathEntity target node as Vec3D
+	 * returns the current PathEntity target node as Vector3d
 	 */
-	public Vec3d getPosition(Entity entityIn) {
+	public Vector3d getPosition(Entity entityIn) {
 		return this.getVectorFromIndex(entityIn, this.compoundPathIndex);
 	}
 
-	public Vec3d getCurrentPos() {
+	public Vector3d getCurrentPos() {
 		PathPoint pathpoint = this.getPathPointFromIndex(compoundPathIndex);
-		return new Vec3d((double)pathpoint.x, (double)pathpoint.y, (double)pathpoint.z);
+		return new Vector3d((double)pathpoint.x, (double)pathpoint.y, (double)pathpoint.z);
 	}
 
 	/**

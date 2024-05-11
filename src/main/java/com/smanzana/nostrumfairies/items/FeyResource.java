@@ -34,13 +34,12 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -141,7 +140,7 @@ public class FeyResource extends Item implements ILoreTagged {
 		return this.type;
 	}
 	
-	protected void spawnFey(World worldIn, BlockPos at) {
+	protected void spawnFey(ServerWorld worldIn, BlockPos at) {
 		final EntityFeyBase fey;
 		switch (NostrumFairies.random.nextInt(5)) {
 		case 0:
@@ -162,7 +161,7 @@ public class FeyResource extends Item implements ILoreTagged {
 			break;
 		}
 		fey.setPosition(at.getX() + .5, at.getY(), at.getZ() + .5);
-		fey.onInitialSpawn(worldIn, worldIn.getDifficultyForLocation(new BlockPos(fey)), SpawnReason.MOB_SUMMONED, (ILivingEntityData)null, null);
+		fey.onInitialSpawn(worldIn, worldIn.getDifficultyForLocation(fey.getPosition()), SpawnReason.MOB_SUMMONED, (ILivingEntityData)null, null);
 		
 		worldIn.addEntity(fey);
 		
@@ -189,9 +188,9 @@ public class FeyResource extends Item implements ILoreTagged {
 		if (type == FeyResourceType.FLOWER) {
 			
 			if (!worldIn.isRemote) {
-				spawnFey(worldIn, pos.up());
+				spawnFey((ServerWorld) worldIn, pos.up());
 				int count = NostrumFairies.random.nextInt(3) + 1;
-				MutableBlockPos cursor = new MutableBlockPos();
+				BlockPos.Mutable cursor = new BlockPos.Mutable();
 				for (int i = 0; i < count; i++) {
 					cursor.setPos(pos.up()).move(Direction.Plane.HORIZONTAL.random(NostrumFairies.random), NostrumFairies.random.nextInt(2) + 1);
 					for (int j = 0; j < 5; j++) {
@@ -240,7 +239,7 @@ public class FeyResource extends Item implements ILoreTagged {
 						stack.shrink(1);
 						return new ActionResult<ItemStack>(ActionResultType.SUCCESS, stack);
 					} else {
-						playerIn.sendMessage(new TranslationTextComponent("info.tablet.fail"));
+						playerIn.sendMessage(new TranslationTextComponent("info.tablet.fail"), Util.DUMMY_UUID);
 						return new ActionResult<ItemStack>(ActionResultType.FAIL, stack);
 					}
 				}
@@ -249,17 +248,17 @@ public class FeyResource extends Item implements ILoreTagged {
 			}
 		} else if (type == FeyResourceType.BELL) {
 			if (!worldIn.isRemote) {
-				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, VoxelShapes.fullCube().getBoundingBox().offset(playerIn.posX, playerIn.posY, playerIn.posZ).grow(30))) {
+				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, VoxelShapes.fullCube().getBoundingBox().offset(playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ()).grow(30))) {
 					ent.addPotionEffect(new EffectInstance(Effects.GLOWING, 20 * 5));
 					NostrumMagica.playerListener.registerTimer((/*Event*/ eType, /*LivingEntity*/ entity, /*Object*/ data) -> {
 						if (eType == Event.TIME) {
-							NostrumFairiesSounds.BELL.play(worldIn, ent.posX, ent.posY, ent.posZ);
+							NostrumFairiesSounds.BELL.play(worldIn, ent.getPosX(), ent.getPosY(), ent.getPosZ());
 						}
 						return true;
 					}, 10, 10);
 				}
 				
-				NostrumFairiesSounds.BELL.play(worldIn, playerIn.posX, playerIn.posY, playerIn.posZ);
+				NostrumFairiesSounds.BELL.play(worldIn, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ());
 			}
 			return new ActionResult<ItemStack>(ActionResultType.SUCCESS, stack);
 		}
@@ -284,9 +283,9 @@ public class FeyResource extends Item implements ILoreTagged {
 		for (int i = 0; i <= event.getLootingLevel(); i++) {
 			if (NostrumFairies.random.nextFloat() < chance) {
 				ItemEntity entity = new ItemEntity(event.getEntity().world,
-						event.getEntity().posX,
-						event.getEntity().posY,
-						event.getEntity().posZ,
+						event.getEntity().getPosX(),
+						event.getEntity().getPosY(),
+						event.getEntity().getPosZ(),
 						create(FeyResourceType.GOLEM_TOKEN, 1));
 				event.getDrops().add(entity);
 			}

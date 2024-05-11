@@ -39,7 +39,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -343,7 +343,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 					float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
 					float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
 					
-					targ = new BlockPos(new Vec3d(
+					targ = new BlockPos(new Vector3d(
 							center.getX() + (Math.cos(angle) * dist),
 							center.getY() + (Math.cos(tilt) * dist),
 							center.getZ() + (Math.sin(angle) * dist)));
@@ -409,7 +409,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 							float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
 							float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
 							
-							targ = new BlockPos(new Vec3d(
+							targ = new BlockPos(new Vector3d(
 									center.getX() + (Math.cos(angle) * dist),
 									center.getY() + (Math.cos(tilt) * dist),
 									center.getZ() + (Math.sin(angle) * dist)));
@@ -622,7 +622,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 				
 				if (Math.abs(d3) < .25) {
 					lastDist = 0.0D;
-					this.parentEntity.setMotion(Vec3d.ZERO);
+					this.parentEntity.setMotion(Vector3d.ZERO);
 					this.action = MovementController.Action.WAIT;
 					return;
 				} else if (lastDist != 0.0D && Math.abs(lastDist - d3) < 0.05) {
@@ -701,7 +701,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		int color = 0x40CCFFDD;
 		NostrumParticles.GLOW_ORB.spawn(world, new SpawnParams(
 				1, posX, posY + getHeight()/2f, posZ, 0, 40, 0,
-				new Vec3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), null
+				new Vector3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), null
 				).color(color));
 	}
 	

@@ -40,7 +40,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public String getHighlightTip(ItemStack item, String displayName) {
+	public ITextComponent getHighlightTip(ItemStack item, ITextComponent displayName) {
 		return displayName;
 	}
 	
@@ -125,7 +125,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
+	public ActionResultType itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
 		return super.itemInteractionForEntity(stack, playerIn, target, hand);
 	}
 	
