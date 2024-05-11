@@ -12,6 +12,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -32,11 +33,11 @@ public class BufferLogisticsChest extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		BufferChestTileEntity chest = (BufferChestTileEntity) worldIn.getTileEntity(pos);
 		NostrumMagica.instance.proxy.openContainer(playerIn, BufferChestGui.BufferChestContainer.Make(chest));
 		
-		return true;
+		return ActionResultType.SUCCESS;
 	}
 	
 	@Override

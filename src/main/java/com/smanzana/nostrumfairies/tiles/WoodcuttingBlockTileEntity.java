@@ -31,7 +31,6 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 
 public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity,  ILogisticsTaskListener, IFeySign {
@@ -150,7 +149,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 			}
 		}
 		
-		MutableBlockPos pos = new MutableBlockPos();
+		BlockPos.Mutable pos = new BlockPos.Mutable();
 		BlockPos center = this.getPos();
 		final int startY = (int) Math.max(-pos.getY(), Math.floor(-radius));
 		final int endY = (int) Math.min(256 - pos.getY(), Math.ceil(radius));

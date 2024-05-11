@@ -36,7 +36,6 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.LightType;
@@ -424,7 +423,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				// No light from the 'sky' which means we're underground
 				// Refreseh magic lights around. Then see if it's too dark
 				BlockState state;
-				MutableBlockPos cursor = new MutableBlockPos();
+				BlockPos.Mutable cursor = new BlockPos.Mutable();
 				for (int x = -1; x <= 1; x++)
 				for (int y = -1; y <= 1; y++)
 				for (int z = -1; z <= 1; z++) {

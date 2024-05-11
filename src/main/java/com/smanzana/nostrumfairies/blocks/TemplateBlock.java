@@ -12,7 +12,6 @@ import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrummagica.blocks.MimicBlock;
 import com.smanzana.nostrummagica.utils.NonNullHashMap;
 import com.smanzana.nostrummagica.utils.RayTrace;
-import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -25,7 +24,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.pathfinding.PathType;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
@@ -35,7 +33,7 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.DrawBlockHighlightEvent;
+import net.minecraftforge.client.event.DrawHighlightEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -181,17 +179,6 @@ public class TemplateBlock extends MimicBlock {
 		return true;
 	}
 	
-//	@Override
-//	public boolean doesSideBlockRendering(BlockState state, IBlockAccess world, BlockPos pos, Direction face) {
-//		return false;
-//	}
-	
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public BlockRenderLayer getRenderLayer() {
-		return BlockRenderLayer.CUTOUT;
-	}
-	
 	@Override
 	@OnlyIn(Dist.CLIENT)
 	public BlockRenderType getRenderType(BlockState state) {
@@ -208,7 +195,7 @@ public class TemplateBlock extends MimicBlock {
 	
 	@SubscribeEvent
 	@OnlyIn(Dist.CLIENT)
-	public void onBlockHighlight(DrawBlockHighlightEvent event) {
+	public void onBlockHighlight(DrawHighlightEvent.HighlightBlock event) {
 		if (event.getTarget().getType() == RayTraceResult.Type.BLOCK) {
 			Entity renderEnt = event.getInfo().getRenderViewEntity();
 			BlockPos pos = RayTrace.blockPosFromResult(event.getTarget());
@@ -221,7 +208,8 @@ public class TemplateBlock extends MimicBlock {
 					blockState = Blocks.STONE.getDefaultState();
 				}
 				
-				RenderFuncs.RenderBlockOutline((PlayerEntity)renderEnt, renderEnt.world, pos, hit, event.getPartialTicks());
+				int unused;
+				//RenderFuncs.RenderBlockOutline((PlayerEntity)renderEnt, renderEnt.world, pos, hit, event.getPartialTicks());
 				
 				event.setCanceled(true);
 				return;

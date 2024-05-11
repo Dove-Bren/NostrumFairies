@@ -14,7 +14,6 @@ import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 
 public class EntityDwarfBuilder extends EntityDwarf {
@@ -74,7 +73,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		}
 		
 		// Otherwise try and find a place underneat the build spot to walk to instead
-		MutableBlockPos cursor = new MutableBlockPos();
+		BlockPos.Mutable cursor = new BlockPos.Mutable();
 		final int yIncr = 1 * (buildPos.getY() > posY ? -1 : 1);
 		
 		boolean lastSolid = true;

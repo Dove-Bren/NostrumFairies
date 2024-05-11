@@ -34,7 +34,6 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -148,7 +147,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		Set<BlockPos> known = Sets.newHashSet(taskMap.keySet());
 		List<BlockPos> templateSpots = new LinkedList<>();
 		
-		final MutableBlockPos cursor = new MutableBlockPos();
+		final BlockPos.Mutable cursor = new BlockPos.Mutable();
 		for (int x = (int) Math.floor(-radius); x <= Math.ceil(radius); x++)
 		for (int z = (int) Math.floor(-radius); z <= Math.ceil(radius); z++) {
 			cursor.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);

@@ -14,7 +14,7 @@ import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -81,11 +81,6 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	}
 	
 	@Override
-	public BlockRenderLayer getRenderLayer() {
-		return BlockRenderLayer.CUTOUT;
-	}
-	
-	@Override
 	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
 		switch (state.get(FACING)) {
 		case NORTH:
@@ -141,11 +136,11 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		OutputPanelTileEntity panel = (OutputPanelTileEntity) worldIn.getTileEntity(pos);
 		NostrumMagica.instance.proxy.openContainer(playerIn, OutputPanelGui.OutputPanelContainer.Make(panel));
 		
-		return true;
+		return ActionResultType.SUCCESS;
 	}
 	
 	@Override

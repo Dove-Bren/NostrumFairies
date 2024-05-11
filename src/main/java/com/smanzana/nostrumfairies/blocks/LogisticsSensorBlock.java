@@ -18,7 +18,7 @@ import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -65,18 +65,13 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 	}
 	
 	@Override
-	public BlockRenderLayer getRenderLayer() {
-		return BlockRenderLayer.CUTOUT;
-	}
-	
-	@Override
 	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
 		return VoxelShapes.fullCube();
 	}
 	
 	@Override
 	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		if (!Block.hasSolidSide(worldIn.getBlockState(pos.down()), worldIn, pos.down(), Direction.UP)) {
+		if (!Block.hasEnoughSolidSide(worldIn, pos.down(), Direction.UP)) {
 			return false;
 		}
 		
@@ -93,7 +88,7 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 	}
 	
 	@Override
-	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		
 		// Kick off a request to refresh info.
 		if (worldIn.isRemote) {
@@ -112,7 +107,7 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 		LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) worldIn.getTileEntity(pos);
 		NostrumMagica.instance.proxy.openContainer(playerIn, LogisticsSensorGui.LogisticsSensorContainer.Make(sensor));
 		
-		return true;
+		return ActionResultType.SUCCESS;
 	}
 	
 	@Override

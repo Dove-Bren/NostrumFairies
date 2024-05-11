@@ -14,7 +14,7 @@ import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -53,17 +53,12 @@ public class LogisticsPylon extends FeyContainerBlock {
 		}
 		
 		BlockPos attachedPos = context.getPos().offset(context.getFace().getOpposite());
-		if (!Block.hasSolidSide(context.getWorld().getBlockState(attachedPos), context.getWorld(), attachedPos, context.getFace())) {
+		if (!Block.hasEnoughSolidSide(context.getWorld(), attachedPos, context.getFace())) {
 			return null;
 		}
 		
 		return this.getDefaultState()
 				.with(FACING, context.getFace() == Direction.DOWN ? context.getFace() : Direction.UP);
-	}
-	
-	@Override
-	public BlockRenderLayer getRenderLayer() {
-		return BlockRenderLayer.CUTOUT;
 	}
 	
 	@Override
@@ -73,7 +68,7 @@ public class LogisticsPylon extends FeyContainerBlock {
 		}
 		
 		BlockPos attachedPos = pos.offset(facing.getOpposite());
-		if (!Block.hasSolidSide(world.getBlockState(attachedPos), world, attachedPos, facing.getOpposite())) {
+		if (!Block.hasEnoughSolidSide(world, attachedPos, facing.getOpposite())) {
 			return Blocks.AIR.getDefaultState();
 		}
 		
@@ -81,8 +76,8 @@ public class LogisticsPylon extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
-		return false; // could do a cool ping animation or something
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+		return ActionResultType.PASS; // could do a cool ping animation or something
 	}
 	
 	@Override

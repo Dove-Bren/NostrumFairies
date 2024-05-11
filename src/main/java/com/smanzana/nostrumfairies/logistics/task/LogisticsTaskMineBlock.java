@@ -21,7 +21,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
@@ -443,7 +442,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		NonNullList<ItemStack> drops = NonNullList.create();
 		if (state.getBlock() instanceof FallingBlock) {
 			// Walk and DESTROY ALL GRAVEL that's up
-			MutableBlockPos cursor = new MutableBlockPos(block);
+			BlockPos.Mutable cursor = new BlockPos.Mutable(block);
 			do {
 				drops.addAll(Block.getDrops(state, (ServerWorld) world, cursor, world.getTileEntity(cursor)));
 				world.destroyBlock(cursor, false);

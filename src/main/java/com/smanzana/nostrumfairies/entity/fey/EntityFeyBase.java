@@ -56,7 +56,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
@@ -681,7 +680,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 			// Look for nearby homes
 			if (this.ticksExisted % 100 == 0) {
 				int radius = 3;
-				MutableBlockPos cursor = new MutableBlockPos();
+				BlockPos.Mutable cursor = new BlockPos.Mutable();
 				for (int x = -radius; x <= radius; x++)
 				for (int z = -radius; z <= radius; z++)
 				for (int y = -radius; y <= radius; y++) {

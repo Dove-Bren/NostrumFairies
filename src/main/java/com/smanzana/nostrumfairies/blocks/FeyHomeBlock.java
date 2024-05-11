@@ -25,10 +25,12 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootContext;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.EnumProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.IStringSerializable;
@@ -37,7 +39,6 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
-import net.minecraft.world.storage.loot.LootContext;
 import net.minecraftforge.common.ToolType;
 
 /**
@@ -53,13 +54,13 @@ public class FeyHomeBlock extends FeyContainerBlock {
 		TOP;
 
 		@Override
-		public String getName() {
+		public String getString() {
 			return this.name().toLowerCase();
 		}
 		
 		@Override
 		public String toString() {
-			return this.getName();
+			return this.getString();
 		}
 	}
 	
@@ -116,20 +117,20 @@ public class FeyHomeBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		if (state == null || !(state.getBlock() instanceof FeyHomeBlock)) {
-			return false;
+			return ActionResultType.FAIL;
 		}
 		
 		BlockPos center = ((FeyHomeBlock) state.getBlock()).getMasterPos(worldIn, pos, state);
 		TileEntity te = worldIn.getTileEntity(center);
 		if (te == null || !(te instanceof HomeBlockTileEntity)) {
-			return false;
+			return ActionResultType.FAIL;
 		}
 		
 		NostrumMagica.instance.proxy.openContainer(playerIn, HomeBlockGui.HomeBlockContainer.Make((HomeBlockTileEntity) te));
 		
-		return true;
+		return ActionResultType.SUCCESS;
 	}
 	
 	@Override

@@ -40,7 +40,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -381,14 +380,14 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			return platform;
 		}
 		
-		private boolean forEachOnLayer(int level, Function<MutableBlockPos, Boolean> func) {
+		private boolean forEachOnLayer(int level, Function<BlockPos.Mutable, Boolean> func) {
 			final int startX = this.pos.getX() + chunkXOffset - radius;
 			final int endX = this.pos.getX() + chunkXOffset + radius;
 			final int startZ = this.pos.getZ() + chunkZOffset - radius;
 			final int endZ = this.pos.getZ() + chunkZOffset + radius;
 			final int y = getYFromLevel(level);
 			
-			MutableBlockPos cursor = new MutableBlockPos();
+			BlockPos.Mutable cursor = new BlockPos.Mutable();
 			for (int x = startX; x <= endX; x++)
 			for (int z = startZ; z <= endZ; z++) {
 				cursor.setPos(x, y, z);
@@ -475,7 +474,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			// check for 2 or 3 high air
 			// Make a prereq from lastPos if it's there.
 			// TODO could try and use above and below blocks as prereqs? Would that help?
-			MutableBlockPos lastCursor = lastPos == null ? null : new MutableBlockPos(lastPos);
+			BlockPos.Mutable lastCursor = lastPos == null ? null : new BlockPos.Mutable(lastPos);
 			BlockPos[] range = (tall ? new BlockPos[]{base, base.up(), base.up().up(), base.up().up()} : new BlockPos[]{base, base.up(), base.up()});
 			for (BlockPos pos : range) {
 				if (!isEmpty(pos)) {
@@ -521,7 +520,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			// Get platform level. Then move to the right X. Then mine up to the required Z.
 			// If X isn't beyond the platform, make sure to adjust where we 'start' at the right spot.
 			// Note X is rounded to 4 to spread shafts out
-			MutableBlockPos cursor = new MutableBlockPos();
+			BlockPos.Mutable cursor = new BlockPos.Mutable();
 			final int effX = pos.getX() & ~3; // chop off bottom 2 bits, rounding down to nearest 4 
 			int y = platformToY(platformForY(pos.getY()));
 			int x;
@@ -564,7 +563,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				}
 				
 				// Keep track of last for platform building
-				MutableBlockPos last = new MutableBlockPos(cursor);
+				BlockPos.Mutable last = new BlockPos.Mutable(cursor);
 				
 				// First, get to the right x
 				int spaces = 0;
@@ -661,8 +660,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			// 17x17 ring with a doorway to the north (or south if !whole) that leads in
 			
 			final int bounds = MiningBlock.STAIRCASE_RADIUS + MiningBlock.PLATFORM_WIDTH;
-			MutableBlockPos cursor = new MutableBlockPos();
-			//MutableBlockPos last = null;
+			BlockPos.Mutable cursor = new BlockPos.Mutable();
+			//BlockPos.Mutable last = null;
 			boolean clear = true;
 			final int y = getYFromLevel(level);
 			
@@ -680,7 +679,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 					final int z = pos.getZ() + j;
 					
 //					if (last == null) {
-//						last = new MutableBlockPos(x, y, z);
+//						last = new BlockPos.Mutable(x, y, z);
 //					} else {
 //						last.setPos(cursor);
 //					}
@@ -702,8 +701,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		 * @return
 		 */
 		private boolean makeStaircaseSegment(int level, boolean upper) {
-			MutableBlockPos cursor = new MutableBlockPos();
-			MutableBlockPos last = new MutableBlockPos();
+			BlockPos.Mutable cursor = new BlockPos.Mutable();
+			BlockPos.Mutable last = new BlockPos.Mutable();
 			boolean clear = true;
 			
 			// 5x5 spiral staircase 'starting' to the north and descending 16 blocks in

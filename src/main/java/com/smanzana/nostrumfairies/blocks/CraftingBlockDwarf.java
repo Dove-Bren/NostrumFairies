@@ -17,7 +17,7 @@ import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -61,18 +61,13 @@ public class CraftingBlockDwarf extends FeyContainerBlock {
 	}
 	
 	@Override
-	public BlockRenderLayer getRenderLayer() {
-		return BlockRenderLayer.CUTOUT;
-	}
-	
-	@Override
 	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
 		return AABB;
 	}
 	
 	@Override
 	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		if (!Block.hasSolidSide(worldIn.getBlockState(pos.down()), worldIn, pos.down(), Direction.UP)) {
+		if (!Block.hasEnoughSolidSide(worldIn, pos.down(), Direction.UP)) {
 			return false;
 		}
 		
@@ -89,7 +84,7 @@ public class CraftingBlockDwarf extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		
 		if (!worldIn.isRemote) {
 			worldIn.notifyBlockUpdate(pos, state, state, 2);
@@ -98,7 +93,7 @@ public class CraftingBlockDwarf extends FeyContainerBlock {
 		CraftingBlockDwarfTileEntity craftBlock = (CraftingBlockDwarfTileEntity) worldIn.getTileEntity(pos);
 		NostrumMagica.instance.proxy.openContainer(playerIn, CraftingStationGui.CraftingStationContainer.Make(craftBlock));
 		
-		return true;
+		return ActionResultType.SUCCESS;
 	}
 	
 	@Override

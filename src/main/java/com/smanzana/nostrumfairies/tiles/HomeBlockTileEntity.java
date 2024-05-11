@@ -59,7 +59,6 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.server.ServerWorld;
@@ -897,7 +896,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		this.boostBlockSpots.clear();
 		
 		float bonus = 0f;
-		MutableBlockPos cursor = new MutableBlockPos();
+		BlockPos.Mutable cursor = new BlockPos.Mutable();
 		final int x = pos.getX();
 		final int y = pos.getY();
 		final int z = pos.getZ();

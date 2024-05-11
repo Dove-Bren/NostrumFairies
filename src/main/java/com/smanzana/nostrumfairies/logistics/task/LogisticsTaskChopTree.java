@@ -16,7 +16,6 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 
 /*
@@ -211,7 +210,7 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 	
 	private int getTreeHeight() {
 		int count = 0;
-		MutableBlockPos pos = new MutableBlockPos(trunk);
+		BlockPos.Mutable pos = new BlockPos.Mutable(trunk);
 		
 		while (WoodcuttingBlock.isTrunkMaterial(world, pos)) {
 			count++;

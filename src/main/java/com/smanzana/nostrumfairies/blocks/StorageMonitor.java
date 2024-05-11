@@ -18,7 +18,7 @@ import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -45,7 +45,7 @@ public class StorageMonitor extends FeyContainerBlock {
 		super(Block.Properties.create(Material.WOOD)
 				.hardnessAndResistance(2.0f, 1.0f)
 				.sound(SoundType.WOOD)
-				.lightValue(4)
+				.setLightLevel((s) -> 4)
 				);
 	}
 	
@@ -59,7 +59,7 @@ public class StorageMonitor extends FeyContainerBlock {
 	}
 	
 	protected boolean canPlaceAt(IWorldReader worldIn, BlockPos pos, Direction side) {
-		if (!Block.hasSolidSide(worldIn.getBlockState(pos.offset(side.getOpposite())), worldIn, pos.offset(side.getOpposite()), side)) {
+		if (!Block.hasEnoughSolidSide(worldIn, pos.offset(side.getOpposite()), side)) {
 			return false;
 		}
 		
@@ -84,11 +84,6 @@ public class StorageMonitor extends FeyContainerBlock {
 		
 		return this.getDefaultState()
 				.with(FACING, side);
-	}
-	
-	@Override
-	public BlockRenderLayer getRenderLayer() {
-		return BlockRenderLayer.CUTOUT;
 	}
 	
 	@Override
@@ -123,7 +118,7 @@ public class StorageMonitor extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
 		
 		// Kick off a request to refresh info.
 		if (worldIn.isRemote) {
@@ -141,7 +136,7 @@ public class StorageMonitor extends FeyContainerBlock {
 			NostrumFairies.proxy.openStorageMonitor(worldIn, pos);
 		}
 		
-		return true;
+		return ActionResultType.SUCCESS;
 	}
 	
 	@Override

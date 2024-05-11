@@ -13,6 +13,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
@@ -78,7 +79,7 @@ public class FairyBlocks {
 		registerBlockItem(farmingBlock, farmingBlock.getRegistryName(), registry);
 		registry.register(new BlockItem(feyBush, FairyItems.PropBase()) {
 			@Override
-			public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
+			public ActionResultType itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
 				return feyBush.getEntityInteraction(stack, playerIn, target, hand);
 			}
 		}.setRegistryName(feyBush.getRegistryName()));

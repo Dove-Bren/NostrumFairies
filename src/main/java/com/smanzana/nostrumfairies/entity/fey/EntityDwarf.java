@@ -72,7 +72,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.DifficultyInstance;
@@ -130,7 +129,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 						pathnodetype = this.checkNeighborBlocks(blockaccessIn, x, y, z, pathnodetype);
 						return pathnodetype;
 	
-//						BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
+//						BlockPos.PooledBlockPos.Mutable blockpos$pooledBlockPos.Mutable = BlockPos.PooledBlockPos.Mutable.retain();
 //	
 //						if (pathnodetype == PathNodeType.WALKABLE)
 //						{
@@ -140,7 +139,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 //								{
 //									if (j != 0 || i != 0)
 //									{
-//										Block block1 = blockaccessIn.getBlockState(blockpos$pooledmutableblockpos.setPos(j + x, y, i + z)).getBlock();
+//										Block block1 = blockaccessIn.getBlockState(blockpos$pooledBlockPos.Mutable.setPos(j + x, y, i + z)).getBlock();
 //	
 //										if (block1 == Blocks.CACTUS)
 //										{
@@ -155,7 +154,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 //							}
 //						}
 //	
-//						blockpos$pooledmutableblockpos.release();
+//						blockpos$pooledBlockPos.Mutable.release();
 //						return pathnodetype;
 					}
 					
@@ -713,7 +712,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				// No light from the 'sky' which means we're underground
 				// Refreseh magic lights around. Then see if it's too dark
 				BlockState state;
-				MutableBlockPos cursor = new MutableBlockPos();
+				BlockPos.Mutable cursor = new BlockPos.Mutable();
 				for (int x = -3; x <= 3; x++)
 				for (int y = -1; y <= 1; y++)
 				for (int z = -3; z <= 3; z++) {

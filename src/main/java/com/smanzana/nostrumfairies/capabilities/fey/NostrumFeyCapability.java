@@ -53,7 +53,6 @@ import net.minecraft.nbt.NBTUtil;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
@@ -255,7 +254,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		Set<BlockPos> builds = new HashSet<>();
 		
 		if (owner != null && owner.isAlive()) {
-			MutableBlockPos cursor = new MutableBlockPos();
+			BlockPos.Mutable cursor = new BlockPos.Mutable();
 			for (int x = -BUILD_SCAN_RADIUS; x <= BUILD_SCAN_RADIUS; x++)
 			for (int z = -BUILD_SCAN_RADIUS; z <= BUILD_SCAN_RADIUS; z++)
 			for (int y = -BUILD_SCAN_RADIUS; y <= BUILD_SCAN_RADIUS; y++) {

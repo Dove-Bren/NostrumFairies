@@ -10,6 +10,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.state.IntegerProperty;
 import net.minecraft.state.StateContainer;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -21,6 +22,7 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 
 public class MagicLight extends Block {
 	
@@ -52,7 +54,7 @@ public class MagicLight extends Block {
 		super(Block.Properties.create(Material.IRON)
 				.hardnessAndResistance(0f, 100f)
 				.tickRandomly()
-				.lightValue(brightness.lightLevel)
+				.setLightLevel((s) -> brightness.lightLevel)
 				.noDrops()
 				);
 		this.brightness = brightness;
@@ -65,7 +67,7 @@ public class MagicLight extends Block {
 	
 	@Override
 	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		if (!Block.hasSolidSide(worldIn.getBlockState(pos.up()), worldIn, pos.up(), Direction.DOWN)
+		if (!Block.hasEnoughSolidSide(worldIn, pos.up(), Direction.DOWN)
 				|| worldIn.getBlockState(pos.up()).getMaterial() != Material.ROCK) {
 			return false;
 		}
@@ -83,8 +85,8 @@ public class MagicLight extends Block {
 	}
 	
 	@Override
-	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
-		return false; // could do a cool ping animation or something
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+		return ActionResultType.PASS; // could do a cool ping animation or something
 	}
 	
 	@Override
@@ -104,7 +106,7 @@ public class MagicLight extends Block {
 	}
 	
 	@Override
-	public void randomTick(BlockState state, World worldIn, BlockPos pos, Random random) {
+	public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
 		
 		if (!isValidPosition(state, worldIn, pos)) {
 			worldIn.removeBlock(pos, false);

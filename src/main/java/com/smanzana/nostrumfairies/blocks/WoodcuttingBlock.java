@@ -15,11 +15,10 @@ import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
@@ -58,11 +57,6 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public BlockRenderLayer getRenderLayer() {
-		return BlockRenderLayer.CUTOUT;
-	}
-	
-	@Override
 	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
 		if (state.get(FACING).getHorizontalIndex() % 2 == 0) {
 			return IFeySign.AABB_NS;
@@ -73,7 +67,7 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	
 	@Override
 	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		if (!Block.hasSolidSide(worldIn.getBlockState(pos.down()), worldIn, pos.down(), Direction.UP)) {
+		if (!Block.hasEnoughSolidSide(worldIn, pos.down(), Direction.UP)) {
 			return false;
 		}
 		
@@ -90,8 +84,8 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
-		return false;
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+		return ActionResultType.PASS;
 	}
 	
 	@Override
@@ -148,12 +142,12 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 		}
 		
 		// A tree must be on the ground
-		if (!Block.hasSolidSide(world.getBlockState(base.down()), world, base.down(), Direction.UP)) {
+		if (!Block.hasEnoughSolidSide(world, base.down(), Direction.UP)) {
 			return false;
 		}
 		
 		// A tree must be topped with leaves
-		MutableBlockPos pos = new MutableBlockPos(base);
+		BlockPos.Mutable pos = new BlockPos.Mutable().setPos(base);
 		do {
 			pos.move(Direction.UP);
 		} while ((pos.getY() < 255) && isTrunkMaterial(world, pos));
@@ -177,7 +171,7 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 		}
 		
 		// A branch is NOT on the ground
-		if (Block.hasSolidSide(world.getBlockState(base.down()), world, base.down(), Direction.UP)) {
+		if (Block.hasEnoughSolidSide(world, base.down(), Direction.UP)) {
 			return false;
 		}
 		

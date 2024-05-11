@@ -17,6 +17,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -56,16 +57,16 @@ public class FeyBush extends BushBlock {
 //		return Lists.newArrayList(new ItemStack(this));
 //	}
 
-	public boolean getEntityInteraction(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
+	public ActionResultType getEntityInteraction(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
 		if (target instanceof EntityFeyBase && !(target instanceof EntityPersonalFairy)) {
 			EntityFeyBase fey = (EntityFeyBase) target;
 			if (fey.getStatus() == FairyGeneralStatus.WANDERING) {
 				if (!target.world.isRemote) {
 					target.entityDropItem(FeyResource.create(FeyResourceType.TABLET, 1), .1f);
 					((ServerWorld) target.world).spawnParticle(ParticleTypes.HEART,
-							target.posX,
-							target.posY,	
-							target.posZ,
+							target.getPosX(),
+							target.getPosY(),	
+							target.getPosZ(),
 							10,
 							.2,
 							.25,
@@ -76,10 +77,10 @@ public class FeyBush extends BushBlock {
 					stack.shrink(1);
 				}
 				
-				return true;
+				return ActionResultType.SUCCESS;
 			}
 		}
 		
-		return false;
+		return ActionResultType.PASS;
 	}
 }

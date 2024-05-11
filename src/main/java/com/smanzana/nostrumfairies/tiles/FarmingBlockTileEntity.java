@@ -35,7 +35,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
@@ -134,7 +133,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 		List<BlockPos> emptySpots = new LinkedList<>();
 		List<BlockPos> grownCrops = new LinkedList<>();
 		
-		MutableBlockPos pos = new MutableBlockPos();
+		BlockPos.Mutable pos = new BlockPos.Mutable();
 		BlockPos center = this.getPos();
 		final int startY = (int) Math.max(-pos.getY(), Math.floor(-radius));
 		final int endY = (int) Math.min(256 - pos.getY(), Math.ceil(radius));
