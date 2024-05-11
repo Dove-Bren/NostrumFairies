@@ -272,8 +272,8 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	@Override
-	public void read(CompoundNBT nbt) {
-		super.read(nbt);
+	public void read(BlockState state, CompoundNBT nbt) {
+		super.read(state, nbt);
 		
 		this.slot = ItemStack.read(nbt.getCompound(NBT_SLOT));
 		

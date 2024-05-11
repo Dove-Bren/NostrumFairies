@@ -10,6 +10,7 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class InputChestTileEntity extends LogisticsChestTileEntity {
@@ -59,8 +60,8 @@ public class InputChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public void setWorld(World worldIn) {
-		super.setWorld(worldIn);
+	public void setWorldAndPos(World worldIn, BlockPos pos) {
+		super.setWorldAndPos(worldIn, pos);
 		
 		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
 			requester = new LogisticsItemDepositRequester(this.networkComponent.getNetwork(), this.networkComponent);

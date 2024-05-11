@@ -15,10 +15,12 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -141,7 +143,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public void read(CompoundNBT nbt) {
+	public void read(BlockState state, CompoundNBT nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
@@ -166,7 +168,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 		}
 		
 		// Do super afterwards so taht we have templates already
-		super.read(nbt);
+		super.read(state, nbt);
 	}
 	
 	@Override
@@ -181,8 +183,8 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public void setWorld(World worldIn) {
-		super.setWorld(worldIn);
+	public void setWorldAndPos(World worldIn, BlockPos pos) {
+		super.setWorldAndPos(worldIn, pos);
 		logicComp.setLocation(worldIn, pos);
 		
 		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {

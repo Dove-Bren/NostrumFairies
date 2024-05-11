@@ -432,7 +432,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			boolean tasked = false;
 			
 			// check underneath
-			if (!Block.func_220055_a(world, base.down(), Direction.UP)) {
+			if (!Block.hasEnoughSolidSide(world, base.down(), Direction.UP)) {
 				makeRepairTask(base.down(), lastPos);
 				tasked = true;
 			}
@@ -474,7 +474,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			// check for 2 or 3 high air
 			// Make a prereq from lastPos if it's there.
 			// TODO could try and use above and below blocks as prereqs? Would that help?
-			BlockPos.Mutable lastCursor = lastPos == null ? null : new BlockPos.Mutable(lastPos);
+			BlockPos.Mutable lastCursor = lastPos == null ? null : new BlockPos.Mutable().setPos(lastPos);
 			BlockPos[] range = (tall ? new BlockPos[]{base, base.up(), base.up().up(), base.up().up()} : new BlockPos[]{base, base.up(), base.up()});
 			for (BlockPos pos : range) {
 				if (!isEmpty(pos)) {
@@ -563,7 +563,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				}
 				
 				// Keep track of last for platform building
-				BlockPos.Mutable last = new BlockPos.Mutable(cursor);
+				BlockPos.Mutable last = new BlockPos.Mutable().setPos(cursor);
 				
 				// First, get to the right x
 				int spaces = 0;
@@ -986,8 +986,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		@Override
-		public void setWorld(World worldIn) {
-			super.setWorld(worldIn);
+		public void setWorldAndPos(World worldIn, BlockPos pos) {
+			super.setWorldAndPos(worldIn, pos);
 			if (!worldIn.isRemote) {
 				MinecraftForge.EVENT_BUS.register(this);
 			}
@@ -995,14 +995,9 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			if (this.networkComponent != null && !worldIn.isRemote && materialRequester == null) {
 				refreshRequester();
 			}
-		}
-		
-		@Override
-		public void setPos(BlockPos posIn) {
-			super.setPos(posIn);
 			
-			chunkXOffset = -((posIn.getX() - radius) & 0xF); // lowest 16 values
-			chunkZOffset = -((posIn.getZ() - radius) & 0xF);
+			chunkXOffset = -((pos.getX() - radius) & 0xF); // lowest 16 values
+			chunkZOffset = -((pos.getZ() - radius) & 0xF);
 		}
 		
 		public static final String NBT_ORES = "ores";
@@ -1052,8 +1047,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		@Override
-		public void read(CompoundNBT nbt) {
-			super.read(nbt);
+		public void read(BlockState state, CompoundNBT nbt) {
+			super.read(state, nbt);
 			
 			this.oreLocations.clear();
 			this.repairLocations.clear();

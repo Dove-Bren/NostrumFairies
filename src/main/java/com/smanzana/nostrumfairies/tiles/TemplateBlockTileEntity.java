@@ -10,6 +10,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class TemplateBlockTileEntity extends MimicBlockTileEntity {
@@ -44,8 +45,8 @@ public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	}
 	
 	@Override
-	public void setWorld(World worldIn) {
-		super.setWorld(worldIn);
+	public void setWorldAndPos(World worldIn, BlockPos pos) {
+		super.setWorldAndPos(worldIn, pos);
 	}
 	
 	@Override
@@ -72,8 +73,8 @@ public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	}
 
 	@Override
-	public void read(CompoundNBT compound) {
-		super.read(compound);
+	public void read(BlockState state, CompoundNBT compound) {
+		super.read(state, compound);
 		
 		if (this.state != null) {
 			this.setBlockState(null);

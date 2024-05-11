@@ -27,6 +27,7 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.utils.ItemStacks;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
@@ -39,6 +40,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -380,7 +382,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public void read(CompoundNBT nbt) {
+	public void read(BlockState state, CompoundNBT nbt) {
 		templates = NonNullList.withSize(TEMPLATE_SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
@@ -407,7 +409,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		this.buildPoints = nbt.getFloat(NBT_BUILD_POINTS);
 		
 		// Do super afterwards so taht we have templates already
-		super.read(nbt);
+		super.read(state, nbt);
 		
 		this.recipeDirty = true;
 		this.ingredientsDirty = true;
@@ -428,8 +430,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public void setWorld(World worldIn) {
-		super.setWorld(worldIn);
+	public void setWorldAndPos(World worldIn, BlockPos pos) {
+		super.setWorldAndPos(worldIn, pos);
 		logicComp.setLocation(worldIn, pos);
 		
 		if (this.networkComponent != null && !worldIn.isRemote) {

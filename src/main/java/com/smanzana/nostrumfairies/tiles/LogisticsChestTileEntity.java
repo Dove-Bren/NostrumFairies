@@ -10,6 +10,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrummagica.utils.Inventories;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
@@ -162,7 +163,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	}
 	
 	@Override
-	public void read(CompoundNBT nbt) {
+	public void read(BlockState state, CompoundNBT nbt) {
 		if (nbt == null || !nbt.contains(NBT_INV, NBT.TAG_COMPOUND))
 			return;
 		
@@ -181,7 +182,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 			this.setInventorySlotContents(id, stack);
 		}
 
-		super.read(nbt);
+		super.read(state, nbt);
 	}
 	
 	@Override

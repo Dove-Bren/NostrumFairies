@@ -501,7 +501,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		
 		HomeBlockTileEntity.FeyAwayRecord record = new FeyAwayRecord();
 		record.tickLastSeen = ticksExisted;
-		record.name = fey.getName().getFormattedText();
+		record.name = fey.getName().getString();
 		record.cache = fey;
 		
 		this.feyCacheMap.put(fey.getUniqueID(), record);
@@ -538,7 +538,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		
 		HomeBlockTileEntity.FeyAwayRecord record = new FeyAwayRecord();
 		record.tickLastSeen = ticksExisted;
-		record.name = replacement.getName().getFormattedText();
+		record.name = replacement.getName().getString();
 		record.cache = replacement;
 		
 		this.feyCacheMap.put(replacement.getUniqueID(), record);
@@ -741,8 +741,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	@Override
-	public void read(CompoundNBT nbt) {
-		super.read(nbt);
+	public void read(BlockState state, CompoundNBT nbt) {
+		super.read(state, nbt);
 		
 		String type = nbt.getString(NBT_TYPE);
 		this.type = ResidentType.valueOf(ResidentType.class, type.toUpperCase());

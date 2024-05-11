@@ -4,6 +4,7 @@ import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
@@ -37,8 +38,8 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public void read(CompoundNBT nbt) {
-		super.read(nbt);
+	public void read(BlockState state, CompoundNBT nbt) {
+		super.read(state, nbt);
 		
 		CompoundNBT sub = nbt.getCompound(NBT_LOGIC_COMP);
 		if (sub != null) {
@@ -53,8 +54,8 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public void setWorld(World worldIn) {
-		super.setWorld(worldIn);
+	public void setWorldAndPos(World worldIn, BlockPos pos) {
+		super.setWorldAndPos(worldIn, pos);
 		
 		logicComp.setLocation(worldIn, pos);
 	}

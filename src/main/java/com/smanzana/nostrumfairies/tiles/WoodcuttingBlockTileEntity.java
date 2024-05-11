@@ -88,7 +88,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 		if (!taskMap.containsKey(base) && network.taskDataAdd(WOODCUTTING_POSITION, base)) {
 			// Find spot underneath on ground
 			BlockPos target = base;
-			while (!Block.func_220055_a(world, target.down(), Direction.UP)) {
+			while (!Block.hasEnoughSolidSide(world, target.down(), Direction.UP)) {
 				target = target.down();
 			}
 			
@@ -290,8 +290,8 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 //		}
 	
 	@Override
-	public void setWorld(World worldIn) {
-		super.setWorld(worldIn);
+	public void setWorldAndPos(World worldIn, BlockPos pos) {
+		super.setWorldAndPos(worldIn, pos);
 //			if (!worldIn.isRemote) {
 //				MinecraftForge.TERRAIN_GEN_BUS.register(this);
 //			}
@@ -347,8 +347,8 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 	}
 	
 	@Override
-	public void read(CompoundNBT compound) {
-		super.read(compound);
+	public void read(BlockState state, CompoundNBT compound) {
+		super.read(state, compound);
 		
 		if (this.world != null && this.world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, this);

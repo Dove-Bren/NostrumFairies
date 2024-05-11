@@ -297,8 +297,8 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	}
 	
 	@Override
-	public void read(CompoundNBT compound) {
-		super.read(compound);
+	public void read(BlockState state, CompoundNBT compound) {
+		super.read(state, compound);
 		
 		if (this.world != null && this.world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, this);

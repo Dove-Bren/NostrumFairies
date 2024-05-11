@@ -25,8 +25,9 @@ import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -151,7 +152,7 @@ public class NostrumFairies {
     			new LogisticsTileEntity.LogisticsTileEntityComponent.ComponentFactory());
     }
     
-    public static @Nullable World getWorld(DimensionType dimension) {
+    public static @Nullable World getWorld(RegistryKey<World> dimension) {
     	PlayerEntity p = proxy.getPlayer();
     	if (p != null && p.world.isRemote()) {
     		if (p.world.getDimension().getType() == dimension) {

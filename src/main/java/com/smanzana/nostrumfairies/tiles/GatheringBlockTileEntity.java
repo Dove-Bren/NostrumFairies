@@ -25,6 +25,7 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.item.ItemExpireEvent;
@@ -151,7 +152,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		
 		// Idk if this is actually faster than 6 conditionals.
 		return (e.world == this.world &&
-				this.getDistanceSq(e.posX, e.posY, e.posZ) <=
+				this.pos.distanceSq(e.getPosX(), e.getPosY(), e.getPosZ(), true) <=
 					Math.pow(radius * 1.7321, 2));
 	}
 	
@@ -177,8 +178,8 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	}
 	
 	@Override
-	public void setWorld(World worldIn) {
-		super.setWorld(worldIn);
+	public void setWorldAndPos(World worldIn, BlockPos pos) {
+		super.setWorldAndPos(worldIn, pos);
 		if (!worldIn.isRemote) {
 			MinecraftForge.EVENT_BUS.register(this);
 		}
@@ -216,8 +217,8 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	}
 	
 	@Override
-	public void read(CompoundNBT compound) {
-		super.read(compound);
+	public void read(BlockState state, CompoundNBT compound) {
+		super.read(state, compound);
 		
 		if (this.world != null && this.world.isRemote) {
 			StaticTESRRenderer.instance.update(world, pos, this);

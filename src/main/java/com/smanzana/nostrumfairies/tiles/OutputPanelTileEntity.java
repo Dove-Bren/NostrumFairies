@@ -139,7 +139,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 	
 	@Override
-	public void read(CompoundNBT nbt) {
+	public void read(BlockState state, CompoundNBT nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
@@ -164,7 +164,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		// Do super afterwards so taht we have templates already
-		super.read(nbt);
+		super.read(state, nbt);
 	}
 	
 	protected LogisticsItemWithdrawRequester makeRequester(LogisticsNetwork network, LogisticsTileEntityComponent networkComponent) {
@@ -197,8 +197,8 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 	
 	@Override
-	public void setWorld(World worldIn) {
-		super.setWorld(worldIn);
+	public void setWorldAndPos(World worldIn, BlockPos pos) {
+		super.setWorldAndPos(worldIn, pos);
 		logicComp.setLocation(worldIn, pos);
 		
 		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {

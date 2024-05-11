@@ -17,6 +17,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -71,8 +72,8 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public void setWorld(World worldIn) {
-		super.setWorld(worldIn);
+	public void setWorldAndPos(World worldIn, BlockPos pos) {
+		super.setWorldAndPos(worldIn, pos);
 		
 		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
 			makeRequester();
@@ -187,8 +188,8 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public void read(CompoundNBT nbt) {
-		super.read(nbt);
+	public void read(BlockState state, CompoundNBT nbt) {
+		super.read(state, nbt);
 		
 		requests.clear();
 		ListNBT list = nbt.getList(NBT_REQUESTS, NBT.TAG_COMPOUND);
