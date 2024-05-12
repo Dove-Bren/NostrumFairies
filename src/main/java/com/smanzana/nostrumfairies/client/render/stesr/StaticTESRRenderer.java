@@ -83,7 +83,7 @@ public class StaticTESRRenderer {
 		
 		if (shouldClear) {
 			for (RenderTarget targ : cache.values()) {
-				GLAllocation.deleteDisplayLists(targ.drawlist);
+				int unused;//GLAllocation.deleteDisplayLists(targ.drawlist);
 			}
 			System.out.println("Clearing " + cache.size() + " cached renders");
 			cache.clear();
@@ -94,7 +94,7 @@ public class StaticTESRRenderer {
 				RenderTarget existing = cache.get(loc);
 				
 				if (existing != null && existing != put && existing.drawlist != -1) {
-					GLAllocation.deleteDisplayLists(existing.drawlist);
+					int unused;//GLAllocation.deleteDisplayLists(existing.drawlist);
 				}
 				
 				if (put == null) {
@@ -118,24 +118,26 @@ public class StaticTESRRenderer {
 	}
 	
 	private <T extends TileEntity> int compile(T te, StaticTESR<T> render) {
-		final VertexFormat format = render.getRenderFormat(te);
-		int list = GLAllocation.generateDisplayLists(1);
-		Tessellator tess = Tessellator.getInstance();
-		BufferBuilder buffer = tess.getBuffer();
-		
-		
-		GlStateManager.newList(list, GL11.GL_COMPILE);
-		buffer.begin(GL11.GL_QUADS, format);
-		{
-			BlockPos pos = te.getPos();
-			World world = te.getWorld();
-			BlockState state = world.getBlockState(pos);
-			render.render(te, pos.getX(), pos.getY(), pos.getZ(), state, world, buffer);
-		}
-		tess.draw();
-		GlStateManager.endList();
-		
-		return list;
+		int unused;//
+//		final VertexFormat format = render.getRenderFormat(te);
+//		int list = GLAllocation.generateDisplayLists(1);
+//		Tessellator tess = Tessellator.getInstance();
+//		BufferBuilder buffer = tess.getBuffer();
+//		
+//		WorldRenderer a;
+//		GlStateManager.newList(list, GL11.GL_COMPILE);
+//		buffer.begin(GL11.GL_QUADS, format);
+//		{
+//			BlockPos pos = te.getPos();
+//			World world = te.getWorld();
+//			BlockState state = world.getBlockState(pos);
+//			render.render(te, pos.getX(), pos.getY(), pos.getZ(), state, world, buffer);
+//		}
+//		tess.draw();
+//		GlStateManager.endList();
+//		
+//		return list;
+		return 0;
 	}
 	
 	private void drawTarget(RenderTarget target, Minecraft mc, ClientPlayerEntity player, float partialTicks) {
@@ -144,16 +146,11 @@ public class StaticTESRRenderer {
 		Vector3d offset = new Vector3d(pos.getX() - playerPos.x,
 				pos.getY() - playerPos.y,
 				pos.getZ() - playerPos.z);
-		
-		//GlStateManager.enableLighting();
-		GlStateManager.color4f(1f, 1f, 1f, 1f);
-		GlStateManager.enableBlend();
-		GlStateManager.enableAlphaTest();
-		
-		matrixStackIn.push();
-		matrixStackIn.translate(offset.x, offset.y, offset.z);
-		GlStateManager.callList(target.drawlist);
-		matrixStackIn.pop();
+		int unused;//
+//		matrixStackIn.push();
+//		matrixStackIn.translate(offset.x, offset.y, offset.z);
+//		GlStateManager.callList(target.drawlist);
+//		matrixStackIn.pop();
 	}
 	
 	public void update(World world, BlockPos pos, @Nullable TileEntity te) {

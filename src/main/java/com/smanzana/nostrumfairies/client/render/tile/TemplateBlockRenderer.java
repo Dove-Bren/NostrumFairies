@@ -3,8 +3,8 @@ package com.smanzana.nostrumfairies.client.render.tile;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.vecmath.Vector3f;
-
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESR;
 import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
@@ -13,9 +13,11 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.world.World;
@@ -27,37 +29,22 @@ public class TemplateBlockRenderer extends TileEntityRenderer<TemplateBlockTileE
 
 	protected static final Map<IBakedModel, Integer> RenderListCache = new HashMap<>();
 	
-	public TemplateBlockRenderer() {
-		
+	public TemplateBlockRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
+		super(rendererDispatcherIn);
 	}
-	
-//	protected static int Cache(IBakedModel model) {
-//		Integer existing = RenderListCache.get(model); 
-//		if (existing != null) {
-//			return existing;
-//		}
-//		
-//		existing = GLAllocation.generateDisplayLists(1);
-//		GlStateManager.glNewList(existing, GL11.GL_COMPILE);
-//		
-//		final int color = 0x66AAAADD;
-//		RenderFuncs.RenderModelWithColor(model, color);
-//		
-//		GlStateManager.glEndList();
-//		RenderListCache.put(model, existing);
-//		System.out.println("New cache entry");
-//		return existing;
-//	}
 	
 	@Override
 	public VertexFormat getRenderFormat(TemplateBlockTileEntity te) {
 		return DefaultVertexFormats.BLOCK;
 	}
 	
-	public void renderTileEntityFast(TemplateBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
-		Minecraft mc = Minecraft.getInstance();
+	public void render(TemplateBlockTileEntity te, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
+		final Minecraft mc = Minecraft.getInstance();
+		final BlockState state = te.getTemplateState();
 		
-		BlockState state = te.getTemplateState();
+		// Need to force a different RenderType, so get model and render manually
+		//RenderFuncs.RenderBlockState(state, stack, bufferIn, combinedLightIn, combinedOverlayIn);
+		
 		IBakedModel model = null;
 		if (state != null) {
 			model = mc.getBlockRendererDispatcher().getModelForState(state);
@@ -67,37 +54,21 @@ public class TemplateBlockRenderer extends TileEntityRenderer<TemplateBlockTileE
 			model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());
 		}
 		
-		//final int drawlist = Cache(model);
+		//MatrixStack stack, IVertexBuilder buffer, IBakedModel model, int combinedLight, int combinedOverlay, float red, float green, float blue, float alpha
+		final float red = .6f;
+		final float green = .6f;
+		final float blue = .9f;
+		final float alpha = .3f;
+		final IVertexBuilder buffer = bufferIn.getBuffer(RenderType.getTranslucent());
+		RenderFuncs.RenderModel(matrixStackIn, buffer, model, combinedLightIn, combinedOverlayIn, red, green, blue, alpha);
 		
-		//matrixStackIn.push();
-		//GlStateManager.translate(x, y, z);
-		
-		//GlStateManager.color(0f, 0f, 0f, .3f);
-//		GlStateManager.disableAlpha();
-//		GlStateManager.disableBlend();
-//		GlStateManager.disableTexture2D();
-//		GlStateManager.disableLighting();
-//		GlStateManager.enableAlpha();
-//		GlStateManager.enableBlend();
-//		GlStateManager.enableTexture2D();
-//		GlStateManager.enableLighting();
-//		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-		
-//		GlStateManager.pushAttrib();
-//		GlStateManager.callList(drawlist);
-//		GlStateManager.popAttrib();
-		
-		final int color = 0x66AAAADD;
-		RenderFuncs.RenderModelWithColor(model, color, buffer, new Vector3f((float) 0, (float) 0, (float) 0));
-		
-		//matrixStackIn.pop();
+		int unused; // This was batched before. Does it need it?
 	}
 
 	@Override
 	public void render(TemplateBlockTileEntity tileEntity, double x, double y, double z, BlockState state, World world,
 			BufferBuilder buffer) {
-		renderTileEntityFast(tileEntity, x, y, z, 0, 0, 0, buffer);
+		//renderTileEntityFast(tileEntity, x, y, z, 0, 0, 0, buffer);
 	}
 	
 }

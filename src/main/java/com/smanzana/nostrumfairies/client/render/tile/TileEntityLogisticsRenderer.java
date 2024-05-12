@@ -3,11 +3,9 @@ package com.smanzana.nostrumfairies.client.render.tile;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.lwjgl.opengl.GL11;
-
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
-import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.smanzana.nostrumfairies.client.render.FairyRenderTypes;
 import com.smanzana.nostrumfairies.effect.FeyEffects;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -15,13 +13,11 @@ import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.utils.Curves;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -29,14 +25,36 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity> extends TileEntityRenderer<T> {
 
-	public TileEntityLogisticsRenderer() {
+	public TileEntityLogisticsRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
+		super(rendererDispatcherIn);
+	}
+	
+	private void addVertex(MatrixStack matrixStackIn, IVertexBuilder buffer, int combinedLightIn, float red, float green, float blue, float alpha, Vector3d point, boolean repeat) {
+		buffer.pos(matrixStackIn.getLast().getMatrix(), (float) point.x, (float) point.y, (float) point.z).color(red, green, blue, alpha).lightmap(combinedLightIn).endVertex();
+		if (repeat) {
+			this.addVertex(matrixStackIn, buffer, combinedLightIn, red, green, blue, alpha, point, false);
+		}
+	}
+	
+	protected void renderLine(MatrixStack matrixStackIn, IVertexBuilder buffer, int combinedLightIn, Vector3d offset,
+			int intervals, float red, float green, float blue, float alpha) {
+		final Vector3d dist = offset.scale(.25);
+		final Vector3d control1 = dist.add(dist.rotateYaw((float) (Math.PI * .5)));
+		final Vector3d control2 = offset.subtract(dist).subtract(dist.rotateYaw((float) (Math.PI * .5)));
 		
+		for (int i = 0; i <= intervals; i++) {
+			float prog = (float) i / (float) intervals;
+			Vector3d point = Curves.bezier(prog, Vector3d.ZERO, control1, control2, offset);
+			
+			// We aren't rendering a strip, so need to repeat every 'last' point.
+			// We can do this simply by just adding each point twice except the first and last one.
+			final boolean repeat = (i != 0 && i != intervals);
+			addVertex(matrixStackIn, buffer, combinedLightIn, red, green, blue, alpha, point, repeat);
+		}
 	}
 	
 	@Override
-	public void render(T te, double x, double y, double z, float partialTicks, int destroyStage) {
-		super.render(te, x, y, z, partialTicks, destroyStage);
-		
+	public void render(T te, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
 		Minecraft mc = Minecraft.getInstance();
 		PlayerEntity player = mc.player;
 		EffectInstance effect = player.getActivePotionEffect(FeyEffects.feyVisibility);
@@ -61,75 +79,16 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 					alpha = 1f;
 				}
 				
-				Vector3d origin = new Vector3d(BlockPos.ZERO);
-				Tessellator tessellator = Tessellator.getInstance();
-				BufferBuilder buffer = tessellator.getBuffer();
-				matrixStackIn.push();
-				matrixStackIn.translate(x + .5, y + 1.05, z + .5);
-				//GlStateManager.disableColorMaterial();
-				GlStateManager.enableTexture();
-				GlStateManager.disableTexture();
-				GlStateManager.enableLighting();
-				GlStateManager.disableLighting();
-				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-				GlStateManager.disableBlend();
-				GlStateManager.disableAlphaTest();
-				GlStateManager.enableBlend();
-				GlStateManager.enableAlphaTest();
-				GlStateManager.lineWidth(3f);
-				GlStateManager.enableDepthTest();
-				GlStateManager.disableRescaleNormal();
-				GL11.glDisable(GL11.GL_LINE_STIPPLE);
-				GL11.glLineStipple(1, (short) 1);
-				GlStateManager.color4f(1f, 1f, 1f, .9f);
-				GlStateManager.color4f(1f, 1f, 1f, alpha);
-				//OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+				final IVertexBuilder buffer = bufferIn.getBuffer(FairyRenderTypes.LOGISTICS_LINES);
 				
+				matrixStackIn.push();
+				matrixStackIn.translate(.5, 1.05, .5);
 				for (ILogisticsComponent component : neighbors) {
-					final Vector3d offset = new Vector3d(component.getPosition().toImmutable().subtract(te.getPos()));
-					final Vector3d dist = offset.scale(.25);
-					final Vector3d control1 = dist.add(dist.rotateYaw((float) (Math.PI * .5)));
-					final Vector3d control2 = offset.subtract(dist).subtract(dist.rotateYaw((float) (Math.PI * .5)));
-					buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-					for (int i = 0; i <= intervals; i++) {
-						
-						
-//						buffer.pos(.5, 1.25, .5).color(1f, .2f, .4f, .8f).endVertex();
-//						buffer.pos((pos.getX() - origin.getX()) + .5,
-//								(pos.getY() - origin.getY()) + 1.25,
-//								(pos.getZ() - origin.getZ()) + .5).color(1f, .2f, .4f, .8f).endVertex();
-						
-						float prog = (float) i / (float) intervals;
-						Vector3d point = Curves.bezier(prog, origin, control1, control2, offset);
-						
-//						float dotAmt = Math.max(0f, 1f - (perI * Math.abs(dotI - (float) i)));
-//						if (dotAmt == 0f) {
-//							float pretendI = (prog > .5f ? i - intervals : i + intervals);
-//							dotAmt = Math.max(0f, 1f - (perI * Math.abs(dotI - (float) pretendI)));
-//						}
-						
-						buffer.pos(point.x, point.y, point.z)
-								.color(0f, 1f, 0f, alpha).endVertex();
-						
-					}
-					tessellator.draw();
+					final Vector3d offset = Vector3d.copyCentered(component.getPosition().toImmutable().subtract(te.getPos()));
+					this.renderLine(matrixStackIn, buffer, combinedLightIn, offset, intervals, 1f, 1f, 1f, alpha);
 				}
 				
-//				GlStateManager.rotate(rot, 0, 1f, 0);
-//				
-//				GlStateManager.scale(scale, scale, scale);
-//				GlStateManager.enableBlend();
-//				GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-//				GlStateManager.disableLighting();
-//				GlStateManager.enableAlpha();
-//				GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-//				
-//				Minecraft.getInstance().getRenderItem()
-//					.renderItem(item, TransformType.GROUND);
-				
 				matrixStackIn.pop();
-				GlStateManager.enableColorMaterial();
-				GlStateManager.enableTexture();
 			}
 		}
 	}

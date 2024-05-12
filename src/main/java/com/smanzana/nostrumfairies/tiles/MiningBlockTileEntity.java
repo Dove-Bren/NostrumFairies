@@ -1,5 +1,6 @@
 package com.smanzana.nostrumfairies.tiles;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1223,11 +1224,11 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			}
 		}
 		
-		public void collectOreLocations(Set<BlockPos> locationSet) {
+		public void collectOreLocations(Collection<BlockPos> locationSet) {
 			locationSet.addAll(oreLocations);
 		}
 		
-		public void collectRepairLocations(Set<BlockPos> locationSet) {
+		public void collectRepairLocations(Collection<BlockPos> locationSet) {
 			locationSet.addAll(repairLocations);
 		}
 	}

@@ -1,66 +1,42 @@
 package com.smanzana.nostrumfairies.client.render.tile;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.lwjgl.opengl.GL11;
-
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.smanzana.nostrumfairies.client.render.FairyRenderTypes;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.tiles.MiningBlockTileEntity;
+import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 
 public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> {
 	
-	protected void renderCube(BlockPos origin, BlockPos target, float red, float green, float blue, float alpha) {
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder buffer = tessellator.getBuffer();
+	public MiningBlockRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
+		super(rendererDispatcherIn);
+	}
+
+	protected void renderCube(BlockPos offset, MatrixStack matrixStackIn, IVertexBuilder buffer, int combinedLightIn, int combinedOverlayIn,
+			float red, float green, float blue, float alpha, boolean outline) {
 		matrixStackIn.push();
-		matrixStackIn.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
-		buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-		
-		buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-		buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
-		buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
-		buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
-		buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-		
-		tessellator.draw();
-		
-		buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-		
-		buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-		buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
-		buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
-		buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
-		buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-		
-		tessellator.draw();
-		
-		buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-		
-		buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-			buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-		buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
-			buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
-		buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
-			buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
-		buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
-			buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
-		
-		tessellator.draw();
+		matrixStackIn.translate(offset.getX() + .5, offset.getY() + .5, offset.getZ() + .5);
+		if (outline) {
+			RenderFuncs.drawUnitCubeOutline(matrixStackIn, buffer, combinedLightIn, combinedOverlayIn, red, green, blue, alpha);
+		} else {
+			RenderFuncs.drawUnitCube(matrixStackIn, buffer, combinedLightIn, combinedOverlayIn, red, green, blue, alpha);
+		}
 		matrixStackIn.pop();
 	}
 	
 	@Override
-	public void render(MiningBlockTileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
-		super.render(te, x, y, z, partialTicks, destroyStage);
+	public void render(MiningBlockTileEntity te, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
+		super.render(te, partialTicks, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn);
 		
 		Minecraft mc = Minecraft.getInstance();
 		PlayerEntity player = mc.player;
@@ -71,104 +47,38 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 			if (network != null) {
 				
 				BlockPos origin = te.getPos();
+				List<BlockPos> oreLocs = new ArrayList<>();
+				List<BlockPos> repairLocs = new ArrayList<>();
+				te.collectOreLocations(oreLocs);
+				te.collectRepairLocations(repairLocs);
 				
 				matrixStackIn.push();
-				matrixStackIn.translate(x, y, z);
 				
-				GlStateManager.lineWidth(3f);
-				GlStateManager.disableLighting();
-				GlStateManager.enableTexture();
-				GlStateManager.disableTexture();
-				GlStateManager.enableAlphaTest();
-				GlStateManager.enableBlend();
-				GlStateManager.disableAlphaTest();
-				GlStateManager.disableBlend();
-				GlStateManager.disableDepthTest();
+				// Getting multiple buffers (that aren't the standard ones) calls dispatch on the first and stops drawing.
+				// So we have to break this up to render all of a type first, for efficiency. That means iterating the lists
+				// twice but that's probably worth it to only issue two draw calls.
 				
-				//OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
-				
-				Set<BlockPos> locs = new HashSet<>();
-				te.collectOreLocations(locs);
-				for (BlockPos target : locs) {
-					renderCube(origin, target, 1, 0, 0, 1);
+				// Render main cubes first
+				final IVertexBuilder cubeBuffer = bufferIn.getBuffer(FairyRenderTypes.BLOCK_HIGHLIGHT);
+				for (BlockPos target : oreLocs) {
+					renderCube(target.subtract(origin), matrixStackIn, cubeBuffer, combinedLightIn, combinedOverlayIn, 1f, 0f, 0f, 1f, false);
 				}
 				
-				locs.clear();
-				te.collectRepairLocations(locs);
-				for (BlockPos target : locs) {
-					renderCube(origin, target, 0, 1, 0, 1);
+				for (BlockPos target : repairLocs) {
+					renderCube(target.subtract(origin), matrixStackIn, cubeBuffer, combinedLightIn, combinedOverlayIn, 0f, 1f, 0f, 1f, false);
 				}
 				
-//				red = 0f;
-//				blue = 0f;
-//				green = 1f;
-//				alpha = .7f;
-//				
-//				for (BlockPos target : te.taskMap.keySet()) {
-//					
-//					matrixStackIn.push();
-//					GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
-//					buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-//					
-//					buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-//					
-//					tessellator.draw();
-//					
-//					buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-//					
-//					buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-//					
-//					tessellator.draw();
-//					
-//					buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-//					
-//					buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(0, 1, 0).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(0, 0, 1).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(0, 1, 1).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(1, 0, 1).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(1, 1, 1).color(red, green, blue, alpha).endVertex();
-//					buffer.pos(1, 0, 0).color(red, green, blue, alpha).endVertex();
-//						buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
-//					
-//					tessellator.draw();
-//					matrixStackIn.pop();
-//				}
+				// Render outlines
+				final IVertexBuilder outlineBuffer = bufferIn.getBuffer(FairyRenderTypes.BLOCK_OUTLINE);
+				for (BlockPos target : oreLocs) {
+					renderCube(target.subtract(origin), matrixStackIn, outlineBuffer, combinedLightIn, combinedOverlayIn, .3f, 0f, 0f, 1f, true);
+				}
 				
-				GlStateManager.enableDepthTest();
-				GlStateManager.enableTexture();
-				
-//				GlStateManager.disableLighting();
-//				GlStateManager.disableTexture2D();
-//				GlStateManager.disableAlpha();
-//				GlStateManager.disableBlend();
-//				GlStateManager.disableDepth();
+				for (BlockPos target : repairLocs) {
+					renderCube(target.subtract(origin), matrixStackIn, outlineBuffer, combinedLightIn, combinedOverlayIn, 0f, .3f, 0f, 1f, true);
+				}
 				
 				matrixStackIn.pop();
-				
-//				for (ILogisticsComponent component : neighbors) {
-//					BlockPos pos = component.getPosition();
-//					GlStateManager.glLineWidth(2f);
-//					GlStateManager.disableLighting();
-//					GlStateManager.disableAlpha();
-//					GlStateManager.disableBlend();
-//					buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-//					
-//					buffer.pos(.5, 1.25, .5).color(1f, .2f, .4f, .8f).endVertex();
-//					buffer.pos((pos.getX() - origin.getX()) + .5,
-//							(pos.getY() - origin.getY()) + 1.25,
-//							(pos.getZ() - origin.getZ()) + .5).color(1f, .2f, .4f, .8f).endVertex();
-//					
-//					tessellator.draw();
-//				}
 			}
 		}
 	}
