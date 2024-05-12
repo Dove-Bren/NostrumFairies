@@ -1,5 +1,7 @@
 package com.smanzana.nostrumfairies.client.render.tile;
 
+import java.util.function.Function;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.smanzana.nostrumfairies.blocks.IFeySign;
@@ -15,6 +17,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Vector3f;
@@ -25,8 +28,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public abstract class FeySignRenderer<T extends LogisticsTileEntity & IFeySign> extends TileEntityLogisticsRenderer<T> implements StaticTESR<T> {
 
-	public static <T extends LogisticsTileEntity & IFeySign> void init(Class<T> clazz, FeySignRenderer<T> renderer) {
-		StaticTESRRenderer.instance.registerRender(clazz, renderer);
+	public static <T extends LogisticsTileEntity & IFeySign> void init(TileEntityType<T> clazz, Function<? super TileEntityRendererDispatcher, ? extends FeySignRenderer<T>> renderFactory) {
+		StaticTESRRenderer.instance.registerRender(clazz, renderFactory);
 	}
 	
 	private static final float ICON_SIZE = .2f;

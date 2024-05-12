@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.client.render.stesr;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -12,7 +13,9 @@ import com.smanzana.nostrumfairies.utils.Location;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
@@ -34,7 +37,7 @@ public class StaticTESRRenderer {
 	
 	// Render thread exclusives
 	private Map<Location, RenderTarget> cache;
-	private Map<Class<? extends TileEntity>, StaticTESR<?>> renders;
+	private Map<TileEntityType<? extends TileEntity>, StaticTESR<?>> renders;
 	
 	// Synced update collections
 	private Map<Location, RenderTarget> updates; 
@@ -47,13 +50,13 @@ public class StaticTESRRenderer {
 		clear = false;
 	}
 	
-	public <T extends TileEntity> void registerRender(Class<T> entClass, StaticTESR<T> render) {
-		renders.put(entClass, render);
+	public <T extends TileEntity> void registerRender(TileEntityType<T> entClass, Function<? super TileEntityRendererDispatcher, ? extends StaticTESR<T>> renderFactory) {
+		renders.put(entClass, renderFactory.apply(TileEntityRendererDispatcher.instance));
 	}
 	
 	@SuppressWarnings("unchecked")
 	public <T extends TileEntity> StaticTESR<T> getRender(TileEntity ent) {
-		return (StaticTESR<T>) renders.get(ent.getClass());
+		return (StaticTESR<T>) renders.get(ent.getType());
 	}
 	
 	public void render(MatrixStack matrixStackIn, Minecraft mc, ClientPlayerEntity player, float partialTicks) {

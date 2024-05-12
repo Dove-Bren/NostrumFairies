@@ -10,8 +10,12 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
 
+@Mod.EventBusSubscriber(modid = NostrumFairies.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public enum NostrumFairiesSounds {
 	
 	PICKAXE_HIT("ambient.pickaxe.strike", SoundCategory.AMBIENT),
@@ -88,4 +92,8 @@ public enum NostrumFairiesSounds {
 		return event;
 	}
 	
+	@SubscribeEvent
+    public void registerSounds(RegistryEvent.Register<SoundEvent> event) {
+    	NostrumFairiesSounds.registerSounds(event.getRegistry());
+    }
 }
