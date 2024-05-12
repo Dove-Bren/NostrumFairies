@@ -204,9 +204,9 @@ public class OutputPanelGui {
 		
 		private void drawTemplate(float partialTicks, @Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
-				GlStateManager.pushMatrix();
+				matrixStackIn.push();
 				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
-				GlStateManager.translated(0, 0, 110);
+				matrixStackIn.translate(0, 0, 110);
 				if (template.getCount() > 1) {
 					final String count = "" + template.getCount();
 					
@@ -218,7 +218,7 @@ public class OutputPanelGui {
 					GlStateManager.enableAlphaTest();
 				}
 				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 		}
 		
@@ -235,17 +235,17 @@ public class OutputPanelGui {
 			
 			// Draw templates, if needed
 			for (int i = 0; i < container.slots.getSizeInventory(); i++) {
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(horizontalMargin + GUI_LPANEL_WIDTH + GUI_TOP_INV_HOFFSET + (i * GUI_INV_CELL_LENGTH),
+				matrixStackIn.push();
+				matrixStackIn.translate(horizontalMargin + GUI_LPANEL_WIDTH + GUI_TOP_INV_HOFFSET + (i * GUI_INV_CELL_LENGTH),
 						verticalMargin + GUI_TOP_INV_VOFFSET,
 						0);
 				
-				GlStateManager.pushMatrix();
-				GlStateManager.scalef(1f, 1f, .05f);
+				matrixStackIn.push();
+				matrixStackIn.scale(1f, 1f, .05f);
 				drawTemplate(partialTicks, container.panel.getTemplate(i));
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 				
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 			
 			panelGui.draw(mc, horizontalMargin, verticalMargin);

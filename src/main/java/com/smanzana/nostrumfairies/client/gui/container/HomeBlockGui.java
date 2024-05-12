@@ -258,32 +258,32 @@ public class HomeBlockGui {
 			}
 			
 			GlStateManager.color4f(1f, 1f, 1f, 1f);
-			GlStateManager.pushMatrix();
-			GlStateManager.translated(x + 5, y + 2, 0);
+			matrixStackIn.push();
+			matrixStackIn.translate(x + 5, y + 2, 0);
 			
 			font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
 			
-			GlStateManager.pushMatrix();
-			GlStateManager.translated(0, 14, 0);
-			GlStateManager.scalef(scale, scale, scale);
+			matrixStackIn.push();
+			matrixStackIn.translate(0, 14, 0);
+			matrixStackIn.scale(scale, scale, scale);
 			font.drawString(String.format("%.0f%% Growth", (container.home.getGrowth() * 100)),
 					0, 0, 0xFFA0A0A0);
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 			
 			
-			GlStateManager.pushMatrix();
+			matrixStackIn.push();
 			
-			GlStateManager.translated(0, 26, 0);
-			GlStateManager.scalef(scale, scale, scale);
+			matrixStackIn.translate(0, 26, 0);
+			matrixStackIn.scale(scale, scale, scale);
 			font.drawString(count + "/" + maxcount + " Residents",
 					0, 0, 0xFFA0A0A0);
 			
 			String str = getAetherDescription(container.home.getAetherLevel());
 			font.drawString(str,
 					215 - (font.getStringWidth(str)), 0, 0xFFA0A0A0);
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 		}
 		
 		private void drawListItem(int x, int y, boolean hasStone, boolean mouseOver, @Nullable FeyAwayRecord record) {
@@ -313,11 +313,11 @@ public class HomeBlockGui {
 						name = name.substring(0, index) + "...";
 					}
 					
-					GlStateManager.pushMatrix();
-					GlStateManager.translated(x + 2, y + 1 + ((GUI_LIST_ITEM_HEIGHT - font.FONT_HEIGHT) / 2) / .75f, 0);
-					GlStateManager.scalef(.75f, .75f, .75f);
+					matrixStackIn.push();
+					matrixStackIn.translate(x + 2, y + 1 + ((GUI_LIST_ITEM_HEIGHT - font.FONT_HEIGHT) / 2) / .75f, 0);
+					matrixStackIn.scale(.75f, .75f, .75f);
 					this.font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
-					GlStateManager.popMatrix();
+					matrixStackIn.pop();
 				}
 			}
 		}
@@ -363,37 +363,37 @@ public class HomeBlockGui {
 				name = name.substring(0, index) + "...";
 			}
 			
-			GlStateManager.pushMatrix();
-			GlStateManager.translated(x + 2 + (nameSpace - (font.getStringWidth(name) * nameScale)) / 2, y + 5, 0);
-			GlStateManager.scalef(nameScale, nameScale, nameScale);
+			matrixStackIn.push();
+			matrixStackIn.translate(x + 2 + (nameSpace - (font.getStringWidth(name) * nameScale)) / 2, y + 5, 0);
+			matrixStackIn.scale(nameScale, nameScale, nameScale);
 			this.font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 			
 			if (record.cache != null) {
 				EntityFeyBase fey = record.cache;
 				// -> Title
 				name = fey.getSpecializationName();
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(x + 2 + (nameSpace - (font.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
-				GlStateManager.scalef(nameScale, nameScale, nameScale);
+				matrixStackIn.push();
+				matrixStackIn.translate(x + 2 + (nameSpace - (font.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
+				matrixStackIn.scale(nameScale, nameScale, nameScale);
 				this.font.drawString(name, 0, 0, 0xFFF0A0FF);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 				
 				// -> Status
 				name = I18n.format(fey.getMoodSummary());
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
-				GlStateManager.scalef(nameScale, nameScale, nameScale);
+				matrixStackIn.push();
+				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
+				matrixStackIn.scale(nameScale, nameScale, nameScale);
 				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 				
 				// -> Activity report
 				name = I18n.format(fey.getActivitySummary());
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
-				GlStateManager.scalef(nameScale, nameScale, nameScale);
+				matrixStackIn.push();
+				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
+				matrixStackIn.scale(nameScale, nameScale, nameScale);
 				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 				
 				// render preview
 				RenderFuncs.drawRect(x + GUI_DETAILS_WIDTH - (previewMargin + previewSize), y + previewMargin,
@@ -433,19 +433,19 @@ public class HomeBlockGui {
 				}
 			} else {
 				name = "Away";
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
-				GlStateManager.scalef(nameScale, nameScale, nameScale);
+				matrixStackIn.push();
+				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
+				matrixStackIn.scale(nameScale, nameScale, nameScale);
 				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 		}
 		
 		private void drawSlots() {
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
-			GlStateManager.pushMatrix();
-			GlStateManager.translated(horizontalMargin, verticalMargin, 0);
+			matrixStackIn.push();
+			matrixStackIn.translate(horizontalMargin, verticalMargin, 0);
 			for (ResidentSlot slot : container.residentSlots) {
 				if (slot.isActive()) {
 					float scale = (12f / 16f) ;
@@ -465,7 +465,7 @@ public class HomeBlockGui {
 				GlStateManager.color4f(1f, 1f, 1f, 1f);
 				FeySlotIcon.draw(slot, scale);
 			}
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 		}
 		
 		private void drawSummaryOverlay(int mouseX, int mouseY) {

@@ -1,9 +1,11 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 
 import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.entity.model.RendererModel;
+import net.minecraft.client.renderer.model.ModelRenderer;
 
 public class ModelGnomeHat extends EntityModel<EntityGnome> {
 	
@@ -16,7 +18,7 @@ public class ModelGnomeHat extends EntityModel<EntityGnome> {
 	
 	protected final Type type;
 
-	private RendererModel base;
+	private ModelRenderer base;
 	
 	public ModelGnomeHat(Type type) {
 		// 16x16x16 is one block.
@@ -29,7 +31,7 @@ public class ModelGnomeHat extends EntityModel<EntityGnome> {
 		this.type = type;
 		switch (type) {
 		case ERECT:
-			base = new RendererModel(this, 0, 0);
+			base = new ModelRenderer(this, 0, 0);
 			base.setTextureSize(textW, textH);
 			base.addBox(-3.5f, -8, -3.5f, 7, 2, 7);
 			base.setTextureOffset(28, 0);
@@ -42,7 +44,7 @@ public class ModelGnomeHat extends EntityModel<EntityGnome> {
 			base.addBox(-.5f, -15, -.5f, 1, 3, 1);
 			break;
 		case PLAIN:
-			base = new RendererModel(this, 0, 18);
+			base = new ModelRenderer(this, 0, 18);
 			base.setTextureSize(textW, textH);
 			base.addBox(-3.5f, -8, -3.5f, 7, 2, 7);
 			base.setTextureOffset(28, 18);
@@ -55,7 +57,7 @@ public class ModelGnomeHat extends EntityModel<EntityGnome> {
 			base.addBox(-.5f, -13, -.5f, 2, 1, 2);
 			break;
 		case LIMP:
-			base = new RendererModel(this, 0, 36);
+			base = new ModelRenderer(this, 0, 36);
 			base.setTextureSize(textW, textH);
 			base.addBox(-3.5f, -8, -3.5f, 7, 2, 7);
 			base.setTextureOffset(28, 36);
@@ -73,7 +75,7 @@ public class ModelGnomeHat extends EntityModel<EntityGnome> {
 			base.addBox(-7, -7, 3, 1, 1, 1);
 			break;
 		case SMALL:
-			base = new RendererModel(this, 0, 52);
+			base = new ModelRenderer(this, 0, 52);
 			base.setTextureSize(textW, textH);
 			base.addBox(-1, -8, -1, 4, 1, 4);
 			
@@ -87,13 +89,14 @@ public class ModelGnomeHat extends EntityModel<EntityGnome> {
 		}
 	}
 	
+	public void setRotationAngles(EntityGnome entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+		base.rotateAngleX = headPitch * 0.017453292F;
+		base.rotateAngleY = netHeadYaw * 0.017453292F;
+	}
+	
 	@Override
-	public void render(EntityGnome entity, float limbSwing, float limbSwingAmount, float ageInTicks,
-			float headAngleY, float headAngleX, float scale) {
-		base.rotateAngleX = headAngleX * 0.017453292F;
-		base.rotateAngleY = headAngleY * 0.017453292F;
-		
-		base.render(scale);	
+	public void render(MatrixStack matrixStackIn, IVertexBuilder buffer, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+		base.render(matrixStackIn, buffer, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 	}
 	
 }

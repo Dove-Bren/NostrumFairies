@@ -67,10 +67,10 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 					//.rotate(90f, new Vector3f(1f, 0, 0));
 					;
 
-			GlStateManager.pushMatrix();
-			GlStateManager.scalef(.5f, .5f, .5f);
+			matrixStackIn.push();
+			matrixStackIn.scale(.5f, .5f, .5f);
 			RenderFuncs.RenderModelWithColor(model, color, buffer, offset, transform);
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 		}
 	}
 }

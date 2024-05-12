@@ -1,20 +1,22 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
 
 import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.entity.model.RendererModel;
+import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.util.math.MathHelper;
 
 public class ModelGnome extends EntityModel<EntityGnome> {
 
-	private RendererModel body;
-	private RendererModel head;
-	private RendererModel legLeft;
-	private RendererModel legRight;
-	private RendererModel armLeft;
-	private RendererModel armRight;
+	private OffsetModelRenderer body;
+	private ModelRenderer head;
+	private OffsetModelRenderer legLeft;
+	private OffsetModelRenderer legRight;
+	private ModelRenderer armLeft;
+	private ModelRenderer armRight;
 	
 	public ModelGnome() {
 		// 16x16x16 is one block.
@@ -22,23 +24,23 @@ public class ModelGnome extends EntityModel<EntityGnome> {
 		final int textW = 64;
 		final int textH = 32;
 		
-		body = new RendererModel(this, 0, 0);
+		body = new OffsetModelRenderer(this, 0, 0);
 		body.setTextureSize(textW, textH);
 		body.setRotationPoint(0, 13, 0);
 		body.addBox(-4, -5, -3, 8, 10, 6);
 		
-		head = new RendererModel(this, 28, 0);
+		head = new ModelRenderer(this, 28, 0);
 		head.setTextureSize(textW, textH);
 		head.setRotationPoint(0, 0, 0);
-		head.addBox(-3.5f, -7, -3.5f, 7, 7, 7);
+		head.addBox(-3.5f, -7 + (-5f / 16f), -3.5f, 7, 7, 7);
 		head.setTextureOffset(28, 14);
-		head.addBox(3, -5, -1, 1, 2, 1);
+		head.addBox(3, -5 + (-5f / 16f), -1, 1, 2, 1);
 		head.setTextureOffset(28, 17);
-		head.addBox(-4, -5, -1, 1, 2, 1);
-		head.offsetY = (-5f / 16f);
+		head.addBox(-4, -5 + (-5f / 16f), -1, 1, 2, 1);
+//		head.offsetY = (-5f / 16f);
 		body.addChild(head);
 		
-		legLeft = new RendererModel(this, 0, 16);
+		legLeft = new OffsetModelRenderer(this, 0, 16);
 		legLeft.setTextureSize(textW, textH);
 		legLeft.setRotationPoint(0, 0, 0);
 		legLeft.addBox(-1.5f, 0, -2, 3, 6, 4);
@@ -50,7 +52,7 @@ public class ModelGnome extends EntityModel<EntityGnome> {
 		legLeft.offsetX = (2.49f / 16f);
 		body.addChild(legLeft);
 
-		legRight = new RendererModel(this, 0, 16);
+		legRight = new OffsetModelRenderer(this, 0, 16);
 		legRight.mirror = true;
 		legRight.setTextureSize(textW, textH);
 		legRight.setRotationPoint(0, 0, 0);
@@ -63,26 +65,26 @@ public class ModelGnome extends EntityModel<EntityGnome> {
 		legRight.offsetX = (-2.49f / 16f);
 		body.addChild(legRight);
 		
-		armLeft = new RendererModel(this, 48, 16);
+		armLeft = new ModelRenderer(this, 48, 16);
 		armLeft.setTextureSize(textW, textH);
 		armLeft.setRotationPoint(0, 0, 0);
-		armLeft.addBox(-1.5f, 0, -1.5f, 3, 7, 3);
-		armLeft.offsetY = (-5f / 16f);
-		armLeft.offsetX = ((3 + 1.5f) / 16f);
+		armLeft.addBox(-1.5f + ((3 + 1.5f) / 16f), 0 + (-5f / 16f), -1.5f, 3, 7, 3);
+//		armLeft.offsetY = (-5f / 16f);
+//		armLeft.offsetX = ((3 + 1.5f) / 16f);
 		body.addChild(armLeft);
 		
-		armRight = new RendererModel(this, 48, 16);
+		armRight = new ModelRenderer(this, 48, 16);
 		armRight.mirror = true;
 		armRight.setTextureSize(textW, textH);
 		armRight.setRotationPoint(0, 0, 0);
-		armRight.addBox(-1.5f, 0, -1.5f, 3, 7, 3);
-		armRight.offsetY = (-5f / 16f);
-		armRight.offsetX = (-(3 + 1.5f) / 16f);
+		armRight.addBox(-1.5f + (-(3 + 1.5f) / 16f), 0 + (-5f / 16f), -1.5f, 3, 7, 3);
+//		armRight.offsetY = (-5f / 16f);
+//		armRight.offsetX = (-(3 + 1.5f) / 16f);
 		body.addChild(armRight);
 	}
 	
 	@Override
-	public void setRotationAngles(EntityGnome gnome, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor) {
+	public void setRotationAngles(EntityGnome gnome, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
 		
 		head.rotateAngleX = headPitch * 0.017453292F;
 		head.rotateAngleY = netHeadYaw * 0.017453292F;
@@ -136,13 +138,8 @@ public class ModelGnome extends EntityModel<EntityGnome> {
 	}
 	
 	@Override
-	public void render(EntityGnome entity, float limbSwing, float limbSwingAmount, float ageInTicks,
-			float headAngleY, float headAngleX, float scale) {
-		
-		//EntityGnome gnome = (EntityGnome) entity;
-		this.setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, headAngleY, headAngleX, scale);
-		
-		body.render(scale);
+	public void render(MatrixStack matrixStackIn, IVertexBuilder buffer, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+		body.render(matrixStackIn, buffer, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 	}
 	
 }

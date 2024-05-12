@@ -1,14 +1,20 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
+import java.util.function.Function;
+
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
 import com.smanzana.nostrumfairies.serializers.BattleStanceElfArcher;
 import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
 
-import net.minecraft.client.renderer.entity.model.RendererModel;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 
 public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
@@ -16,17 +22,24 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 	private static final int ELF_TEX_W = 64;
 	private static final int ELF_TEX_H = 32;
 	
-	protected RendererModel bow;
-	protected RendererModel dagger;
+	protected OffsetModelRenderer bow;
+	protected OffsetModelRenderer dagger;
 	protected final boolean leftHanded;
+	
+	protected boolean useBow; // Dumb variable set up before render calls
 	
 	public ModelElfArcher(boolean leftHanded) {
 		super(leftHanded);
 		this.leftHanded = leftHanded;
 	}
 	
-	protected RendererModel makeBow() {
-		RendererModel bow = new RendererModel(this, 42, 18);
+	public ModelElfArcher(boolean leftHanded, Function<ResourceLocation, RenderType> renderTypeMap) {
+		super(leftHanded, renderTypeMap);
+		this.leftHanded = leftHanded;
+	}
+	
+	protected OffsetModelRenderer makeBow() {
+		OffsetModelRenderer bow = new OffsetModelRenderer(this, 42, 18);
 		bow.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 		bow.setRotationPoint(0, 0, 0);
 		bow.addBox(-3, 0, -.5f, 6, 1, 1);
@@ -50,8 +63,8 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 		return bow;
 	}
 	
-	protected RendererModel makeDagger() {
-		RendererModel dagger = new RendererModel(this, 60, 18);
+	protected OffsetModelRenderer makeDagger() {
+		OffsetModelRenderer dagger = new OffsetModelRenderer(this, 60, 18);
 		dagger.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 		dagger.setRotationPoint(0, 0, 0);
 		dagger.addBox(-.5f, 0, -.5f, 1, 4, 1);
@@ -66,8 +79,8 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 	}
 	
 	@Override
-	public void setRotationAngles(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX, float scaleFactor) {
-		super.setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, headAngleY, headAngleX, scaleFactor);
+	public void setRotationAngles(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX) {
+		super.setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, headAngleY, headAngleX);
 		
 		final boolean isAttacking;
 		final boolean useBow;
@@ -97,8 +110,8 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 			if (useBow) {
 				double targetDist = 0;
 				//LivingEntity target = elf.getAttackTarget();
-				RendererModel mainArm = this.armLeft;
-				RendererModel offArm = this.armRight;
+				OffsetModelRenderer mainArm = this.armLeft;
+				OffsetModelRenderer offArm = this.armRight;
 				
 				if (leftHanded) {
 					mainArm = this.armRight;
@@ -152,7 +165,7 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 				legRight.rotateAngleX = -bend;
 				
 			} else {
-				RendererModel mainArm = this.armRight;
+				ModelRenderer mainArm = this.armRight;
 				
 				if (leftHanded) {
 					mainArm = this.armLeft;
@@ -200,12 +213,7 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 		
 	}
 	
-	@Override
-	public void render(T entity, float limbSwing, float limbSwingAmount, float ageInTicks,
-			float headAngleY, float headAngleX, float scale) {
-		
-		final boolean useBow;
-		
+	public void setWeaponSelection(T entity) {
 		if (entity instanceof EntityElfArcher) {
 			EntityElfArcher elf = (EntityElfArcher) entity;
 			useBow = elf.getStance() == BattleStanceElfArcher.RANGED;
@@ -215,15 +223,18 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 		} else {
 			useBow = false;
 		}
-		
+	}
+	
+	@Override
+	public void render(MatrixStack matrixStackIn, IVertexBuilder buffer, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
 		// Hide whichever weapon we're not using
 		bow.showModel = useBow;
 		dagger.showModel = !useBow;
 		
-		super.render(entity, limbSwing, limbSwingAmount, ageInTicks, headAngleY, headAngleX, scale);
+		super.render(matrixStackIn, buffer, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 	}
 	
-	protected RendererModel getInHand(boolean mainHand) {
+	protected OffsetModelRenderer getInHand(boolean mainHand) {
 		if (mainHand) {
 			dagger = makeDagger();
 			return dagger;

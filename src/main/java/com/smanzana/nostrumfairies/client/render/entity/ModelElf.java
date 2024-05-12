@@ -1,41 +1,51 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
+import java.util.function.Function;
+
 import javax.annotation.Nullable;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
 import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
 
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.entity.model.RendererModel;
+import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 
 public class ModelElf<T extends Entity> extends EntityModel<T> {
 
-	protected RendererModel body;
-	protected RendererModel head;
-	protected RendererModel legLeft;
-	protected RendererModel legRight;
-	protected RendererModel armLeft;
-	protected RendererModel armRight;
-	protected @Nullable RendererModel heldMain;
-	protected @Nullable RendererModel heldOff;
+	protected OffsetModelRenderer body;
+	protected OffsetModelRenderer head;
+	protected OffsetModelRenderer legLeft;
+	protected OffsetModelRenderer legRight;
+	protected OffsetModelRenderer armLeft;
+	protected OffsetModelRenderer armRight;
+	protected @Nullable OffsetModelRenderer heldMain;
+	protected @Nullable OffsetModelRenderer heldOff;
 	
 	private static final int ELF_TEX_W = 64;
 	private static final int ELF_TEX_H = 32;
 	
-	public ModelElf(boolean leftHanded) {
+	public ModelElf(boolean leftHanded) {}
+	
+	public ModelElf(boolean leftHanded, Function<ResourceLocation, RenderType> renderTypeMap) {
+		super(renderTypeMap);
+		
 		// 16x16x16 is one block.
 		// Y starts at offset 24 and grows down
 		
-		body = new RendererModel(this, 0, 0);
+		body = new OffsetModelRenderer(this, 0, 0);
 		body.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 		body.setRotationPoint(0, 7, 0);
 		body.addBox(-4, -7, -2, 8, 14, 4);
 		
-		head = new RendererModel(this, 24, 0);
+		head = new OffsetModelRenderer(this, 24, 0);
 		head.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 		head.setRotationPoint(0, 0, 0);
 		head.addBox(-3, -6, -3, 6, 6, 6);
@@ -54,7 +64,7 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 		head.offsetY = (-7f / 16f);
 		body.addChild(head);
 		
-		legLeft = new RendererModel(this, 0, 18);
+		legLeft = new OffsetModelRenderer(this, 0, 18);
 		legLeft.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 		legLeft.setRotationPoint(0, 0, 0);
 		legLeft.addBox(-2, 0, -2, 3, 10, 4);
@@ -62,7 +72,7 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 		legLeft.offsetX = (3f / 16f);
 		body.addChild(legLeft);
 
-		legRight = new RendererModel(this, 0, 18);
+		legRight = new OffsetModelRenderer(this, 0, 18);
 		legRight.mirror = true;
 		legRight.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 		legRight.setRotationPoint(0, 0, 0);
@@ -71,7 +81,7 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 		legRight.offsetX = (-2f / 16f);
 		body.addChild(legRight);
 		
-		armLeft = new RendererModel(this, 48, 0);
+		armLeft = new OffsetModelRenderer(this, 48, 0);
 		armLeft.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 		armLeft.setRotationPoint(0, 1, 0);
 		armLeft.addBox(-1.5f, -1, -1.5f, 3, 12, 3);
@@ -79,7 +89,7 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 		armLeft.offsetX = ((4 + 1.5f) / 16f);
 		body.addChild(armLeft);
 		
-		armRight = new RendererModel(this, 48, 0);
+		armRight = new OffsetModelRenderer(this, 48, 0);
 		armRight.mirror = true;
 		armRight.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 		armRight.setRotationPoint(0, 1, 0);
@@ -110,7 +120,7 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 	}
 	
 	@Override
-	public void setRotationAngles(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX, float scaleFactor) {
+	public void setRotationAngles(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX) {
 		final boolean isWorking;
 		final boolean isIdle;
 		final boolean leftHanded;
@@ -133,7 +143,6 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 		
 		body.rotateAngleY = 0;
 		body.rotateAngleX = 0;
-		body.offsetY = 0;
 		head.rotateAngleX = headAngleX * 0.017453292F;
 		head.rotateAngleY = headAngleY * 0.017453292F;
 		
@@ -147,25 +156,13 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 		armRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 2.0F * limbSwingAmount * 0.5F;
 		armRight.rotateAngleZ = 0;
 		armRight.rotateAngleY = 0;
-		armRight.offsetY = (-7f / 16f);
-		armRight.offsetX = (-(4 + 1.5f) / 16f);
-		armRight.offsetZ = 0;
 		armLeft.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F;
 		armLeft.rotateAngleZ = 0;
 		armLeft.rotateAngleY = 0;
-		armLeft.offsetY = (-7f / 16f);
-		armLeft.offsetX = ((4 + 1.5f) / 16f);
-		armLeft.offsetZ = 0;
 		
 		
 		legRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
-		legRight.offsetY = (7f / 16f);
-		legRight.offsetX = (-2f / 16f);
-		legRight.offsetZ = 0;
 		legLeft.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
-		legLeft.offsetY = (7f / 16f);
-		legLeft.offsetX = (2f / 16f);
-		legLeft.offsetZ = 0;
 		
 		//if (elf.isSwingInProgress || elf.getPose() != ArmPose.IDLE) {
 		if (swingProgress > 0 || !isIdle) {
@@ -174,7 +171,7 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 				//heldMain.rotateAngleY = 0;
 			}
 			
-			RendererModel hand = (leftHanded ? armLeft : armRight);
+			ModelRenderer hand = (leftHanded ? armLeft : armRight);
 			
 			//if (elf.getPose() == ArmPose.CHOPPING)
 			{
@@ -194,15 +191,14 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 	}
 	
 	@Override
-	public void render(T entity, float limbSwing, float limbSwingAmount, float ageInTicks,
-			float headAngleY, float headAngleX, float scale) {
-		body.render(scale);
+	public void render(MatrixStack matrixStackIn, IVertexBuilder buffer, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+		body.render(matrixStackIn, buffer, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 	}
 	
-	protected RendererModel getInHand(boolean mainHand) {
-		RendererModel render = null;
+	protected OffsetModelRenderer getInHand(boolean mainHand) {
+		OffsetModelRenderer render = null;
 		if (mainHand) {
-			render = new RendererModel(this, 48, 25);
+			render = new OffsetModelRenderer(this, 48, 25);
 			render.setTextureSize(ELF_TEX_W, ELF_TEX_H);
 			render.setRotationPoint(0, 0, 0);
 			render.addBox(-.5f, -6, -.5f, 1, 6, 1);

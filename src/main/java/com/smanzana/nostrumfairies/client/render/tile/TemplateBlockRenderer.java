@@ -69,7 +69,7 @@ public class TemplateBlockRenderer extends TileEntityRenderer<TemplateBlockTileE
 		
 		//final int drawlist = Cache(model);
 		
-		//GlStateManager.pushMatrix();
+		//matrixStackIn.push();
 		//GlStateManager.translate(x, y, z);
 		
 		//GlStateManager.color(0f, 0f, 0f, .3f);
@@ -91,7 +91,7 @@ public class TemplateBlockRenderer extends TileEntityRenderer<TemplateBlockTileE
 		final int color = 0x66AAAADD;
 		RenderFuncs.RenderModelWithColor(model, color, buffer, new Vector3f((float) 0, (float) 0, (float) 0));
 		
-		//GlStateManager.popMatrix();
+		//matrixStackIn.pop();
 	}
 
 	@Override

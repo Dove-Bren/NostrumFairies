@@ -21,8 +21,8 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 	protected void renderCube(BlockPos origin, BlockPos target, float red, float green, float blue, float alpha) {
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buffer = tessellator.getBuffer();
-		GlStateManager.pushMatrix();
-		GlStateManager.translated(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
+		matrixStackIn.push();
+		matrixStackIn.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
 		buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
 		
 		buffer.pos(0, 0, 0).color(red, green, blue, alpha).endVertex();
@@ -55,7 +55,7 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 			buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
 		
 		tessellator.draw();
-		GlStateManager.popMatrix();
+		matrixStackIn.pop();
 	}
 	
 	@Override
@@ -72,8 +72,8 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 				
 				BlockPos origin = te.getPos();
 				
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(x, y, z);
+				matrixStackIn.push();
+				matrixStackIn.translate(x, y, z);
 				
 				GlStateManager.lineWidth(3f);
 				GlStateManager.disableLighting();
@@ -106,7 +106,7 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 //				
 //				for (BlockPos target : te.taskMap.keySet()) {
 //					
-//					GlStateManager.pushMatrix();
+//					matrixStackIn.push();
 //					GlStateManager.translate(target.getX() - origin.getX(), target.getY() - origin.getY(), target.getZ() - origin.getZ());
 //					buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
 //					
@@ -140,7 +140,7 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 //						buffer.pos(1, 1, 0).color(red, green, blue, alpha).endVertex();
 //					
 //					tessellator.draw();
-//					GlStateManager.popMatrix();
+//					matrixStackIn.pop();
 //				}
 				
 				GlStateManager.enableDepthTest();
@@ -152,7 +152,7 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 //				GlStateManager.disableBlend();
 //				GlStateManager.disableDepth();
 				
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 				
 //				for (ILogisticsComponent component : neighbors) {
 //					BlockPos pos = component.getPosition();

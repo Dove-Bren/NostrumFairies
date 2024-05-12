@@ -2,15 +2,18 @@ package com.smanzana.nostrumfairies.client.render.entity;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Vector3f;
 
 public class RenderFairy extends MobRenderer<EntityFairy, ModelFairy> {
 	
@@ -26,28 +29,28 @@ public class RenderFairy extends MobRenderer<EntityFairy, ModelFairy> {
 	}
 
 	@Override
-	protected ResourceLocation getEntityTexture(EntityFairy entity) {
+	public ResourceLocation getEntityTexture(EntityFairy entity) {
 		return LOC_BODY;
 	}
 	
 	@Override
-	public void doRender(EntityFairy entity, double x, double y, double z, float entityYaw, float partialTicks) {
-		GlStateManager.pushMatrix();
-		GlStateManager.translated(x, y + .1, z);
-		GlStateManager.pushMatrix();
-		GlStateManager.scalef(.05f, .05f, .05f);
-		super.doRender(entity, 0, 0, 0, entityYaw, partialTicks);
-		GlStateManager.popMatrix();
+	public void render(EntityFairy entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
+		matrixStackIn.push();
+		matrixStackIn.translate(0, .1, 0);
+		matrixStackIn.push();
+		matrixStackIn.scale(.05f, .05f, .05f);
+		super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
+		matrixStackIn.pop();
 		
 		// Now item time!
-		@Nonnull ItemStack item = (entity.getCarriedItems().get(0));
+		@Nonnull ItemStack item = (entityIn.getCarriedItems().get(0));
 		if (!item.isEmpty()) {
-			GlStateManager.translatef(0, .25f, 0);
-			GlStateManager.rotatef(-entityYaw, 0, 1, 0);
-			RenderFuncs.ItemRenderer(item);
+			matrixStackIn.translate(0, .25f, 0);
+			matrixStackIn.rotate(Vector3f.YP.rotationDegrees(-entityYaw));
+			RenderFuncs.ItemRenderer(item, matrixStackIn, bufferIn, packedLightIn, OverlayTexture.NO_OVERLAY);
 		}
 		
-		GlStateManager.popMatrix();
+		matrixStackIn.pop();
 	}
 	
 }

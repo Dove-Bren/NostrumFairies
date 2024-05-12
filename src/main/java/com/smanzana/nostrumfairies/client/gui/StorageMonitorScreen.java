@@ -128,19 +128,19 @@ public class StorageMonitorScreen extends Screen {
 			GlStateManager.enableAlphaTest();
 			GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 			
-//			GlStateManager.pushMatrix();
+//			matrixStackIn.push();
 //			GlStateManager.translate(0, 0, 1000);
 //			Gui.drawRect(x + 1, y + (GUI_INV_CELL_LENGTH - 6) , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60000000);
-//			GlStateManager.popMatrix();
+//			matrixStackIn.pop();
 		}
 		
 		if (mouseOver) {
-			GlStateManager.pushMatrix();
-			GlStateManager.translated(0, 0, 1000);
+			matrixStackIn.push();
+			matrixStackIn.translate(0, 0, 1000);
 			RenderFuncs.drawRect(x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET,
 					x + GUI_TEXT_MENUITEM_SLOT_HOFFSET + (GUI_INV_CELL_LENGTH - 1), y + GUI_TEXT_MENUITEM_SLOT_VOFFSET + (GUI_INV_CELL_LENGTH - 1),
 					0x60FFFFFF);
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 		}
 	}
 	
@@ -175,20 +175,20 @@ public class StorageMonitorScreen extends Screen {
 			Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(stack.getTemplate(), x + 1, y + 1);
 			RenderHelper.disableStandardItemLighting();
 			
-			GlStateManager.pushMatrix();
-			GlStateManager.translated(0, 0, 1000);
+			matrixStackIn.push();
+			matrixStackIn.translate(0, 0, 1000);
 			RenderFuncs.drawRect(x + 1, y + (GUI_INV_CELL_LENGTH - 6) , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60000000);
-			GlStateManager.translated(x + GUI_INV_CELL_LENGTH + (-2) + (-width / 2), y + GUI_INV_CELL_LENGTH + (-height / 2) - 1, 0);
+			matrixStackIn.translate(x + GUI_INV_CELL_LENGTH + (-2) + (-width / 2), y + GUI_INV_CELL_LENGTH + (-height / 2) - 1, 0);
 			GlStateManager.scaled(.5, .5, 1);
 			this.font.drawStringWithShadow(count, 0, 0, 0xFFFFFFFF);
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 		}
 		
 		if (mouseOver) {
-			GlStateManager.pushMatrix();
-			GlStateManager.translated(0, 0, 1000);
+			matrixStackIn.push();
+			matrixStackIn.translate(0, 0, 1000);
 			RenderFuncs.drawRect(x + 1, y + 1 , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60FFFFFF);
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 		}
 	}
 	
@@ -219,7 +219,7 @@ public class StorageMonitorScreen extends Screen {
 			final int spilloverRows = rows - GUI_CELL_ROWS;
 			int invOffset = 0;
 			
-			GlStateManager.pushMatrix();
+			matrixStackIn.push();
 			
 			// Adjust up or down depending on scroll
 			if (spilloverRows <= 0 || scrollLag == 0f) {
@@ -230,7 +230,7 @@ public class StorageMonitorScreen extends Screen {
 				final int wholes = (int) Math.floor(scrollLag * spilloverRows);
 				final double frac = (scrollLag * spilloverRows) - wholes;
 				invOffset = wholes;
-				GlStateManager.translated(0, -GUI_INV_CELL_LENGTH * frac, 0);
+				matrixStackIn.translate(0, -GUI_INV_CELL_LENGTH * frac, 0);
 			}
 			
 			for (int i = 0; i < GUI_CELL_ROWS + 1; i++)
@@ -261,11 +261,11 @@ public class StorageMonitorScreen extends Screen {
 				i++;
 			}
 			
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 		}
 		
-		GlStateManager.pushMatrix();
-		GlStateManager.translated(0, 0, 1000);
+		matrixStackIn.push();
+		matrixStackIn.translate(0, 0, 1000);
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
 		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 0.9f);
 		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -279,7 +279,7 @@ public class StorageMonitorScreen extends Screen {
 		drawSlider(sliderX, sliderY,
 				mouseX >= sliderX && mouseX < sliderX + GUI_INV_SLIDER_WIDTH
 				&& mouseY >= sliderY && mouseY < sliderY + GUI_INV_SLIDER_HEIGHT);
-		GlStateManager.popMatrix();
+		matrixStackIn.pop();
 		
 		super.render(mouseX, mouseY, p_73863_3_);
 	}

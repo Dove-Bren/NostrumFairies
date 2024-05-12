@@ -666,15 +666,15 @@ public class FairyScreenGui {
 				} else {
 					name = selectedName;
 				}
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(sidebarX + (SIDEBAR_ATTACK_WIDTH / 2), sidebarY + 7, 0); 
-				GlStateManager.scalef(scale, scale, scale);
+				matrixStackIn.push();
+				matrixStackIn.translate(sidebarX + (SIDEBAR_ATTACK_WIDTH / 2), sidebarY + 7, 0); 
+				matrixStackIn.scale(scale, scale, scale);
 				this.drawCenteredString(this.font,
 						name,
 						0,
 						0,
 						0xFFFFFFFF);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 				GlStateManager.disableAlphaTest();
 				GlStateManager.disableBlend();
 				GlStateManager.enableAlphaTest();
@@ -731,15 +731,15 @@ public class FairyScreenGui {
 				} else {
 					name = selectedName;
 				}
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(sidebarX + (SIDEBAR_LOGISTICS_WIDTH / 2), sidebarY + 7, 0); 
-				GlStateManager.scalef(scale, scale, scale);
+				matrixStackIn.push();
+				matrixStackIn.translate(sidebarX + (SIDEBAR_LOGISTICS_WIDTH / 2), sidebarY + 7, 0); 
+				matrixStackIn.scale(scale, scale, scale);
 				this.drawCenteredString(this.font,
 						name,
 						0,
 						0,
 						0xFFFFFFFF);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 				GlStateManager.disableAlphaTest();
 				GlStateManager.disableBlend();
 				GlStateManager.enableAlphaTest();
@@ -803,15 +803,15 @@ public class FairyScreenGui {
 				} else {
 					name = selectedName;
 				}
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(sidebarX + (SIDEBAR_CONSTRUCTION_WIDTH / 2), sidebarY + 7, 0); 
-				GlStateManager.scalef(scale, scale, scale);
+				matrixStackIn.push();
+				matrixStackIn.translate(sidebarX + (SIDEBAR_CONSTRUCTION_WIDTH / 2), sidebarY + 7, 0); 
+				matrixStackIn.scale(scale, scale, scale);
 				this.drawCenteredString(this.font,
 						name,
 						0,
 						0,
 						0xFFFFFFFF);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 				GlStateManager.disableAlphaTest();
 				GlStateManager.disableBlend();
 				GlStateManager.enableAlphaTest();
@@ -853,12 +853,12 @@ public class FairyScreenGui {
 			GlStateManager.color4f(1f, 1f, 1f, 1f);
 			
 			for (int i = 0; i < level; i++) {
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(x + (starWidth * i),
+				matrixStackIn.push();
+				matrixStackIn.translate(x + (starWidth * i),
 						verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET + (GUI_FAIRY_XP_BAR_HEIGHT / 2) + (-ICON_STAR_HEIGHT / 2),
 						0);
 				drawStar(partialTicks);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 			
 			// Draw level
@@ -888,8 +888,8 @@ public class FairyScreenGui {
 		@Override
 		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
 			
-			GlStateManager.pushMatrix();
-			GlStateManager.translated(0, 0, 500);
+			matrixStackIn.push();
+			matrixStackIn.translate(0, 0, 500);
 			if (!container.capability.attackFairyUnlocked()) {
 				RenderFuncs.drawRect(GUI_ATTACK_SLOT_HOFFSET,
 						GUI_ATTACK_SLOT_VOFFSET,
@@ -911,7 +911,7 @@ public class FairyScreenGui {
 						GUI_LOGISTICS_SLOT_VOFFSET + (3 * 18) - (2),
 						0xAA000000);
 			}
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 			
 			if (selectedGroup != -1) {
 				float bright = 1f;

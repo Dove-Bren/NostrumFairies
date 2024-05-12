@@ -164,14 +164,14 @@ public class OverlayRenderer extends AbstractGui {
 				
 				if (name != null) {
 					
-					GlStateManager.pushMatrix();
+					matrixStackIn.push();
 					MainWindow res = event.getWindow();
-					GlStateManager.translated(
+					matrixStackIn.translate(
 							((double) res.getScaledWidth() / 2),
 							((double) res.getScaledHeight() / 2) + 10,
 							0);
 					renderCurrentIndex(name);
-					GlStateManager.popMatrix();
+					matrixStackIn.pop();
 				}
 			}
 		}
@@ -227,7 +227,7 @@ public class OverlayRenderer extends AbstractGui {
 				pos.getY() - playerPos.y,
 				pos.getZ() - playerPos.z);
 		
-		GlStateManager.pushMatrix();
+		matrixStackIn.push();
 		
 		GlStateManager.disableAlphaTest();
 		GlStateManager.disableBlend();
@@ -238,7 +238,7 @@ public class OverlayRenderer extends AbstractGui {
 		GlStateManager.disableDepthTest();
 		GlStateManager.color4f(.4f, .7f, 1f, .4f);
 		
-		GlStateManager.translated(offset.x, offset.y, offset.z);
+		matrixStackIn.translate(offset.x, offset.y, offset.z);
 		
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buffer = tessellator.getBuffer();
@@ -277,7 +277,7 @@ public class OverlayRenderer extends AbstractGui {
 		
 		tessellator.draw();
 		
-		GlStateManager.popMatrix();
+		matrixStackIn.pop();
 		GlStateManager.enableTexture();
 		GlStateManager.enableDepthTest();
 	}
@@ -290,7 +290,7 @@ public class OverlayRenderer extends AbstractGui {
 				min.getY() - playerPos.y,
 				min.getZ() - playerPos.z);
 		
-		GlStateManager.pushMatrix();
+		matrixStackIn.push();
 		
 		GlStateManager.disableAlphaTest();
 		GlStateManager.disableBlend();
@@ -326,7 +326,7 @@ public class OverlayRenderer extends AbstractGui {
 		
 		// TODO apply partial tick offset to effects too! lol!
 		
-		GlStateManager.translated(offset.x, offset.y, offset.z);
+		matrixStackIn.translate(offset.x, offset.y, offset.z);
 		GlStateManager.scaled((max.getX() - min.getX()) + 1,
 				(max.getY() - min.getY()) + 1,
 				(max.getZ() - min.getZ()) + 1);
@@ -368,7 +368,7 @@ public class OverlayRenderer extends AbstractGui {
 		
 		tessellator.draw();
 		
-		GlStateManager.popMatrix();
+		matrixStackIn.pop();
 		GlStateManager.enableTexture();
 		GlStateManager.enableDepthTest();
 		GlStateManager.enableCull();
@@ -415,12 +415,12 @@ public class OverlayRenderer extends AbstractGui {
 					model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());
 				}
 				
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(xOff, yOff, zOff);
+				matrixStackIn.push();
+				matrixStackIn.translate(xOff, yOff, zOff);
 				
 				RenderFuncs.RenderModelWithColor(model, 0xFFFFFFFF);
 				
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 
 			GlStateManager.endList();
@@ -480,7 +480,7 @@ public class OverlayRenderer extends AbstractGui {
 //			break;
 //		}
 		
-		GlStateManager.pushMatrix();
+		matrixStackIn.push();
 		
 		GlStateManager.disableAlphaTest();
 		GlStateManager.disableBlend();
@@ -493,8 +493,8 @@ public class OverlayRenderer extends AbstractGui {
 		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 		GlStateManager.color4f(1f, 1f, 1f, 1f);
 		
-		GlStateManager.translated(offset.x + rotX, offset.y, offset.z + rotZ);
-		GlStateManager.rotatef(angle, 0, 1, 0);
+		matrixStackIn.translate(offset.x + rotX, offset.y, offset.z + rotZ);
+		matrixStackIn.rotate(angle, 0, 1, 0);
 		
 		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 		
@@ -502,7 +502,7 @@ public class OverlayRenderer extends AbstractGui {
 		GlStateManager.callList(cachedRenderList);
 		GlStateManager.popAttributes();
 		
-		GlStateManager.popMatrix();
+		matrixStackIn.pop();
 		GlStateManager.disableTexture();
 		GlStateManager.enableColorMaterial();
 		GlStateManager.enableDepthTest();
@@ -517,11 +517,11 @@ public class OverlayRenderer extends AbstractGui {
 		Minecraft mc = Minecraft.getInstance();
 		
 		GlStateManager.disableBlend();
-		GlStateManager.pushMatrix();
+		matrixStackIn.push();
 		
 		this.drawCenteredString(mc.fontRenderer, name, 0, 0, 0xFFFFFFFF);
 		
-		GlStateManager.popMatrix();
+		matrixStackIn.pop();
 		GlStateManager.enableBlend();
 		GlStateManager.color4f(1f, 1f, 1f, 1f);
 	}

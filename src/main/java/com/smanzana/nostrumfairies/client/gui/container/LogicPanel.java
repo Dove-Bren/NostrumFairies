@@ -291,19 +291,19 @@ public class LogicPanel {
 			}
 			
 			// Vertical offset and arrangement of stuff depends on whether we allow logic or not
-			GlStateManager.pushMatrix();
+			matrixStackIn.push();
 			//GlStateManager.translate(guiLeft + panel.x - (GUI_INV_CELL_LENGTH / 2) - 1, guiTop + panel.y - 1, 0);
-			GlStateManager.translated(guiLeft + panel.templateSlot.xPos - 1, guiTop + panel.templateSlot.yPos - 1, 0);
+			matrixStackIn.translate(guiLeft + panel.templateSlot.xPos - 1, guiTop + panel.templateSlot.yPos - 1, 0);
 			drawSlot(mc);
-			GlStateManager.popMatrix();
+			matrixStackIn.pop();
 			
 			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			
 //			if (logicMode) {
-//				GlStateManager.pushMatrix();
-//				GlStateManager.translated(left, top + (panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin + PANEL_BUTTON_HEIGHT + panel.margin), 0);
+//				matrixStackIn.push();
+//				matrixStackIn.translate(left, top + (panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin + PANEL_BUTTON_HEIGHT + panel.margin), 0);
 //				drawInputBar(mc);
-//				GlStateManager.popMatrix();
+//				matrixStackIn.pop();
 //			}
 
 			GlStateManager.enableBlend();
@@ -438,8 +438,8 @@ public class LogicPanel {
 				color();
 				mc.getTextureManager().bindTexture(TEXT);
 				GlStateManager.enableBlend();
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(x, y, 0);
+				matrixStackIn.push();
+				matrixStackIn.translate(x, y, 0);
 				blit(0, 0,
 						textX, GUI_BUTTON_TEXT_VOFFSET,
 						PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT);
@@ -447,7 +447,7 @@ public class LogicPanel {
 				// Then draw mode
 				LogicMode mode = panel.comp.getLogicMode();
 				drawCriteriaMode(mc, mode);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 			
 			@Override
@@ -498,15 +498,15 @@ public class LogicPanel {
 				color();
 				mc.getTextureManager().bindTexture(TEXT);
 				GlStateManager.enableBlend();
-				GlStateManager.pushMatrix();
-				GlStateManager.translated(x, y, 0);
+				matrixStackIn.push();
+				matrixStackIn.translate(x, y, 0);
 				blit(0, 0,
 						textX, GUI_BUTTON_TEXT_VOFFSET,
 						PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT);
 				
 				// Then draw mode
 				drawCriteriaOp( mc.fontRenderer, panel.comp.getLogicOp());
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 			
 			@Override

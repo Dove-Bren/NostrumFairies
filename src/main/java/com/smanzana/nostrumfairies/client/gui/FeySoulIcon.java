@@ -36,11 +36,11 @@ public final class FeySoulIcon {
         Minecraft.getInstance().getTextureManager().bindTexture(TEXTS.get(slot));
 		GlStateManager.disableLighting();
 		
-		GlStateManager.pushMatrix();
-		GlStateManager.translated(offsetX, offsetY, 0);
-		GlStateManager.scalef(scale, scale, scale);
+		matrixStackIn.push();
+		matrixStackIn.translate(offsetX, offsetY, 0);
+		matrixStackIn.scale(scale, scale, scale);
         RenderFuncs.drawModalRectWithCustomSizedTexture(0, 0, 0, 0, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
-        GlStateManager.popMatrix();
+        matrixStackIn.pop();
         
         GlStateManager.enableLighting();
 	}

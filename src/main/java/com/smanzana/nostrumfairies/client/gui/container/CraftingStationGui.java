@@ -333,12 +333,12 @@ public class CraftingStationGui {
 		
 		private void drawTemplate(@Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
-				GlStateManager.pushMatrix();
+				matrixStackIn.push();
 				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
-				GlStateManager.translatef(0, 0, 110);
+				matrixStackIn.translate(0, 0, 110);
 				GlStateManager.enableAlphaTest();
 				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA05B6460);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 		}
 		
@@ -346,12 +346,12 @@ public class CraftingStationGui {
 			ICraftingRecipe recipe = container.station.getRecipe();
 			if (recipe != null) {
 				ItemStack outcome = recipe.getRecipeOutput();
-				GlStateManager.pushMatrix();
+				matrixStackIn.push();
 				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(outcome, 0, 0);
-				GlStateManager.translatef(0, 0, 110);
+				matrixStackIn.translate(0, 0, 110);
 				GlStateManager.enableAlphaTest();
 				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA05B6460);
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 		}
 		
@@ -376,70 +376,70 @@ public class CraftingStationGui {
 				final int x = (i % dim);
 				final int y = (i / dim);
 				
-				GlStateManager.pushMatrix();
-				GlStateManager.translatef(horizontalMargin + container.getCraftGridStartX() + (x * GUI_INV_CELL_LENGTH),
+				matrixStackIn.push();
+				matrixStackIn.translate(horizontalMargin + container.getCraftGridStartX() + (x * GUI_INV_CELL_LENGTH),
 						verticalMargin + container.getCraftGridStartY() + (y * GUI_INV_CELL_LENGTH),
 						0);
 				
 				if (stack.isEmpty()) {
-					GlStateManager.pushMatrix();
-					GlStateManager.scalef(1f, 1f, .05f);
+					matrixStackIn.push();
+					matrixStackIn.scale(1f, 1f, .05f);
 					drawTemplate(template);
-					GlStateManager.popMatrix();
+					matrixStackIn.pop();
 				}
 				
 				if (error) {
-					GlStateManager.translatef(0, 0, 100);
+					matrixStackIn.translate(0, 0, 100);
 					drawError();
 				} else if (bonus) {
-					GlStateManager.translatef(0, 0, 1000);
+					matrixStackIn.translate(0, 0, 1000);
 					drawBoost();
 				}
 				
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 			
 			// Draw upgrade slot
 			{
-				GlStateManager.pushMatrix();
-				GlStateManager.translatef(guiLeft,
+				matrixStackIn.push();
+				matrixStackIn.translate(guiLeft,
 						verticalMargin,
 						0);
 				FeySlotIcon.draw(container.upgradeSlot, 1f);
 				GlStateManager.disableLighting();
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 			
 			// Draw progress
 			{
-				GlStateManager.pushMatrix();
-				GlStateManager.translatef(horizontalMargin + GUI_PROGRESS_HOFFSET, verticalMargin + GUI_PROGRESS_VOFFSET, 0);
+				matrixStackIn.push();
+				matrixStackIn.translate(horizontalMargin + GUI_PROGRESS_HOFFSET, verticalMargin + GUI_PROGRESS_VOFFSET, 0);
 				
 				float progress = (float) container.station.getField(0) / 100f;
 				this.drawProgress(progress);
 				
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 			
 			// Draw logic panel
 			{
-				GlStateManager.pushMatrix();
+				matrixStackIn.push();
 				//GlStateManager.translate(this.guiLeft, this.guiTop, 0);
 				
 				panelGui.draw(mc, guiLeft, guiTop);
 				
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 			
 			// Draw outcome
 			if (container.station.getOutputStack().isEmpty())
 			{
-				GlStateManager.pushMatrix();
-				GlStateManager.translatef(horizontalMargin + GUI_OUTPUT_INV_HOFFSET, verticalMargin + GUI_OUTPUT_INV_VOFFSET, 0);
+				matrixStackIn.push();
+				matrixStackIn.translate(horizontalMargin + GUI_OUTPUT_INV_HOFFSET, verticalMargin + GUI_OUTPUT_INV_VOFFSET, 0);
 				
 				drawRecipe();
 				
-				GlStateManager.popMatrix();
+				matrixStackIn.pop();
 			}
 
 			GlStateManager.enableBlend();

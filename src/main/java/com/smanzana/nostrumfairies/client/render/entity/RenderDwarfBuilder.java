@@ -1,11 +1,12 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.render.entity.ModelDwarfBeard.Type;
 import com.smanzana.nostrumfairies.client.render.entity.layer.LayerDwarfBeard;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
 
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.util.ResourceLocation;
@@ -26,29 +27,28 @@ public class RenderDwarfBuilder extends MobRenderer<EntityDwarfBuilder, ModelBui
 	}
 
 	@Override
-	protected ResourceLocation getEntityTexture(EntityDwarfBuilder entity) {
+	public ResourceLocation getEntityTexture(EntityDwarfBuilder entity) {
 		// TODO different textures?
 		return TEXT_DWARF_1;
 	}
 	
 	@Override
-	public void doRender(EntityDwarfBuilder entity, double x, double y, double z, float entityYaw, float partialTicks) {
+	public void render(EntityDwarfBuilder entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
 		// Swap out model based on the dwarf
-		if (entity.isLeftHanded()) {
+		if (entityIn.isLeftHanded()) {
 			this.entityModel = this.modelLeft;
 		} else {
 			this.entityModel = this.modelRight;
 		}
 		
-		GlStateManager.pushMatrix();
-		GlStateManager.translated(x, y, z);
+		matrixStackIn.push();
 		
 		// Model is 30/16ths of a block. Want to be .95 (dwarf height).
-		float scale = entity.getHeight() / (30f/16f);
-		GlStateManager.scalef(scale, scale, scale);
-		super.doRender(entity, 0, 0, 0, entityYaw, partialTicks);
+		float scale = entityIn.getHeight() / (30f/16f);
+		matrixStackIn.scale(scale, scale, scale);
+		super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
 		
-		GlStateManager.popMatrix();
+		matrixStackIn.pop();
 	}
 	
 }

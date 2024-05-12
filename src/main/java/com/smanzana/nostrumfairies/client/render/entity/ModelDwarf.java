@@ -1,25 +1,27 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 
 import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.entity.model.RendererModel;
+import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.util.math.MathHelper;
 
 public class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 
-	private RendererModel body;
-	private RendererModel head;
-	private RendererModel legLeft;
-	private RendererModel legRight;
-	private RendererModel armLeft;
-	private RendererModel armRight;
+	private ModelRenderer body;
+	private ModelRenderer head;
+	private ModelRenderer legLeft;
+	private ModelRenderer legRight;
+	private ModelRenderer armLeft;
+	private ModelRenderer armRight;
 	
-	private RendererModel heldMain;
-	private RendererModel heldOff;
+	private ModelRenderer heldMain;
+	private ModelRenderer heldOff;
 	
-	//private RendererModel pick;
+	//private ModelRenderer pick;
 	
 	public ModelDwarf(boolean leftHanded) {
 		// 16x16x16 is one block.
@@ -27,54 +29,54 @@ public class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 		final int textW = 128;
 		final int textH = 64;
 		
-		body = new RendererModel(this, 0, 0);
+		body = new ModelRenderer(this, 0, 0);
 		body.setTextureSize(textW, textH);
 		body.setRotationPoint(0, 11, 0);
 		body.addBox(-7, -9, -4, 14, 18, 8);
 		
-		head = new RendererModel(this, 44, 0);
+		head = new ModelRenderer(this, 44, 0);
 		head.setTextureSize(textW, textH);
 		head.setRotationPoint(0, 0, 0);
-		head.addBox(-4, -8, -4, 8, 8, 8);
+		head.addBox(-4, -8 + (-9f / 16f), -4, 8, 8, 8);
 		head.setTextureOffset(44, 16);
-		head.addBox(4, -6, -1, 1, 2, 1);
+		head.addBox(4, -6 + (-9f / 16f), -1, 1, 2, 1);
 		head.setTextureOffset(44, 16);
-		head.addBox(-5, -6, -1, 1, 2, 1);
-		head.offsetY = (-9f / 16f);
+		head.addBox(-5, -6 + (-9f / 16f), -1, 1, 2, 1);
+		//head.offsetY = (-9f / 16f);
 		body.addChild(head);
 		
-		legLeft = new RendererModel(this, 0, 41);
+		legLeft = new ModelRenderer(this, 0, 41);
 		legLeft.setTextureSize(textW, textH);
 		legLeft.setRotationPoint(0, 0, 0);
-		legLeft.addBox(-2.5f, 0, -3, 5, 8, 6);
-		legLeft.offsetY = (5f / 16f);
-		legLeft.offsetX = (3f / 16f);
+		legLeft.addBox(-2.5f + (3f / 16f), 0 + (5f / 16f), -3, 5, 8, 6);
+		//legLeft.offsetY = (5f / 16f);
+		//legLeft.offsetX = (3f / 16f);
 		body.addChild(legLeft);
 
-		legRight = new RendererModel(this, 0, 41);
+		legRight = new ModelRenderer(this, 0, 41);
 		legRight.mirror = true;
 		legRight.setTextureSize(textW, textH);
 		legRight.setRotationPoint(0, 0, 0);
-		legRight.addBox(-2.5f, 0, -3, 5, 8, 6);
-		legRight.offsetY = (5f / 16f);
-		legRight.offsetX = (-3f / 16f);
+		legRight.addBox(-2.5f + (-3f / 16f), 0 + (5f / 16f), -3, 5, 8, 6);
+//		legRight.offsetY = (5f / 16f);
+//		legRight.offsetX = (-3f / 16f);
 		body.addChild(legRight);
 		
-		armLeft = new RendererModel(this, 0, 26);
+		armLeft = new ModelRenderer(this, 0, 26);
 		armLeft.setTextureSize(textW, textH);
 		armLeft.setRotationPoint(0, 0, 0);
-		armLeft.addBox(-2.5f, 0, -2.5f, 5, 10, 5);
-		armLeft.offsetY = (-7f / 16f);
-		armLeft.offsetX = ((7 + 2.5f) / 16f);
+		armLeft.addBox(-2.5f + ((7 + 2.5f) / 16f), 0 + (-7f / 16f), -2.5f, 5, 10, 5);
+//		armLeft.offsetY = (-7f / 16f);
+//		armLeft.offsetX = ((7 + 2.5f) / 16f);
 		body.addChild(armLeft);
 		
-		armRight = new RendererModel(this, 0, 26);
+		armRight = new ModelRenderer(this, 0, 26);
 		armRight.mirror = true;
 		armRight.setTextureSize(textW, textH);
 		armRight.setRotationPoint(0, 0, 0);
-		armRight.addBox(-2.5f, 0, -2.5f, 5, 10, 5);
-		armRight.offsetY = (-7f / 16f);
-		armRight.offsetX = (-(7 + 2.5f) / 16f);
+		armRight.addBox(-2.5f + (-(7 + 2.5f) / 16f), 0 + (-7f / 16f), -2.5f, 5, 10, 5);
+//		armRight.offsetY = (-7f / 16f);
+//		armRight.offsetX = (-(7 + 2.5f) / 16f);
 		body.addChild(armRight);
 		
 		heldMain = createHeldItem(true);
@@ -98,32 +100,32 @@ public class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 		
 	}
 	
-	protected RendererModel createPickaxe() {
+	protected ModelRenderer createPickaxe() {
 		final int textW = 128;
 		final int textH = 64;
 		
-		RendererModel pick = new RendererModel(this, 84, 0);
+		ModelRenderer pick = new ModelRenderer(this, 84, 0);
 		pick.setTextureSize(textW, textH);
 		pick.setRotationPoint(-0.5f, 0, -0.5f);
-		pick.addBox(0, -14, 0, 1, 14, 1);
+		pick.addBox(0, -14 + (9f / 16f), 0, 1, 14, 1);
 		pick.setTextureOffset(99, 5);
-		pick.addBox(-1, -15, -.5f, 3, 1, 2);
+		pick.addBox(-1, -15 + (9f / 16f), -.5f, 3, 1, 2);
 		pick.setTextureOffset(95, 2);
-		pick.addBox(-3, -16, -.5f, 7, 1, 2);
+		pick.addBox(-3, -16 + (9f / 16f), -.5f, 7, 1, 2);
 		pick.setTextureOffset(98, 0);
-		pick.addBox(-2, -17, 0, 5, 1, 1);
+		pick.addBox(-2, -17 + (9f / 16f), 0, 5, 1, 1);
 		pick.setTextureOffset(91, 5);
-		pick.addBox(3, -15, 0, 2, 1, 1);
+		pick.addBox(3, -15 + (9f / 16f), 0, 2, 1, 1);
 		pick.setTextureOffset(111, 5);
-		pick.addBox(-4, -15, 0, 2, 1, 1);
-		pick.offsetY = (9f / 16f); // height of arm, - a bit
+		pick.addBox(-4, -15 + (9f / 16f), 0, 2, 1, 1);
+		//pick.offsetY = (9f / 16f); // height of arm, - a bit
 		
 		pick.rotateAngleZ = (float) (.5 * Math.PI) - .2f;
 		pick.rotateAngleX = (float) (.5 * Math.PI);
 		return pick;
 	}
 	
-	protected RendererModel createHeldItem(boolean mainhand) {
+	protected ModelRenderer createHeldItem(boolean mainhand) {
 		if (mainhand) {
 			return createPickaxe();
 		}
@@ -132,10 +134,8 @@ public class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 	}
 	
 	@Override
-	public void render(T entity, float limbSwing, float limbSwingAmount, float ageInTicks,
-			float headAngleY, float headAngleX, float scale) {
-		
-		EntityDwarf dwarf = (EntityDwarf) entity;
+	public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+		EntityDwarf dwarf = (EntityDwarf) entityIn;
 //		final float period = (20f * .15f); //.15f
 //		float progress = (ageInTicks % period) / period;
 //		
@@ -145,8 +145,8 @@ public class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 //		wingRight.rotateAngleZ = -angle;
 //		wingRightBack.rotateAngleZ = -angle;
 		
-		head.rotateAngleX = headAngleX * 0.017453292F;
-		head.rotateAngleY = headAngleY * 0.017453292F;
+		head.rotateAngleX = headPitch * 0.017453292F;
+		head.rotateAngleY = netHeadYaw * 0.017453292F;
 		
 		// dwarves move their small legs and arms fast
 		limbSwing *= 2;
@@ -161,7 +161,7 @@ public class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 		
 		if (dwarf.isSwingInProgress || dwarf.getDwarfPose() != ArmPoseDwarf.IDLE) {
 			int sign = 1;//(dwarf.isLeftHanded() ? -1 : 1);
-			RendererModel hand = (dwarf.isLeftHanded() ? armLeft : armRight);
+			ModelRenderer hand = (dwarf.isLeftHanded() ? armLeft : armRight);
 			
 			if (dwarf.getDwarfPose() == ArmPoseDwarf.MINING) {
 				double lowX = -sign * (Math.PI * .75);
@@ -223,8 +223,11 @@ public class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 				}
 			}
 		}
-		
-		body.render(scale);
+	}
+	
+	@Override
+	public void render(MatrixStack matrixStackIn, IVertexBuilder buffer, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+		body.render(matrixStackIn, buffer, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 	}
 	
 }

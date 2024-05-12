@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.render.entity.ModelGnomeHat.Type;
 import com.smanzana.nostrumfairies.client.render.entity.layer.LayerGnomeHat;
@@ -8,10 +8,13 @@ import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
 import com.smanzana.nostrummagica.utils.RenderFuncs;
 
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Vector3f;
 
 public class RenderGnome extends MobRenderer<EntityGnome, ModelGnome> {
 	
@@ -27,7 +30,7 @@ public class RenderGnome extends MobRenderer<EntityGnome, ModelGnome> {
 	}
 
 	@Override
-	protected ResourceLocation getEntityTexture(EntityGnome entity) {
+	public ResourceLocation getEntityTexture(EntityGnome entity) {
 		// TODO base off of something else
 		if ((entity.getUniqueID().getLeastSignificantBits() & 1) == 0) {
 			return TEXT_GNOME_1;
@@ -37,28 +40,26 @@ public class RenderGnome extends MobRenderer<EntityGnome, ModelGnome> {
 	}
 	
 	@Override
-	public void doRender(EntityGnome entity, double x, double y, double z, float entityYaw, float partialTicks) {
-		GlStateManager.pushMatrix();
-		GlStateManager.translated(x, y, z);
+	public void render(EntityGnome entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
+		matrixStackIn.push();
 		
 		// Model is 23/16ths of a block. Want to be .95 (dwarf height).
-		float scale = entity.getHeight() / (23f/16f);
-		GlStateManager.scalef(scale, scale, scale);
-		super.doRender(entity, 0, 0, 0, entityYaw, partialTicks);
+		float scale = entityIn.getHeight() / (23f/16f);
+		matrixStackIn.scale(scale, scale, scale);
+		super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
 		
 		
-		if (entity.getGnomePose() == ArmPoseGnome.CARRYING) {
-			ItemStack held = entity.getCarriedItem();
+		if (entityIn.getGnomePose() == ArmPoseGnome.CARRYING) {
+			ItemStack held = entityIn.getCarriedItem();
 			if (!held.isEmpty()) {
-				GlStateManager.pushMatrix();
-				GlStateManager.rotated(-entityYaw, 0, 1, 0);
-				GlStateManager.translated(0, 1.1, 0.475);
-				RenderFuncs.ItemRenderer(held);
-				//Minecraft.getInstance().getRenderItem().renderItem(held, TransformType.GROUND);
-				GlStateManager.popMatrix();
+				matrixStackIn.push();
+				matrixStackIn.rotate(Vector3f.YP.rotationDegrees(-entityYaw));
+				matrixStackIn.translate(0, 1.1, 0.475);
+				RenderFuncs.ItemRenderer(held, matrixStackIn, bufferIn, packedLightIn, OverlayTexture.NO_OVERLAY);
+				matrixStackIn.pop();
 			}
 		}
-		GlStateManager.popMatrix();
+		matrixStackIn.pop();
 	}
 	
 }

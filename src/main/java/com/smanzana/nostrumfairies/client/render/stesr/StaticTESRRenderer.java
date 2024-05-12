@@ -150,10 +150,10 @@ public class StaticTESRRenderer {
 		GlStateManager.enableBlend();
 		GlStateManager.enableAlphaTest();
 		
-		GlStateManager.pushMatrix();
-		GlStateManager.translated(offset.x, offset.y, offset.z);
+		matrixStackIn.push();
+		matrixStackIn.translate(offset.x, offset.y, offset.z);
 		GlStateManager.callList(target.drawlist);
-		GlStateManager.popMatrix();
+		matrixStackIn.pop();
 	}
 	
 	public void update(World world, BlockPos pos, @Nullable TileEntity te) {
