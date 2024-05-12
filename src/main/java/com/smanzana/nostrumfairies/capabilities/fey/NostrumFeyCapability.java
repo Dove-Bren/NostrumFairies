@@ -41,6 +41,7 @@ import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.items.PositionCrystal;
 import com.smanzana.nostrummagica.items.SpellScroll;
 import com.smanzana.nostrummagica.spells.Spell;
+import com.smanzana.nostrummagica.utils.DimensionUtils;
 import com.smanzana.nostrummagica.utils.Inventories;
 
 import net.minecraft.block.BlockState;
@@ -52,10 +53,11 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -258,7 +260,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			for (int x = -BUILD_SCAN_RADIUS; x <= BUILD_SCAN_RADIUS; x++)
 			for (int z = -BUILD_SCAN_RADIUS; z <= BUILD_SCAN_RADIUS; z++)
 			for (int y = -BUILD_SCAN_RADIUS; y <= BUILD_SCAN_RADIUS; y++) {
-				cursor.setPos(owner.posX + x, owner.posY + y, owner.posZ + z);
+				cursor.setPos(owner.getPosX() + x, owner.getPosY() + y, owner.getPosZ() + z);
 				BlockState state = owner.world.getBlockState(cursor);
 				if (state != null && state.getBlock() instanceof TemplateBlock) {
 					builds.add(cursor.toImmutable());
@@ -345,10 +347,10 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 							if (!fairyInventory.getLogisticsGem().isEmpty()) {
 								tickNetworks.clear();
 								BlockPos pos = PositionCrystal.getBlockPosition(fairyInventory.getLogisticsGem());
-								int dim = PositionCrystal.getDimension(fairyInventory.getLogisticsGem());
+								RegistryKey<World> dim = PositionCrystal.getDimension(fairyInventory.getLogisticsGem());
 								
-								if (dim == owner.dimension.getId() && owner.getDistanceSq(new Vector3d(pos)) < 1024) {
-									World world = NostrumFairies.getWorld(DimensionType.getById(dim));
+								if (DimensionUtils.InDimension(owner, dim) && owner.getDistanceSq(Vector3d.copyCentered(pos)) < 1024) {
+									World world = NostrumFairies.getWorld(dim);
 									LogisticsNetwork network = NostrumFairies.instance.getLogisticsRegistry().findNetwork(world, pos);
 									if (network != null) {
 										tickNetworks.add(network);
@@ -461,7 +463,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 							continue;
 						}
 						
-						deployFairy(i, type, gael, owner.world, owner.posX, owner.posY, owner.posZ);
+						deployFairy(i, type, gael, (ServerWorld) owner.world, owner.getPosX(), owner.getPosY(), owner.getPosZ());
 					}
 				}
 			}
@@ -494,7 +496,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						continue;
 					}
 					
-					FairyGael.regenFairy(owner.world, gael, 1f);
+					FairyGael.regenFairy((ServerWorld) owner.world, gael, 1f);
 				}
 			}
 		}
@@ -523,7 +525,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		clearFairies();
 	}
 	
-	public void deployFairy(int index, FairyGaelType type, @Nonnull ItemStack gaelStack, World world, double x, double y, double z) {
+	public void deployFairy(int index, FairyGaelType type, @Nonnull ItemStack gaelStack, ServerWorld world, double x, double y, double z) {
 		if (!gaelStack.isEmpty() && gaelStack.getItem() instanceof FairyGael) {
 			EntityPersonalFairy fairy = FairyGael.spawnStoredEntity(gaelStack, world, x, y, z);
 			if (fairy != null) {

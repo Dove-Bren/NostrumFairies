@@ -14,13 +14,15 @@ import net.minecraft.util.math.BlockPos;
 public final class Paths {
 	
 	public static Path TrimStart(Path path) {
-		List<PathPoint> points = new ArrayList<PathPoint>(path.getCurrentPathLength() - 1);
+		final int len = path.getCurrentPathLength();
+		List<PathPoint> points = new ArrayList<PathPoint>(len);
 		// NOTE: start at 1 to chop of 'start' which is usually in a block lol
-		for (PathPoint point : path.func_215746_d()) {
+		for (int i = 0; i < len; i++) {
+			final PathPoint point = path.getPathPointFromIndex(i);
 			points.add(new PathPoint(point.x, point.y, point.z));
 		}
 		
-		return new Path(points, path.func_224770_k(), path.func_224771_h());
+		return new Path(points, path.getTarget(), path.reachesTarget());
 	}
 
 	/**
@@ -45,8 +47,8 @@ public final class Paths {
 				points.add(new PathPoint(point.x, point.y, point.z));
 			}
 			first = false;
-			finalDest = path.func_224770_k();
-			finalFlagged = path.func_224771_h();
+			finalDest = path.getTarget();
+			finalFlagged = path.reachesTarget();
 		}
 		
 		return new Path(points, finalDest, finalFlagged);
@@ -68,7 +70,7 @@ public final class Paths {
 		}
 		
 		if (path instanceof PathPublic) {
-			return new PathPublic(((PathPublic) path).getPathPoints(), path.func_224770_k(), path.func_224771_h());
+			return new PathPublic(((PathPublic) path).getPathPoints(), path.getTarget(), path.reachesTarget());
 		}
 		
 		int size = path.getCurrentPathLength();
@@ -77,7 +79,7 @@ public final class Paths {
 			points.add(path.getPathPointFromIndex(i));
 		}
 		
-		return new PathPublic(points, path.func_224770_k(), path.func_224771_h());
+		return new PathPublic(points, path.getTarget(), path.reachesTarget());
 	}
 	
 }
