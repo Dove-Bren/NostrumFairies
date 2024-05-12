@@ -5,20 +5,13 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import org.lwjgl.opengl.GL11;
-
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.smanzana.nostrumfairies.utils.Location;
 
-import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.AtlasTexture;
-import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
@@ -63,7 +56,8 @@ public class StaticTESRRenderer {
 		return (StaticTESR<T>) renders.get(ent.getClass());
 	}
 	
-	public void render(Minecraft mc, ClientPlayerEntity player, float partialTicks) {
+	public void render(MatrixStack matrixStackIn, Minecraft mc, ClientPlayerEntity player, float partialTicks) {
+		int unused2; // added matrixStackIn but haven't used it
 		final boolean shouldClear;
 		final Map<Location, RenderTarget> updatesCopy;
 		

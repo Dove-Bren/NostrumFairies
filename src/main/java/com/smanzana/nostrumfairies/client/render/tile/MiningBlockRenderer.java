@@ -59,7 +59,7 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 				// twice but that's probably worth it to only issue two draw calls.
 				
 				// Render main cubes first
-				final IVertexBuilder cubeBuffer = bufferIn.getBuffer(FairyRenderTypes.BLOCK_HIGHLIGHT);
+				final IVertexBuilder cubeBuffer = bufferIn.getBuffer(FairyRenderTypes.MININGBLOCK_HIGHLIGHT);
 				for (BlockPos target : oreLocs) {
 					renderCube(target.subtract(origin), matrixStackIn, cubeBuffer, combinedLightIn, combinedOverlayIn, 1f, 0f, 0f, 1f, false);
 				}
@@ -69,7 +69,7 @@ public class MiningBlockRenderer extends FeySignRenderer<MiningBlockTileEntity> 
 				}
 				
 				// Render outlines
-				final IVertexBuilder outlineBuffer = bufferIn.getBuffer(FairyRenderTypes.BLOCK_OUTLINE);
+				final IVertexBuilder outlineBuffer = bufferIn.getBuffer(FairyRenderTypes.MININGBLOCK_OUTLINE);
 				for (BlockPos target : oreLocs) {
 					renderCube(target.subtract(origin), matrixStackIn, outlineBuffer, combinedLightIn, combinedOverlayIn, .3f, 0f, 0f, 1f, true);
 				}

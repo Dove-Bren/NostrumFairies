@@ -1,15 +1,15 @@
 package com.smanzana.nostrumfairies.client.gui;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.opengl.GL11;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
-import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.capabilities.templates.ITemplateViewerCapability;
 import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapability;
+import com.smanzana.nostrumfairies.client.render.FairyRenderTypes;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.items.TemplateScroll;
 import com.smanzana.nostrumfairies.items.TemplateWand;
@@ -25,11 +25,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.texture.AtlasTexture;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
@@ -37,7 +38,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
-import net.minecraftforge.client.event.DrawBlockHighlightEvent;
+import net.minecraft.util.math.vector.Vector3f;
+import net.minecraftforge.client.event.DrawHighlightEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -58,8 +60,8 @@ public class OverlayRenderer extends AbstractGui {
 	
 	@SubscribeEvent
 	public void onRender(RenderGameOverlayEvent.Post event) {
-		Minecraft.getInstance().getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
-		
+		//Minecraft.getInstance().getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+		int unsued; // ??
 	}
 	
 	protected boolean shouldDisplaySelection(PlayerEntity player) {
@@ -98,11 +100,10 @@ public class OverlayRenderer extends AbstractGui {
 		final Minecraft mc = Minecraft.getInstance();
 		ClientPlayerEntity player = mc.player;
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
+		final MatrixStack matrixStackIn = event.getMatrixStack();
 		
 		// Hook into static TESR renderer
-		StaticTESRRenderer.instance.render(mc, player, event.getPartialTicks());
-		GlStateManager.color4f(1f, 1f, 0f, 1f);
-		GlStateManager.color4f(1f, 1f, 1f, 1f);
+		StaticTESRRenderer.instance.render(matrixStackIn, mc, player, event.getPartialTicks());
 		
 		// Check for template viewer item and then display template selection
 		if (shouldDisplaySelection(player)) {
@@ -118,8 +119,11 @@ public class OverlayRenderer extends AbstractGui {
 				}
 				
 				if (minDist < 5096) {
+					final IRenderTypeBuffer bufferIn = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
 					if (pos2 != null) {
+						final IVertexBuilder buffer = bufferIn.getBuffer(FairyRenderTypes.TEMPLATE_SELECT_HIGHLIGHT);
 						renderSelectionBox(
+								matrixStackIn, buffer,
 								new BlockPos(Math.min(pos1.getX(), pos2.getX()),
 										Math.min(pos1.getY(), pos2.getY()),
 										Math.min(pos1.getZ(), pos2.getZ())),
@@ -132,7 +136,8 @@ public class OverlayRenderer extends AbstractGui {
 					}
 					
 					// Render pos1 anchor block special
-					renderAnchorBlock(pos1, event.getPartialTicks());
+					final IVertexBuilder buffer = bufferIn.getBuffer(FairyRenderTypes.TEMPLATE_SELECT_HIGHLIGHT_CULL);
+					renderAnchorBlock(matrixStackIn, buffer, pos1, event.getPartialTicks());
 				}
 			}
 		}
@@ -142,6 +147,7 @@ public class OverlayRenderer extends AbstractGui {
 	public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
 		final Minecraft mc = Minecraft.getInstance();
 		ClientPlayerEntity player = mc.player;
+		final MatrixStack matrixStackIn = event.getMatrixStack();
 		
 		if (event.getType() == ElementType.CROSSHAIRS) {
 			if (shouldDisplayPreview(player)) {
@@ -157,7 +163,7 @@ public class OverlayRenderer extends AbstractGui {
 					
 					ItemStack templateScroll = TemplateWand.GetSelectedTemplate(held);
 					if (!templateScroll.isEmpty()) {
-						name = templateScroll.getDisplayName().getFormattedText();
+						name = templateScroll.getDisplayName().getString();
 						break;
 					}
 				}
@@ -170,7 +176,7 @@ public class OverlayRenderer extends AbstractGui {
 							((double) res.getScaledWidth() / 2),
 							((double) res.getScaledHeight() / 2) + 10,
 							0);
-					renderCurrentIndex(name);
+					renderCurrentIndex(matrixStackIn, name);
 					matrixStackIn.pop();
 				}
 			}
@@ -178,10 +184,11 @@ public class OverlayRenderer extends AbstractGui {
 	}
 	
 	@SubscribeEvent
-	public void onHighlight(DrawBlockHighlightEvent event) {
+	public void onHighlight(DrawHighlightEvent.HighlightBlock event) {
 		if (event.getTarget().getType() == RayTraceResult.Type.BLOCK) {
 			Minecraft mc = Minecraft.getInstance();
 			ClientPlayerEntity player = mc.player;
+			final MatrixStack matrixStackIn = event.getMatrix();
 			
 			if (shouldDisplayPreview(player) && player.isSneaking()) {
 				ItemStack templateScroll = ItemStack.EMPTY;
@@ -199,28 +206,30 @@ public class OverlayRenderer extends AbstractGui {
 						TemplateBlueprint blueprint = TemplateScroll.GetTemplate(templateScroll);
 						if (blueprint != cachedBlueprint) {
 							cachedBlueprint = blueprint;
-							cachedRenderList = -1;
+							cachedRenderDirty = true;
 						}
 						break;
 					}
 				}
 				
 				if (cachedBlueprint != null) {
+					final IRenderTypeBuffer bufferIn = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
 					BlockRayTraceResult blockResult = (BlockRayTraceResult) event.getTarget();
 					Vector3d center = event.getTarget().getHitVec();
 					BlockPos blockPos = blockResult.getPos().offset(blockResult.getFace());
-					Direction face = Direction.getFacingFromVector((float) (center.x - player.posX), 0f, (float) (center.z - player.posZ));
+					Direction face = Direction.getFacingFromVector((float) (center.x - player.getPosX()), 0f, (float) (center.z - player.getPosZ()));
 					// apply original template rotation
-					renderBlueprintPreview(blockPos, cachedBlueprint.getPreview(), face, event.getPartialTicks());
+					renderBlueprintPreview(matrixStackIn, bufferIn, blockPos, cachedBlueprint.getPreview(), face, event.getPartialTicks());
 				}
 			}
 		}
 	}
 	
 	private TemplateBlueprint cachedBlueprint = null;
-	private int cachedRenderList = -1;
+	private BufferBuilder cachedRenderList = new BufferBuilder(256);
+	private boolean cachedRenderDirty = true;
 	
-	private void renderAnchorBlock(BlockPos pos, float partialTicks) {
+	private void renderAnchorBlock(MatrixStack matrixStackIn, IVertexBuilder buffer, BlockPos pos, float partialTicks) {
 		Minecraft mc = Minecraft.getInstance();
 		Vector3d playerPos = mc.gameRenderer.getActiveRenderInfo().getProjectedView();//player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
 		Vector3d offset = new Vector3d(pos.getX() - playerPos.x,
@@ -228,61 +237,12 @@ public class OverlayRenderer extends AbstractGui {
 				pos.getZ() - playerPos.z);
 		
 		matrixStackIn.push();
-		
-		GlStateManager.disableAlphaTest();
-		GlStateManager.disableBlend();
-		GlStateManager.enableTexture();
-		GlStateManager.enableAlphaTest();
-		GlStateManager.enableBlend();
-		GlStateManager.disableTexture();
-		GlStateManager.disableDepthTest();
-		GlStateManager.color4f(.4f, .7f, 1f, .4f);
-		
-		matrixStackIn.translate(offset.x, offset.y, offset.z);
-		
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder buffer = tessellator.getBuffer();
-		
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-		
-		buffer.pos(0, 1, 0).endVertex();
-		buffer.pos(0, 1, 1).endVertex();
-		buffer.pos(1, 1, 1).endVertex();
-		buffer.pos(1, 1, 0).endVertex();
-		
-		buffer.pos(0, 0, 0).endVertex();
-		buffer.pos(1, 0, 0).endVertex();
-		buffer.pos(1, 0, 1).endVertex();
-		buffer.pos(0, 0, 1).endVertex();
-		
-		buffer.pos(0, 1, 0).endVertex();
-		buffer.pos(1, 1, 0).endVertex();
-		buffer.pos(1, 0, 0).endVertex();
-		buffer.pos(0, 0, 0).endVertex();
-		
-		buffer.pos(0, 1, 1).endVertex();
-		buffer.pos(0, 0, 1).endVertex();
-		buffer.pos(1, 0, 1).endVertex();
-		buffer.pos(1, 1, 1).endVertex();
-		
-		buffer.pos(0, 0, 0).endVertex();
-		buffer.pos(0, 0, 1).endVertex();
-		buffer.pos(0, 1, 1).endVertex();
-		buffer.pos(0, 1, 0).endVertex();
-		
-		buffer.pos(1, 0, 0).endVertex();
-		buffer.pos(1, 1, 0).endVertex();
-		buffer.pos(1, 1, 1).endVertex();
-		buffer.pos(1, 0, 1).endVertex();
-		
-		tessellator.draw();
-		
+		matrixStackIn.translate(offset.x + .5, offset.y + .5, offset.z + 5);
+		RenderFuncs.drawUnitCube(matrixStackIn, buffer, 0, OverlayTexture.NO_OVERLAY, .4f, .7f, 1f, .4f);
 		matrixStackIn.pop();
-		GlStateManager.enableTexture();
-		GlStateManager.enableDepthTest();
 	}
 	
-	private void renderSelectionBox(BlockPos min, BlockPos max, float partialTicks) {
+	private void renderSelectionBox(MatrixStack matrixStackIn, IVertexBuilder buffer, BlockPos min, BlockPos max, float partialTicks) {
 		Minecraft mc = Minecraft.getInstance();
 		ClientPlayerEntity player = mc.player;
 		Vector3d playerPos = mc.gameRenderer.getActiveRenderInfo().getProjectedView();//player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
@@ -292,19 +252,11 @@ public class OverlayRenderer extends AbstractGui {
 		
 		matrixStackIn.push();
 		
-		GlStateManager.disableAlphaTest();
-		GlStateManager.disableBlend();
-		GlStateManager.enableTexture();
-		GlStateManager.enableAlphaTest();
-		GlStateManager.enableBlend();
-		GlStateManager.disableTexture();
-		GlStateManager.disableDepthTest();
-		
-		// Disable cull if inside
-		if (playerPos.x > min.getX() && playerPos.y > min.getY() && playerPos.z > min.getZ()
-				&& playerPos.x < max.getX() && playerPos.y < max.getY() && playerPos.z < max.getZ()) {
-			GlStateManager.disableCull();
-		}
+//		// Disable cull if inside
+//		if (playerPos.x > min.getX() && playerPos.y > min.getY() && playerPos.z > min.getZ()
+//				&& playerPos.x < max.getX() && playerPos.y < max.getY() && playerPos.z < max.getZ()) {
+//			GlStateManager.disableCull();
+//		}
 		
 		boolean good = true;
 		if (!player.isCreative()) {
@@ -318,63 +270,31 @@ public class OverlayRenderer extends AbstractGui {
 			}
 		}
 		
+		final float red, green, blue, alpha;
 		if (good) { // If good
-			GlStateManager.color4f(.4f, .9f, .4f, .3f);
+			red = .4f;
+			green = .9f;
+			blue = .4f;
+			alpha = .3f;
 		} else {
-			GlStateManager.color4f(.9f, .4f, .4f, .3f);
+			red = .9f;
+			green = .4f;
+			blue = .4f;
+			alpha = .3f;
 		}
 		
 		// TODO apply partial tick offset to effects too! lol!
 		
-		matrixStackIn.translate(offset.x, offset.y, offset.z);
-		GlStateManager.scaled((max.getX() - min.getX()) + 1,
-				(max.getY() - min.getY()) + 1,
-				(max.getZ() - min.getZ()) + 1);
-		
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder buffer = tessellator.getBuffer();
-		
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-		
-		buffer.pos(0, 1, 0).endVertex();
-		buffer.pos(0, 1, 1).endVertex();
-		buffer.pos(1, 1, 1).endVertex();
-		buffer.pos(1, 1, 0).endVertex();
-		
-		buffer.pos(0, 0, 0).endVertex();
-		buffer.pos(1, 0, 0).endVertex();
-		buffer.pos(1, 0, 1).endVertex();
-		buffer.pos(0, 0, 1).endVertex();
-		
-		buffer.pos(0, 1, 0).endVertex();
-		buffer.pos(1, 1, 0).endVertex();
-		buffer.pos(1, 0, 0).endVertex();
-		buffer.pos(0, 0, 0).endVertex();
-		
-		buffer.pos(0, 1, 1).endVertex();
-		buffer.pos(0, 0, 1).endVertex();
-		buffer.pos(1, 0, 1).endVertex();
-		buffer.pos(1, 1, 1).endVertex();
-		
-		buffer.pos(0, 0, 0).endVertex();
-		buffer.pos(0, 0, 1).endVertex();
-		buffer.pos(0, 1, 1).endVertex();
-		buffer.pos(0, 1, 0).endVertex();
-		
-		buffer.pos(1, 0, 0).endVertex();
-		buffer.pos(1, 1, 0).endVertex();
-		buffer.pos(1, 1, 1).endVertex();
-		buffer.pos(1, 0, 1).endVertex();
-		
-		tessellator.draw();
-		
+		final float widthX = (max.getX() - min.getX()) + 1;
+		final float widthY = (max.getY() - min.getY()) + 1;
+		final float widthZ = (max.getZ() - min.getZ()) + 1;
+		matrixStackIn.translate(offset.x + (widthX / 2), offset.y + (widthY / 2), offset.z + (widthZ / 2));
+		matrixStackIn.scale(widthX, widthY, widthZ);
+		RenderFuncs.drawUnitCube(matrixStackIn, buffer, 0, OverlayTexture.NO_OVERLAY, red, green, blue, alpha);
 		matrixStackIn.pop();
-		GlStateManager.enableTexture();
-		GlStateManager.enableDepthTest();
-		GlStateManager.enableCull();
 	}
 	
-	private void renderBlueprintPreview(BlockPos center, BlueprintBlock[][][] preview, Direction rotation, float partialTicks) {
+	private void renderBlueprintPreview(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, BlockPos center, BlueprintBlock[][][] preview, Direction rotation, float partialTicks) {
 		Minecraft mc = Minecraft.getInstance();
 		Vector3d playerPos = mc.gameRenderer.getActiveRenderInfo().getProjectedView();//player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
 		Vector3d offset = new Vector3d(center.getX() - playerPos.x,
@@ -382,11 +302,9 @@ public class OverlayRenderer extends AbstractGui {
 				center.getZ() - playerPos.z);
 		
 		// Compile drawlist if not present
-		if (cachedRenderList == -1) {
-			cachedRenderList = GLAllocation.generateDisplayLists(1);
-			GlStateManager.newList(cachedRenderList, GL11.GL_COMPILE);
-			
-			mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
+		if (cachedRenderDirty) {
+			cachedRenderDirty = false;
+			cachedRenderList.reset();
 			
 			for (int x = 0; x < 5; x++)
 			for (int y = 0; y < 2; y++)
@@ -415,15 +333,15 @@ public class OverlayRenderer extends AbstractGui {
 					model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());
 				}
 				
-				matrixStackIn.push();
-				matrixStackIn.translate(xOff, yOff, zOff);
+				final int fakeLight = 15728880;
+				MatrixStack renderStack = new MatrixStack();
+				renderStack.push();
+				renderStack.translate(xOff, yOff, zOff);
 				
-				RenderFuncs.RenderModelWithColor(model, 0xFFFFFFFF);
+				RenderFuncs.RenderModel(renderStack, cachedRenderList, model, fakeLight, OverlayTexture.NO_OVERLAY, 1f, 1f, 1f, .6f);
 				
-				matrixStackIn.pop();
+				renderStack.pop();
 			}
-
-			GlStateManager.endList();
 		}
 		
 		final float angle;
@@ -482,34 +400,33 @@ public class OverlayRenderer extends AbstractGui {
 		
 		matrixStackIn.push();
 		
-		GlStateManager.disableAlphaTest();
-		GlStateManager.disableBlend();
-		GlStateManager.disableTexture();
-		GlStateManager.disableLighting();
-		GlStateManager.enableAlphaTest();
-		GlStateManager.enableBlend();
-		GlStateManager.enableTexture();
-		GlStateManager.enableLighting();
-		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-		GlStateManager.color4f(1f, 1f, 1f, 1f);
+//		GlStateManager.disableAlphaTest();
+//		GlStateManager.disableBlend();
+//		GlStateManager.disableTexture();
+//		GlStateManager.disableLighting();
+//		GlStateManager.enableAlphaTest();
+//		GlStateManager.enableBlend();
+//		GlStateManager.enableTexture();
+//		GlStateManager.enableLighting();
+//		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+//		GlStateManager.color4f(1f, 1f, 1f, 1f);
 		
 		matrixStackIn.translate(offset.x + rotX, offset.y, offset.z + rotZ);
-		matrixStackIn.rotate(angle, 0, 1, 0);
+		matrixStackIn.rotate(Vector3f.YP.rotationDegrees(angle));
 		
 		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 		
-		GlStateManager.pushTextureAttributes();
-		GlStateManager.callList(cachedRenderList);
-		GlStateManager.popAttributes();
+		int unused; // Almost certainly need to push render stack to global stack!
+		WorldVertexBufferUploader.draw(cachedRenderList);
 		
 		matrixStackIn.pop();
-		GlStateManager.disableTexture();
-		GlStateManager.enableColorMaterial();
-		GlStateManager.enableDepthTest();
-		GlStateManager.color4f(1f, 1f, 1f, 1f);
+//		GlStateManager.disableTexture();
+//		GlStateManager.enableColorMaterial();
+//		GlStateManager.enableDepthTest();
+//		GlStateManager.color4f(1f, 1f, 1f, 1f);
 	}
 	
-	private void renderCurrentIndex(String name) {
+	private void renderCurrentIndex(MatrixStack matrixStackIn, String name) {
 		if (name == null) {
 			return;
 		}
@@ -519,10 +436,9 @@ public class OverlayRenderer extends AbstractGui {
 		GlStateManager.disableBlend();
 		matrixStackIn.push();
 		
-		this.drawCenteredString(mc.fontRenderer, name, 0, 0, 0xFFFFFFFF);
+		drawCenteredString(matrixStackIn, mc.fontRenderer, name, 0, 0, 0xFFFFFFFF);
 		
 		matrixStackIn.pop();
 		GlStateManager.enableBlend();
-		GlStateManager.color4f(1f, 1f, 1f, 1f);
 	}
 }

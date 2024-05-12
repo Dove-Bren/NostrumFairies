@@ -6,8 +6,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
@@ -27,7 +27,6 @@ import com.smanzana.nostrummagica.utils.RenderFuncs;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.inventory.InventoryScreen;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -41,6 +40,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -236,7 +236,7 @@ public class HomeBlockGui {
 			}
 		}
 		
-		private void drawSummary(int x, int y) {
+		private void drawSummary(MatrixStack matrixStackIn, int x, int y) {
 			/* Elven Residence - The beautiful rose
 			 * 0/1 Residents      Healthy Aether     5% Growth
 			 */
@@ -257,16 +257,15 @@ public class HomeBlockGui {
 				slot.isItemDisplay = true;
 			}
 			
-			GlStateManager.color4f(1f, 1f, 1f, 1f);
 			matrixStackIn.push();
 			matrixStackIn.translate(x + 5, y + 2, 0);
 			
-			font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
+			font.drawStringWithShadow(matrixStackIn, name, 0, 0, 0xFFFFFFFF);
 			
 			matrixStackIn.push();
 			matrixStackIn.translate(0, 14, 0);
 			matrixStackIn.scale(scale, scale, scale);
-			font.drawString(String.format("%.0f%% Growth", (container.home.getGrowth() * 100)),
+			font.drawString(matrixStackIn, String.format("%.0f%% Growth", (container.home.getGrowth() * 100)),
 					0, 0, 0xFFA0A0A0);
 			matrixStackIn.pop();
 			
@@ -275,28 +274,27 @@ public class HomeBlockGui {
 			
 			matrixStackIn.translate(0, 26, 0);
 			matrixStackIn.scale(scale, scale, scale);
-			font.drawString(count + "/" + maxcount + " Residents",
+			font.drawString(matrixStackIn, count + "/" + maxcount + " Residents",
 					0, 0, 0xFFA0A0A0);
 			
 			String str = getAetherDescription(container.home.getAetherLevel());
-			font.drawString(str,
+			font.drawString(matrixStackIn, str,
 					215 - (font.getStringWidth(str)), 0, 0xFFA0A0A0);
 			matrixStackIn.pop();
 
 			matrixStackIn.pop();
 		}
 		
-		private void drawListItem(int x, int y, boolean hasStone, boolean mouseOver, @Nullable FeyAwayRecord record) {
+		private void drawListItem(MatrixStack matrixStackIn, int x, int y, boolean hasStone, boolean mouseOver, @Nullable FeyAwayRecord record) {
 			mc.getTextureManager().bindTexture(TEXT);
-			GlStateManager.color4f(1f, 1f, 1f, 1f);
-			blit(x, y, GUI_TEXT_LIST_ITEM_HOFFSET + (mouseOver ? GUI_LIST_ITEM_WIDTH : 0), GUI_TEXT_LIST_ITEM_vOFFSET,
+			blit(matrixStackIn, x, y, GUI_TEXT_LIST_ITEM_HOFFSET + (mouseOver ? GUI_LIST_ITEM_WIDTH : 0), GUI_TEXT_LIST_ITEM_vOFFSET,
 					GUI_LIST_ITEM_WIDTH, GUI_LIST_ITEM_HEIGHT);
 			
 			if (hasStone) {
 				if (record == null) {
 					// Show a 'VACANT' notice lol
 					String str = "Vacant";
-					this.font.drawStringWithShadow("Vacant",
+					this.font.drawStringWithShadow(matrixStackIn, "Vacant",
 							x + (GUI_LIST_ITEM_WIDTH - font.getStringWidth(str)) / 2,
 							y + 1 + ((GUI_LIST_ITEM_HEIGHT - font.FONT_HEIGHT) / 2), 0xFFFFFFFF);
 				} else {
@@ -306,8 +304,8 @@ public class HomeBlockGui {
 						int len = 0;
 						int index = 0;
 						len += font.getStringWidth("..."); // offset to include ellipses
-						while ((len + font.getCharWidth(name.charAt(index))) * .75f < (GUI_LIST_ITEM_WIDTH - 4)) {
-							len += font.getCharWidth(name.charAt(index));
+						while ((len + font.getStringWidth("" + name.charAt(index))) * .75f < (GUI_LIST_ITEM_WIDTH - 4)) {
+							len += font.getStringWidth("" + name.charAt(index));
 							index++;
 						}
 						name = name.substring(0, index) + "...";
@@ -316,20 +314,20 @@ public class HomeBlockGui {
 					matrixStackIn.push();
 					matrixStackIn.translate(x + 2, y + 1 + ((GUI_LIST_ITEM_HEIGHT - font.FONT_HEIGHT) / 2) / .75f, 0);
 					matrixStackIn.scale(.75f, .75f, .75f);
-					this.font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
+					this.font.drawStringWithShadow(matrixStackIn, name, 0, 0, 0xFFFFFFFF);
 					matrixStackIn.pop();
 				}
 			}
 		}
 		
-		private void drawList(int x, int y, int mouseIndex) {
+		private void drawList(MatrixStack matrixStackIn, int x, int y, int mouseIndex) {
 			for (int i = 0; i < container.home.getTotalSlots(); i++) {
 				@Nullable FeyAwayRecord fey = (i >= feyArray.length ? null : feyArray[i]);
-				drawListItem(x, y + (i * GUI_LIST_ITEM_HEIGHT), container.home.getSlotInventory().hasStone(i), mouseIndex == i, fey);
+				drawListItem(matrixStackIn, x, y + (i * GUI_LIST_ITEM_HEIGHT), container.home.getSlotInventory().hasStone(i), mouseIndex == i, fey);
 			}
 		}
 		
-		private void drawDetails(int x, int y, @Nullable FeyAwayRecord record) {
+		private void drawDetails(MatrixStack matrixStackIn, int x, int y, @Nullable FeyAwayRecord record) {
 			if (record == null) {
 				return;
 			}
@@ -337,7 +335,6 @@ public class HomeBlockGui {
 			int previewSize = 24;
 			int previewMargin = 2;
 			float nameScale = .75f;
-			GlStateManager.color4f(1f, 1f, 1f, 1f);
 			
 			// Details
 			int nameSpace;
@@ -348,7 +345,7 @@ public class HomeBlockGui {
 			}
 			
 			// -> Backplate
-			RenderFuncs.drawRect(x, y, x + GUI_DETAILS_WIDTH, y + previewSize + previewMargin + previewMargin, 0x40000000);
+			RenderFuncs.drawRect(matrixStackIn, x, y, x + GUI_DETAILS_WIDTH, y + previewSize + previewMargin + previewMargin, 0x40000000);
 
 			// -> Name
 			String name = record.name;
@@ -356,8 +353,8 @@ public class HomeBlockGui {
 				int len = 0;
 				int index = 0;
 				len += font.getStringWidth("..."); // offset to include ellipses
-				while ((len + font.getCharWidth(name.charAt(index))) * nameScale < nameSpace) {
-					len += font.getCharWidth(name.charAt(index));
+				while ((len + font.getStringWidth("" + name.charAt(index))) * nameScale < nameSpace) {
+					len += font.getStringWidth("" + name.charAt(index));
 					index++;
 				}
 				name = name.substring(0, index) + "...";
@@ -366,7 +363,7 @@ public class HomeBlockGui {
 			matrixStackIn.push();
 			matrixStackIn.translate(x + 2 + (nameSpace - (font.getStringWidth(name) * nameScale)) / 2, y + 5, 0);
 			matrixStackIn.scale(nameScale, nameScale, nameScale);
-			this.font.drawStringWithShadow(name, 0, 0, 0xFFFFFFFF);
+			this.font.drawStringWithShadow(matrixStackIn, name, 0, 0, 0xFFFFFFFF);
 			matrixStackIn.pop();
 			
 			if (record.cache != null) {
@@ -376,7 +373,7 @@ public class HomeBlockGui {
 				matrixStackIn.push();
 				matrixStackIn.translate(x + 2 + (nameSpace - (font.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
 				matrixStackIn.scale(nameScale, nameScale, nameScale);
-				this.font.drawString(name, 0, 0, 0xFFF0A0FF);
+				this.font.drawString(matrixStackIn, name, 0, 0, 0xFFF0A0FF);
 				matrixStackIn.pop();
 				
 				// -> Status
@@ -384,7 +381,7 @@ public class HomeBlockGui {
 				matrixStackIn.push();
 				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
 				matrixStackIn.scale(nameScale, nameScale, nameScale);
-				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
+				this.font.drawString(matrixStackIn, name, 0, 0, 0xFFE0E0E0);
 				matrixStackIn.pop();
 				
 				// -> Activity report
@@ -392,11 +389,11 @@ public class HomeBlockGui {
 				matrixStackIn.push();
 				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
 				matrixStackIn.scale(nameScale, nameScale, nameScale);
-				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
+				this.font.drawString(matrixStackIn, name, 0, 0, 0xFFE0E0E0);
 				matrixStackIn.pop();
 				
 				// render preview
-				RenderFuncs.drawRect(x + GUI_DETAILS_WIDTH - (previewMargin + previewSize), y + previewMargin,
+				RenderFuncs.drawRect(matrixStackIn, x + GUI_DETAILS_WIDTH - (previewMargin + previewSize), y + previewMargin,
 						x + GUI_DETAILS_WIDTH - (previewMargin), y + (previewMargin + previewSize),
 						0xFFAAAAAA);
 				//RenderHelper.disableStandardItemLighting();
@@ -404,10 +401,14 @@ public class HomeBlockGui {
 				// the fey is, and then make that fit in 24 units.
 				float length = Math.max(fey.getHeight(), fey.getWidth());
 				int scale = (int) Math.floor((previewSize - 2) / (length));
-				GlStateManager.color4f(1f, 1f, 1f, 1f);
-				InventoryScreen.drawEntityOnScreen(x + GUI_DETAILS_WIDTH - ((previewSize / 2) + previewMargin),
+				{
+					RenderSystem.pushMatrix();
+					RenderSystem.multMatrix(matrixStackIn.getLast().getMatrix());
+					InventoryScreen.drawEntityOnScreen(x + GUI_DETAILS_WIDTH - ((previewSize / 2) + previewMargin),
 						y + (previewMargin + previewSize),
 						scale, 0, 0, fey);
+					RenderSystem.popMatrix();
+				}
 				
 				// Render inventory
 				if (fey instanceof IItemCarrierFey) {
@@ -416,16 +417,13 @@ public class HomeBlockGui {
 					if (items != null && items.size() > 0) {
 						int cells = Math.min(5, items.size());
 						int offsetX = (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH * cells)) / 2;
-						RenderHelper.enableGUIStandardItemLighting();
-						GlStateManager.color4f(1f, 1f, 1f, 1f);
 						for (int i = 0; i < cells; i++) {
 							int cellX = x + offsetX + (i * GUI_INV_CELL_LENGTH);
 							int cellY = y + 62;
 							mc.getTextureManager().bindTexture(TEXT);
-							RenderFuncs.drawModalRectWithCustomSizedTexture(cellX, cellY,
+							RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, cellX, cellY,
 									GUI_TEXT_LIST_ITEM_HOFFSET, GUI_TEXT_LIST_ITEM_vOFFSET + GUI_LIST_ITEM_HEIGHT,
 									GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH, 256, 256);
-							GlStateManager.enableDepthTest();
 				            Minecraft.getInstance().getItemRenderer().renderItemAndEffectIntoGUI(this.mc.player, items.get(i), cellX + 1, cellY + 1);
 				            Minecraft.getInstance().getItemRenderer().renderItemOverlayIntoGUI(this.font, items.get(i), cellX + 1, cellY + 1, null);
 						}
@@ -436,12 +434,12 @@ public class HomeBlockGui {
 				matrixStackIn.push();
 				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
 				matrixStackIn.scale(nameScale, nameScale, nameScale);
-				this.font.drawString(name, 0, 0, 0xFFE0E0E0);
+				this.font.drawString(matrixStackIn, name, 0, 0, 0xFFE0E0E0);
 				matrixStackIn.pop();
 			}
 		}
 		
-		private void drawSlots() {
+		private void drawSlots(MatrixStack matrixStackIn) {
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
 			matrixStackIn.push();
@@ -449,38 +447,35 @@ public class HomeBlockGui {
 			for (ResidentSlot slot : container.residentSlots) {
 				if (slot.isActive()) {
 					float scale = (12f / 16f) ;
-					GlStateManager.color4f(1f, 1f, 1f, 1f);
-					FeySoulIcon.draw(slot, scale);
+					FeySoulIcon.draw(matrixStackIn, slot, scale);
 				}
 			}
 			for (SpecializationSlot slot : container.specializationSlots) {
 				if (slot.isActive()) {
 					float scale = 1f;
-					GlStateManager.color4f(1f, 1f, 1f, 1f);
-					FeySlotIcon.draw(slot, scale);
+					FeySlotIcon.draw(matrixStackIn, slot, scale);
 				}
 			}
 			for (FeyStoneContainerSlot slot : container.upgradeSlots) {
 				float scale = 1f;
-				GlStateManager.color4f(1f, 1f, 1f, 1f);
-				FeySlotIcon.draw(slot, scale);
+				FeySlotIcon.draw(matrixStackIn, slot, scale);
 			}
 			matrixStackIn.pop();
 		}
 		
-		private void drawSummaryOverlay(int mouseX, int mouseY) {
+		private void drawSummaryOverlay(MatrixStack matrixStackIn, int mouseX, int mouseY) {
 			//26
 			//215 - string length x
 			
 			if (mouseY > (GUI_LIST_VOFFSET + -5 + -10) && mouseX > 115 && mouseX < (GUI_UPGRADE_HOFFSET - 5) && mouseY < (GUI_LIST_VOFFSET - 5)) {
-				this.renderTooltip(Lists.newArrayList(
+				this.renderTooltip(matrixStackIn, new StringTextComponent(
 						container.home.getAether() + "/" + container.home.getAetherCapacity()
 						), mouseX, mouseY);
 			}
 		}
 		
 		@Override
-		protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+		protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
@@ -488,24 +483,20 @@ public class HomeBlockGui {
 			
 			setIsItemRender(true);
 			
-			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
-			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
+			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			
 			refreshFeyArray();
-			drawSummary(horizontalMargin + GUI_INFO_HOFFSET, verticalMargin + GUI_INFO_VOFFSET);
-			drawList(horizontalMargin + GUI_LIST_HOFFSET, verticalMargin + GUI_LIST_VOFFSET, mouseIndex);
-			drawDetails(horizontalMargin + GUI_DETAILS_HOFFSET, verticalMargin + GUI_DETAILS_VOFFSET, getSelected());
-			drawSlots();
-
-			GlStateManager.enableBlend();
-			GlStateManager.enableAlphaTest();
+			drawSummary(matrixStackIn, horizontalMargin + GUI_INFO_HOFFSET, verticalMargin + GUI_INFO_VOFFSET);
+			drawList(matrixStackIn, horizontalMargin + GUI_LIST_HOFFSET, verticalMargin + GUI_LIST_VOFFSET, mouseIndex);
+			drawDetails(matrixStackIn, horizontalMargin + GUI_DETAILS_HOFFSET, verticalMargin + GUI_DETAILS_VOFFSET, getSelected());
+			drawSlots(matrixStackIn);
 		}
 		
 		@Override
-		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-			super.drawGuiContainerForegroundLayer(mouseX, mouseY);
+		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+			super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 			
 			setIsItemRender(false);
 			
@@ -514,7 +505,7 @@ public class HomeBlockGui {
 			
 			if (mouseX >= horizontalMargin + GUI_INFO_HOFFSET && mouseX <= horizontalMargin + GUI_UPGRADE_HOFFSET
 					&& mouseY >= verticalMargin + GUI_INFO_VOFFSET && mouseY <= verticalMargin + GUI_LIST_VOFFSET) {
-				drawSummaryOverlay(mouseX - horizontalMargin, mouseY - verticalMargin);
+				drawSummaryOverlay(matrixStackIn, mouseX - horizontalMargin, mouseY - verticalMargin);
 			}
 		}
 		

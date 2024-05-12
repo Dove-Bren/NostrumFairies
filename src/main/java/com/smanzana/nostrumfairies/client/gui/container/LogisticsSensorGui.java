@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
@@ -145,26 +145,22 @@ public class LogisticsSensorGui {
 		
 		
 		@Override
-		protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+		protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			
 			int horizontalMargin = this.guiLeft;
 			int verticalMargin = this.guiTop;
 			
-			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
 			
-			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_MAIN_WIDTH, GUI_TEXT_MAIN_HEIGHT, 256, 256);
+			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_MAIN_WIDTH, GUI_TEXT_MAIN_HEIGHT, 256, 256);
 			
-			panelGui.draw(mc, guiLeft, guiTop);
-
-			GlStateManager.enableBlend();
-			GlStateManager.enableAlphaTest();
+			panelGui.draw(matrixStackIn, mc, guiLeft, guiTop);
 			
 		}
 		
 		@Override
-		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-			super.drawGuiContainerForegroundLayer(mouseX, mouseY);
+		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+			super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 		}
 	}
 	

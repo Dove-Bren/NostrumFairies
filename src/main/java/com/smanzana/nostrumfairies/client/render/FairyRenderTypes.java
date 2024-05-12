@@ -14,8 +14,10 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 public class FairyRenderTypes {
 
 	public static final RenderType LOGISTICS_LINES;
-	public static final RenderType BLOCK_HIGHLIGHT;
-	public static final RenderType BLOCK_OUTLINE;
+	public static final RenderType MININGBLOCK_HIGHLIGHT;
+	public static final RenderType MININGBLOCK_OUTLINE;
+	public static final RenderType TEMPLATE_SELECT_HIGHLIGHT;
+	public static final RenderType TEMPLATE_SELECT_HIGHLIGHT_CULL;
 	
 	private static final String Name(String suffix) {
 		return "fairyrender_" + suffix;
@@ -54,7 +56,17 @@ public class FairyRenderTypes {
 				.lightmap(NO_LIGHTING)
 				.depthTest(NO_DEPTH)
 			.build(false);
-		BLOCK_HIGHLIGHT = RenderType.makeType(Name("BlockHighlight"), DefaultVertexFormats.BLOCK, GL11.GL_QUADS, 64, glState);
+		MININGBLOCK_HIGHLIGHT = RenderType.makeType(Name("BlockHighlight"), DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 64, glState);
+		TEMPLATE_SELECT_HIGHLIGHT_CULL = RenderType.makeType(Name("TemplateHighlightCull"), DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 16, glState);
+		
+		glState = RenderType.State.getBuilder()
+				.texture(new RenderState.TextureState(TileEntityWispBlockRenderer.GEM_TEX_LOC, false, false))
+				.transparency(TRANSLUCENT_TRANSPARENCY)
+				.lightmap(NO_LIGHTING)
+				.depthTest(NO_DEPTH)
+				.cull(NO_CULL) // Previously only was no-cull if inside box
+			.build(false);
+		TEMPLATE_SELECT_HIGHLIGHT = RenderType.makeType(Name("TemplateHighlight"), DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 16, glState);
 
 		glState = RenderType.State.getBuilder()
 				.transparency(TRANSLUCENT_TRANSPARENCY)
@@ -62,7 +74,7 @@ public class FairyRenderTypes {
 				.line(LINE_3)
 				.depthTest(NO_DEPTH)
 			.build(false);
-		BLOCK_OUTLINE = RenderType.makeType(Name("BlockHighlightOutline"), DefaultVertexFormats.POSITION_COLOR_LIGHTMAP, GL11.GL_LINES, 64, glState);
+		MININGBLOCK_OUTLINE = RenderType.makeType(Name("BlockHighlightOutline"), DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINES, 64, glState);
 	}
 	
 }

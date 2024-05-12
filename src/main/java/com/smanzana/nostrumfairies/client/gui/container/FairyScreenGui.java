@@ -2,7 +2,8 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
@@ -32,9 +33,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.client.config.GuiUtils;
+import net.minecraftforge.fml.client.gui.GuiUtils;
 
 public class FairyScreenGui {
 	
@@ -609,7 +611,7 @@ public class FairyScreenGui {
 			container.gemSlot.hide(!showLogistics);
 		}
 		
-		protected void drawAttackSlide(float partialTicks, int mouseX, int mouseY) {
+		protected void drawAttackSlide(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			// whole thing can be skipped if no selection
 			if (selectedEmpty) {
 				return;
@@ -621,42 +623,39 @@ public class FairyScreenGui {
 			final int sidebarY = verticalMargin + SIDEBAR_ATTACK_VOFFSET;
 			
 			// DRAW BARS
-			RenderFuncs.drawRect(sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET,
 					sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET,
 					sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET + SIDEBAR_ATTACK_HEALTH_WIDTH,
 					sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET + SIDEBAR_ATTACK_HEALTH_HEIGHT,
 					0xFF444444);
 			
-			RenderFuncs.drawRect(sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET,
 					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET,
 					sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET + SIDEBAR_ATTACK_ENERGY_WIDTH,
 					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET + SIDEBAR_ATTACK_ENERGY_HEIGHT,
 					0xFF444444);
 			
 			int x = (int) Math.round((float) SIDEBAR_ATTACK_HEALTH_WIDTH * (selectedHealth));
-			RenderFuncs.drawRect(sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET,
 					sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET,
 					sidebarX + SIDEBAR_ATTACK_HEALTH_HOFFSET + x,
 					sidebarY + SIDEBAR_ATTACK_HEALTH_VOFFSET + SIDEBAR_ATTACK_HEALTH_HEIGHT,
 					0xFFAA0000);
 			
 			x = (int) Math.round((float) SIDEBAR_ATTACK_ENERGY_WIDTH * (selectedEnergy));
-			RenderFuncs.drawRect(sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET,
 					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET,
 					sidebarX + SIDEBAR_ATTACK_ENERGY_HOFFSET + x,
 					sidebarY + SIDEBAR_ATTACK_ENERGY_VOFFSET + SIDEBAR_ATTACK_ENERGY_HEIGHT,
 					0xFF00A040);
 			
 			// draw background
-			GlStateManager.color4f(1f, 1f, 1f, 1f);
-			GlStateManager.disableAlphaTest();
-			GlStateManager.disableBlend();
-			GlStateManager.enableAlphaTest();
-			GlStateManager.enableBlend();
-			RenderFuncs.drawScaledCustomSizeModalRect(sidebarX, sidebarY,
+			RenderSystem.enableBlend();
+			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, sidebarX, sidebarY,
 					SIDEBAR_ATTACK_TEXT_HOFFSET, SIDEBAR_ATTACK_TEXT_VOFFSET,
 					SIDEBAR_ATTACK_TEXT_WIDTH, SIDEBAR_ATTACK_TEXT_HEIGHT,
 					SIDEBAR_ATTACK_WIDTH, SIDEBAR_ATTACK_HEIGHT, 256, 256);
+			RenderSystem.disableBlend();
 			
 			if (selectedName != null) {
 				final float scale = .8f;
@@ -669,33 +668,29 @@ public class FairyScreenGui {
 				matrixStackIn.push();
 				matrixStackIn.translate(sidebarX + (SIDEBAR_ATTACK_WIDTH / 2), sidebarY + 7, 0); 
 				matrixStackIn.scale(scale, scale, scale);
-				this.drawCenteredString(this.font,
+				drawCenteredString(matrixStackIn, this.font,
 						name,
 						0,
 						0,
 						0xFFFFFFFF);
 				matrixStackIn.pop();
-				GlStateManager.disableAlphaTest();
-				GlStateManager.disableBlend();
-				GlStateManager.enableAlphaTest();
-				GlStateManager.enableBlend();
 			}
 		}
 		
-		protected void drawLogisticsSlide(float partialTicks, int mouseX, int mouseY) {
+		protected void drawLogisticsSlide(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			final int horizontalMargin = (width - xSize) / 2;
 			final int verticalMargin = (height - ySize) / 2;
 			final int sidebarX = horizontalMargin + SIDEBAR_LOGISTICS_HOFFSET;
 			final int sidebarY = verticalMargin + SIDEBAR_LOGISTICS_VOFFSET;
 			
 			// DRAW BARS
-			RenderFuncs.drawRect(sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET,
 					sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET,
 					sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET + SIDEBAR_LOGISTICS_HEALTH_WIDTH,
 					sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET + SIDEBAR_LOGISTICS_HEALTH_HEIGHT,
 					0xFF444444);
 			
-			RenderFuncs.drawRect(sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET,
 					sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET,
 					sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET + SIDEBAR_LOGISTICS_ENERGY_WIDTH,
 					sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET + SIDEBAR_LOGISTICS_ENERGY_HEIGHT,
@@ -703,22 +698,21 @@ public class FairyScreenGui {
 			
 			if (!selectedEmpty) {
 				int x = (int) Math.round((float) SIDEBAR_LOGISTICS_HEALTH_WIDTH * (selectedHealth));
-				RenderFuncs.drawRect(sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET,
+				RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET,
 						sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET,
 						sidebarX + SIDEBAR_LOGISTICS_HEALTH_HOFFSET + x,
 						sidebarY + SIDEBAR_LOGISTICS_HEALTH_VOFFSET + SIDEBAR_LOGISTICS_HEALTH_HEIGHT,
 						0xFFAA0000);
 				
 				x = (int) Math.round((float) SIDEBAR_LOGISTICS_ENERGY_WIDTH * (selectedEnergy));
-				RenderFuncs.drawRect(sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET,
+				RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET,
 						sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET,
 						sidebarX + SIDEBAR_LOGISTICS_ENERGY_HOFFSET + x,
 						sidebarY + SIDEBAR_LOGISTICS_ENERGY_VOFFSET + SIDEBAR_LOGISTICS_ENERGY_HEIGHT,
 						0xFF00A040);
 			}
-			GlStateManager.color4f(1f, 1f, 1f, 1f);
 			
-			RenderFuncs.drawScaledCustomSizeModalRect(horizontalMargin + SIDEBAR_LOGISTICS_HOFFSET, verticalMargin + SIDEBAR_LOGISTICS_VOFFSET,
+			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, horizontalMargin + SIDEBAR_LOGISTICS_HOFFSET, verticalMargin + SIDEBAR_LOGISTICS_VOFFSET,
 					SIDEBAR_LOGISTICS_TEXT_HOFFSET, SIDEBAR_LOGISTICS_TEXT_VOFFSET,
 					SIDEBAR_LOGISTICS_TEXT_WIDTH, SIDEBAR_LOGISTICS_TEXT_HEIGHT,
 					SIDEBAR_LOGISTICS_WIDTH, SIDEBAR_LOGISTICS_HEIGHT, 256, 256);
@@ -734,20 +728,16 @@ public class FairyScreenGui {
 				matrixStackIn.push();
 				matrixStackIn.translate(sidebarX + (SIDEBAR_LOGISTICS_WIDTH / 2), sidebarY + 7, 0); 
 				matrixStackIn.scale(scale, scale, scale);
-				this.drawCenteredString(this.font,
+				drawCenteredString(matrixStackIn, this.font,
 						name,
 						0,
 						0,
 						0xFFFFFFFF);
 				matrixStackIn.pop();
-				GlStateManager.disableAlphaTest();
-				GlStateManager.disableBlend();
-				GlStateManager.enableAlphaTest();
-				GlStateManager.enableBlend();
 			}
 		}
 		
-		protected void drawConstructionSlide(float partialTicks, int mouseX, int mouseY) {
+		protected void drawConstructionSlide(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			if (selectedEmpty) {
 				return;
 			}
@@ -758,42 +748,39 @@ public class FairyScreenGui {
 			final int sidebarY = verticalMargin + SIDEBAR_ATTACK_VOFFSET;
 			
 			// DRAW BARS
-			RenderFuncs.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET,
 					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET,
 					sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET + SIDEBAR_CONSTRUCTION_HEALTH_WIDTH,
 					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET + SIDEBAR_CONSTRUCTION_HEALTH_HEIGHT,
 					0xFF444444);
 			
-			RenderFuncs.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET,
 					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET,
 					sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET + SIDEBAR_CONSTRUCTION_ENERGY_WIDTH,
 					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET + SIDEBAR_CONSTRUCTION_ENERGY_HEIGHT,
 					0xFF444444);
 			
 			int x = (int) Math.round((float) SIDEBAR_CONSTRUCTION_HEALTH_WIDTH * (selectedHealth));
-			RenderFuncs.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET,
 					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET,
 					sidebarX + SIDEBAR_CONSTRUCTION_HEALTH_HOFFSET + x,
 					sidebarY + SIDEBAR_CONSTRUCTION_HEALTH_VOFFSET + SIDEBAR_CONSTRUCTION_HEALTH_HEIGHT,
 					0xFFAA0000);
 			
 			x = (int) Math.round((float) SIDEBAR_CONSTRUCTION_ENERGY_WIDTH * (selectedEnergy));
-			RenderFuncs.drawRect(sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET,
 					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET,
 					sidebarX + SIDEBAR_CONSTRUCTION_ENERGY_HOFFSET + x,
 					sidebarY + SIDEBAR_CONSTRUCTION_ENERGY_VOFFSET + SIDEBAR_CONSTRUCTION_ENERGY_HEIGHT,
 					0xFF00A040);
 			
 			// draw background
-			GlStateManager.color4f(1f, 1f, 1f, 1f);
-			GlStateManager.disableAlphaTest();
-			GlStateManager.disableBlend();
-			GlStateManager.enableAlphaTest();
-			GlStateManager.enableBlend();
-			RenderFuncs.drawScaledCustomSizeModalRect(sidebarX, sidebarY,
+			RenderSystem.enableBlend();
+			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, sidebarX, sidebarY,
 					SIDEBAR_CONSTRUCTION_TEXT_HOFFSET, SIDEBAR_CONSTRUCTION_TEXT_VOFFSET,
 					SIDEBAR_CONSTRUCTION_TEXT_WIDTH, SIDEBAR_CONSTRUCTION_TEXT_HEIGHT,
 					SIDEBAR_CONSTRUCTION_WIDTH, SIDEBAR_CONSTRUCTION_HEIGHT, 256, 256);
+			RenderSystem.disableBlend();
 			
 			if (selectedName != null) {
 				final float scale = .8f;
@@ -806,27 +793,23 @@ public class FairyScreenGui {
 				matrixStackIn.push();
 				matrixStackIn.translate(sidebarX + (SIDEBAR_CONSTRUCTION_WIDTH / 2), sidebarY + 7, 0); 
 				matrixStackIn.scale(scale, scale, scale);
-				this.drawCenteredString(this.font,
+				drawCenteredString(matrixStackIn, this.font,
 						name,
 						0,
 						0,
 						0xFFFFFFFF);
 				matrixStackIn.pop();
-				GlStateManager.disableAlphaTest();
-				GlStateManager.disableBlend();
-				GlStateManager.enableAlphaTest();
-				GlStateManager.enableBlend();
 			}
 		}
 		
-		protected void drawStar(float partialTicks) {
-			RenderFuncs.drawScaledCustomSizeModalRect(0, 0,
+		protected void drawStar(MatrixStack matrixStackIn, float partialTicks) {
+			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, 0, 0,
 					ICON_STAR_TEXT_HOFFSET, ICON_STAR_TEXT_VOFFSET,
 					ICON_STAR_TEXT_WIDTH, ICON_STAR_TEXT_HEIGHT,
 					ICON_STAR_WIDTH, ICON_STAR_HEIGHT, 256, 256);
 		}
 		
-		protected void drawLevelDisplay(float partialTicks) {
+		protected void drawLevelDisplay(MatrixStack matrixStackIn, float partialTicks) {
 			final int horizontalMargin = (width - xSize) / 2;
 			final int verticalMargin = (height - ySize) / 2;
 			
@@ -840,7 +823,7 @@ public class FairyScreenGui {
 			final int bar_width = (int) ((float) GUI_FAIRY_XP_BAR_WIDTH * perc);
 			
 			// Draw bar
-			RenderFuncs.drawRect(horizontalMargin + GUI_FAIRY_XP_BAR_HOFFSET, verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, horizontalMargin + GUI_FAIRY_XP_BAR_HOFFSET, verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET,
 					horizontalMargin + GUI_FAIRY_XP_BAR_HOFFSET + bar_width,
 					verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET + GUI_FAIRY_XP_BAR_HEIGHT, 0xFFFFFFA0);
 			
@@ -849,75 +832,72 @@ public class FairyScreenGui {
 			final int starWidth = ICON_STAR_WIDTH;
 			final int totalWidth = (starWidth) * level + (4 * (level - 1));
 			int x = horizontalMargin + ((GUI_TEXT_WIDTH - totalWidth) / 2);
-			GlStateManager.enableBlend();
-			GlStateManager.color4f(1f, 1f, 1f, 1f);
 			
+			RenderSystem.enableBlend();
 			for (int i = 0; i < level; i++) {
 				matrixStackIn.push();
 				matrixStackIn.translate(x + (starWidth * i),
 						verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET + (GUI_FAIRY_XP_BAR_HEIGHT / 2) + (-ICON_STAR_HEIGHT / 2),
 						0);
-				drawStar(partialTicks);
+				drawStar(matrixStackIn, partialTicks);
 				matrixStackIn.pop();
 			}
+			RenderSystem.disableBlend();
 			
 			// Draw level
 		}
 		
 		@Override
-		protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+		protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			final int horizontalMargin = (width - xSize) / 2;
 			final int verticalMargin = (height - ySize) / 2;
 			
-			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
+			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, GUI_WIDTH, GUI_HEIGHT, 256, 256);
 			
-			RenderFuncs.drawScaledCustomSizeModalRect(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, GUI_WIDTH, GUI_HEIGHT, 256, 256);
-			
-			drawLevelDisplay(partialTicks);
+			drawLevelDisplay(matrixStackIn, partialTicks);
 			
 			if (showAttack) {
-				drawAttackSlide(partialTicks, mouseX, mouseY);
+				drawAttackSlide(matrixStackIn, partialTicks, mouseX, mouseY);
 			} else if (showLogistics) {
-				drawLogisticsSlide(partialTicks, mouseX, mouseY);
+				drawLogisticsSlide(matrixStackIn, partialTicks, mouseX, mouseY);
 			} else if (showConstruction) {
-				drawConstructionSlide(partialTicks, mouseX, mouseY);
+				drawConstructionSlide(matrixStackIn, partialTicks, mouseX, mouseY);
 			}
 		}
 		
 		@Override
-		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
 			
 			matrixStackIn.push();
 			matrixStackIn.translate(0, 0, 500);
+			RenderSystem.enableBlend();
 			if (!container.capability.attackFairyUnlocked()) {
-				RenderFuncs.drawRect(GUI_ATTACK_SLOT_HOFFSET,
+				RenderFuncs.drawRect(matrixStackIn, GUI_ATTACK_SLOT_HOFFSET,
 						GUI_ATTACK_SLOT_VOFFSET,
 						GUI_ATTACK_SLOT_HOFFSET + (3 * 18) - (2),
 						GUI_ATTACK_SLOT_VOFFSET + (3 * 18) - (2),
 						0xAA000000);
 			}
 			if (!container.capability.builderFairyUnlocked()) {
-				RenderFuncs.drawRect(GUI_BUILD_SLOT_HOFFSET,
+				RenderFuncs.drawRect(matrixStackIn, GUI_BUILD_SLOT_HOFFSET,
 						GUI_BUILD_SLOT_VOFFSET,
 						GUI_BUILD_SLOT_HOFFSET + (3 * 18) - (2),
 						GUI_BUILD_SLOT_VOFFSET + (3 * 18) - (2),
 						0xAA000000);
 			}
 			if (!container.capability.logisticsFairyUnlocked()) {
-				RenderFuncs.drawRect(GUI_LOGISTICS_SLOT_HOFFSET,
+				RenderFuncs.drawRect(matrixStackIn, GUI_LOGISTICS_SLOT_HOFFSET,
 						GUI_LOGISTICS_SLOT_VOFFSET,
 						GUI_LOGISTICS_SLOT_HOFFSET + (3 * 18) - (2),
 						GUI_LOGISTICS_SLOT_VOFFSET + (3 * 18) - (2),
 						0xAA000000);
 			}
+			RenderSystem.disableBlend();
 			matrixStackIn.pop();
 			
 			if (selectedGroup != -1) {
 				float bright = 1f;
-				GlStateManager.color4f(bright, bright, bright, 1.0F);
-				GlStateManager.enableTexture();
-				GlStateManager.enableBlend();
 				mc.getTextureManager().bindTexture(TEXT);
 				
 				int x = -5;
@@ -933,13 +913,14 @@ public class FairyScreenGui {
 					y += GUI_LOGISTICS_SLOT_VOFFSET;
 				}
 				
-				RenderFuncs.drawScaledCustomSizeModalRect(x, y,
+				RenderSystem.enableBlend();
+				RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, x, y,
 						ICON_CURSOR_MAJOR_TEXT_HOFFSET, ICON_CURSOR_MAJOR_TEXT_VOFFSET,
 						ICON_CURSOR_MAJOR_TEXT_WIDTH, ICON_CURSOR_MAJOR_TEXT_HEIGHT,
-						ICON_CURSOR_MAJOR_WIDTH, ICON_CURSOR_MAJOR_HEIGHT, 256, 256);
+						ICON_CURSOR_MAJOR_WIDTH, ICON_CURSOR_MAJOR_HEIGHT, 256, 256,
+						bright, bright, bright, 1.0f);
 				
 				if (selectedSlot != -1) {
-					GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 					
 					x += 3;
 					y += 3;
@@ -958,19 +939,20 @@ public class FairyScreenGui {
 					x += (18 * (localSlot % 3));
 					y += (18 * (localSlot / 3));
 					
-					RenderFuncs.drawScaledCustomSizeModalRect(x, y,
+					RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, x, y,
 							ICON_CURSOR_MINOR_TEXT_HOFFSET, ICON_CURSOR_MINOR_TEXT_VOFFSET,
 							ICON_CURSOR_MINOR_TEXT_WIDTH, ICON_CURSOR_MINOR_TEXT_HEIGHT,
 							ICON_CURSOR_MINOR_WIDTH, ICON_CURSOR_MINOR_HEIGHT, 256, 256);
 				}
+				RenderSystem.disableBlend();
 			}
 			
 			// Let buttons draw foregrounds
 			for (Widget button : this.buttons) {
 				if (button instanceof TargetButton) {
-					((TargetButton) button).drawButtonForegroundLayer(mouseX - this.guiLeft, mouseY - this.guiTop);
+					((TargetButton) button).drawButtonForegroundLayer(matrixStackIn, mouseX - this.guiLeft, mouseY - this.guiTop);
 				} else if (button instanceof PlacementButton) {
-					((PlacementButton) button).drawButtonForegroundLayer(mouseX - this.guiLeft, mouseY - this.guiTop);
+					((PlacementButton) button).drawButtonForegroundLayer(matrixStackIn, mouseX - this.guiLeft, mouseY - this.guiTop);
 				}
 			}
 		}
@@ -1028,7 +1010,7 @@ public class FairyScreenGui {
 			private final int slot;
 			
 			public TargetButton(int x, int y, int slot, FairyScreenGuiContainer gui) {
-				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, null, (b) -> {
+				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, StringTextComponent.EMPTY, (b) -> {
 					FairyHolderInventory.FairyCastTarget current = gui.container.inv.getFairyCastTarget(slot);
 					NetworkHandler.sendToServer(new FairyGuiActionMessage(
 							GuiAction.CHANGE_TARGET, slot, current.ordinal() + 1));
@@ -1037,22 +1019,29 @@ public class FairyScreenGui {
 			}
 			
 			@Override
-			public void render(int mouseX, int mouseY, float partialTicks) {
+			public void render(MatrixStack matrixStackIn, int mouseX, int mouseY, float partialTicks) {
 				if (this.visible) {
 					isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 					
+					final float red, green, blue, alpha;
 					if (this.isHovered) {
-						GlStateManager.color4f(.8f, .8f, .8f, 1.0F);
+						red = .8f;
+						green = .8f;
+						blue = .8f;
+						alpha = 1f;
 					} else {
-						GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
+						red = 1f;
+						green = 1f;
+						blue = 1f;
+						alpha = 1f;
 					}
-					GlStateManager.disableBlend();
-					GlStateManager.enableBlend();
+					RenderSystem.enableBlend();
 					mc.getTextureManager().bindTexture(TEXT);
-					RenderFuncs.drawScaledCustomSizeModalRect(this.x, this.y,
+					RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, this.x, this.y,
 							ICON_SLOTHELPER_TEXT_HOFFSET, ICON_SLOTHELPER_TEXT_VOFFSET,
 							ICON_SLOTHELPER_TEXT_WIDTH, ICON_SLOTHELPER_TEXT_HEIGHT,
-							ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, 256, 256);
+							ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, 256, 256,
+							red, green, blue, alpha);
 					
 					final int offsetU;
 					final FairyCastTarget target = container.inv.getFairyCastTarget(this.slot);
@@ -1069,20 +1058,21 @@ public class FairyScreenGui {
 						break;
 					}
 					
-					RenderFuncs.drawScaledCustomSizeModalRect(this.x + 1, this.y + 1,
+					RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, this.x + 1, this.y + 1,
 							ICON_TARGET_TEXT_HOFFSET + offsetU, ICON_TARGET_TEXT_VOFFSET,
 							ICON_TARGET_TEXT_WIDTH, ICON_TARGET_TEXT_HEIGHT,
 							ICON_TARGET_WIDTH, ICON_TARGET_HEIGHT, 256, 256);
+					RenderSystem.disableBlend();
 				}
 			}
 			
-			public void drawButtonForegroundLayer(int mouseX, int mouseY) {
+			public void drawButtonForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
 				//super.drawButtonForegroundLayer(mouseX, mouseY);
 				
 				if (this.isHovered) {
 					final FairyCastTarget target = container.inv.getFairyCastTarget(this.slot);
 					
-					GuiUtils.drawHoveringText(target.getDescription(), mouseX, mouseY,
+					GuiUtils.drawHoveringText(matrixStackIn, target.getDescription(), mouseX, mouseY,
 							FairyScreenGuiContainer.this.width, FairyScreenGuiContainer.this.height, 200,
 							FairyScreenGuiContainer.this.font);
 				}
@@ -1095,7 +1085,7 @@ public class FairyScreenGui {
 			private final int slot;
 			
 			public PlacementButton(int x, int y, int slot, FairyScreenGuiContainer gui) {
-				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, null, (b) -> {
+				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, StringTextComponent.EMPTY, (b) -> {
 					FairyHolderInventory.FairyPlacementTarget current = gui.container.inv.getFairyPlacementTarget(slot);
 					NetworkHandler.sendToServer(new FairyGuiActionMessage(
 							GuiAction.CHANGE_PLACEMENT, slot, current.ordinal() + 1));
@@ -1104,22 +1094,26 @@ public class FairyScreenGui {
 			}
 			
 			@Override
-			public void render(int mouseX, int mouseY, float partialTicks) {
+			public void render(MatrixStack matrixStackIn, int mouseX, int mouseY, float partialTicks) {
 				if (this.visible) {
 					isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 					
+					final float red, green, blue, alpha;
 					if (this.isHovered) {
-						GlStateManager.color4f(.8f, .8f, .8f, 1.0F);
+						red = .8f;
+						green = .8f;
+						blue = .8f;
+						alpha = 1f;
 					} else {
-						GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
+						red = green = blue = alpha = 1f;
 					}
-					GlStateManager.disableBlend();
-					GlStateManager.enableBlend();
+					RenderSystem.enableBlend();
 					mc.getTextureManager().bindTexture(TEXT);
-					RenderFuncs.drawScaledCustomSizeModalRect(this.x, this.y,
+					RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, this.x, this.y,
 							ICON_SLOTHELPER_TEXT_HOFFSET, ICON_SLOTHELPER_TEXT_VOFFSET,
 							ICON_SLOTHELPER_TEXT_WIDTH, ICON_SLOTHELPER_TEXT_HEIGHT,
-							ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, 256, 256);
+							ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, 256, 256,
+							red, green, blue, alpha);
 					
 					final int offsetU;
 					final FairyPlacementTarget placement = container.inv.getFairyPlacementTarget(this.slot);
@@ -1134,20 +1128,22 @@ public class FairyScreenGui {
 					
 					}
 					
-					RenderFuncs.drawScaledCustomSizeModalRect(this.x + 1, this.y + 1,
+					RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, this.x + 1, this.y + 1,
 							ICON_PLACEMENT_TEXT_HOFFSET + offsetU, ICON_PLACEMENT_TEXT_VOFFSET,
 							ICON_PLACEMENT_TEXT_WIDTH, ICON_PLACEMENT_TEXT_HEIGHT,
-							ICON_PLACEMENT_WIDTH, ICON_PLACEMENT_HEIGHT, 256, 256);
+							ICON_PLACEMENT_WIDTH, ICON_PLACEMENT_HEIGHT, 256, 256,
+							red, green, blue, alpha);
+					RenderSystem.disableBlend();
 				}
 			}
 			
-			public void drawButtonForegroundLayer(int mouseX, int mouseY) {
+			public void drawButtonForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
 				//super.drawButtonForegroundLayer(mouseX, mouseY);
 				
 				if (this.isHovered) {
 					final FairyPlacementTarget placement = container.inv.getFairyPlacementTarget(this.slot);
 					
-					GuiUtils.drawHoveringText(placement.getDescription(), mouseX, mouseY,
+					GuiUtils.drawHoveringText(matrixStackIn, placement.getDescription(), mouseX, mouseY,
 							FairyScreenGuiContainer.this.width, FairyScreenGuiContainer.this.height, 200,
 							FairyScreenGuiContainer.this.font);
 				}

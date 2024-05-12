@@ -2,7 +2,8 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
@@ -205,18 +206,19 @@ public class OutputChestGui {
 			panelGui.init(mc, guiLeft, guiTop);
 		}
 		
-		private void drawStatus(float partialTicks, boolean available) {
+		private void drawStatus(MatrixStack matrixStackIn, float partialTicks, boolean available) {
 			float alpha = (float) (.5f + (.25f * Math.sin(Math.PI * (double)(System.currentTimeMillis() % 1000) / 1000.0)));
-			GlStateManager.color4f(1.0F,  1.0F, 1.0F, alpha);
 			mc.getTextureManager().bindTexture(TEXT);
 			
 			final int text_hoffset = (available ? GUI_TEXT_WORKING_ICON_HOFFSET : GUI_TEXT_MISSING_ICON_HOFFSET);
 			final int text_voffset = 0;
-			GlStateManager.enableBlend();
-			blit(0, 0, text_hoffset, text_voffset, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
+			RenderSystem.enableBlend();
+			RenderFuncs.blit(matrixStackIn, 0, 0, text_hoffset, text_voffset, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH,
+					1f, 1f, 1f, alpha);
+			RenderSystem.disableBlend();
 		}
 		
-		private void drawTemplate(float partialTicks, @Nonnull ItemStack template) {
+		private void drawTemplate(MatrixStack matrixStackIn, float partialTicks, @Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
 				matrixStackIn.push();
 				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
@@ -224,28 +226,29 @@ public class OutputChestGui {
 				if (template.getCount() > 1) {
 					final String count = "" + template.getCount();
 					
-					this.font.drawStringWithShadow("" + template.getCount(),
+					this.font.drawStringWithShadow(matrixStackIn, "" + template.getCount(),
 							GUI_INV_CELL_LENGTH - (this.font.getStringWidth(count) + 1),
 							GUI_INV_CELL_LENGTH - (this.font.FONT_HEIGHT),
 							0xFFFFFFFF);
-				} else {
-					GlStateManager.enableAlphaTest();
 				}
-				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
+//				else {
+//					GlStateManager.enableAlphaTest();
+//				}
+				RenderSystem.enableBlend();
+				RenderFuncs.drawRect(matrixStackIn, 0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
+				RenderSystem.disableBlend();
 				matrixStackIn.pop();
 			}
 		}
 		
 		@Override
-		protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+		protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			
 			int horizontalMargin = (width - xSize) / 2;
 			int verticalMargin = (height - ySize) / 2;
 			
-			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(TEXT);
-			
-			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
+			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			
 			// Draw templates, if needed
 			for (int i = 0; i < container.chest.getSizeInventory(); i++) {
@@ -260,28 +263,24 @@ public class OutputChestGui {
 				if (container.chest.getStackInSlot(i).isEmpty()) {
 					matrixStackIn.push();
 					matrixStackIn.scale(1f, 1f, .05f);
-					drawTemplate(partialTicks, container.chest.getTemplate(i));
+					drawTemplate(matrixStackIn, partialTicks, container.chest.getTemplate(i));
 					matrixStackIn.pop();
 				}
 				
 				if (!template.isEmpty() && (stack.isEmpty() || stack.getCount() < template.getCount())) {
 					matrixStackIn.translate(0, 0, 100);
-					drawStatus(partialTicks, true);
+					drawStatus(matrixStackIn, partialTicks, true);
 				}
 				
 				matrixStackIn.pop();
 			}
 			
-			panelGui.draw(mc, horizontalMargin, verticalMargin);
-
-			GlStateManager.enableBlend();
-			GlStateManager.enableAlphaTest();
-			
+			panelGui.draw(matrixStackIn, mc, horizontalMargin, verticalMargin);
 		}
 		
 		@Override
-		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-			super.drawGuiContainerForegroundLayer(mouseX, mouseY);
+		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+			super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 		}
 		
 	}

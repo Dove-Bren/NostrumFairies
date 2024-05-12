@@ -4,22 +4,24 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.items.FairyGael;
 import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrummagica.items.PositionCrystal;
 import com.smanzana.nostrummagica.items.SpellScroll;
 import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
+import com.smanzana.nostrummagica.utils.TextUtils;
 
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class FairyHolderInventory implements IInventory, IAutoContainerInventory {
@@ -29,8 +31,8 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 		TARGET,
 		OWNER;
 		
-		private List<String> desc = null;
-		private String transName = null;
+		private List<ITextComponent> desc = null;
+		private TextComponent transName = null;
 		
 		private FairyCastTarget() {
 			
@@ -40,19 +42,18 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 			return name().toLowerCase();
 		}
 		
-		public String getName() {
+		public TextComponent getName() {
 			if (this.transName == null) {
-				this.transName = I18n.format("fairytarget." + getUnlocName() + ".name");
+				this.transName = new TranslationTextComponent("fairytarget." + getUnlocName() + ".name");
 			}
 			return transName;
 		}
 		
-		public List<String> getDescription() {
+		public List<ITextComponent> getDescription() {
 			if (this.desc == null) {
-				String raw = I18n.format("fairytarget." + getUnlocName() + ".desc", "" + TextFormatting.DARK_GREEN + TextFormatting.BOLD, TextFormatting.RESET);
-				String[] lines = raw.split("\\|");
+				this.desc = TextUtils.GetTranslatedList("fairytarget." + getUnlocName() + ".desc", "" + TextFormatting.DARK_GREEN + TextFormatting.BOLD, TextFormatting.RESET);
 				
-				this.desc = Lists.asList("" + TextFormatting.BLUE + TextFormatting.BOLD + getName() + TextFormatting.RESET, lines);
+				desc.set(0, getName().mergeStyle(TextFormatting.BLUE, TextFormatting.BOLD));
 			}
 			return desc;
 		}
@@ -62,8 +63,8 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 		MELEE,
 		RANGE;
 		
-		private List<String> desc = null;
-		private String transName = null;
+		private List<ITextComponent> desc = null;
+		private TextComponent transName = null;
 		
 		private FairyPlacementTarget() {
 			
@@ -73,19 +74,17 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 			return name().toLowerCase();
 		}
 		
-		public String getName() {
+		public TextComponent getName() {
 			if (this.transName == null) {
-				this.transName = I18n.format("fairyplacement." + getUnlocName() + ".name");
+				this.transName = new TranslationTextComponent("fairyplacement." + getUnlocName() + ".name");
 			}
 			return transName;
 		}
 		
-		public List<String> getDescription() {
+		public List<ITextComponent> getDescription() {
 			if (this.desc == null) {
-				String raw = I18n.format("fairyplacement." + getUnlocName() + ".desc", "" + TextFormatting.DARK_GREEN + TextFormatting.BOLD, TextFormatting.RESET);
-				String[] lines = raw.split("\\|");
-				
-				this.desc = Lists.asList("" + TextFormatting.BLUE + TextFormatting.BOLD + getName() + TextFormatting.RESET, lines);
+				this.desc = TextUtils.GetTranslatedList("fairyplacement." + getUnlocName() + ".desc", "" + TextFormatting.DARK_GREEN + TextFormatting.BOLD, TextFormatting.RESET);
+				desc.add(0, getName().mergeStyle(TextFormatting.BLACK, TextFormatting.BOLD));
 			}
 			return desc;
 		}

@@ -2,7 +2,8 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
@@ -285,86 +286,89 @@ public class CraftingStationGui {
 			return TEXT;
 		}
 		
-		private void drawProgress(float progress) {
-			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1f);
+		private void drawProgress(MatrixStack matrixStackIn, float progress) {
 			mc.getTextureManager().bindTexture(getBackgroundTexture());
 			
 			int width = (int) ((float) GUI_PROGRESS_ICON_WIDTH * progress);
 			
-			GlStateManager.enableBlend();
-			RenderFuncs.drawScaledCustomSizeModalRect(0, 0,
+			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, 0, 0,
 					GUI_PROGRESS_ICON_HOFFSET, GUI_PROGRESS_ICON_VOFFSET,
 					width, GUI_PROGRESS_ICON_HEIGHT,
 					width, GUI_PROGRESS_ICON_HEIGHT,
 					256, 256);
 		}
 		
-		private void drawError() {
+		private void drawError(MatrixStack matrixStackIn) {
 			final long period = 2000L;
 			float perc = (float) ((double) (System.currentTimeMillis() % period) / (double) period);
 			perc = (float) (.5 * (1 + Math.sin(perc * Math.PI * 2)));
 			float alpha = .2f + .3f * perc;
-			GlStateManager.color4f(1.0F,  1.0F, 1.0F, alpha);
 			mc.getTextureManager().bindTexture(TEXT);
 			
-			GlStateManager.enableBlend();
-			RenderFuncs.drawScaledCustomSizeModalRect(-1, -1,
+			RenderSystem.enableBlend();
+			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, -1, -1,
 					GUI_ERROR_ICON_HOFFSET, GUI_ERROR_ICON_VOFFSET,
 					GUI_ERROR_ICON_WIDTH, GUI_ERROR_ICON_HEIGHT,
 					GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH,
-					256, 256);
+					256, 256,
+					1f, 1f, 1f, alpha);
+			RenderSystem.disableBlend();
 		}
 		
-		private void drawBoost() {
+		private void drawBoost(MatrixStack matrixStackIn) {
 			final long period = 2000L;
 			float perc = (float) ((double) (System.currentTimeMillis() % period) / (double) period);
 			perc = (float) (.5 * (1 + Math.sin(perc * Math.PI * 2)));
 			float alpha = .2f + .3f * perc;
-			GlStateManager.color4f(1.0F,  1.0F, 1.0F, alpha);
 			mc.getTextureManager().bindTexture(TEXT);
 			
-			GlStateManager.enableBlend();
-			RenderFuncs.drawScaledCustomSizeModalRect(-1 + ((GUI_INV_CELL_LENGTH * 3) / 4), -1 + ((GUI_INV_CELL_LENGTH * 3) / 4),
+			RenderSystem.enableBlend();
+			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, -1 + ((GUI_INV_CELL_LENGTH * 3) / 4), -1 + ((GUI_INV_CELL_LENGTH * 3) / 4),
 					GUI_BOOST_ICON_HOFFSET, GUI_BOOST_ICON_VOFFSET,
 					GUI_BOOST_ICON_WIDTH, GUI_BOOST_ICON_HEIGHT,
 					GUI_INV_CELL_LENGTH / 4, GUI_INV_CELL_LENGTH / 4,
-					256, 256);
+					256, 256,
+					1f, 1f, 1f, alpha);
+			RenderSystem.disableBlend();
 		}
 		
-		private void drawTemplate(@Nonnull ItemStack template) {
+		private void drawTemplate(MatrixStack matrixStackIn, @Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
 				matrixStackIn.push();
 				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
 				matrixStackIn.translate(0, 0, 110);
-				GlStateManager.enableAlphaTest();
-				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA05B6460);
+				//GlStateManager.enableAlphaTest();
+				RenderSystem.enableBlend();
+				RenderFuncs.drawRect(matrixStackIn, 0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA05B6460);
+				RenderSystem.disableBlend();
 				matrixStackIn.pop();
 			}
 		}
 		
-		private void drawRecipe() {
+		private void drawRecipe(MatrixStack matrixStackIn) {
 			ICraftingRecipe recipe = container.station.getRecipe();
 			if (recipe != null) {
 				ItemStack outcome = recipe.getRecipeOutput();
 				matrixStackIn.push();
 				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(outcome, 0, 0);
 				matrixStackIn.translate(0, 0, 110);
-				GlStateManager.enableAlphaTest();
-				RenderFuncs.drawRect(0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA05B6460);
+				//GlStateManager.enableAlphaTest();
+				RenderSystem.enableBlend();
+				RenderFuncs.drawRect(matrixStackIn, 0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA05B6460);
+				RenderSystem.disableBlend();
 				matrixStackIn.pop();
 			}
 		}
 		
 		@Override
-		protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+		protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			
 			int horizontalMargin = this.guiLeft + GUI_TEXT_SIDE_WIDTH;
 			int verticalMargin = this.guiTop;
 			
-			GlStateManager.color4f(1.0F,  1.0F, 1.0F, 1.0F);
 			mc.getTextureManager().bindTexture(getBackgroundTexture());
 			
-			RenderFuncs.drawModalRectWithCustomSizedTexture(horizontalMargin, verticalMargin, 0,0, GUI_TEXT_MAIN_WIDTH, GUI_TEXT_MAIN_HEIGHT, 256, 256);
+			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_MAIN_WIDTH, GUI_TEXT_MAIN_HEIGHT, 256, 256);
 			
 			// Draw templates and errors, if needed
 			for (int i = 0; i < container.stationInputCount; i++) {
@@ -384,16 +388,16 @@ public class CraftingStationGui {
 				if (stack.isEmpty()) {
 					matrixStackIn.push();
 					matrixStackIn.scale(1f, 1f, .05f);
-					drawTemplate(template);
+					drawTemplate(matrixStackIn, template);
 					matrixStackIn.pop();
 				}
 				
 				if (error) {
 					matrixStackIn.translate(0, 0, 100);
-					drawError();
+					drawError(matrixStackIn);
 				} else if (bonus) {
 					matrixStackIn.translate(0, 0, 1000);
-					drawBoost();
+					drawBoost(matrixStackIn);
 				}
 				
 				matrixStackIn.pop();
@@ -405,8 +409,8 @@ public class CraftingStationGui {
 				matrixStackIn.translate(guiLeft,
 						verticalMargin,
 						0);
-				FeySlotIcon.draw(container.upgradeSlot, 1f);
-				GlStateManager.disableLighting();
+				FeySlotIcon.draw(matrixStackIn, container.upgradeSlot, 1f);
+				//GlStateManager.disableLighting();
 				matrixStackIn.pop();
 			}
 			
@@ -416,7 +420,7 @@ public class CraftingStationGui {
 				matrixStackIn.translate(horizontalMargin + GUI_PROGRESS_HOFFSET, verticalMargin + GUI_PROGRESS_VOFFSET, 0);
 				
 				float progress = (float) container.station.getField(0) / 100f;
-				this.drawProgress(progress);
+				this.drawProgress(matrixStackIn, progress);
 				
 				matrixStackIn.pop();
 			}
@@ -426,7 +430,7 @@ public class CraftingStationGui {
 				matrixStackIn.push();
 				//GlStateManager.translate(this.guiLeft, this.guiTop, 0);
 				
-				panelGui.draw(mc, guiLeft, guiTop);
+				panelGui.draw(matrixStackIn, mc, guiLeft, guiTop);
 				
 				matrixStackIn.pop();
 			}
@@ -437,18 +441,14 @@ public class CraftingStationGui {
 				matrixStackIn.push();
 				matrixStackIn.translate(horizontalMargin + GUI_OUTPUT_INV_HOFFSET, verticalMargin + GUI_OUTPUT_INV_VOFFSET, 0);
 				
-				drawRecipe();
+				drawRecipe(matrixStackIn);
 				
 				matrixStackIn.pop();
 			}
-
-			GlStateManager.enableBlend();
-			GlStateManager.enableAlphaTest();
-			
 		}
 		
 		@Override
-		protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
 			;
 		}
 	}

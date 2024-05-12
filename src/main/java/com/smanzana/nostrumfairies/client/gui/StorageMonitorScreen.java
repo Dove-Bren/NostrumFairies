@@ -5,9 +5,10 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
 import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
@@ -20,7 +21,6 @@ import com.smanzana.nostrummagica.utils.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
@@ -97,67 +97,35 @@ public class StorageMonitorScreen extends Screen {
 		}
 	}
 	
-	private void drawMenuItem(int x, int y, ItemStack request, boolean mouseOver) {
+	private void drawMenuItem(MatrixStack matrixStackIn, int x, int y, ItemStack request, boolean mouseOver) {
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
-		GlStateManager.enableLighting();
-		GlStateManager.disableLighting();
-		GlStateManager.disableTexture();
-		GlStateManager.enableTexture();
-		GlStateManager.disableBlend();
-		GlStateManager.enableBlend();
-		GlStateManager.disableAlphaTest();
-		GlStateManager.enableAlphaTest();
-		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+		//RenderSystem.disableLighting();
 
-		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 0.9f);
 		final float value = (mouseOver ? .8f : 1f);
-		GlStateManager.color4f(value, value, value, 1.0f);
-		blit(x, y, GUI_TEXT_MENUITEM_HOFFSET, GUI_TEXT_MENUITEM_VOFFSET, GUI_TEXT_MENUITEM_WIDTH, GUI_TEXT_MENUITEM_HEIGHT);
-		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 1.0f);
+		RenderFuncs.blit(matrixStackIn, x, y, GUI_TEXT_MENUITEM_HOFFSET, GUI_TEXT_MENUITEM_VOFFSET, GUI_TEXT_MENUITEM_WIDTH, GUI_TEXT_MENUITEM_HEIGHT, value, value, value, 1f);
 		if (!request.isEmpty()) {
-			RenderHelper.disableStandardItemLighting();
-			RenderHelper.enableGUIStandardItemLighting();
 			Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET);
 			Minecraft.getInstance().getItemRenderer().renderItemOverlayIntoGUI(this.font, request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET, request.getCount() + "");
-			RenderHelper.disableStandardItemLighting();
-			GlStateManager.disableTexture();
-			GlStateManager.enableTexture();
-			GlStateManager.disableBlend();
-			GlStateManager.enableBlend();
-			GlStateManager.disableAlphaTest();
-			GlStateManager.enableAlphaTest();
-			GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-			
-//			matrixStackIn.push();
-//			GlStateManager.translate(0, 0, 1000);
-//			Gui.drawRect(x + 1, y + (GUI_INV_CELL_LENGTH - 6) , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60000000);
-//			matrixStackIn.pop();
 		}
 		
 		if (mouseOver) {
+			RenderSystem.enableBlend();
+			RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 			matrixStackIn.push();
 			matrixStackIn.translate(0, 0, 1000);
-			RenderFuncs.drawRect(x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET,
+			RenderFuncs.drawRect(matrixStackIn, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET,
 					x + GUI_TEXT_MENUITEM_SLOT_HOFFSET + (GUI_INV_CELL_LENGTH - 1), y + GUI_TEXT_MENUITEM_SLOT_VOFFSET + (GUI_INV_CELL_LENGTH - 1),
 					0x60FFFFFF);
 			matrixStackIn.pop();
+			RenderSystem.disableBlend();
 		}
+		
 	}
 	
-	private void drawCell(int x, int y, @Nullable ItemDeepStack stack, boolean mouseOver) {
+	private void drawCell(MatrixStack matrixStackIn, int x, int y, @Nullable ItemDeepStack stack, boolean mouseOver) {
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
-		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 0.9f);
-		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 1.0f);
-		GlStateManager.enableLighting();
-		GlStateManager.disableLighting();
-		GlStateManager.disableTexture();
-		GlStateManager.enableTexture();
-		GlStateManager.disableBlend();
-		GlStateManager.enableBlend();
-		GlStateManager.disableAlphaTest();
-		GlStateManager.enableAlphaTest();
-		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-		blit(x, y, GUI_TEXT_CELL_HOFFSET, 0, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
+		//RenderSystem.disableLighting();
+		blit(matrixStackIn, x, y, GUI_TEXT_CELL_HOFFSET, 0, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
 		if (stack != null) {
 			final long countNum = stack.getCount();
 			String count;
@@ -170,47 +138,41 @@ public class StorageMonitorScreen extends Screen {
 			}
 			final int width = this.font.getStringWidth(count);
 			final int height = this.font.FONT_HEIGHT;
-			RenderHelper.disableStandardItemLighting();
-			RenderHelper.enableGUIStandardItemLighting();
 			Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(stack.getTemplate(), x + 1, y + 1);
-			RenderHelper.disableStandardItemLighting();
 			
 			matrixStackIn.push();
 			matrixStackIn.translate(0, 0, 1000);
-			RenderFuncs.drawRect(x + 1, y + (GUI_INV_CELL_LENGTH - 6) , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60000000);
+			RenderFuncs.drawRect(matrixStackIn, x + 1, y + (GUI_INV_CELL_LENGTH - 6) , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60000000);
 			matrixStackIn.translate(x + GUI_INV_CELL_LENGTH + (-2) + (-width / 2), y + GUI_INV_CELL_LENGTH + (-height / 2) - 1, 0);
-			GlStateManager.scaled(.5, .5, 1);
-			this.font.drawStringWithShadow(count, 0, 0, 0xFFFFFFFF);
+			matrixStackIn.scale(.5f, .5f, 1f);
+			this.font.drawStringWithShadow(matrixStackIn, count, 0, 0, 0xFFFFFFFF);
 			matrixStackIn.pop();
 		}
 		
 		if (mouseOver) {
+			RenderSystem.enableBlend();
+			RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+			
 			matrixStackIn.push();
 			matrixStackIn.translate(0, 0, 1000);
-			RenderFuncs.drawRect(x + 1, y + 1 , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60FFFFFF);
+			RenderFuncs.drawRect(matrixStackIn, x + 1, y + 1 , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60FFFFFF);
 			matrixStackIn.pop();
+			RenderSystem.disableBlend();
 		}
 	}
 	
-	private void drawSlider(int x, int y, boolean mouseOver) {
+	private void drawSlider(MatrixStack matrixStackIn, int x, int y, boolean mouseOver) {
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
-		GlStateManager.color4f(1f, 1f, 1f, 1f);
-		blit(x, y, GUI_TEXT_SLIDER_HOFFSET, mouseOver ? GUI_INV_SLIDER_HEIGHT : 0, GUI_INV_SLIDER_WIDTH, GUI_INV_SLIDER_HEIGHT);
+		blit(matrixStackIn, x, y, GUI_TEXT_SLIDER_HOFFSET, mouseOver ? GUI_INV_SLIDER_HEIGHT : 0, GUI_INV_SLIDER_WIDTH, GUI_INV_SLIDER_HEIGHT);
 	}
 	
 	@Override
-	public void render(int mouseX, int mouseY, float p_73863_3_) {
+	public void render(MatrixStack matrixStackIn, int mouseX, int mouseY, float p_73863_3_) {
 		
 		final int leftOffset = (this.width - GUI_TEXT_WIDTH) / 2; //distance from left
 		final int topOffset = (this.height - GUI_TEXT_HEIGHT) / 2;
 
-		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 0.9f);
-		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 1.0f);
-		GlStateManager.enableLighting();
-		GlStateManager.disableLighting();
-		GlStateManager.disableTexture();
-		GlStateManager.enableTexture();
-		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
+		//Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
 		
 		if (monitor.getNetwork() != null) {
 			final List<ItemDeepStack> items = monitor.getNetwork().getAllCondensedNetworkItems(ItemCacheType.NET);
@@ -243,7 +205,7 @@ public class StorageMonitorScreen extends Screen {
 				
 				int x = leftOffset + GUI_TOP_INV_HOFFSET + (j * GUI_INV_CELL_LENGTH);
 				int y = topOffset + GUI_TOP_INV_VOFFSET + (i * GUI_INV_CELL_LENGTH);
-				drawCell(x, y, stack,
+				drawCell(matrixStackIn, x, y, stack,
 						mouseX >= x && mouseX < x + GUI_INV_CELL_LENGTH && mouseY >= y && mouseY < y + GUI_INV_CELL_LENGTH);
 			}
 			
@@ -257,7 +219,7 @@ public class StorageMonitorScreen extends Screen {
 				
 				int x = leftOffset - (GUI_TEXT_MENUITEM_WIDTH);
 				int y = topOffset + (i * GUI_TEXT_MENUITEM_HEIGHT);
-				drawMenuItem(x, y, request, mouseX >= x && mouseX < x + GUI_TEXT_MENUITEM_WIDTH && mouseY >= y && mouseY < y + GUI_TEXT_MENUITEM_HEIGHT);
+				drawMenuItem(matrixStackIn, x, y, request, mouseX >= x && mouseX < x + GUI_TEXT_MENUITEM_WIDTH && mouseY >= y && mouseY < y + GUI_TEXT_MENUITEM_HEIGHT);
 				i++;
 			}
 			
@@ -266,22 +228,17 @@ public class StorageMonitorScreen extends Screen {
 		
 		matrixStackIn.push();
 		matrixStackIn.translate(0, 0, 1000);
+		//RenderSystem.disableLighting();
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
-		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 0.9f);
-		GlStateManager.color4f(1.0f, 1.0f, 1.0f, 1.0f);
-		GlStateManager.enableLighting();
-		GlStateManager.disableLighting();
-		GlStateManager.disableTexture();
-		GlStateManager.enableTexture();
-		blit(leftOffset, topOffset, 0, 0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT);
+		blit(matrixStackIn, leftOffset, topOffset, 0, 0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT);
 		int sliderX = leftOffset + GUI_INV_SLIDER_HOFFSET;
 		int sliderY = topOffset + GUI_INV_SLIDER_VOFFSET + (int) Math.ceil(GUI_INV_SLIDER_TOTAL_HEIGHT * scroll);
-		drawSlider(sliderX, sliderY,
+		drawSlider(matrixStackIn, sliderX, sliderY,
 				mouseX >= sliderX && mouseX < sliderX + GUI_INV_SLIDER_WIDTH
 				&& mouseY >= sliderY && mouseY < sliderY + GUI_INV_SLIDER_HEIGHT);
 		matrixStackIn.pop();
 		
-		super.render(mouseX, mouseY, p_73863_3_);
+		super.render(matrixStackIn, mouseX, mouseY, p_73863_3_);
 	}
 	
 	@Override

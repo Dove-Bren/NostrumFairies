@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.client.gui;
 import java.util.EnumMap;
 import java.util.Map;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.container.FeyStoneContainerSlot;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
@@ -30,25 +30,21 @@ public final class FeySlotIcon {
 		}
 	}
 	
-	public static void draw(int offsetX, int offsetY, float scale, FeySlotType slot) {
+	public static void draw(MatrixStack matrixStackIn, int offsetX, int offsetY, float scale, FeySlotType slot) {
 		init();
 
         Minecraft.getInstance().getTextureManager().bindTexture(TEXTS.get(slot));
-		GlStateManager.disableLighting();
 		
 		matrixStackIn.push();
 		matrixStackIn.translate(offsetX, offsetY, 0);
 		matrixStackIn.scale(scale, scale, scale);
-		GlStateManager.color4f(1f, 1f, 1f, 1f);
-        RenderFuncs.drawModalRectWithCustomSizedTexture(0, 0, 0, 0, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
+        RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, 0, 0, 0, 0, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
         matrixStackIn.pop();
-        
-        GlStateManager.enableLighting();
 	}
 	
-	public static void draw(FeyStoneContainerSlot slot, float scale) {
+	public static void draw(MatrixStack matrixStackIn, FeyStoneContainerSlot slot, float scale) {
 		// offset to center based on scale, since slots always have a hover of 16x16
 		int offset = (int) (16 * (1f - scale) * .5);
-		draw(slot.xPos + offset, slot.yPos + offset, scale, slot.getType());
+		draw(matrixStackIn, slot.xPos + offset, slot.yPos + offset, scale, slot.getType());
 	}
 }
