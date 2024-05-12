@@ -497,9 +497,9 @@ public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
 				if (entity instanceof PlayerEntity) {
 					PlayerEntity player = (PlayerEntity) entity;
 					player.inventory.addItemStackToInventory(stack.copy());
-					player.world.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, .75f, 2f);
+					player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, .75f, 2f);
 				} else {
-					ItemEntity item = new ItemEntity(entity.world, entity.posX, entity.posY + .5, entity.posZ, stack);
+					ItemEntity item = new ItemEntity(entity.world, entity.getPosX(), entity.getPosY() + .5, entity.getPosZ(), stack);
 					entity.world.addEntity(item);
 				}
 			}

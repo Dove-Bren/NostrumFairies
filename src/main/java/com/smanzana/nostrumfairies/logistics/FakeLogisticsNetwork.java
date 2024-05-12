@@ -17,9 +17,11 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.common.util.Constants.NBT;
 
 /**
@@ -215,7 +217,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 			tag.putDouble(NBT_COMP_LOG_RANGE, logisticsRange);
 			tag.putDouble(NBT_COMP_LINK_RANGE, linkRange);
 			if (world != null) {
-				tag.putInt(NBT_COMP_DIM, world.getDimension().getType().getId());
+				tag.putString(NBT_COMP_DIM, world.getDimensionKey().getLocation().toString());
 			}
 			tag.put(NBT_COMP_POS, NBTUtil.writeBlockPos(pos));
 			
@@ -238,7 +240,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		public static FakeLogisticsComponent fromNBT(CompoundNBT tag) {
 			double logisticsRange = tag.getDouble(NBT_COMP_LOG_RANGE);
 			double linkRange = tag.getDouble(NBT_COMP_LINK_RANGE);
-			int dim = tag.getInt(NBT_COMP_DIM);
+			RegistryKey<World> dim = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(tag.getString(NBT_COMP_DIM)));
 			BlockPos pos = NBTUtil.readBlockPos(tag.getCompound(NBT_COMP_POS));
 			World world = null;
 			
@@ -248,7 +250,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 				items.add(ItemStack.read(list.getCompound(i)));
 			}
 			
-			world = NostrumFairies.getWorld(DimensionType.getById(dim));
+			world = NostrumFairies.getWorld(dim);
 			
 			return new FakeLogisticsComponent(logisticsRange, linkRange, world, pos, items);
 		}
@@ -256,7 +258,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 		public void overrideFromNBT(CompoundNBT tag) {
 			double logisticsRange = tag.getDouble(NBT_COMP_LOG_RANGE);
 			double linkRange = tag.getDouble(NBT_COMP_LINK_RANGE);
-			int dim = tag.getInt(NBT_COMP_DIM);
+			RegistryKey<World> dim = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(tag.getString(NBT_COMP_DIM)));
 			BlockPos pos = NBTUtil.readBlockPos(tag.getCompound(NBT_COMP_POS));
 			World world = null;
 			
@@ -266,7 +268,7 @@ public class FakeLogisticsNetwork extends LogisticsNetwork {
 				items.add(ItemStack.read(list.getCompound(i)));
 			}
 			
-			world = NostrumFairies.getWorld(DimensionType.getById(dim));
+			world = NostrumFairies.getWorld(dim);
 			
 			this.linkRange = linkRange;
 			this.logisticsRange = logisticsRange;

@@ -442,7 +442,7 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		NonNullList<ItemStack> drops = NonNullList.create();
 		if (state.getBlock() instanceof FallingBlock) {
 			// Walk and DESTROY ALL GRAVEL that's up
-			BlockPos.Mutable cursor = new BlockPos.Mutable(block);
+			BlockPos.Mutable cursor = new BlockPos.Mutable().setPos(block);
 			do {
 				drops.addAll(Block.getDrops(state, (ServerWorld) world, cursor, world.getTileEntity(cursor)));
 				world.destroyBlock(cursor, false);
@@ -476,9 +476,9 @@ public class LogisticsTaskMineBlock implements ILogisticsTask {
 		double y;
 		double z;
 		if (fairy instanceof LivingEntity) {
-			x = ((LivingEntity) fairy).posX;
-			y = ((LivingEntity) fairy).posY;
-			z = ((LivingEntity) fairy).posZ;
+			x = ((LivingEntity) fairy).getPosX();
+			y = ((LivingEntity) fairy).getPosY();
+			z = ((LivingEntity) fairy).getPosZ();
 		} else {
 			BlockPos pos = owningComponent.getPosition();
 			x = pos.getX() + .5;

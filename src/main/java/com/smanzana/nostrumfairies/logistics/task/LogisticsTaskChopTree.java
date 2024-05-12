@@ -210,7 +210,7 @@ public class LogisticsTaskChopTree implements ILogisticsTask {
 	
 	private int getTreeHeight() {
 		int count = 0;
-		BlockPos.Mutable pos = new BlockPos.Mutable(trunk);
+		BlockPos.Mutable pos = new BlockPos.Mutable().setPos(trunk);
 		
 		while (WoodcuttingBlock.isTrunkMaterial(world, pos)) {
 			count++;
