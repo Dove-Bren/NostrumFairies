@@ -2,29 +2,31 @@ package com.smanzana.nostrumfairies.utils;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 
 public class Location {
 
 	private BlockPos pos;
-	private DimensionType dimension;
+	private RegistryKey<World> dimension;
 	
-	public Location(BlockPos pos, DimensionType dimension) {
+	public Location(BlockPos pos, RegistryKey<World> dimension) {
 		this.pos = pos;
 		this.dimension = dimension;
 	}
 	
 	public Location(World world, BlockPos pos) {
-		this(pos, world.getDimension().getType());
+		this(pos, world.getDimensionKey());
 	}
 	
 	public BlockPos getPos() {
 		return pos;
 	}
 	
-	public DimensionType getDimension() {
+	public RegistryKey<World> getDimension() {
 		return dimension;
 	}
 	
@@ -35,7 +37,7 @@ public class Location {
 	
 	@Override
 	public int hashCode() {
-		return pos.hashCode() + 277 * dimension.getId();
+		return pos.hashCode() + 277 * dimension.hashCode();
 	}
 	
 	private static final String NBT_DIM = "dim";
@@ -46,7 +48,7 @@ public class Location {
 	}
 	
 	public CompoundNBT toNBT(CompoundNBT tag) {
-		tag.putInt(NBT_DIM, dimension.getId());
+		tag.putString(NBT_DIM, dimension.getLocation().toString());
 		tag.put(NBT_POS, NBTUtil.writeBlockPos(pos));
 		return tag;
 	}
@@ -54,7 +56,7 @@ public class Location {
 	public static Location FromNBT(CompoundNBT tag) {
 		return new Location(
 				NBTUtil.readBlockPos(tag.getCompound(NBT_POS)),
-				DimensionType.getById(tag.getInt(NBT_DIM))
+				RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(tag.getString(NBT_DIM)))
 				);
 	}
 	

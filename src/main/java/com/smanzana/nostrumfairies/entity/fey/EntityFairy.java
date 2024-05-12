@@ -26,7 +26,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.controller.MovementController;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
@@ -273,7 +274,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected void dropItem() {
-		ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, getHeldItem());
+		ItemEntity item = new ItemEntity(this.world, getPosX(), getPosY(), getPosZ(), getHeldItem());
 		world.addEntity(item);
 		this.dataManager.set(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
@@ -470,7 +471,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
 							//if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
-								this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+								this.getMoveHelper().setMoveTo(moveEntity.getPosX(), moveEntity.getPosY(), moveEntity.getPosZ(), 1.0f);
 							//}
 						} else {
 							if (!world.isAirBlock(movePos)) {
@@ -545,14 +546,11 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		// Or if we're idle... wander?
 	}
 
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.4D);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(4.0D);
-		//this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(0.0D);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(0.0D);
-		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+	public static final AttributeModifierMap.MutableAttribute BuildAttributes() {
+		return EntityFeyBase.BuildFeyAttributes()
+				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .4)
+				.createMutableAttribute(Attributes.MAX_HEALTH, 4.0)
+			;
 	}
 	
 	@Override
@@ -567,8 +565,8 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void fall(float distance, float damageMultiplier) {
-		;
+	public boolean onLivingFall(float distance, float damageMultiplier) {
+		return false;
 	}
 	
 	@Override
@@ -613,9 +611,9 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		@Override
 		public void tick() {
 			if (this.action == MovementController.Action.MOVE_TO) {
-				double d0 = this.posX - this.parentEntity.posX;
-				double d1 = this.posY - this.parentEntity.posY;
-				double d2 = this.posZ - this.parentEntity.posZ;
+				double d0 = this.getX() - this.parentEntity.getPosX();
+				double d1 = this.getY() - this.parentEntity.getPosY();
+				double d2 = this.getZ() - this.parentEntity.getPosZ();
 				double d3 = d0 * d0 + d1 * d1 + d2 * d2;
 
 				d3 = (double)MathHelper.sqrt(d3);
@@ -635,7 +633,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 					lastDist = 0.0D;
 					this.action = MovementController.Action.WAIT;
 				} else {
-					float speed = (float) this.parentEntity.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue();
+					float speed = (float) this.parentEntity.getAttribute(Attributes.MOVEMENT_SPEED).getValue();
 					//speed *= 3f;
 					this.parentEntity.setMotion(
 							(d0 / d3) * speed,
@@ -700,7 +698,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	protected void onCientTick() {
 		int color = 0x40CCFFDD;
 		NostrumParticles.GLOW_ORB.spawn(world, new SpawnParams(
-				1, posX, posY + getHeight()/2f, posZ, 0, 40, 0,
+				1, getPosX(), getPosY() + getHeight()/2f, getPosZ(), 0, 40, 0,
 				new Vector3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), null
 				).color(color));
 	}

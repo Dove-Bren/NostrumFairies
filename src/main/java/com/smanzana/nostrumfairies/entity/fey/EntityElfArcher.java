@@ -27,7 +27,8 @@ import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.monster.MonsterEntity;
@@ -222,14 +223,12 @@ public class EntityElfArcher extends EntityElf {
 		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<MonsterEntity>(this, MonsterEntity.class, 5, true, true, this::canEntityBeSeen));
 	}
 
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.28D);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(10.0D);
-		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(4.0D);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
-		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+	public static final AttributeModifierMap.MutableAttribute BuildArcherAttributes() {
+		return EntityElf.BuildAttributes()
+				.createMutableAttribute(Attributes.MAX_HEALTH, 10.0)
+				.createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0)
+				.createMutableAttribute(Attributes.ARMOR, 2.0)
+			;
 	}
 	
 	@Override
@@ -269,9 +268,9 @@ public class EntityElfArcher extends EntityElf {
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;
 			double zdiff = Math.cos(angle / 180.0 * Math.PI) * .4;
 			
-			double x = posX - xdiff;
-			double z = posZ + zdiff;
-			world.addParticle(ParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0);
+			double x = getPosX() - xdiff;
+			double z = getPosZ() + zdiff;
+			world.addParticle(ParticleTypes.DRAGON_BREATH, x, getPosY() + 1.25, z, 0, .015, 0);
 		}
 	}
 	
@@ -284,9 +283,9 @@ public class EntityElfArcher extends EntityElf {
 	protected void shootArrowAt(LivingEntity target, float distanceFactor) {
 		EntityArrowEx entitytippedarrow = new EntityArrowEx(this.world, this);
 		entitytippedarrow.setFilter(ELF_ARCHER_ARROW_FILTER);
-		double d0 = target.posX - this.posX;
-		double d1 = target.getBoundingBox().minY + (double)(target.getHeight() / 3.0F) - entitytippedarrow.posY;
-		double d2 = target.posZ - this.posZ;
+		double d0 = target.getPosX() - this.getPosX();
+		double d1 = target.getBoundingBox().minY + (double)(target.getHeight() / 3.0F) - entitytippedarrow.getPosY();
+		double d2 = target.getPosZ() - this.getPosZ();
 		double d3 = (double)MathHelper.sqrt(d0 * d0 + d2 * d2);
 		entitytippedarrow.shoot(d0, d1 + d3 * 0.20000000298023224D, d2, 1.6F, .5f);
 		int i = EnchantmentHelper.getMaxEnchantmentLevel(Enchantments.POWER, this);

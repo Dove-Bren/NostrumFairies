@@ -10,13 +10,13 @@ public enum ResidentType implements IStringSerializable {
 	GNOME;
 
 	@Override
-	public String getName() {
+	public String getString() {
 		return this.name().toLowerCase();
 	}
 	
 	@Override
 	public String toString() {
-		return this.getName();
+		return this.getString();
 	}
 	
 }

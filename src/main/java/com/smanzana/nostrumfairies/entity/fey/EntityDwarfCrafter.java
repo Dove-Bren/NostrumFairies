@@ -8,7 +8,8 @@ import com.smanzana.nostrumfairies.utils.Paths;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
@@ -83,14 +84,12 @@ public class EntityDwarfCrafter extends EntityDwarf {
 		super.registerGoals();
 	}
 
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.18D);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(18.0D);
-		this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(2.0D);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(4.0D);
-		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+	public static final AttributeModifierMap.MutableAttribute BuildCrafterAttributes() {
+		return EntityDwarf.BuildAttributes()
+				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .18)
+				.createMutableAttribute(Attributes.MAX_HEALTH, 18)
+				.createMutableAttribute(Attributes.ARMOR, 4)
+			;
 	}
 	
 	@Override
@@ -120,6 +119,6 @@ public class EntityDwarfCrafter extends EntityDwarf {
 	
 	@Override
 	protected void playWorkSound() {
-		world.playSound(posX, posY, posZ, SoundEvents.BLOCK_ANVIL_PLACE, SoundCategory.NEUTRAL, .8f, 1.6f, false);
+		world.playSound(getPosX(), getPosY(), getPosZ(), SoundEvents.BLOCK_ANVIL_PLACE, SoundCategory.NEUTRAL, .8f, 1.6f, false);
 	}
 }

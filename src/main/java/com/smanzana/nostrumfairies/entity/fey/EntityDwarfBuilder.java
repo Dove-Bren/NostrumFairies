@@ -12,7 +12,8 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
 import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -74,7 +75,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		
 		// Otherwise try and find a place underneat the build spot to walk to instead
 		BlockPos.Mutable cursor = new BlockPos.Mutable();
-		final int yIncr = 1 * (buildPos.getY() > posY ? -1 : 1);
+		final int yIncr = 1 * (buildPos.getY() > getPosY() ? -1 : 1);
 		
 		boolean lastSolid = true;
 		for (int x = -1; x <= 1; x++)
@@ -199,7 +200,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 				if (movePos == null) {
 					moveEntity = sub.getEntity();
 					if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
-						this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+						this.getMoveHelper().setMoveTo(moveEntity.getPosX(), moveEntity.getPosY(), moveEntity.getPosZ(), 1.0f);
 					}
 				} else {
 					BlockPos betterSpot = findBuildSpot(movePos);
@@ -226,14 +227,13 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		super.registerGoals();
 	}
 
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.22D);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(30.0D);
-		this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(5.0D);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(3.0D);
-		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+	public static final AttributeModifierMap.MutableAttribute BuildBuilderAttributes() {
+		return EntityDwarf.BuildAttributes()
+				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .22)
+				.createMutableAttribute(Attributes.MAX_HEALTH, 30)
+				.createMutableAttribute(Attributes.ATTACK_DAMAGE, 5.0)
+				.createMutableAttribute(Attributes.ARMOR, 3.0)
+			;
 	}
 	
 	@Override
@@ -254,7 +254,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 //			if (this.getPose() == ArmPose.MINING) {
 //				// 20% into animation is the hit
 //				if (this.swingProgressInt == Math.floor(this.getArmSwingAnimationEnd() * .2)) {
-//					NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), world, posX, posY, posZ);
+//					NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), world, getPosX(), getPosY(), getPosZ());
 //				}
 //			}
 //		}

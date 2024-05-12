@@ -8,11 +8,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
-import net.minecraft.entity.projectile.ProjectileHelper;
 import net.minecraft.network.IPacket;
 import net.minecraft.util.EntityPredicates;
-import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkHooks;
 
@@ -53,19 +50,24 @@ public class EntityArrowEx extends ArrowEntity {
 		this.setShooter(shooter);
 		
 		// This is baked in to parent versions that we can't call
-		this.setPosition(shooter.posX, shooter.posY + (double)shooter.getEyeHeight() - 0.10000000149011612D, shooter.posZ);
+		this.setPosition(shooter.getPosX(), shooter.getPosY() + (double)shooter.getEyeHeight() - 0.10000000149011612D, shooter.getPosZ());
 	}
 	
 	public void setFilter(Predicate<Entity> filter) {
 		this.filter = filter;
 	}
 	
-	@Nullable
+//	@Nullable
+//	@Override
+//	protected EntityRayTraceResult rayTraceEntities(Vector3d startVec, Vector3d endVec) {
+//		return ProjectileHelper.rayTraceEntities(this.world, this, startVec, endVec, this.getBoundingBox().expand(this.getMotion()).grow(1.0D), (ent) -> {
+//			return this.filter.test(ent);
+//		});
+//	}
+	
 	@Override
-	protected EntityRayTraceResult func_213866_a(Vector3d start, Vector3d end) { //findEntityOnPath
-		return ProjectileHelper.func_221271_a(this.world, this, start, end, this.getBoundingBox().expand(this.getMotion()).grow(1.0D), (ent) -> {
-			return this.filter.test(ent);
-		});
+	protected boolean func_230298_a_(Entity ent) { // CanHit
+		return super.func_230298_a_(ent) && this.filter.test(ent);
 	}
 	
 	@Override

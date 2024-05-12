@@ -10,8 +10,6 @@ import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.entity.FairyEntities;
 import com.smanzana.nostrumfairies.entity.ResidentType;
-import com.smanzana.nostrumfairies.entity.navigation.PathFinderPublic;
-import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -36,36 +34,25 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.utils.Inventories;
 
-import net.minecraft.block.AbstractRailBlock;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.DoorBlock;
-import net.minecraft.block.FenceGateBlock;
-import net.minecraft.block.LeavesBlock;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.fluid.IFluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathNodeType;
-import net.minecraft.pathfinding.PathType;
-import net.minecraft.pathfinding.WalkNodeProcessor;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
@@ -75,8 +62,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
+import net.minecraft.world.IServerWorld;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -94,124 +80,11 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	public EntityDwarf(EntityType<? extends EntityDwarf> type, World world) {
 		super(type, world);
-		
-		this.navigator = new PathNavigatorLogistics(this, world) {
-			@Override
-			protected PathFinder getPathFinder(int range) {
-				this.nodeProcessor = new WalkNodeProcessor() {
-					// Naturally, copied from vanilla since there isn't a good way to override
-					@Override
-					public PathNodeType getPathNodeType(IBlockReader blockaccessIn, int x, int y, int z) {
-						PathNodeType pathnodetype = this.getPathNodeTypeRaw(blockaccessIn, x, y, z);
-	
-						if (pathnodetype == PathNodeType.OPEN && y >= 1)
-						{
-							Block block = blockaccessIn.getBlockState(new BlockPos(x, y - 1, z)).getBlock();
-							PathNodeType pathnodetype1 = this.getPathNodeTypeRaw(blockaccessIn, x, y - 1, z);
-							pathnodetype = pathnodetype1 != PathNodeType.WALKABLE && pathnodetype1 != PathNodeType.OPEN && pathnodetype1 != PathNodeType.WATER && pathnodetype1 != PathNodeType.LAVA ? PathNodeType.WALKABLE : PathNodeType.OPEN;
-	
-							if (pathnodetype1 == PathNodeType.DAMAGE_FIRE || block == Blocks.MAGMA_BLOCK || block == Blocks.CAMPFIRE)
-							{
-								pathnodetype = PathNodeType.DAMAGE_FIRE;
-							}
-	
-							if (pathnodetype1 == PathNodeType.DAMAGE_CACTUS)
-							{
-								pathnodetype = PathNodeType.DAMAGE_CACTUS;
-							}
-							
-							if (pathnodetype1 == PathNodeType.DAMAGE_OTHER) {
-								pathnodetype = PathNodeType.DAMAGE_OTHER;
-							}
-							if (pathnodetype1 == PathNodeType.DAMAGE_OTHER) pathnodetype = PathNodeType.DAMAGE_OTHER; // Forge: consider modded damage types
-						}
-						
-						pathnodetype = this.checkNeighborBlocks(blockaccessIn, x, y, z, pathnodetype);
-						return pathnodetype;
-	
-//						BlockPos.PooledBlockPos.Mutable blockpos$pooledBlockPos.Mutable = BlockPos.PooledBlockPos.Mutable.retain();
-//	
-//						if (pathnodetype == PathNodeType.WALKABLE)
-//						{
-//							for (int j = -1; j <= 1; ++j)
-//							{
-//								for (int i = -1; i <= 1; ++i)
-//								{
-//									if (j != 0 || i != 0)
-//									{
-//										Block block1 = blockaccessIn.getBlockState(blockpos$pooledBlockPos.Mutable.setPos(j + x, y, i + z)).getBlock();
-//	
-//										if (block1 == Blocks.CACTUS)
-//										{
-//											pathnodetype = PathNodeType.DANGER_CACTUS;
-//										}
-//										else if (block1 == Blocks.FIRE)
-//										{
-//											pathnodetype = PathNodeType.DANGER_FIRE;
-//										}
-//									}
-//								}
-//							}
-//						}
-//	
-//						blockpos$pooledBlockPos.Mutable.release();
-//						return pathnodetype;
-					}
-					
-					@Override
-					protected PathNodeType getPathNodeTypeRaw(IBlockReader blockaccessIn, int x, int y, int z) {
-						BlockPos blockpos = new BlockPos(x, y, z);
-						  BlockState blockstate = blockaccessIn.getBlockState(blockpos);
-						  PathNodeType type = blockstate.getAiPathNodeType(blockaccessIn, blockpos, this.currentEntity);
-						  if (type != null) return type;
-						  Block block = blockstate.getBlock();
-						  Material material = blockstate.getMaterial();
-						  if (blockstate.isAir(blockaccessIn, blockpos)) {
-							 return PathNodeType.OPEN;
-						  } else if (!block.isIn(BlockTags.TRAPDOORS) && block != Blocks.LILY_PAD) {
-							 if (block == Blocks.FIRE) {
-								return PathNodeType.DAMAGE_FIRE;
-							 } else if (block == Blocks.CACTUS) {
-								return PathNodeType.DAMAGE_CACTUS;
-							 } else if (block == Blocks.SWEET_BERRY_BUSH) {
-								return PathNodeType.DAMAGE_OTHER;
-							 } else if (block instanceof DoorBlock && material == Material.WOOD && !blockstate.get(DoorBlock.OPEN)) {
-								return PathNodeType.DOOR_WOOD_CLOSED;
-							 } else if (block instanceof DoorBlock && material == Material.IRON && !blockstate.get(DoorBlock.OPEN)) {
-								return PathNodeType.DOOR_IRON_CLOSED;
-							 } else if (block instanceof DoorBlock && blockstate.get(DoorBlock.OPEN)) {
-								return PathNodeType.DOOR_OPEN;
-							 } else if (block instanceof AbstractRailBlock) {
-								return PathNodeType.RAIL;
-							 } else if (block instanceof LeavesBlock) {
-								return PathNodeType.LEAVES;
-							 } else if (!block.isIn(BlockTags.FENCES) && !block.isIn(BlockTags.WALLS) && (!(block instanceof FenceGateBlock) || blockstate.get(FenceGateBlock.OPEN))) {
-								IFluidState ifluidstate = blockaccessIn.getFluidState(blockpos);
-								if (ifluidstate.isTagged(FluidTags.WATER)) {
-								   return PathNodeType.WATER;
-								}
-								// Turning off fear of lava cause DWARVES
-//								else if (ifluidstate.isTagged(FluidTags.LAVA)) {
-//								   return PathNodeType.LAVA;
-//								}
-								else {
-								   return blockstate.allowsMovement(blockaccessIn, blockpos, PathType.LAND) ? PathNodeType.OPEN : PathNodeType.BLOCKED;
-								}
-							 } else {
-								return PathNodeType.FENCE;
-							 }
-						  } else {
-							 return PathNodeType.TRAPDOOR;
-						  }
-					}
-				};
-				this.nodeProcessor.setCanEnterDoors(true);
-				this.nodeProcessor.setCanSwim(true);
-				this.pathFinder = new PathFinderPublic(this.nodeProcessor, range); int unused; // Why not return this?
-				return new PathFinder(this.nodeProcessor, range);
-			}
-		};
-		
+
+		this.setPathPriority(PathNodeType.WATER, -1.0F);
+		this.setPathPriority(PathNodeType.LAVA, 0.0F);
+		this.setPathPriority(PathNodeType.DANGER_FIRE, 0.0F);
+		this.setPathPriority(PathNodeType.DAMAGE_FIRE, 0.0F);
 	}
 	
 	@Override
@@ -226,12 +99,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	public Lore getBasicLore() {
-		return new Lore("test lore for test fairy lol");
+		return new Lore("Dwarves are a quiet, brooding fey who seem to have an affinity for mining.");
 	}
 
 	@Override
 	public Lore getDeepLore() {
-		return new Lore("test lore for test fairy lol");
+		return new Lore("Dwarves are a quiet, brooding fey who seem to have an affinity for mining.");
 	}
 
 	@Override
@@ -583,7 +456,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			if (heldItem.isEmpty()) {
 				continue;
 			}
-			ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, heldItem);
+			ItemEntity item = new ItemEntity(this.world, getPosX(), getPosY(), getPosZ(), heldItem);
 			world.addEntity(item);
 		}
 		updateItems(new ItemStack[INV_SIZE]);
@@ -716,7 +589,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				for (int x = -3; x <= 3; x++)
 				for (int y = -1; y <= 1; y++)
 				for (int z = -3; z <= 3; z++) {
-					cursor.setPos(posX + x, posY + y, posZ + z);
+					cursor.setPos(getPosX() + x, getPosY() + y, getPosZ() + z);
 					state = world.getBlockState(cursor);
 					if (state != null && state.getBlock() instanceof MagicLight) {
 						FairyBlocks.magicLightBright.refresh(world, cursor.toImmutable());
@@ -754,8 +627,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 					}
 					this.swingArm(getActiveHand());
 					BlockPos pos = sub.getPos();
-					double d0 = pos.getX() - this.posX;
-			        double d2 = pos.getZ() - this.posZ;
+					double d0 = pos.getX() - this.getPosX();
+			        double d2 = pos.getZ() - this.getPosZ();
 					float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 					
 					this.rotationYaw = desiredYaw;
@@ -763,8 +636,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 //				// this is where we'd play some animation?
 //				if (this.onGround) {
 //					BlockPos pos = sub.getPos();
-//					double d0 = pos.getX() - this.posX;
-//			        double d2 = pos.getZ() - this.posZ;
+//					double d0 = pos.getX() - this.getPosX();
+//			        double d2 = pos.getZ() - this.getPosZ();
 //					float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 //					
 //					this.rotationYaw = desiredYaw;
@@ -873,14 +746,13 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		// Or if we're idle... wander?
 	}
 
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.20D);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(24.0D);
-		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(3.0D);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
-		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+	public static final AttributeModifierMap.MutableAttribute BuildAttributes() {
+		return EntityFeyBase.BuildFeyAttributes()
+				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .2)
+				.createMutableAttribute(Attributes.MAX_HEALTH, 24)
+				.createMutableAttribute(Attributes.ATTACK_DAMAGE, 3.0)
+				.createMutableAttribute(Attributes.ARMOR, 2.0)
+			;
 	}
 	
 	private ListNBT inventoryToNBT() {
@@ -944,7 +816,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public ILivingEntityData onInitialSpawn(IWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
+	public ILivingEntityData onInitialSpawn(IServerWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
 		livingdata = super.onInitialSpawn(world, difficulty, reason, livingdata, tag);
 		
 		// Dwarves are 40:60 lefthanded
@@ -1042,7 +914,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected void playWorkSound() {
-		NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), world, posX, posY, posZ);
+		NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), world, getPosX(), getPosY(), getPosZ());
 	}
 	
 	@Override

@@ -9,7 +9,8 @@ import com.smanzana.nostrumfairies.utils.Paths;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
@@ -84,14 +85,12 @@ public class EntityElfCrafter extends EntityElf {
 		super.onIdleTick();
 	}
 	
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.24D);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(4.0D);
-		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(1.0D);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(0.0D);
-		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+	public static final AttributeModifierMap.MutableAttribute BuildCrafterAttributes() {
+		return EntityElf.BuildAttributes()
+				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .24)
+				.createMutableAttribute(Attributes.MAX_HEALTH, 4.0)
+				.createMutableAttribute(Attributes.ATTACK_DAMAGE, 1.0)
+			;
 	}
 	
 	@Override
@@ -117,9 +116,9 @@ public class EntityElfCrafter extends EntityElf {
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;
 			double zdiff = Math.cos(angle / 180.0 * Math.PI) * .4;
 			
-			double x = posX - xdiff;
-			double z = posZ + zdiff;
-			world.addParticle(ParticleTypes.SMOKE, x, posY + 1.25, z, 0, .015, 0);
+			double x = getPosX() - xdiff;
+			double z = getPosZ() + zdiff;
+			world.addParticle(ParticleTypes.SMOKE, x, getPosY() + 1.25, z, 0, .015, 0);
 		}
 	}
 	

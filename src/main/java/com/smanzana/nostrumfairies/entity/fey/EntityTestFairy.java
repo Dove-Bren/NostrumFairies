@@ -27,7 +27,8 @@ import com.smanzana.nostrummagica.utils.Inventories;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
@@ -303,7 +304,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			if (heldItem.isEmpty()) {
 				continue;
 			}
-			ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, heldItem);
+			ItemEntity item = new ItemEntity(this.world, getPosX(), getPosY(), getPosZ(), heldItem);
 			world.addEntity(item);
 		}
 		inventory.clear();
@@ -454,8 +455,8 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				// this is where we'd play some animation?
 				if (this.onGround) {
 					BlockPos pos = sub.getPos();
-					double d0 = pos.getX() - this.posX;
-			        double d2 = pos.getZ() - this.posZ;
+					double d0 = pos.getX() - this.getPosX();
+			        double d2 = pos.getZ() - this.getPosZ();
 					float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 					
 					this.rotationYaw = desiredYaw;
@@ -540,7 +541,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
 							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
-								this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+								this.getMoveHelper().setMoveTo(moveEntity.getPosX(), moveEntity.getPosY(), moveEntity.getPosZ(), 1.0f);
 							}
 						} else {
 							movePos = findEmptySpot(movePos, false);
@@ -568,14 +569,11 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		// Or if we're idle... wander?
 	}
 
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.24D);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(2.0D);
-		//this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(0.0D);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(0.0D);
-		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+	public static final AttributeModifierMap.MutableAttribute BuildAttributes() {
+		return EntityFeyBase.BuildFeyAttributes()
+				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .24)
+				.createMutableAttribute(Attributes.MAX_HEALTH, 2.0)
+			;
 	}
 	
 	private ListNBT inventoryToNBT() {

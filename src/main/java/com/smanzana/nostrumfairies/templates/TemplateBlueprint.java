@@ -20,6 +20,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IServerWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -65,7 +66,7 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 		
 		BlockState placeState = block.getSpawnState(direction);
 		if (placeState != null && !(placeState.getBlock() instanceof TemplateBlock)) {
-			TemplateBlock.SetTemplate(context.world.getWorld(), pos, placeState);
+			TemplateBlock.SetTemplate(((IServerWorld) context.world).getWorld(), pos, placeState);
 			spawnedBlocks.add(pos.toImmutable());
 		} else {
 			; // Templating doesn't mess with air or template blocks

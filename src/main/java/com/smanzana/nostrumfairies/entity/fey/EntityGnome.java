@@ -28,7 +28,8 @@ import com.smanzana.nostrummagica.utils.ItemStacks;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.ItemStack;
@@ -259,7 +260,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	private void dropItem() {
-		ItemEntity item = new ItemEntity(this.world, posX, posY, posZ, getCarriedItem());
+		ItemEntity item = new ItemEntity(this.world, getPosX(), getPosY(), getPosZ(), getCarriedItem());
 		world.addEntity(item);
 		this.dataManager.set(DATA_HELD_ITEM, ItemStack.EMPTY);
 	}
@@ -387,8 +388,8 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 				break;
 			case BREAK: {
 				BlockPos pos = sub.getPos();
-				double d0 = pos.getX() - this.posX;
-		        double d2 = pos.getZ() - this.posZ;
+				double d0 = pos.getX() - this.getPosX();
+		        double d2 = pos.getZ() - this.getPosZ();
 				float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 				
 				this.setPose(ArmPoseGnome.WORKING);
@@ -398,7 +399,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 					// lel what if we sweat? xD
 //					if (ticksExisted % 5 == 0 && getPose() == ArmPose.CHOPPING) {
 //						world.spawnParticle(EnumParticleTypes.DRAGON_BREATH,
-//								posX, posY, posZ,
+//								getPosX(), getPosY(), getPosZ(),
 //								0, 0.3, 0,
 //								new int[0]);
 //					}
@@ -409,7 +410,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 						break;
 					}
 					this.swingArm(this.getActiveHand());
-					NostrumFairiesSounds.GNOME_WORK.play(world, posX, posY, posZ);
+					NostrumFairiesSounds.GNOME_WORK.play(world, getPosX(), getPosY(), getPosZ());
 				}
 				break;
 			}
@@ -495,14 +496,11 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		; // Could panic when they are attacked!
 	}
 
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.21D);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(8.0D);
-		//this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(0.0D);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(0.0D);
-		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+	public static final AttributeModifierMap.MutableAttribute BuildAttributes() {
+		return EntityFeyBase.BuildFeyAttributes()
+				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .21)
+				.createMutableAttribute(Attributes.MAX_HEALTH, 8.0)
+			;
 	}
 	
 	@Override

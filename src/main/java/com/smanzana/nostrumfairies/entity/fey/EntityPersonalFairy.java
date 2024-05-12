@@ -47,7 +47,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -375,7 +376,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				if (this.getDistanceSq(owner) > 3) {
 					if (!this.getMoveHelper().isUpdating() || this.ticksExisted % 10 == 0) {
 						// Move to pickup
-						getMoveHelper().setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
+						getMoveHelper().setMoveTo(owner.getPosX(), owner.getPosY(), owner.getPosZ(), 1);
 					}
 				} else {
 					// At owner. Pickup item for delivery!
@@ -454,8 +455,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		
 		if (distOwnerSq > 1600) {
 			// Teleport. Too far.
-			this.setPosition(owner.posX, owner.posY, owner.posZ);
-			this.getMoveHelper().setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
+			this.setPosition(owner.getPosX(), owner.getPosY(), owner.getPosZ());
+			this.getMoveHelper().setMoveTo(owner.getPosX(), owner.getPosY(), owner.getPosZ(), 1);
 		}
 		
 		// We could play some idle animation or something
@@ -465,7 +466,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		if (!heldItem.isEmpty()) {
 			// Move towards owner
 			if (distOwnerSq > 2) {
-				this.getMoveHelper().setMoveTo(owner.posX, owner.posY, owner.posZ, 1);
+				this.getMoveHelper().setMoveTo(owner.getPosX(), owner.getPosY(), owner.getPosZ(), 1);
 			} else {
 				if (owner instanceof PlayerEntity) {
 					if (((PlayerEntity) owner).inventory.addItemStackToInventory(heldItem.copy())) {
@@ -605,8 +606,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 						if (!held.isEmpty()) {
 							if (held.getItem() instanceof SwordItem || held.getItem() instanceof BowItem) {
 								weaponDrawn = true;
-							} else if (held.getAttributeModifiers(EquipmentSlotType.MAINHAND).containsKey(
-									SharedMonsterAttributes.ATTACK_DAMAGE.getName())) {
+							} else if (held.getAttributeModifiers(EquipmentSlotType.MAINHAND).containsKey(Attributes.ATTACK_DAMAGE)) {
 								weaponDrawn = true;
 							}
 						}
@@ -634,8 +634,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 						if (!held.isEmpty()) {
 							if (held.getItem() instanceof SwordItem || held.getItem() instanceof BowItem) {
 								weaponDrawn = true;
-							} else if (held.getAttributeModifiers(EquipmentSlotType.MAINHAND).containsKey(
-									SharedMonsterAttributes.ATTACK_DAMAGE.getName())) {
+							} else if (held.getAttributeModifiers(EquipmentSlotType.MAINHAND).containsKey(Attributes.ATTACK_DAMAGE)) {
 								weaponDrawn = true;
 							}
 						}
@@ -714,11 +713,10 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		}.setCallsForHelp(EntityPersonalFairy.class));
 	}
 
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(1.0D);
-		resetAttributes(this.getJob());
+	public static final AttributeModifierMap.MutableAttribute BuildPersonalAttributes() {
+		return EntityFairy.BuildAttributes()
+				.createMutableAttribute(Attributes.ATTACK_DAMAGE, 1.0)
+			;
 	}
 	
 	protected void resetAttributes(FairyJob job) {
@@ -737,10 +735,10 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			health = 6.0;
 		}
 		
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(speed);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(health);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(armor);
-		this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(attack);
+		this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(speed);
+		this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(health);
+		this.getAttribute(Attributes.ARMOR).setBaseValue(armor);
+		this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(attack);
 	}
 	
 	@Override
@@ -827,7 +825,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			}
 			if (this.ticksExisted % 5 == 0 && rand.nextBoolean()) {
 				// Building noises
-				world.playSound(posX, posY, posZ, SoundEvents.BLOCK_LADDER_STEP, SoundCategory.NEUTRAL, .4f, 2f, false);
+				world.playSound(getPosX(), getPosY(), getPosZ(), SoundEvents.BLOCK_LADDER_STEP, SoundCategory.NEUTRAL, .4f, 2f, false);
 			}
 		}
 		
@@ -850,7 +848,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		}
 		
 		NostrumParticles.GLOW_ORB.spawn(world, new SpawnParams(
-				1, posX, posY + getHeight()/2f, posZ, 0, 40, 0,
+				1, getPosX(), getPosY() + getHeight()/2f, getPosZ(), 0, 40, 0,
 				new Vector3d(rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125, rand.nextFloat() * .025 - .0125), null
 				).color(color));
 	}

@@ -1,7 +1,6 @@
 package com.smanzana.nostrumfairies.entity;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
@@ -19,13 +18,22 @@ import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 
 import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.biome.MobSpawnInfo;
+import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.common.BiomeDictionary;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
+import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.ObjectHolder;
 
@@ -68,17 +76,54 @@ public class FairyEntities {
 		EntityType<EntityShadowFey> feyType = EntityType.Builder.<EntityShadowFey>create(EntityShadowFey::new, EntityClassification.MONSTER).size(0.6F, .75F).setTrackingRange(128).setUpdateInterval(1).setShouldReceiveVelocityUpdates(false).build("");
 		feyType.setRegistryName(EntityShadowFey.ID);
 		registry.register(feyType);
-		addSpawn(feyType, EntityClassification.MONSTER, 35, 1, 2, BiomeDictionary.getBiomes(BiomeDictionary.Type.MAGICAL));
-		addSpawn(feyType, EntityClassification.MONSTER, 25, 1, 3, BiomeDictionary.getBiomes(BiomeDictionary.Type.FOREST));
-		addSpawn(feyType, EntityClassification.MONSTER, 18, 2, 2, BiomeDictionary.getBiomes(BiomeDictionary.Type.SPOOKY));
-		addSpawn(feyType, EntityClassification.MONSTER, 20, 1, 2, BiomeDictionary.getBiomes(BiomeDictionary.Type.DENSE));
 	}
 	
-	private static void addSpawn(EntityType<? extends MobEntity> entityType, EntityClassification classification, int itemWeight, int minGroupCount, int maxGroupCount, Collection<Biome> biomes) {
-		for (Biome biome : biomes) {
-			List<Biome.SpawnListEntry> spawns = biome.getSpawns(classification);
-			spawns.add(new Biome.SpawnListEntry(entityType, itemWeight, minGroupCount, maxGroupCount));
+	@SubscribeEvent
+	public static void registerEntityPlacement(FMLCommonSetupEvent event) {
+		EntitySpawnPlacementRegistry.register(ShadowFey, EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, MonsterEntity::canMonsterSpawnInLight);
+		
+		// Can't mix buses, so manually register spawn handling to the game bus
+		MinecraftForge.EVENT_BUS.addListener(FairyEntities::registerSpawns);
+	}
+	
+	public static final void registerSpawns(BiomeLoadingEvent event) {
+		final Set<BiomeDictionary.Type> types = BiomeDictionary.getTypes(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, event.getName()));
+		
+		final boolean magical = types.contains(BiomeDictionary.Type.MAGICAL);
+		final boolean forest = types.contains(BiomeDictionary.Type.FOREST);
+		final boolean spooky = types.contains(BiomeDictionary.Type.SPOOKY);
+		final boolean dense = types.contains(BiomeDictionary.Type.DENSE);
+		
+		if (magical) {
+			addSpawn(event, ShadowFey, EntityClassification.MONSTER, 35, 1, 2);
+		} else if (forest) {
+			addSpawn(event, ShadowFey, EntityClassification.MONSTER, 25, 1, 3);
+		} else if (spooky) {
+			addSpawn(event, ShadowFey, EntityClassification.MONSTER, 18, 2, 2);
+		} else if (dense) {
+			addSpawn(event, ShadowFey, EntityClassification.MONSTER, 20, 1, 2);
 		}
+	}
+	
+	private static void addSpawn(BiomeLoadingEvent event, EntityType<? extends MobEntity> entityType, EntityClassification classification, int itemWeight, int minGroupCount, int maxGroupCount) {
+		event.getSpawns().getSpawner(classification).add(new MobSpawnInfo.Spawners(entityType, itemWeight, minGroupCount, maxGroupCount));
+	}
+	
+	@SubscribeEvent
+	public static void registerAttributes(EntityAttributeCreationEvent event) {
+		event.put(Dwarf, EntityDwarf.BuildAttributes().create());
+		event.put(DwarfBuilder, EntityDwarfBuilder.BuildBuilderAttributes().create());
+		event.put(DwarfCrafter, EntityDwarfCrafter.BuildCrafterAttributes().create());
+		event.put(Elf, EntityElf.BuildAttributes().create());
+		event.put(ElfArcher, EntityElfArcher.BuildArcherAttributes().create());
+		event.put(ElfCrafter, EntityElfCrafter.BuildCrafterAttributes().create());
+		event.put(Fairy, EntityFairy.BuildAttributes().create());
+		event.put(Gnome, EntityGnome.BuildAttributes().create());
+		event.put(GnomeCollector, EntityGnomeCollector.BuildCollectorAttributes().create());
+		event.put(GnomeCrafter, EntityGnomeCrafter.BuildCrafterAttributes().create());
+		event.put(PersonalFairy, EntityPersonalFairy.BuildAttributes().create());
+		event.put(ShadowFey, EntityShadowFey.BuildAttributes().create());
+		event.put(TestFairy, EntityTestFairy.BuildAttributes().create());
 	}
 	
 }

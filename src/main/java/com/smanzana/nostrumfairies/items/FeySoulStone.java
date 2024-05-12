@@ -405,7 +405,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			
 			ResidentType type = getStoredFeyType(stack);
 			if (type != null) {
-				tooltip.add(new StringTextComponent(type.getName()).mergeStyle(TextFormatting.DARK_AQUA));
+				tooltip.add(new StringTextComponent(type.getString()).mergeStyle(TextFormatting.DARK_AQUA));
 			}
 		}
 	}

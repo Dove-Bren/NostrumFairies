@@ -29,6 +29,7 @@ import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
+import com.smanzana.nostrummagica.utils.DimensionUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -36,7 +37,8 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.passive.GolemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.AxeItem;
@@ -548,7 +550,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 				if (this.getIdleSound() != null) {
 					if (world.isRemote) {
 						if (idleChatTicks == 0) {
-							getIdleSound().play(NostrumFairies.proxy.getPlayer(), world, posX, posY, posZ);
+							getIdleSound().play(NostrumFairies.proxy.getPlayer(), world, getPosX(), getPosY(), getPosZ());
 							idleChatTicks = -1;
 						}
 						
@@ -684,7 +686,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 				for (int x = -radius; x <= radius; x++)
 				for (int z = -radius; z <= radius; z++)
 				for (int y = -radius; y <= radius; y++) {
-					cursor.setPos(posX + x, posY + y, posZ + z);
+					cursor.setPos(getPosX() + x, getPosY() + y, getPosZ() + z);
 					if (!NostrumMagica.isBlockLoaded(world, cursor)) {
 						continue;
 					}
@@ -731,7 +733,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 				
 				World world = ILogisticsTask.GetSourceWorld(task);
 				BlockPos pos = ILogisticsTask.GetSourcePosition(task);
-				if (world.getDimension().getType() != this.dimension) {
+				if (DimensionUtils.SameDimension(world, this.world)) {
 					return false;
 				}
 				
@@ -991,7 +993,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 	public boolean attackEntityAsMob(Entity entityIn) {
 		// Copied from MonsterEntity
 		
-		float f = (float)this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
+		float f = (float)this.getAttribute(Attributes.ATTACK_DAMAGE).getValue();
 		int i = 0;
 
 		if (entityIn instanceof LivingEntity) {
@@ -1003,7 +1005,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 
 		if (flag) {
 			if (i > 0 && entityIn instanceof LivingEntity) {
-				((LivingEntity)entityIn).knockBack(this, (float)i * 0.5F, (double)MathHelper.sin(this.rotationYaw * 0.017453292F), (double)(-MathHelper.cos(this.rotationYaw * 0.017453292F)));
+				((LivingEntity)entityIn).applyKnockback((float)i * 0.5F, (double)MathHelper.sin(this.rotationYaw * 0.017453292F), (double)(-MathHelper.cos(this.rotationYaw * 0.017453292F)));
 				this.setMotion(this.getMotion().mul(0.6, 1, 0.6));
 			}
 
@@ -1075,7 +1077,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 	}
 	
 	protected final boolean isSolid(World world, BlockPos pos, Direction direction) {
-		return Block.hasSolidSide(world.getBlockState(pos), world, pos, direction);
+		return Block.hasEnoughSolidSide(world, pos, direction);
 	}
 	
 	protected @Nullable BlockPos findEmptySpot(BlockPos targetPos, boolean allOrNothing) {
@@ -1083,7 +1085,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 			do {
 				if (world.isAirBlock(targetPos.north())) {
 					final boolean belowIsAir = world.isAirBlock(targetPos.north().down());
-					if (!belowIsAir && Block.hasSolidSide(world.getBlockState(targetPos.north().down()), world, targetPos.north().down(), Direction.UP)) {
+					if (!belowIsAir && Block.hasEnoughSolidSide(world, targetPos.north().down(), Direction.UP)) {
 						targetPos = targetPos.north();
 						break;
 					} else if (belowIsAir && isSolid(world, targetPos.north().down().down(), Direction.UP)) {
@@ -1173,9 +1175,9 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 	
 	protected void copyFrom(EntityFeyBase other) {
 		this.setUniqueId(other.getUniqueID());
-		this.setPositionAndRotation(other.posX, other.posY, other.posZ, other.rotationYaw, other.rotationPitch);
+		this.setPositionAndRotation(other.getPosX(), other.getPosY(), other.getPosZ(), other.rotationYaw, other.rotationPitch);
 		this.setHappiness(other.getHappiness());
-		this.dataManager.set(NAME, other.getName().getFormattedText());
+		this.dataManager.set(NAME, other.getName().getString());
 		HomeBlockTileEntity ent = other.getHomeEnt();
 		if (ent != null) {
 			BlockPos pos = other.getHome();
@@ -1238,7 +1240,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 			if (movePos == null) {
 				moveEntity = sub.getEntity();
 				if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
-					this.getMoveHelper().setMoveTo(moveEntity.posX, moveEntity.posY, moveEntity.posZ, 1.0f);
+					this.getMoveHelper().setMoveTo(moveEntity.getPosX(), moveEntity.getPosY(), moveEntity.getPosZ(), 1.0f);
 				}
 			} else {
 				movePos = findEmptySpot(movePos, allOrNothingMovement);
@@ -1318,7 +1320,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 	
 	protected static boolean FeyFollowNearby(EntityFeyBase fey, Predicate<? super Entity> filter, boolean lazy, double maxSightDist, double minFollowDist, double maxFollowDist) {
 		List<Entity> ents = fey.world.getEntitiesInAABBexcluding(fey,
-				new AxisAlignedBB(fey.posX - maxSightDist, fey.posY - maxSightDist, fey.posZ - maxSightDist, fey.posX + maxSightDist, fey.posY + maxSightDist, fey.posZ + maxSightDist),
+				new AxisAlignedBB(fey.getPosX() - maxSightDist, fey.getPosY() - maxSightDist, fey.getPosZ() - maxSightDist, fey.getPosX() + maxSightDist, fey.getPosY() + maxSightDist, fey.getPosZ() + maxSightDist),
 				filter);
 		
 		LivingEntity target = null;
@@ -1388,4 +1390,11 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 		}
 		
 	};
+	
+	protected static final AttributeModifierMap.MutableAttribute BuildFeyAttributes() {
+		return GolemEntity.func_233666_p_()
+			.createMutableAttribute(Attributes.FOLLOW_RANGE, Math.sqrt(MAX_FAIRY_DISTANCE_SQ))
+			.createMutableAttribute(Attributes.ATTACK_DAMAGE)
+		;
+	}
 }

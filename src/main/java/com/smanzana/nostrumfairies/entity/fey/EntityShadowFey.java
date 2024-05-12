@@ -12,7 +12,7 @@ import com.smanzana.nostrumfairies.items.FairyItems;
 import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
-import com.smanzana.nostrummagica.attributes.AttributeMagicResist;
+import com.smanzana.nostrummagica.attributes.NostrumAttributes;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
@@ -35,8 +35,9 @@ import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.LookAtGoal;
@@ -63,6 +64,7 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.IServerWorld;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -198,15 +200,15 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		}));
 	}
 
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.24D);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(14.0D);
-		this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(4.0D);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
-		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(20.0);
-		this.getAttribute(AttributeMagicResist.instance()).setBaseValue(0.0D);
+	public static final AttributeModifierMap.MutableAttribute BuildAttributes() {
+		return MonsterEntity.func_234295_eP_()
+				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .24)
+				.createMutableAttribute(Attributes.MAX_HEALTH, 14.0)
+				.createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0)
+				.createMutableAttribute(Attributes.ARMOR, 2.0)
+				.createMutableAttribute(Attributes.FOLLOW_RANGE, 20.0)
+				.createMutableAttribute(NostrumAttributes.magicResist, 0)
+			;
 	}
 	
 	@Override
@@ -240,7 +242,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			this.idleTicks++;
 			if (world.isRemote) {
 				if (idleChatTicks == 0) {
-					NostrumFairiesSounds.SHADOW_FEY_IDLE.play(NostrumFairies.proxy.getPlayer(), world, posX, posY, posZ);
+					NostrumFairiesSounds.SHADOW_FEY_IDLE.play(NostrumFairies.proxy.getPlayer(), world, getPosX(), getPosY(), getPosZ());
 					idleChatTicks = -1;
 				}
 				
@@ -274,9 +276,9 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	protected void shootArrowAt(LivingEntity target, float distanceFactor) {
 		EntityArrowEx entitytippedarrow = new EntityArrowEx(this.world, this);
 		entitytippedarrow.setFilter(SHADOW_FEY_ARROW_FILTER);
-		double d0 = target.posX - this.posX;
-		double d1 = target.getBoundingBox().minY + (double)(target.getHeight() / 3.0F) - entitytippedarrow.posY;
-		double d2 = target.posZ - this.posZ;
+		double d0 = target.getPosX() - this.getPosX();
+		double d1 = target.getBoundingBox().minY + (double)(target.getHeight() / 3.0F) - entitytippedarrow.getPosY();
+		double d2 = target.getPosZ() - this.getPosZ();
 		double d3 = (double)MathHelper.sqrt(d0 * d0 + d2 * d2);
 		entitytippedarrow.shoot(d0, d1 + d3 * 0.20000000298023224D, d2, 1.6F, .5f);
 		int i = EnchantmentHelper.getMaxEnchantmentLevel(Enchantments.POWER, this);
@@ -404,13 +406,13 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			break;
 		}
 		fey.copyLocationAndAnglesFrom(this);
-		fey.onInitialSpawn(world, world.getDifficultyForLocation(new BlockPos(fey)), SpawnReason.CONVERSION, (ILivingEntityData)null, null);
+		fey.onInitialSpawn((IServerWorld) world, world.getDifficultyForLocation(fey.getPosition()), SpawnReason.CONVERSION, (ILivingEntityData)null, null);
 		
 		this.remove();
 		world.addEntity(fey);
 		fey.setCursed(true);
 		
-		this.world.playEvent((PlayerEntity)null, 1027, new BlockPos((int)this.posX, (int)this.posY, (int)this.posZ), 0);
+		this.world.playEvent((PlayerEntity)null, 1027, new BlockPos((int)this.getPosX(), (int)this.getPosY(), (int)this.getPosZ()), 0);
 		
 		for (PlayerEntity player : ((ServerWorld) world).getPlayers()) {
 			if (player.getDistanceSq(this) < 36) {
@@ -461,7 +463,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	}
 	
 	@Override
-	public ILivingEntityData onInitialSpawn(IWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
+	public ILivingEntityData onInitialSpawn(IServerWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
 		livingdata = super.onInitialSpawn(world, difficulty, reason, livingdata, tag);
 		
 		this.setLeftHanded(this.rand.nextBoolean());
@@ -473,7 +475,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	public boolean canSpawn(IWorld worldIn, SpawnReason spawnReasonIn) {
 		// Shadow fey amass ar mies in the twilight forest. So let's make sure to only spawn them when other things can spawn.
 		if ((spawnReasonIn == SpawnReason.NATURAL || spawnReasonIn == SpawnReason.CHUNK_GENERATION)
-				&& this.world.getBiome(this.getPosition()).getSpawns(EntityClassification.MONSTER).size() <= 2) {
+				&& this.world.getBiome(this.getPosition()).getMobSpawnInfo().getSpawners(EntityClassification.MONSTER).size() <= 2) {
 			return false;
 		}
 		

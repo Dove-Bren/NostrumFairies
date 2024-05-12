@@ -32,8 +32,9 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.item.ItemStack;
@@ -50,7 +51,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IWorld;
+import net.minecraft.world.IServerWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
@@ -300,8 +301,8 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			case BREAK:
 				setPose(ArmPoseElf.WORKING);
 				BlockPos pos = sub.getPos();
-				double d0 = pos.getX() - this.posX;
-		        double d2 = pos.getZ() - this.posZ;
+				double d0 = pos.getX() - this.getPosX();
+		        double d2 = pos.getZ() - this.getPosZ();
 				float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 				this.setRotation(desiredYaw, .2f);
 				//this.rotationYaw = desiredYaw;
@@ -310,12 +311,12 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 					// On the client, spawn some particles if we're using our wand
 					if (ticksExisted % 5 == 0 && getElfPose() == ArmPoseElf.WORKING) {
 						world.addParticle(ParticleTypes.DRAGON_BREATH,
-								posX, posY, posZ,
+								getPosX(), getPosY(), getPosZ(),
 								0, 0.3, 0
 								);
 					}
 					if (taskTickCount % 15 == 0 && getElfPose() == ArmPoseElf.WORKING && rand.nextBoolean()) {
-						world.playSound(null, posX, posY, posZ, SoundEvents.BLOCK_WOOD_HIT, SoundCategory.NEUTRAL, 1f, 1.6f);
+						world.playSound(null, getPosX(), getPosY(), getPosZ(), SoundEvents.BLOCK_WOOD_HIT, SoundCategory.NEUTRAL, 1f, 1.6f);
 					}
 				} else {
 					task.markSubtaskComplete();
@@ -420,14 +421,11 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setCallsForHelp(EntityElf.class));
 	}
 
-	@Override
-	protected void registerAttributes() {
-		super.registerAttributes();
-		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.28D);
-		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(8.0D);
-		//this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(0.0D);
-		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(0.0D);
-		this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(Math.sqrt(MAX_FAIRY_DISTANCE_SQ));
+	public static final AttributeModifierMap.MutableAttribute BuildAttributes() {
+		return EntityFeyBase.BuildFeyAttributes()
+				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .28)
+				.createMutableAttribute(Attributes.MAX_HEALTH, 8.0)
+			;
 	}
 	
 	@Override
@@ -499,7 +497,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 	
 	@Override
-	public ILivingEntityData onInitialSpawn(IWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
+	public ILivingEntityData onInitialSpawn(IServerWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
 		livingdata = super.onInitialSpawn(world, difficulty, reason, livingdata, tag);
 		
 		// Elves are 70:30 lefthanded
@@ -531,9 +529,9 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;
 			double zdiff = Math.cos(angle / 180.0 * Math.PI) * .4;
 			
-			double x = posX - xdiff;
-			double z = posZ + zdiff;
-			world.addParticle(ParticleTypes.DRAGON_BREATH, x, posY + 1.25, z, 0, .015, 0);
+			double x = getPosX() - xdiff;
+			double z = getPosZ() + zdiff;
+			world.addParticle(ParticleTypes.DRAGON_BREATH, x, getPosY() + 1.25, z, 0, .015, 0);
 		}
 	}
 
