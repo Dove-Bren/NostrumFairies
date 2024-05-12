@@ -27,7 +27,7 @@ public class CompositePath extends Path {
 	private int cachedCurrPathIndex;
 	
 	public CompositePath(List<Path> paths) {
-		super(new ArrayList<>(), paths.get(paths.size() - 1).func_224770_k(), paths.get(paths.size() - 1).func_224771_h());
+		super(new ArrayList<>(), paths.get(paths.size() - 1).getTarget(), paths.get(paths.size() - 1).reachesTarget());
 		this.paths = fixPaths(paths);
 		compoundPathIndex = 0;
 		
@@ -269,9 +269,9 @@ public class CompositePath extends Path {
 
 	@OnlyIn(Dist.CLIENT)
 	@Override
-	public BlockPos func_224770_k() { // getTarget
+	public BlockPos getTarget() { // getTarget
 		refreshCache(false);
-		return this.cachedCurrPath.func_224770_k();
+		return this.cachedCurrPath.getTarget();
 	}
 	
 	

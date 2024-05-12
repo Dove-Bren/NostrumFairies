@@ -121,7 +121,7 @@ public class FairyEntities {
 		event.put(Gnome, EntityGnome.BuildAttributes().create());
 		event.put(GnomeCollector, EntityGnomeCollector.BuildCollectorAttributes().create());
 		event.put(GnomeCrafter, EntityGnomeCrafter.BuildCrafterAttributes().create());
-		event.put(PersonalFairy, EntityPersonalFairy.BuildAttributes().create());
+		event.put(PersonalFairy, EntityPersonalFairy.BuildPersonalAttributes().create());
 		event.put(ShadowFey, EntityShadowFey.BuildAttributes().create());
 		event.put(TestFairy, EntityTestFairy.BuildAttributes().create());
 	}
