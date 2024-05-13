@@ -35,7 +35,7 @@ import net.minecraft.world.World;
 /*
  * Travel to a location and place a block there
  */
-public class LogisticsTaskPlaceBlock implements ILogisticsTask {
+public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 	
 	protected static enum Phase {
 		IDLE,

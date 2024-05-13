@@ -42,6 +42,7 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 				.hardnessAndResistance(2.0f, 1.0f)
 				.sound(SoundType.WOOD)
 				.harvestTool(ToolType.AXE)
+				.notSolid()
 				);
 	}
 	

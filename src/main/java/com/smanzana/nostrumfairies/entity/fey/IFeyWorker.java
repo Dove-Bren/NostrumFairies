@@ -2,13 +2,12 @@ package com.smanzana.nostrumfairies.entity.fey;
 
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
-import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsWorker;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 
 import net.minecraft.util.math.BlockPos;
 
-public interface IFeyWorker {
+public interface IFeyWorker extends ILogisticsWorker {
 
 	// Suggested maximum fairy work distance.
 	// Note: If this is larger, path finding starts to break down since MC limits
@@ -28,20 +27,4 @@ public interface IFeyWorker {
 	 */
 	@Nullable
 	public BlockPos getHome();
-	
-	/**
-	 * Return the current task a fairy is working on.
-	 * It's expected that a status of 'WORKING' means this will return something,
-	 * while calling while IDLE would not.
-	 * @return The current task if there is one, or null.
-	 */
-	public @Nullable ILogisticsTask getCurrentTask();
-	
-	/**
-	 * A task claimed by this fairy is no longer needed. Drop it.
-	 */
-	public void dropTask(ILogisticsTask task);
-	
-	public @Nullable LogisticsNetwork getLogisticsNetwork();
-	
 }

@@ -56,6 +56,7 @@ public class MagicLight extends Block {
 				.tickRandomly()
 				.setLightLevel((s) -> brightness.lightLevel)
 				.noDrops()
+				.notSolid()
 				);
 		this.brightness = brightness;
 	}

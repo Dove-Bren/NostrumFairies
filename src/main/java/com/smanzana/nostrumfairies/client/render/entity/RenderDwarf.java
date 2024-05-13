@@ -34,6 +34,11 @@ public class RenderDwarf<T extends EntityDwarf> extends MobRenderer<T, ModelDwar
 	
 	@Override
 	public void render(T entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
+		{
+			this.modelLeft = new ModelDwarf<>(true);
+			this.modelRight = new ModelDwarf<>(false);
+		}
+		
 		// Swap out model based on the dwarf
 		if (entityIn.isLeftHanded()) {
 			this.entityModel = this.modelLeft;

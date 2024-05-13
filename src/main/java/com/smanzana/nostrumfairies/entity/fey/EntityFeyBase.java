@@ -310,6 +310,11 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 		return currentTask;
 	}
 	
+	@Override
+	public String getLogisticsID() {
+		return "Fey-" + this.getType().getName().getString() + "-" + this.getEntityId();
+	}
+	
 	protected void forceSetTask(@Nullable ILogisticsTask task) {
 		ILogisticsTask oldtask = this.getCurrentTask();
 		this.currentTask = task;
@@ -733,7 +738,7 @@ public abstract class EntityFeyBase extends GolemEntity implements IFeyWorker, I
 				
 				World world = ILogisticsTask.GetSourceWorld(task);
 				BlockPos pos = ILogisticsTask.GetSourcePosition(task);
-				if (DimensionUtils.SameDimension(world, this.world)) {
+				if (!DimensionUtils.SameDimension(world, this.world)) {
 					return false;
 				}
 				

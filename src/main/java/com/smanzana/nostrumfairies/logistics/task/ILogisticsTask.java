@@ -18,6 +18,13 @@ import net.minecraft.world.World;
  *
  */
 public interface ILogisticsTask {
+	
+	/**
+	 * Return a unique-ish ID for this task.
+	 * ID should be unique per the network the task is in, which tasks have low visibility into.
+	 * @return
+	 */
+	public int getTaskID();
 
 	/**
 	 * Return the display name of the task

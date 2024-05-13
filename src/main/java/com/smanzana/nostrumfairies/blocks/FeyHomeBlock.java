@@ -180,10 +180,10 @@ public class FeyHomeBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public void breakBlock(World world, BlockPos pos, BlockState state) {
-		this.destroy(world, pos, state);
+	public void breakBlock(World world, BlockPos pos, BlockState oldState) {
+		this.destroy(world, pos, oldState);
 		world.removeTileEntity(pos);
-		super.breakBlock(world, pos, state);
+		super.breakBlock(world, pos, oldState);
 	}
 	
 	@Override

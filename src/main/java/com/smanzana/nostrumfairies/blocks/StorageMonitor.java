@@ -46,6 +46,7 @@ public class StorageMonitor extends FeyContainerBlock {
 				.hardnessAndResistance(2.0f, 1.0f)
 				.sound(SoundType.WOOD)
 				.setLightLevel((s) -> 4)
+				.notSolid()
 				);
 	}
 	

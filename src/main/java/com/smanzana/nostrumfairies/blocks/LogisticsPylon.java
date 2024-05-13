@@ -34,6 +34,7 @@ public class LogisticsPylon extends FeyContainerBlock {
 				.hardnessAndResistance(2.0f, 1.0f)
 				.sound(SoundType.STONE)
 				.harvestTool(ToolType.PICKAXE)
+				.notSolid()
 				);
 	}
 	

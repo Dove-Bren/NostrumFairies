@@ -32,7 +32,9 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 	private static final int ELF_TEX_W = 64;
 	private static final int ELF_TEX_H = 32;
 	
-	public ModelElf(boolean leftHanded) {}
+	public ModelElf(boolean leftHanded) {
+		this(leftHanded, RenderType::getEntityCutoutNoCull);
+	}
 	
 	public ModelElf(boolean leftHanded, Function<ResourceLocation, RenderType> renderTypeMap) {
 		super(renderTypeMap);
@@ -143,6 +145,7 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 		
 		body.rotateAngleY = 0;
 		body.rotateAngleX = 0;
+		body.offsetY = 0;
 		head.rotateAngleX = headAngleX * 0.017453292F;
 		head.rotateAngleY = headAngleY * 0.017453292F;
 		
@@ -156,13 +159,24 @@ public class ModelElf<T extends Entity> extends EntityModel<T> {
 		armRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 2.0F * limbSwingAmount * 0.5F;
 		armRight.rotateAngleZ = 0;
 		armRight.rotateAngleY = 0;
+		armRight.offsetY = (-7f / 16f);
+		armRight.offsetX = (-(4 + 1.5f) / 16f);
+		armRight.offsetZ = 0;
 		armLeft.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F;
 		armLeft.rotateAngleZ = 0;
 		armLeft.rotateAngleY = 0;
-		
+		armLeft.offsetY = (-7f / 16f);
+		armLeft.offsetX = ((4 + 1.5f) / 16f);
+		armLeft.offsetZ = 0;
 		
 		legRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+		legRight.offsetY = (7f / 16f);
+		legRight.offsetX = (-2f / 16f);
+		legRight.offsetZ = 0;
 		legLeft.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
+		legLeft.offsetY = (7f / 16f);
+		legLeft.offsetX = (2f / 16f);
+		legLeft.offsetZ = 0;
 		
 		//if (elf.isSwingInProgress || elf.getPose() != ArmPose.IDLE) {
 		if (swingProgress > 0 || !isIdle) {

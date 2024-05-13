@@ -85,7 +85,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				matrixStackIn.translate(.5, 1.05, .5);
 				for (ILogisticsComponent component : neighbors) {
 					final Vector3d offset = Vector3d.copyCentered(component.getPosition().toImmutable().subtract(te.getPos()));
-					this.renderLine(matrixStackIn, buffer, combinedLightIn, offset, intervals, 1f, 1f, 1f, alpha);
+					this.renderLine(matrixStackIn, buffer, 15728880, offset, intervals, 1f, 1f, 1f, alpha);
 				}
 				
 				matrixStackIn.pop();

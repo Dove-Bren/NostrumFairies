@@ -21,7 +21,7 @@ import net.minecraft.world.World;
 /*
  * Go to and then chop down a tree. Does not pick up the items.
  */
-public class LogisticsTaskChopTree implements ILogisticsTask {
+public class LogisticsTaskChopTree extends LogisticsTaskBase {
 	
 	private static enum Phase {
 		IDLE,

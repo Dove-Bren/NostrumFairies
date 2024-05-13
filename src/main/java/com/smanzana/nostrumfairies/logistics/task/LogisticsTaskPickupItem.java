@@ -22,7 +22,7 @@ import net.minecraft.util.math.BlockPos;
 /*
  * Pick up an item and then deposit it somewhere in the network
  */
-public class LogisticsTaskPickupItem implements ILogisticsTask {
+public class LogisticsTaskPickupItem extends LogisticsTaskBase {
 	
 	private static enum Phase {
 		IDLE,

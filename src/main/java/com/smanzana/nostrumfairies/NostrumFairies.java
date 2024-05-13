@@ -10,9 +10,12 @@ import org.apache.logging.log4j.Logger;
 import com.smanzana.nostrumfairies.capabilities.AttributeProvider;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry;
+import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsRegistry;
+import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.proxy.ClientProxy;
 import com.smanzana.nostrumfairies.proxy.CommonProxy;
 import com.smanzana.nostrummagica.utils.DimensionUtils;
@@ -137,5 +140,36 @@ public class NostrumFairies {
     		return null;
     	
     	return e.getCapability(AttributeProvider.CAPABILITY, null).orElse(null);
+    }
+    
+    static boolean LogisticsLogging = false;
+    
+    public static void LogLogistics(@Nullable LogisticsNetwork network, @Nullable ILogisticsTask task, @Nullable IFeyWorker worker, String msg) {
+    	if (LogisticsLogging) {
+    		StringBuilder buffer = new StringBuilder();
+    		if (network != null) {
+    			buffer.append('[');
+    			buffer.append(network.getUUID().toString().substring(28));
+    			buffer.append(']');
+    			buffer.append(' ');
+    		}
+    		
+    		if (task != null) {
+    			buffer.append("<[");
+    			buffer.append(task.getTaskID());
+    			buffer.append(']');
+    			buffer.append(task.getDisplayName());
+    			buffer.append("> ");
+    		}
+    		
+    		if (worker != null) {
+    			buffer.append('{');
+    			buffer.append(worker.getLogisticsID());
+    			buffer.append("} ");
+    		}
+    		
+    		buffer.append(msg);
+    		logger.debug(buffer.toString());
+    	}
     }
 }

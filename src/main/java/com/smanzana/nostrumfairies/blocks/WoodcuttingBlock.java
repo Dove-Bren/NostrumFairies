@@ -123,7 +123,7 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	}
 	
 	public static boolean isTrunkMaterial(BlockState state) {
-		return BlockTags.LOGS.contains(state.getBlock());
+		return BlockTags.LOGS.contains(state.getBlock()) && !(state.getBlock() instanceof FeyHomeBlock);
 	}
 	
 	public static boolean isTrunkMaterial(World world, BlockPos pos) {
@@ -138,6 +138,11 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 		
 		// Then, check if there's also trunk material below. We only count the base.
 		if (isTrunkMaterial(world, base.down())) {
+			return false;
+		}
+		
+		// Make sure it's not the tree no top of a fey house
+		if (world.getBlockState(base.down()).getBlock() instanceof FeyHomeBlock) {
 			return false;
 		}
 		

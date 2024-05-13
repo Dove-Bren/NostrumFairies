@@ -17,7 +17,7 @@ import net.minecraft.world.World;
 /*
  * Go to a block and then 'work' it until something signals it's done.
  */
-public abstract class LogisticsTaskWorkBlock implements ILogisticsTask {
+public abstract class LogisticsTaskWorkBlock extends LogisticsTaskBase {
 	
 	private static enum Phase {
 		IDLE,

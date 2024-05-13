@@ -496,7 +496,7 @@ public class HomeBlockGui {
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
-			super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
+			//super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 			
 			setIsItemRender(false);
 			

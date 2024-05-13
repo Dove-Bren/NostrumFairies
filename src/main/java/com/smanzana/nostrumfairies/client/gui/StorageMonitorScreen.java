@@ -141,9 +141,9 @@ public class StorageMonitorScreen extends Screen {
 			Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(stack.getTemplate(), x + 1, y + 1);
 			
 			matrixStackIn.push();
-			matrixStackIn.translate(0, 0, 1000);
+			matrixStackIn.translate(0, 0, 200);
 			RenderFuncs.drawRect(matrixStackIn, x + 1, y + (GUI_INV_CELL_LENGTH - 6) , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60000000);
-			matrixStackIn.translate(x + GUI_INV_CELL_LENGTH + (-2) + (-width / 2), y + GUI_INV_CELL_LENGTH + (-height / 2) - 1, 0);
+			matrixStackIn.translate(x + GUI_INV_CELL_LENGTH + (-2) + (-width / 2), y + GUI_INV_CELL_LENGTH + (-height / 2) - 1, 5);
 			matrixStackIn.scale(.5f, .5f, 1f);
 			this.font.drawStringWithShadow(matrixStackIn, count, 0, 0, 0xFFFFFFFF);
 			matrixStackIn.pop();

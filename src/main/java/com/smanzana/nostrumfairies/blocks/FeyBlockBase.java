@@ -15,7 +15,7 @@ public abstract class FeyBlockBase extends Block {
 	@Override
 	public void onReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
 		if (state.getBlock() != newState.getBlock()) {
-			this.breakBlock(world, pos, newState);
+			this.breakBlock(world, pos, state);
 		}
 	}
 	

@@ -6,17 +6,16 @@ import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
 
 import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.util.math.MathHelper;
 
 public class ModelGnome extends EntityModel<EntityGnome> {
 
 	private OffsetModelRenderer body;
-	private ModelRenderer head;
+	private OffsetModelRenderer head;
 	private OffsetModelRenderer legLeft;
 	private OffsetModelRenderer legRight;
-	private ModelRenderer armLeft;
-	private ModelRenderer armRight;
+	private OffsetModelRenderer armLeft;
+	private OffsetModelRenderer armRight;
 	
 	public ModelGnome() {
 		// 16x16x16 is one block.
@@ -29,15 +28,15 @@ public class ModelGnome extends EntityModel<EntityGnome> {
 		body.setRotationPoint(0, 13, 0);
 		body.addBox(-4, -5, -3, 8, 10, 6);
 		
-		head = new ModelRenderer(this, 28, 0);
+		head = new OffsetModelRenderer(this, 28, 0);
 		head.setTextureSize(textW, textH);
 		head.setRotationPoint(0, 0, 0);
-		head.addBox(-3.5f, -7 + (-5f / 16f), -3.5f, 7, 7, 7);
+		head.addBox(-3.5f, -7, -3.5f, 7, 7, 7);
 		head.setTextureOffset(28, 14);
-		head.addBox(3, -5 + (-5f / 16f), -1, 1, 2, 1);
+		head.addBox(3, -5, -1, 1, 2, 1);
 		head.setTextureOffset(28, 17);
-		head.addBox(-4, -5 + (-5f / 16f), -1, 1, 2, 1);
-//		head.offsetY = (-5f / 16f);
+		head.addBox(-4, -5, -1, 1, 2, 1);
+		head.offsetY = (-5f / 16f);
 		body.addChild(head);
 		
 		legLeft = new OffsetModelRenderer(this, 0, 16);
@@ -65,21 +64,21 @@ public class ModelGnome extends EntityModel<EntityGnome> {
 		legRight.offsetX = (-2.49f / 16f);
 		body.addChild(legRight);
 		
-		armLeft = new ModelRenderer(this, 48, 16);
+		armLeft = new OffsetModelRenderer(this, 48, 16);
 		armLeft.setTextureSize(textW, textH);
 		armLeft.setRotationPoint(0, 0, 0);
-		armLeft.addBox(-1.5f + ((3 + 1.5f) / 16f), 0 + (-5f / 16f), -1.5f, 3, 7, 3);
-//		armLeft.offsetY = (-5f / 16f);
-//		armLeft.offsetX = ((3 + 1.5f) / 16f);
+		armLeft.addBox(-1.5f, 0, -1.5f, 3, 7, 3);
+		armLeft.offsetY = (-5f / 16f);
+		armLeft.offsetX = ((3 + 1.5f) / 16f);
 		body.addChild(armLeft);
 		
-		armRight = new ModelRenderer(this, 48, 16);
+		armRight = new OffsetModelRenderer(this, 48, 16);
 		armRight.mirror = true;
 		armRight.setTextureSize(textW, textH);
 		armRight.setRotationPoint(0, 0, 0);
-		armRight.addBox(-1.5f + (-(3 + 1.5f) / 16f), 0 + (-5f / 16f), -1.5f, 3, 7, 3);
-//		armRight.offsetY = (-5f / 16f);
-//		armRight.offsetX = (-(3 + 1.5f) / 16f);
+		armRight.addBox(-1.5f, 0, -1.5f, 3, 7, 3);
+		armRight.offsetY = (-5f / 16f);
+		armRight.offsetX = (-(3 + 1.5f) / 16f);
 		body.addChild(armRight);
 	}
 	

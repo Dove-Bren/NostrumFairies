@@ -18,7 +18,7 @@ import net.minecraft.world.World;
 /*
  * Go to and then harvest a crop
  */
-public class LogisticsTaskHarvest implements ILogisticsTask {
+public class LogisticsTaskHarvest extends LogisticsTaskBase {
 	
 	private static enum Phase {
 		IDLE,

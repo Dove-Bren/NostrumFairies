@@ -61,10 +61,20 @@ public class LogisticsTaskRegistry {
 		}
 	}
 	
-	private List<RegistryItem> registry;
+	public static interface LogisticsTaskLogger {
+		public void LogTaskUpdate(ILogisticsTask task, @Nullable IFeyWorker worker, String msg);
+	}
 	
-	public LogisticsTaskRegistry() {
+	private List<RegistryItem> registry;
+	private LogisticsTaskLogger logger;
+	
+	public LogisticsTaskRegistry(LogisticsTaskLogger logger) {
 		registry = new LinkedList<>();
+		this.logger = logger;
+	}
+	
+	protected void log(ILogisticsTask task, @Nullable IFeyWorker worker, String msg) {
+		this.logger.LogTaskUpdate(task, worker, msg);
 	}
 	
 	public void clear() {
@@ -81,6 +91,8 @@ public class LogisticsTaskRegistry {
 		if (task.getSourceComponent() == null && task.getSourceEntity() == null) {
 			throw new RuntimeException("Logistics task registered without an attached component OR an attached entity");
 		}
+		
+		log(task, null, "Task registered");
 	}
 	
 	/**
@@ -89,12 +101,15 @@ public class LogisticsTaskRegistry {
 	 * @param task
 	 */
 	public void revoke(ILogisticsTask task) {
+		log(task, null, "Revoking task");
 		Iterator<RegistryItem> it = registry.iterator();
 		while (it.hasNext()) {
 			RegistryItem item = it.next();
 			if (item.task == task) {
+				log(task, null, "Found registry item to revoke");
 				IFeyWorker oldActor = item.actor;
 				if (item.hasActor()) {
+					log(task, oldActor, "Dropping actor during revoke");
 					item.setActor(null);
 					oldActor.dropTask(task);
 				}
@@ -146,6 +161,7 @@ public class LogisticsTaskRegistry {
 	 * @param actor
 	 */
 	public void claimTask(ILogisticsTask task, IFeyWorker actor) {
+		log(task, actor, "Claiming task");
 		RegistryItem item = findTaskItem(task);
 		if (item == null) {
 			throw new RuntimeException("Attempted to claim a logistics task before it was registered in the registry");
@@ -177,6 +193,8 @@ public class LogisticsTaskRegistry {
 		}
 		
 		IFeyWorker oldActor = item.actor;
+		log(task, oldActor, "Forfitting task");
+		
 		item.setActor(null);
 		item.task.onDrop(oldActor);
 		if (item.hasListener()) {
@@ -191,6 +209,7 @@ public class LogisticsTaskRegistry {
 		}
 		
 		IFeyWorker actor = item.actor;
+		log(task, actor, "Completing task");
 		if (item.hasListener()) {
 			item.getListener().onTaskComplete(task, actor);
 		}

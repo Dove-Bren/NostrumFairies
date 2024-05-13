@@ -27,7 +27,7 @@ import net.minecraft.world.server.ServerWorld;
 /*
  * Travel to a block and mine it. If the block drops anything, return it to the surface.
  */
-public class LogisticsTaskMineBlock implements ILogisticsTask {
+public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 	
 	private static enum Phase {
 		IDLE,

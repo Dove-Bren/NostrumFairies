@@ -20,9 +20,11 @@ import javax.annotation.Nullable;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisticsComponentFactory;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry;
+import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskRegistry.LogisticsTaskLogger;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrumfairies.utils.Location;
@@ -41,7 +43,7 @@ import net.minecraftforge.common.util.Constants.NBT;
  * One logical logistics network, with all nodes and the summed availability of each.
  * @author Skyler
  */
-public class LogisticsNetwork {
+public class LogisticsNetwork implements LogisticsTaskLogger {
 	
 	public static final class RequestedItemRecord {
 		
@@ -175,7 +177,7 @@ public class LogisticsNetwork {
 		this.activeItemRequests = new HashMap<>();
 		this.activeItemDeliveries = new HashMap<>();
 		this.cacheKey = UUID.randomUUID();
-		this.taskRegistry = new LogisticsTaskRegistry();
+		this.taskRegistry = new LogisticsTaskRegistry(this);
 		this.extraBeacons = new HashSet<>();
 		this.cachePaths = new HashMap<>();
 		this.taskData = new HashMap<>();
@@ -1066,5 +1068,10 @@ public class LogisticsNetwork {
 		if (existing == path) {
 			submap.put(to, null);
 		}
+	}
+
+	@Override
+	public void LogTaskUpdate(ILogisticsTask task, IFeyWorker worker, String msg) {
+		NostrumFairies.LogLogistics(this, task, worker, msg);
 	}
 }

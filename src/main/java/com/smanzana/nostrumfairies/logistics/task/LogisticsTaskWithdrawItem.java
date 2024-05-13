@@ -30,7 +30,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 
-public class LogisticsTaskWithdrawItem implements ILogisticsItemTask {
+public class LogisticsTaskWithdrawItem extends LogisticsTaskBase implements ILogisticsItemTask {
 	
 	private static enum Phase {
 		IDLE,

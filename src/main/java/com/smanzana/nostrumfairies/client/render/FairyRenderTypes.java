@@ -28,7 +28,7 @@ public class FairyRenderTypes {
 		//final RenderState.DepthTestState DEPTH_EQUAL = new RenderState.DepthTestState("==", GL11.GL_EQUAL);
 		final RenderState.DepthTestState NO_DEPTH = new RenderState.DepthTestState("none", GL11.GL_ALWAYS);
 		final RenderState.LightmapState NO_LIGHTING = new RenderState.LightmapState(false);
-	    final RenderState.LightmapState LIGHTMAP_ENABLED = new RenderState.LightmapState(true);
+	    //final RenderState.LightmapState LIGHTMAP_ENABLED = new RenderState.LightmapState(true);
 //	    final RenderState.LineState LINE_2 = new RenderState.LineState(OptionalDouble.of(2));
 	    final RenderState.LineState LINE_3 = new RenderState.LineState(OptionalDouble.of(3));
 	    //@SuppressWarnings("deprecation")
@@ -43,7 +43,7 @@ public class FairyRenderTypes {
 		glState = RenderType.State.getBuilder()
 				.transparency(TRANSLUCENT_TRANSPARENCY)
 				.cull(NO_CULL)
-				.lightmap(LIGHTMAP_ENABLED)
+				.lightmap(NO_LIGHTING)
 				.line(LINE_3)
 			.build(false);
 		LOGISTICS_LINES = RenderType.makeType(Name("LogisticsLines"), DefaultVertexFormats.POSITION_COLOR_LIGHTMAP, GL11.GL_LINES, 64, glState);

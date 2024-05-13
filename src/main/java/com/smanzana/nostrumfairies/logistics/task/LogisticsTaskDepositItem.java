@@ -30,7 +30,7 @@ import net.minecraft.util.math.BlockPos;
 /*
  * Pick up an item and then deposit it somewhere in the network
  */
-public class LogisticsTaskDepositItem implements ILogisticsItemTask {
+public class LogisticsTaskDepositItem extends LogisticsTaskBase implements ILogisticsItemTask {
 	
 	private static enum Phase {
 		IDLE,
