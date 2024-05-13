@@ -3,6 +3,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
@@ -205,7 +206,12 @@ public class OutputPanelGui {
 		private void drawTemplate(MatrixStack matrixStackIn, float partialTicks, @Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
 				matrixStackIn.push();
-				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
+				{
+					RenderSystem.pushMatrix();
+					RenderSystem.multMatrix(matrixStackIn.getLast().getMatrix());
+					Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
+					RenderSystem.popMatrix();
+				}
 				matrixStackIn.translate(0, 0, 110);
 				if (template.getCount() > 1) {
 					final String count = "" + template.getCount();
@@ -253,7 +259,7 @@ public class OutputPanelGui {
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
-			super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
+			//super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 		}
 	}
 	

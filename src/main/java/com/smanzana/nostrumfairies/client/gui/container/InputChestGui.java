@@ -159,7 +159,7 @@ public class InputChestGui {
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
-			super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
+			//super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 		}
 		
 	}

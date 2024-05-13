@@ -160,7 +160,7 @@ public class LogisticsSensorGui {
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
-			super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
+			//super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 		}
 	}
 	

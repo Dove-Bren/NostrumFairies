@@ -157,7 +157,7 @@ public class OutputChestGui {
 			
 			if (player.inventory.getItemStack().isEmpty()) {
 				// empty hand. Right-click?
-				if (slotId >= chestIDStart && dragType == 1 && clickTypeIn == ClickType.PICKUP && chest.getStackInSlot(slotId - chestIDStart) == null) {
+				if (slotId >= chestIDStart && dragType == 1 && clickTypeIn == ClickType.PICKUP && chest.getStackInSlot(slotId - chestIDStart).isEmpty()) {
 					chest.setTemplate(slotId - chestIDStart, ItemStack.EMPTY);
 					return ItemStack.EMPTY;
 				}
@@ -221,7 +221,12 @@ public class OutputChestGui {
 		private void drawTemplate(MatrixStack matrixStackIn, float partialTicks, @Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
 				matrixStackIn.push();
-				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
+				{
+					RenderSystem.pushMatrix();
+					RenderSystem.multMatrix(matrixStackIn.getLast().getMatrix());
+					Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
+					RenderSystem.popMatrix();
+				}
 				matrixStackIn.translate(0, 0, 110);
 				if (template.getCount() > 1) {
 					final String count = "" + template.getCount();
@@ -280,7 +285,7 @@ public class OutputChestGui {
 		
 		@Override
 		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
-			super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
+			//super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 		}
 		
 	}

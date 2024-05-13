@@ -335,7 +335,12 @@ public class CraftingStationGui {
 		private void drawTemplate(MatrixStack matrixStackIn, @Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
 				matrixStackIn.push();
-				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
+				{
+					RenderSystem.pushMatrix();
+					RenderSystem.multMatrix(matrixStackIn.getLast().getMatrix());
+					Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
+					RenderSystem.popMatrix();
+				}
 				matrixStackIn.translate(0, 0, 110);
 				//GlStateManager.enableAlphaTest();
 				RenderSystem.enableBlend();
@@ -350,7 +355,12 @@ public class CraftingStationGui {
 			if (recipe != null) {
 				ItemStack outcome = recipe.getRecipeOutput();
 				matrixStackIn.push();
-				Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(outcome, 0, 0);
+				{
+					RenderSystem.pushMatrix();
+					RenderSystem.multMatrix(matrixStackIn.getLast().getMatrix());
+					Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(outcome, 0, 0);
+					RenderSystem.popMatrix();
+				}
 				matrixStackIn.translate(0, 0, 110);
 				//GlStateManager.enableAlphaTest();
 				RenderSystem.enableBlend();
