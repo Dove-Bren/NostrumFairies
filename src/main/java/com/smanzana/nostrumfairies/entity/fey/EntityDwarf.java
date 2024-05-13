@@ -138,14 +138,16 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	public void addItem(ItemStack stack) {
-		ItemStack[] items = dataManager.get(ITEMS);
+		ItemStack[] oldItems = dataManager.get(ITEMS);
+		ItemStack[] items = Arrays.copyOf(oldItems, oldItems.length);
 		Inventories.addItem(items, stack);
 		updateItems(items);
 	}
 	
 	@Override
 	public void removeItem(ItemStack stack) {
-		ItemStack[] items = dataManager.get(ITEMS);
+		ItemStack[] oldItems = dataManager.get(ITEMS);
+		ItemStack[] items = Arrays.copyOf(oldItems, oldItems.length);
 		Inventories.remove(items, stack);
 		updateItems(items);
 	}

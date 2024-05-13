@@ -349,7 +349,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	public int getTotalSlots() {
-		return getRawSlots() + getBonusSlots();
+		return Math.min(MAX_TOTAL_SLOTS, getRawSlots() + getBonusSlots());
 	}
 	
 	public int getBonusSlots() {

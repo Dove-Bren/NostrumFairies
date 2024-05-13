@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 
 public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShiv<EntityShadowFey>> {
 	
@@ -52,6 +53,29 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShi
 		this.entityModel.setPayload((_matrixStackIn, _buffer, _packedLightIn, _packedOverlayIn, _red, _green, _blue, _alpha) -> {
 			modelToUse.render(_matrixStackIn, _buffer, _packedLightIn, _packedOverlayIn, _red, _green, _blue, _alpha * .7f);
 		});
+		
+		// Have to dupe this here to work on our real model
+		{
+			boolean shouldSit = entityIn.isPassenger() && (entityIn.getRidingEntity() != null && entityIn.getRidingEntity().shouldRiderSit());
+			float limbSwingAmount = 0.0F;
+			float limbSwing = 0.0F;
+			if (!shouldSit && entityIn.isAlive()) {
+				limbSwingAmount = MathHelper.lerp(partialTicks, entityIn.prevLimbSwingAmount, entityIn.limbSwingAmount);
+				limbSwing = entityIn.limbSwing - entityIn.limbSwingAmount * (1.0F - partialTicks);
+				if (entityIn.isChild()) {
+					limbSwing *= 3.0F;
+				}
+
+				if (limbSwingAmount > 1.0F) {
+					limbSwingAmount = 1.0F;
+				}
+			}
+			
+			modelToUse.setLivingAnimations(entityIn, limbSwing, limbSwingAmount, partialTicks);
+			modelToUse.setRotationAngles(entityIn, limbSwing, limbSwingAmount, this.handleRotationFloat(entityIn, partialTicks), entityIn.rotationYawHead, entityIn.rotationPitch);
+		}
+		
+		modelToUse.setWeaponSelection(entityIn);
 		
 		matrixStackIn.push();
 		super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
