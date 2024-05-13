@@ -17,6 +17,7 @@ import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 
 @Mod.EventBusSubscriber(modid = NostrumFairies.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public enum FeyPotions {
@@ -54,18 +55,19 @@ public enum FeyPotions {
 		for (FeyPotions wrapper : FeyPotions.values()) {
 			event.getRegistry().register(wrapper.getTypeInternal());
 		}
-		
-		registerPotionMixes();
 	}
 	
-	protected static final void registerPotionMixes() {
+	@SubscribeEvent
+	public static final void registerPotionMixes(FMLCommonSetupEvent event) {
+		event.enqueueWork(() -> {
 		// Mana regen potion
-    	BrewingRecipeRegistry.addRecipe(new PotionIngredient(Potions.THICK),
-    			Ingredient.fromItems(FairyItems.feyTears),
-    			NostrumPotions.MakePotion(FeyPotions.FEY_VISIBILITY.getType()));
-    	
-    	BrewingRecipeRegistry.addRecipe(new PotionIngredient(FeyPotions.FEY_VISIBILITY.getType()),
-    			Ingredient.fromTag(Tags.Items.DUSTS_REDSTONE),
-    			NostrumPotions.MakePotion(FeyPotions.FEY_VISIBILITY_EXTENDED.getType()));
+	    	BrewingRecipeRegistry.addRecipe(new PotionIngredient(Potions.THICK),
+	    			Ingredient.fromItems(FairyItems.feyTears),
+	    			NostrumPotions.MakePotion(FeyPotions.FEY_VISIBILITY.getType()));
+	    	
+	    	BrewingRecipeRegistry.addRecipe(new PotionIngredient(FeyPotions.FEY_VISIBILITY.getType()),
+	    			Ingredient.fromTag(Tags.Items.DUSTS_REDSTONE),
+	    			NostrumPotions.MakePotion(FeyPotions.FEY_VISIBILITY_EXTENDED.getType()));
+		});
 	}
 }

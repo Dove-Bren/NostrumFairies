@@ -53,8 +53,8 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 			final Vector3f offset = SCROLL_OFFSETS[facing.getHorizontalIndex()];
 
 			matrixStackIn.push();
-			matrixStackIn.scale(.5f, .5f, .5f);
 			matrixStackIn.translate(offset.getX(), offset.getY(), offset.getZ());
+			matrixStackIn.scale(.5f, .5f, .5f);
 			RenderFuncs.ItemRenderer(template, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn);
 			matrixStackIn.pop();
 		}

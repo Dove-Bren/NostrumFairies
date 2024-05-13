@@ -6,7 +6,7 @@
 		},
 		{
 			"condition": "minecraft:entity_properties",
-			"entity": "THIS",
+			"entity": "this",
 			"predicate":
 				{
 					"type": "nostrummagica:fire_golem"

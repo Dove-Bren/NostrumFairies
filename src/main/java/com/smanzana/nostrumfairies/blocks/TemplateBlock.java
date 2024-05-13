@@ -120,6 +120,7 @@ public class TemplateBlock extends MimicBlock {
 				.hardnessAndResistance(.2f)
 				.doesNotBlockMovement()
 				.noDrops()
+				.notSolid()
 				);
 		
 		MinecraftForge.EVENT_BUS.register(this);

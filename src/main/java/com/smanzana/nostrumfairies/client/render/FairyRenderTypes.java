@@ -4,8 +4,6 @@ import java.util.OptionalDouble;
 
 import org.lwjgl.opengl.GL11;
 
-import com.smanzana.nostrumaetheria.client.render.TileEntityWispBlockRenderer;
-
 import net.minecraft.client.renderer.RenderState;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -51,7 +49,6 @@ public class FairyRenderTypes {
 		LOGISTICS_LINES = RenderType.makeType(Name("LogisticsLines"), DefaultVertexFormats.POSITION_COLOR_LIGHTMAP, GL11.GL_LINES, 64, glState);
 		
 		glState = RenderType.State.getBuilder()
-				.texture(new RenderState.TextureState(TileEntityWispBlockRenderer.GEM_TEX_LOC, false, false))
 				.transparency(TRANSLUCENT_TRANSPARENCY)
 				.lightmap(NO_LIGHTING)
 				.depthTest(NO_DEPTH)
@@ -60,7 +57,6 @@ public class FairyRenderTypes {
 		TEMPLATE_SELECT_HIGHLIGHT_CULL = RenderType.makeType(Name("TemplateHighlightCull"), DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 16, glState);
 		
 		glState = RenderType.State.getBuilder()
-				.texture(new RenderState.TextureState(TileEntityWispBlockRenderer.GEM_TEX_LOC, false, false))
 				.transparency(TRANSLUCENT_TRANSPARENCY)
 				.lightmap(NO_LIGHTING)
 				.depthTest(NO_DEPTH)

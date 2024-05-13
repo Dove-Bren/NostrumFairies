@@ -28,7 +28,6 @@ import com.smanzana.nostrumfairies.client.render.entity.RenderFairy;
 import com.smanzana.nostrumfairies.client.render.entity.RenderGnome;
 import com.smanzana.nostrumfairies.client.render.entity.RenderShadowFey;
 import com.smanzana.nostrumfairies.client.render.entity.RenderTestFairy;
-import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.BufferChestRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.BuildingBlockRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.CraftingBlockDwarfRenderer;
@@ -107,7 +106,8 @@ public class ClientInit {
 		FeySignRenderer.init(FairyTileEntities.MiningBlockTileEntityType, (manager) -> new MiningBlockRenderer(manager));
 		FeySignRenderer.init(FairyTileEntities.BuildingBlockTileEntityType, (manager) -> new BuildingBlockRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.BuildingBlockTileEntityType, (manager) -> new BuildingBlockRenderer(manager));
-		StaticTESRRenderer.instance.registerRender(FairyTileEntities.TemplateBlockTileEntityType, (manager) -> new TemplateBlockRenderer(manager));
+		//StaticTESRRenderer.instance.registerRender(FairyTileEntities.TemplateBlockTileEntityType, (manager) -> new TemplateBlockRenderer(manager));
+		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.TemplateBlockTileEntityType, (manager) -> new TemplateBlockRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.CraftingBlockDwarfTileEntityType, (manager) -> new CraftingBlockDwarfRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.CraftingBlockElfTileEntityType, (manager) -> new CraftingBlockElfRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.CraftingBlockGnomeTileEntityType, (manager) -> new CraftingBlockGnomeRenderer(manager));
