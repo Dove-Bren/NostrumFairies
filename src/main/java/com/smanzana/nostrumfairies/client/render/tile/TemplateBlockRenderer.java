@@ -12,9 +12,7 @@ import com.smanzana.nostrummagica.utils.RenderFuncs;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
@@ -39,6 +37,12 @@ public class TemplateBlockRenderer extends TileEntityRenderer<TemplateBlockTileE
 	}
 	
 	public void render(TemplateBlockTileEntity te, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
+		; // Nothing to render every frame; uses static batched renderer
+	}
+
+	@Override
+	public void render(TemplateBlockTileEntity te, double x, double y, double z, BlockState stateIn, World world,
+			IVertexBuilder buffer, final MatrixStack fakeStack, int combinedLightIn, int combinedOverlayIn) {
 		final Minecraft mc = Minecraft.getInstance();
 		final BlockState state = te.getTemplateState();
 		
@@ -59,16 +63,7 @@ public class TemplateBlockRenderer extends TileEntityRenderer<TemplateBlockTileE
 		final float green = .6f;
 		final float blue = .9f;
 		final float alpha = .3f;
-		final IVertexBuilder buffer = bufferIn.getBuffer(RenderType.getTranslucent());
-		RenderFuncs.RenderModel(matrixStackIn, buffer, model, combinedLightIn, combinedOverlayIn, red, green, blue, alpha);
-		
-		int unused; // This was batched before. Does it need it?
-	}
-
-	@Override
-	public void render(TemplateBlockTileEntity tileEntity, double x, double y, double z, BlockState state, World world,
-			BufferBuilder buffer) {
-		//renderTileEntityFast(tileEntity, x, y, z, 0, 0, 0, buffer);
+		RenderFuncs.RenderModel(fakeStack, buffer, model, combinedLightIn, combinedOverlayIn, red, green, blue, alpha);
 	}
 	
 }

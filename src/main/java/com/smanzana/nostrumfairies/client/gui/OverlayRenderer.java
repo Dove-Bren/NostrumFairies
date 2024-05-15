@@ -94,7 +94,7 @@ public class OverlayRenderer extends AbstractGui {
 		final MatrixStack matrixStackIn = event.getMatrixStack();
 		
 		// Hook into static TESR renderer
-		StaticTESRRenderer.instance.render(matrixStackIn, mc, player, event.getPartialTicks());
+		StaticTESRRenderer.instance.render(matrixStackIn, event.getProjectionMatrix(), mc, player, event.getPartialTicks());
 		
 		// Check for template viewer item and then display template selection
 		if (shouldDisplaySelection(player)) {
@@ -303,21 +303,24 @@ public class OverlayRenderer extends AbstractGui {
 			cachedRenderDirty = false;
 			//cachedRenderList.reset(); Reset by doing new upload
 			
-			BufferBuilder buffer = new BufferBuilder(256);
+			final int width = preview.length;
+			final int height = preview[0].length;
+			final int depth = preview[0][0].length;
+			BufferBuilder buffer = new BufferBuilder(4096);
 			
 			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
 			
-			for (int x = 0; x < 5; x++)
-			for (int y = 0; y < 2; y++)
-			for (int z = 0; z < 5; z++) {
+			for (int x = 0; x < width; x++)
+			for (int y = 0; y < height; y++)
+			for (int z = 0; z < depth; z++) {
 				final BlueprintBlock block = preview[x][y][z];
 				if (block == null) {
 					continue;
 				}
 				
-				final int xOff = x - 2;
+				final int xOff = x - (width/2);
 				final int yOff = y;
-				final int zOff = z - 2;
+				final int zOff = z - (depth/2);
 				
 				BlockState state = block.getSpawnState(Direction.NORTH);
 				

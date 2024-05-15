@@ -16,7 +16,6 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.blocks.MagicLight;
 import com.smanzana.nostrumfairies.blocks.MiningBlock;
-import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
@@ -1086,10 +1085,6 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			if (nbt.contains(NBT_TORCHES)) {
 				this.torches = ItemStack.read(nbt.getCompound(NBT_TORCHES));
 			}
-			
-			if (this.world != null && this.world.isRemote) {
-				StaticTESRRenderer.instance.update(world, pos, this);
-			}
 		}
 
 		@Override
@@ -1219,9 +1214,6 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		@Override
 		public void remove() {
 			super.remove();
-			if (world != null && world.isRemote) {
-				StaticTESRRenderer.instance.update(world, pos, null);
-			}
 		}
 		
 		public void collectOreLocations(Collection<BlockPos> locationSet) {

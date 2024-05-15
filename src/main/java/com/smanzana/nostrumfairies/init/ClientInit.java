@@ -1,7 +1,5 @@
 package com.smanzana.nostrumfairies.init;
 
-import java.util.Map;
-
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
@@ -28,13 +26,13 @@ import com.smanzana.nostrumfairies.client.render.entity.RenderFairy;
 import com.smanzana.nostrumfairies.client.render.entity.RenderGnome;
 import com.smanzana.nostrumfairies.client.render.entity.RenderShadowFey;
 import com.smanzana.nostrumfairies.client.render.entity.RenderTestFairy;
+import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.BufferChestRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.BuildingBlockRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.CraftingBlockDwarfRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.CraftingBlockElfRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.CraftingBlockGnomeRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.FarmingBlockRenderer;
-import com.smanzana.nostrumfairies.client.render.tile.FeySignRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.GatheringBlockRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.InputChestRenderer;
 import com.smanzana.nostrumfairies.client.render.tile.LogisticsSensorRenderer;
@@ -56,16 +54,11 @@ import com.smanzana.nostrumfairies.tiles.FairyTileEntities;
 import com.smanzana.nostrumfairies.tiles.ReinforcedDiamondChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedGoldChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedIronChestTileEntity;
-import com.smanzana.nostrummagica.client.model.MimicBlockBakedModel;
 
-import net.minecraft.block.BlockState;
 import net.minecraft.client.gui.ScreenManager;
-import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.renderer.entity.TippedArrowRenderer;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.item.ItemModelsProperties;
 import net.minecraft.util.ResourceLocation;
@@ -95,19 +88,14 @@ public class ClientInit {
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.BufferChestTileEntityType, (manager) -> new BufferChestRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.OutputChestTileEntityType, (manager) -> new OutputChestRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.InputChestTileEntityType, (manager) -> new InputChestRenderer(manager));
-		FeySignRenderer.init(FairyTileEntities.GatheringBlockTileEntityType, (manager) -> new GatheringBlockRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.GatheringBlockTileEntityType, (manager) -> new GatheringBlockRenderer(manager));
-		FeySignRenderer.init(FairyTileEntities.FarmingBlockTileEntityType, (manager) -> new FarmingBlockRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.FarmingBlockTileEntityType, (manager) -> new FarmingBlockRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.PylonTileEntityType, (manager) -> new PylonRenderer(manager));
-		FeySignRenderer.init(FairyTileEntities.WoodcuttingBlockTileEntityType, (manager) -> new WoodcuttingBlockRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.WoodcuttingBlockTileEntityType, (manager) -> new WoodcuttingBlockRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.MiningBlockTileEntityType, (manager) -> new MiningBlockRenderer(manager));
-		FeySignRenderer.init(FairyTileEntities.MiningBlockTileEntityType, (manager) -> new MiningBlockRenderer(manager));
-		FeySignRenderer.init(FairyTileEntities.BuildingBlockTileEntityType, (manager) -> new BuildingBlockRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.BuildingBlockTileEntityType, (manager) -> new BuildingBlockRenderer(manager));
-		//StaticTESRRenderer.instance.registerRender(FairyTileEntities.TemplateBlockTileEntityType, (manager) -> new TemplateBlockRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.TemplateBlockTileEntityType, (manager) -> new TemplateBlockRenderer(manager));
+		StaticTESRRenderer.instance.registerRender(FairyTileEntities.TemplateBlockTileEntityType, (manager) -> new TemplateBlockRenderer(manager));
+		//ClientRegistry.bindTileEntityRenderer(FairyTileEntities.TemplateBlockTileEntityType, (manager) -> new TemplateBlockRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.CraftingBlockDwarfTileEntityType, (manager) -> new CraftingBlockDwarfRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.CraftingBlockElfTileEntityType, (manager) -> new CraftingBlockElfRenderer(manager));
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.CraftingBlockGnomeTileEntityType, (manager) -> new CraftingBlockGnomeRenderer(manager));
@@ -200,13 +188,7 @@ public class ClientInit {
 	
 	@SubscribeEvent
 	public static void onModelBake(ModelBakeEvent event) {
-		final Map<ResourceLocation, IBakedModel> registry = event.getModelRegistry();
-		
-		int unused; // I think this isn't doing anything since the block is invisible?
-		for (BlockState state : FairyBlocks.templateBlock.getStateContainer().getValidStates()) {
-			ModelResourceLocation loc = BlockModelShapes.getModelLocation(state);
-			registry.put(loc, new MimicBlockBakedModel(registry.get(loc))); // Put a new mimic model wrapped around the default one
-		}
+		//final Map<ResourceLocation, IBakedModel> registry = event.getModelRegistry();
 	}
 	
 	@SuppressWarnings("deprecation")

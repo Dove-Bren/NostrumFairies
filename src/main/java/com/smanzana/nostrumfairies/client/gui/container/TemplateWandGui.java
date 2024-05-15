@@ -297,6 +297,12 @@ public class TemplateWandGui {
 			
 			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_WIDTH, GUI_HEIGHT, 256, 256);
 		}
+		
+		@Override
+		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
+			; // don't render labels
+		}
+		
 	}
 	
 	

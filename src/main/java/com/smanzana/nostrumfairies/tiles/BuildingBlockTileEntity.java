@@ -14,7 +14,6 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.BuildingBlock;
 import com.smanzana.nostrumfairies.blocks.IFeySign;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
-import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.items.TemplateScroll;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
@@ -276,10 +275,6 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		super.read(state, nbt);
 		
 		this.slot = ItemStack.read(nbt.getCompound(NBT_SLOT));
-		
-		if (this.world != null && this.world.isRemote) {
-			StaticTESRRenderer.instance.update(world, pos, this);
-		}
 	}
 	
 	public IInventory getInventory() {
@@ -325,9 +320,6 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	@Override
 	public void remove() {
 		super.remove();
-		if (world != null && world.isRemote) {
-			StaticTESRRenderer.instance.update(world, pos, null);
-		}
 	}
 	
 	public @Nonnull ItemStack getTemplateScroll() {

@@ -9,7 +9,6 @@ import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.GatheringBlock;
 import com.smanzana.nostrumfairies.blocks.IFeySign;
-import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ILogisticsTaskUniqueData;
@@ -219,17 +218,10 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	@Override
 	public void read(BlockState state, CompoundNBT compound) {
 		super.read(state, compound);
-		
-		if (this.world != null && this.world.isRemote) {
-			StaticTESRRenderer.instance.update(world, pos, this);
-		}
 	}
 	
 	@Override
 	public void remove() {
 		super.remove();
-		if (world != null && world.isRemote) {
-			StaticTESRRenderer.instance.update(world, pos, null);
-		}
 	}
 }

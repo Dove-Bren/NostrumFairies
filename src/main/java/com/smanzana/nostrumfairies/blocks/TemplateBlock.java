@@ -9,7 +9,6 @@ import org.apache.commons.lang3.Validate;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
-import com.smanzana.nostrummagica.blocks.MimicBlock;
 import com.smanzana.nostrummagica.utils.NonNullHashMap;
 import com.smanzana.nostrummagica.utils.RayTrace;
 
@@ -37,7 +36,7 @@ import net.minecraftforge.client.event.DrawHighlightEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-public class TemplateBlock extends MimicBlock {
+public class TemplateBlock extends Block {
 	
 	/**
 	 * Attempts to deduce what item is needed to create the provided blockstate.
@@ -127,13 +126,13 @@ public class TemplateBlock extends MimicBlock {
 	}
 	
 	@Override
-	public TileEntity createNewTileEntity(IBlockReader world) {
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
 		return new TemplateBlockTileEntity();
 	}
 	
 	@Override
-	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-		return createNewTileEntity(world);
+	public boolean hasTileEntity(BlockState state) {
+		return true;
 	}
 	
 //	@Override
@@ -251,20 +250,4 @@ public class TemplateBlock extends MimicBlock {
 		
 		return null;
 	}
-
-	@Override
-	public BlockState getMimickedState(BlockState mimicBlockState, World world, BlockPos myPos) {
-		return null; // Shouldn't be called
-	}
-	
-//	@Override
-//	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-//		return new TemplateBlockTileEntity();
-//	}
-//	
-//	@Override
-//	public void breakBlock(World worldIn, BlockPos pos, BlockState state) {
-//		super.breakBlock(worldIn, pos, state);
-//	}
-	
 }

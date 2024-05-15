@@ -1,7 +1,9 @@
 package com.smanzana.nostrumfairies.client.render.stesr;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
+
 import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -32,12 +34,16 @@ public interface StaticTESR<T extends TileEntity> {
 	 * @param z
 	 * @param state
 	 * @param world
+	 * @param buffer the buffer to draw into
+	 * @param fakeStack an identit matrixStack that shouldn't actually be modified, for ease of use of drawing functions. You should draw in relation to
+	 * a stack that's set up for your TESR and not do any stack modifications.
 	 */
-	public void render(T tileEntity, double x, double y, double z, BlockState state, World world, BufferBuilder buffer);
+	public void render(T tileEntity, double x, double y, double z, BlockState state, World world, IVertexBuilder buffer, final MatrixStack fakeStack,
+			int combinedLightIn, int combinedOverlayIn);
 	
 	/**
 	 * Return the vertex format (the order the rendering data is going to be added) that this static TESR wants to use.
-	 * Some good options are DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL if using RenderFunc's drawSpaceQuad, or
+	 * Some good options are DefaultVertexFormats.POSITION_COLOR_TEX_LIGHTMAP if using RenderFunc's drawSpaceQuad, or
 	 * .Item/.Block if rendering item or block models.
 	 * @param tileEntity
 	 * @return
