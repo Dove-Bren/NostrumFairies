@@ -7,9 +7,9 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.utils.EntitySpawning;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
-import com.smanzana.nostrummagica.entity.ITameableEntity;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
+import com.smanzana.petcommand.api.entity.ITameableEntity;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;

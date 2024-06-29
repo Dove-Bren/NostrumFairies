@@ -23,24 +23,24 @@ import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
-import com.smanzana.nostrummagica.client.gui.petgui.IPetGUISheet;
-import com.smanzana.nostrummagica.client.gui.petgui.PetGUI.PetGUIStatAdapter;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
-import com.smanzana.nostrummagica.entity.IEntityPet;
-import com.smanzana.nostrummagica.entity.tasks.EntityAIFlierDiveTask;
-import com.smanzana.nostrummagica.entity.tasks.EntityAIOrbitEntityGeneric;
-import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
+import com.smanzana.nostrummagica.entity.tasks.FlierDiveGoal;
+import com.smanzana.nostrummagica.entity.tasks.OrbitEntityGenericGoal;
 import com.smanzana.nostrummagica.entity.tasks.OwnerHurtByTargetGoalGeneric;
+import com.smanzana.nostrummagica.entity.tasks.SpellAttackGoal;
 import com.smanzana.nostrummagica.loretag.Lore;
-import com.smanzana.nostrummagica.pet.PetInfo;
-import com.smanzana.nostrummagica.pet.PetInfo.ManagedPetInfo;
-import com.smanzana.nostrummagica.pet.PetInfo.PetAction;
-import com.smanzana.nostrummagica.pet.PetInfo.SecondaryFlavor;
-import com.smanzana.nostrummagica.serializers.PetJobSerializer;
-import com.smanzana.nostrummagica.spells.Spell;
-import com.smanzana.nostrummagica.utils.Entities;
-import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.serializer.PetJobSerializer;
+import com.smanzana.nostrummagica.spell.Spell;
+import com.smanzana.nostrummagica.util.Entities;
+import com.smanzana.nostrummagica.util.Inventories;
+import com.smanzana.petcommand.api.client.petgui.IPetGUISheet;
+import com.smanzana.petcommand.api.client.petgui.PetGUIStatAdapter;
+import com.smanzana.petcommand.api.entity.IEntityPet;
+import com.smanzana.petcommand.api.pet.PetInfo;
+import com.smanzana.petcommand.api.pet.PetInfo.ManagedPetInfo;
+import com.smanzana.petcommand.api.pet.PetInfo.PetAction;
+import com.smanzana.petcommand.api.pet.PetInfo.SecondaryFlavor;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -79,7 +79,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	private static final DataParameter<FairyJob> DATA_JOB = EntityDataManager.<FairyJob>createKey(EntityPersonalFairy.class, FairyJob.instance());
 	private static final DataParameter<Float> DATA_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
 	private static final DataParameter<Float> DATA_MAX_ENERGY = EntityDataManager.<Float>createKey(EntityPersonalFairy.class, DataSerializers.FLOAT);
-	private static final DataParameter<PetAction> DATA_PET_ACTION = EntityDataManager.<PetAction>createKey(EntityPersonalFairy.class, PetJobSerializer.instance);
+	private static final DataParameter<PetAction> DATA_PET_ACTION = EntityDataManager.<PetAction>createKey(EntityPersonalFairy.class, PetJobSerializer.GetInstance());
 	
 	// Transient data, and only useful for Builders
 	private static final DataParameter<Optional<BlockPos>> DATA_BUILDER_SPOT = EntityDataManager.<Optional<BlockPos>>createKey(EntityPersonalFairy.class, DataSerializers.OPTIONAL_BLOCK_POS);
@@ -560,7 +560,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	@Override
 	protected void registerGoals() {
 		int priority = 1;
-		this.goalSelector.addGoal(priority++, new EntityAIFlierDiveTask<EntityPersonalFairy>(this, 1.0, 20 * 5, 16, true) {
+		this.goalSelector.addGoal(priority++, new FlierDiveGoal<EntityPersonalFairy>(this, 1.0, 20 * 5, 16, true) {
 			@Override
 			public boolean shouldExecute() {
 				if (getJob() != FairyJob.WARRIOR) {
@@ -586,7 +586,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			}
 		});
 		
-		this.goalSelector.addGoal(priority++, new EntityAIOrbitEntityGeneric<EntityPersonalFairy>(this, null, 2, 20 * 5) {
+		this.goalSelector.addGoal(priority++, new OrbitEntityGenericGoal<EntityPersonalFairy>(this, null, 2, 20 * 5) {
 			@Override
 			public boolean shouldExecute() {
 				if (getJob() != FairyJob.WARRIOR) {
@@ -653,7 +653,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			}
 		});
 		
-		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityPersonalFairy>(this, 20, 4, true, (fairy) -> {
+		this.goalSelector.addGoal(priority++, new SpellAttackGoal<EntityPersonalFairy>(this, 20, 4, true, (fairy) -> {
 			return getJob() == FairyJob.WARRIOR
 					&& fairy.getAttackTarget() != null
 					&& castTarget == FairyCastTarget.TARGET
@@ -667,7 +667,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		});
 		
 		
-		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityPersonalFairy>(this, 20, 4, true, (fairy) -> {
+		this.goalSelector.addGoal(priority++, new SpellAttackGoal<EntityPersonalFairy>(this, 20, 4, true, (fairy) -> {
 			return getJob() == FairyJob.WARRIOR
 					&& fairy.getAttackTarget() != null
 					&& castTarget != FairyCastTarget.TARGET
@@ -1065,5 +1065,10 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	@Override
 	public UUID getPetID() {
 		return this.getUniqueID();
+	}
+
+	@Override
+	public boolean isBigPet() {
+		return false;
 	}
 }

@@ -7,10 +7,10 @@ import javax.annotation.Nonnull;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.items.FairyGael;
 import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
-import com.smanzana.nostrummagica.items.PositionCrystal;
-import com.smanzana.nostrummagica.items.SpellScroll;
-import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
-import com.smanzana.nostrummagica.utils.TextUtils;
+import com.smanzana.nostrummagica.item.PositionCrystal;
+import com.smanzana.nostrummagica.item.SpellScroll;
+import com.smanzana.nostrummagica.util.ContainerUtil.IAutoContainerInventory;
+import com.smanzana.nostrummagica.util.TextUtils;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
@@ -485,7 +485,7 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 				return false;
 			}
 			
-			return (SpellScroll.getSpell(stack) != null);
+			return (SpellScroll.GetSpell(stack) != null);
 		}
 		index -= INV_SIZE_SCROLL;
 		

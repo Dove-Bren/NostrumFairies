@@ -7,10 +7,10 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.tiles.StorageChestTileEntity;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
-import com.smanzana.nostrummagica.utils.ContainerUtil;
-import com.smanzana.nostrummagica.utils.ContainerUtil.IPackedContainerProvider;
-import com.smanzana.nostrummagica.utils.Inventories;
-import com.smanzana.nostrummagica.utils.RenderFuncs;
+import com.smanzana.nostrummagica.util.ContainerUtil;
+import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
+import com.smanzana.nostrummagica.util.Inventories;
+import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;

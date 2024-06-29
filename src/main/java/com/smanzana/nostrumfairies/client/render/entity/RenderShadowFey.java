@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.client.render.entity;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
-import com.smanzana.nostrummagica.client.render.entity.ModelRenderShiv;
+import com.smanzana.nostrummagica.client.model.ModelRenderShiv;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;

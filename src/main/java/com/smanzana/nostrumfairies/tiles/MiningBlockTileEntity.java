@@ -24,7 +24,7 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrummagica.utils.ItemStacks;
+import com.smanzana.nostrummagica.util.ItemStacks;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

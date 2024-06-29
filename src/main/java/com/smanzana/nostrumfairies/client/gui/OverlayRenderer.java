@@ -17,8 +17,8 @@ import com.smanzana.nostrumfairies.items.TemplateScroll;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
 import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
-import com.smanzana.nostrummagica.utils.RenderFuncs;
-import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.BlueprintBlock;
+import com.smanzana.nostrummagica.util.RenderFuncs;
+import com.smanzana.nostrummagica.world.blueprints.BlueprintBlock;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -289,6 +289,8 @@ public class OverlayRenderer extends AbstractGui {
 		RenderFuncs.drawUnitCube(matrixStackIn, buffer, 0, OverlayTexture.NO_OVERLAY, red, green, blue, alpha);
 		matrixStackIn.pop();
 	}
+	
+	private int unused; // This has moved to Magica. Remove and replce with using that.
 	
 	@SuppressWarnings("deprecation")
 	private void renderBlueprintPreview(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, BlockPos center, BlueprintBlock[][][] preview, Direction rotation, float partialTicks) {

@@ -4,8 +4,8 @@ import java.util.function.Supplier;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.items.FairyItems;
-import com.smanzana.nostrummagica.effects.NostrumPotions;
-import com.smanzana.nostrummagica.effects.NostrumPotions.PotionIngredient;
+import com.smanzana.nostrummagica.effect.NostrumPotions;
+import com.smanzana.nostrummagica.effect.NostrumPotions.PotionIngredient;
 
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.potion.EffectInstance;

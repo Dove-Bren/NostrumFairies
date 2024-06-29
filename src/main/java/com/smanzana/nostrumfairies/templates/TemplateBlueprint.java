@@ -9,9 +9,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
+import com.smanzana.nostrummagica.world.blueprints.BlueprintBlock;
+import com.smanzana.nostrummagica.world.blueprints.IBlueprintBlockPlacer;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint;
-import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.BlueprintBlock;
-import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.IBlueprintSpawner;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.INBTGenerator;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.SpawnContext;
 
@@ -30,7 +30,7 @@ import net.minecraftforge.common.util.Constants.NBT;
  * @author Skyler
  *
  */
-public class TemplateBlueprint implements IBlueprintSpawner {
+public class TemplateBlueprint implements IBlueprintBlockPlacer {
 	
 	// TODO set of acceptable blockstates that may have tile entities that we're okay to just put down anyways
 
@@ -47,7 +47,6 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 	protected TemplateBlueprint(UUID id, RoomBlueprint blueprint) {
 		this.blueprint = blueprint;
 		this.id = id;
-		blueprint.setSpawningFunc(this);
 		RegisterBlueprint(id, this);
 	}
 
@@ -77,7 +76,7 @@ public class TemplateBlueprint implements IBlueprintSpawner {
 
 	public synchronized List<BlockPos> spawn(World world, BlockPos origin, Direction direction) {
 		spawnedBlocks = new ArrayList<>();
-		blueprint.spawn(world, origin, direction, UUID.randomUUID());
+		blueprint.spawn(world, origin, direction, null, UUID.randomUUID(), this);
 		return spawnedBlocks;
 	}
 	

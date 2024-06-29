@@ -12,8 +12,8 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrummagica.utils.ContainerUtil.IAutoContainerInventory;
-import com.smanzana.nostrummagica.utils.ItemStacks;
+import com.smanzana.nostrummagica.util.ContainerUtil.IAutoContainerInventory;
+import com.smanzana.nostrummagica.util.ItemStacks;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;

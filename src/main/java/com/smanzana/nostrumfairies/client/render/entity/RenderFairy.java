@@ -5,7 +5,7 @@ import javax.annotation.Nonnull;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
-import com.smanzana.nostrummagica.utils.RenderFuncs;
+import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
@@ -47,7 +47,7 @@ public class RenderFairy extends MobRenderer<EntityFairy, ModelFairy> {
 		if (!item.isEmpty()) {
 			matrixStackIn.translate(0, .25f, 0);
 			matrixStackIn.rotate(Vector3f.YP.rotationDegrees(-entityYaw));
-			RenderFuncs.ItemRenderer(item, matrixStackIn, bufferIn, packedLightIn, OverlayTexture.NO_OVERLAY);
+			RenderFuncs.RenderWorldItem(item, matrixStackIn, bufferIn, packedLightIn, OverlayTexture.NO_OVERLAY);
 		}
 		
 		matrixStackIn.pop();

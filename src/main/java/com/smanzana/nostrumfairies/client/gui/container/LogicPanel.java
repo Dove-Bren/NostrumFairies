@@ -14,8 +14,8 @@ import com.smanzana.nostrumfairies.tiles.ILogisticsLogicProvider;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicMode;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicOp;
-import com.smanzana.nostrummagica.utils.Inventories;
-import com.smanzana.nostrummagica.utils.RenderFuncs;
+import com.smanzana.nostrummagica.util.Inventories;
+import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;

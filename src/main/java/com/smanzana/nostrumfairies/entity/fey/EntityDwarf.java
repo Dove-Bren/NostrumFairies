@@ -32,7 +32,7 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
-import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.util.Inventories;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;

@@ -9,8 +9,8 @@ import org.apache.commons.lang3.Validate;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
-import com.smanzana.nostrummagica.utils.NonNullHashMap;
-import com.smanzana.nostrummagica.utils.RayTrace;
+import com.smanzana.nostrummagica.util.NonNullHashMap;
+import com.smanzana.nostrummagica.util.RayTrace;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;

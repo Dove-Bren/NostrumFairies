@@ -9,8 +9,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.smanzana.nostrummagica.utils.Inventories;
-import com.smanzana.nostrummagica.utils.Inventories.ItemStackArrayWrapper;
+import com.smanzana.nostrummagica.util.Inventories;
+import com.smanzana.nostrummagica.util.Inventories.ItemStackArrayWrapper;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;

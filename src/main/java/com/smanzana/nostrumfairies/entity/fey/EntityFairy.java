@@ -20,7 +20,7 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
 import com.smanzana.nostrummagica.loretag.Lore;
-import com.smanzana.nostrummagica.utils.ItemStacks;
+import com.smanzana.nostrummagica.util.ItemStacks;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;

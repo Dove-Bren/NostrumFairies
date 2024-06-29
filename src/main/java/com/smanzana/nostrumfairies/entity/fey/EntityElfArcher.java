@@ -13,14 +13,14 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
 import com.smanzana.nostrumfairies.serializers.BattleStanceElfArcher;
-import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
-import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
-import com.smanzana.nostrummagica.spells.EAlteration;
-import com.smanzana.nostrummagica.spells.EMagicElement;
-import com.smanzana.nostrummagica.spells.Spell;
-import com.smanzana.nostrummagica.spells.Spell.SpellPart;
-import com.smanzana.nostrummagica.spells.components.shapes.SingleShape;
-import com.smanzana.nostrummagica.spells.components.triggers.SelfTrigger;
+import com.smanzana.nostrummagica.entity.tasks.AttackRangedGoal;
+import com.smanzana.nostrummagica.entity.tasks.SpellAttackGoal;
+import com.smanzana.nostrummagica.spell.EAlteration;
+import com.smanzana.nostrummagica.spell.EMagicElement;
+import com.smanzana.nostrummagica.spell.Spell;
+import com.smanzana.nostrummagica.spell.component.SpellEffectPart;
+import com.smanzana.nostrummagica.spell.component.SpellShapePart;
+import com.smanzana.nostrummagica.spell.component.shapes.NostrumSpellShapes;
 
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -56,9 +56,9 @@ public class EntityElfArcher extends EntityElf {
 	
 	private static void initSpells() {
 		if (SPELL_HASTE == null) {
-			SPELL_HASTE = new Spell("Elven Haste");
-			SPELL_HASTE.addPart(new SpellPart(SelfTrigger.instance()));
-			SPELL_HASTE.addPart(new SpellPart(SingleShape.instance(), EMagicElement.WIND, 1, EAlteration.SUPPORT));
+			SPELL_HASTE = Spell.CreateAISpell("Elven Haste");
+			SPELL_HASTE.addPart(new SpellShapePart(NostrumSpellShapes.Self));
+			SPELL_HASTE.addPart(new SpellEffectPart(EMagicElement.WIND, 1, EAlteration.SUPPORT));
 		}
 	}
 
@@ -177,7 +177,7 @@ public class EntityElfArcher extends EntityElf {
 	@Override
 	protected void registerGoals() {
 		int priority = 1;
-		this.goalSelector.addGoal(priority++, new EntityAIAttackRanged<EntityElfArcher>(this, 1.0, 0, 25) { // All delay in animation
+		this.goalSelector.addGoal(priority++, new AttackRangedGoal<EntityElfArcher>(this, 1.0, 0, 25) { // All delay in animation
 			@Override
 			public boolean hasWeaponEquipped(EntityElfArcher elf) {
 				return shouldUseBow();
@@ -194,7 +194,7 @@ public class EntityElfArcher extends EntityElf {
 			}
 		});
 		
-		this.goalSelector.addGoal(priority++, new EntityAIAttackRanged<EntityElfArcher>(this, 0.75, 10, 3) {
+		this.goalSelector.addGoal(priority++, new AttackRangedGoal<EntityElfArcher>(this, 0.75, 10, 3) {
 			@Override
 			public boolean hasWeaponEquipped(EntityElfArcher elf) {
 				return !shouldUseBow();
@@ -211,7 +211,7 @@ public class EntityElfArcher extends EntityElf {
 			}
 		});
 		
-		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityElfArcher>(this, 60, 10, false, (elf) -> {
+		this.goalSelector.addGoal(priority++, new SpellAttackGoal<EntityElfArcher>(this, 60, 10, false, (elf) -> {
 			return elf.getAttackTarget() != null;
 		}, new Spell[]{SPELL_HASTE}));
 		

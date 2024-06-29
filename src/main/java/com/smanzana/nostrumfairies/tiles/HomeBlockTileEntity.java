@@ -44,8 +44,8 @@ import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
-import com.smanzana.nostrummagica.utils.Entities;
-import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.util.Entities;
+import com.smanzana.nostrummagica.util.Inventories;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

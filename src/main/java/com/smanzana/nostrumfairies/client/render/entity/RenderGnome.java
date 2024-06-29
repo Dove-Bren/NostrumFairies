@@ -6,7 +6,7 @@ import com.smanzana.nostrumfairies.client.render.entity.ModelGnomeHat.Type;
 import com.smanzana.nostrumfairies.client.render.entity.layer.LayerGnomeHat;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
-import com.smanzana.nostrummagica.utils.RenderFuncs;
+import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
@@ -55,7 +55,7 @@ public class RenderGnome extends MobRenderer<EntityGnome, ModelGnome> {
 				matrixStackIn.push();
 				matrixStackIn.rotate(Vector3f.YP.rotationDegrees(-entityYaw));
 				matrixStackIn.translate(0, 1.1, 0.475);
-				RenderFuncs.ItemRenderer(held, matrixStackIn, bufferIn, packedLightIn, OverlayTexture.NO_OVERLAY);
+				RenderFuncs.RenderWorldItem(held, matrixStackIn, bufferIn, packedLightIn, OverlayTexture.NO_OVERLAY);
 				matrixStackIn.pop();
 			}
 		}

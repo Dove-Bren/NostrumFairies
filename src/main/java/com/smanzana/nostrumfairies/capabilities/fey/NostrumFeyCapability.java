@@ -38,11 +38,11 @@ import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
-import com.smanzana.nostrummagica.items.PositionCrystal;
-import com.smanzana.nostrummagica.items.SpellScroll;
-import com.smanzana.nostrummagica.spells.Spell;
-import com.smanzana.nostrummagica.utils.DimensionUtils;
-import com.smanzana.nostrummagica.utils.Inventories;
+import com.smanzana.nostrummagica.item.PositionCrystal;
+import com.smanzana.nostrummagica.item.SpellScroll;
+import com.smanzana.nostrummagica.spell.Spell;
+import com.smanzana.nostrummagica.util.DimensionUtils;
+import com.smanzana.nostrummagica.util.Inventories;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
@@ -542,7 +542,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 					ItemStack scrollStack = this.fairyInventory.getScroll(index);
 					Spell spell = null;
 					if (!scrollStack.isEmpty()) {
-						spell = SpellScroll.getSpell(scrollStack);
+						spell = SpellScroll.GetSpell(scrollStack);
 					}
 					
 					FairyCastTarget castTarget = fairyInventory.getFairyCastTarget(index);

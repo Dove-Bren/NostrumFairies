@@ -4,7 +4,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
-import com.smanzana.nostrummagica.tiles.MimicBlockTileEntity;
+import com.smanzana.nostrummagica.tile.MimicBlockTileEntity;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;

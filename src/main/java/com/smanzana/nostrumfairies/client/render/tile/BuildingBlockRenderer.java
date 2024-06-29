@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.client.render.tile;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
-import com.smanzana.nostrummagica.utils.RenderFuncs;
+import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
@@ -43,7 +43,7 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 			matrixStackIn.push();
 			matrixStackIn.translate(offset.getX(), offset.getY(), offset.getZ());
 			matrixStackIn.scale(.5f, .5f, .5f);
-			RenderFuncs.ItemRenderer(template, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn);
+			RenderFuncs.RenderWorldItem(template, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn);
 			matrixStackIn.pop();
 		}
 	}

@@ -16,15 +16,14 @@ import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
-import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
+import com.smanzana.nostrummagica.entity.tasks.AttackRangedGoal;
 import com.smanzana.nostrummagica.loretag.Lore;
-import com.smanzana.nostrummagica.spells.EAlteration;
-import com.smanzana.nostrummagica.spells.EMagicElement;
-import com.smanzana.nostrummagica.spells.Spell;
-import com.smanzana.nostrummagica.spells.Spell.SpellPart;
-import com.smanzana.nostrummagica.spells.components.shapes.SingleShape;
-import com.smanzana.nostrummagica.spells.components.triggers.AITargetTrigger;
-import com.smanzana.nostrummagica.spells.components.triggers.MagicCutterTrigger;
+import com.smanzana.nostrummagica.spell.EAlteration;
+import com.smanzana.nostrummagica.spell.EMagicElement;
+import com.smanzana.nostrummagica.spell.Spell;
+import com.smanzana.nostrummagica.spell.component.SpellEffectPart;
+import com.smanzana.nostrummagica.spell.component.SpellShapePart;
+import com.smanzana.nostrummagica.spell.component.shapes.NostrumSpellShapes;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -64,15 +63,15 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	
 	private static void initSpells() {
 		if (SPELL_VINES == null) {
-			SPELL_VINES = new Spell("Ancient Vines");
-			SPELL_VINES.addPart(new SpellPart(AITargetTrigger.instance()));
-			SPELL_VINES.addPart(new SpellPart(SingleShape.instance(), EMagicElement.EARTH, 2, EAlteration.INFLICT));
-			SPELL_VINES.addPart(new SpellPart(SingleShape.instance(), EMagicElement.LIGHTNING, 1, EAlteration.INFLICT));
+			SPELL_VINES = Spell.CreateAISpell("Ancient Vines");
+			SPELL_VINES.addPart(new SpellShapePart(NostrumSpellShapes.AI));
+			SPELL_VINES.addPart(new SpellEffectPart(EMagicElement.EARTH, 2, EAlteration.INFLICT));
+			SPELL_VINES.addPart(new SpellEffectPart(EMagicElement.LIGHTNING, 1, EAlteration.INFLICT));
 			
-			SPELL_POISON_WIND = new Spell("Poison Wind");
-			SPELL_POISON_WIND.addPart(new SpellPart(MagicCutterTrigger.instance()));
-			SPELL_POISON_WIND.addPart(new SpellPart(SingleShape.instance(), EMagicElement.WIND, 1, null));
-			SPELL_POISON_WIND.addPart(new SpellPart(SingleShape.instance(), EMagicElement.WIND, 1, EAlteration.INFLICT));
+			SPELL_POISON_WIND = Spell.CreateAISpell("Poison Wind");
+			SPELL_POISON_WIND.addPart(new SpellShapePart(NostrumSpellShapes.Cutter));
+			SPELL_POISON_WIND.addPart(new SpellEffectPart(EMagicElement.WIND, 1, null));
+			SPELL_POISON_WIND.addPart(new SpellEffectPart(EMagicElement.WIND, 1, EAlteration.INFLICT));
 		}
 	}
 	
@@ -397,8 +396,8 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	protected void registerGoals() {
 		int priority = 1;
 		this.goalSelector.addGoal(priority++, new SwimGoal(this));
-		//this.goalSelector.addGoal(priority++, new EntityAIAttackRanged(this, 1.0, 20 * 3, 10));
-		this.goalSelector.addGoal(priority++, new EntityAIAttackRanged<EntityElf>(this, 1.0, 20 * 3, 10) {
+		//this.goalSelector.addGoal(priority++, new AttackRangedGoal(this, 1.0, 20 * 3, 10));
+		this.goalSelector.addGoal(priority++, new AttackRangedGoal<EntityElf>(this, 1.0, 20 * 3, 10) {
 			@Override
 			public boolean hasWeaponEquipped(EntityElf elf) {
 				return true;
@@ -410,10 +409,10 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			}
 		});
 		
-//		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityElf>(this, 60, 10, true, (elf) -> {
+//		this.goalSelector.addGoal(priority++, new SpellAttackGoal<EntityElf>(this, 60, 10, true, (elf) -> {
 //			return elf.getAttackTarget() != null;
 //		}, new Spell[]{SPELL_VINES}));
-//		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityElf>(this, 20, 4, true, (elf) -> {
+//		this.goalSelector.addGoal(priority++, new SpellAttackGoal<EntityElf>(this, 20, 4, true, (elf) -> {
 //			return elf.getAttackTarget() != null;
 //		}, new Spell[]{SPELL_POISON_WIND}));
 		

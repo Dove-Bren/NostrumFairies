@@ -12,19 +12,19 @@ import com.smanzana.nostrumfairies.items.FairyItems;
 import com.smanzana.nostrumfairies.serializers.BattleStanceShadowFey;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
-import com.smanzana.nostrummagica.attributes.NostrumAttributes;
+import com.smanzana.nostrummagica.attribute.NostrumAttributes;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
-import com.smanzana.nostrummagica.entity.tasks.EntityAIAttackRanged;
-import com.smanzana.nostrummagica.entity.tasks.EntitySpellAttackTask;
+import com.smanzana.nostrummagica.entity.tasks.AttackRangedGoal;
+import com.smanzana.nostrummagica.entity.tasks.SpellAttackGoal;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
-import com.smanzana.nostrummagica.spells.EAlteration;
-import com.smanzana.nostrummagica.spells.EMagicElement;
-import com.smanzana.nostrummagica.spells.Spell;
-import com.smanzana.nostrummagica.spells.Spell.SpellPart;
-import com.smanzana.nostrummagica.spells.components.shapes.SingleShape;
-import com.smanzana.nostrummagica.spells.components.triggers.SeekingBulletTrigger;
+import com.smanzana.nostrummagica.spell.EAlteration;
+import com.smanzana.nostrummagica.spell.EMagicElement;
+import com.smanzana.nostrummagica.spell.Spell;
+import com.smanzana.nostrummagica.spell.component.SpellEffectPart;
+import com.smanzana.nostrummagica.spell.component.SpellShapePart;
+import com.smanzana.nostrummagica.spell.component.shapes.NostrumSpellShapes;
 
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -80,9 +80,9 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	
 	private static void initSpells() {
 		if (SPELL_SLOW == null) {
-			SPELL_SLOW = new Spell("Shadow Binds");
-			SPELL_SLOW.addPart(new SpellPart(SeekingBulletTrigger.instance()));
-			SPELL_SLOW.addPart(new SpellPart(SingleShape.instance(), EMagicElement.LIGHTNING, 1, EAlteration.INFLICT));
+			SPELL_SLOW = Spell.CreateAISpell("Shadow Binds");
+			SPELL_SLOW.addPart(new SpellShapePart(NostrumSpellShapes.SeekingBullet));
+			SPELL_SLOW.addPart(new SpellEffectPart(EMagicElement.LIGHTNING, 1, EAlteration.INFLICT));
 		}
 	}
 	
@@ -148,7 +148,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		this.goalSelector.addGoal(priority++, new AvoidEntityGoal<PlayerEntity>(this, PlayerEntity.class, 5, 1, 1.2, (player) -> {
 			return isDangerItem(player.getHeldItemMainhand()) || isDangerItem(player.getHeldItemOffhand());
 		}));
-		this.goalSelector.addGoal(priority++, new EntityAIAttackRanged<EntityShadowFey>(this, 1.0, 0, 25) { // All delay in animation
+		this.goalSelector.addGoal(priority++, new AttackRangedGoal<EntityShadowFey>(this, 1.0, 0, 25) { // All delay in animation
 			@Override
 			public boolean hasWeaponEquipped(EntityShadowFey elf) {
 				return shouldUseBow() && !elf.getMorphing();
@@ -165,7 +165,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			}
 		});
 		
-		this.goalSelector.addGoal(priority++, new EntityAIAttackRanged<EntityShadowFey>(this, 0.75, 10, 3) {
+		this.goalSelector.addGoal(priority++, new AttackRangedGoal<EntityShadowFey>(this, 0.75, 10, 3) {
 			@Override
 			public boolean hasWeaponEquipped(EntityShadowFey elf) {
 				return !shouldUseBow() && !elf.getMorphing();
@@ -182,7 +182,7 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			}
 		});
 		
-		this.goalSelector.addGoal(priority++, new EntitySpellAttackTask<EntityShadowFey>(this, 60, 10, true, (elf) -> {
+		this.goalSelector.addGoal(priority++, new SpellAttackGoal<EntityShadowFey>(this, 60, 10, true, (elf) -> {
 			return elf.getAttackTarget() != null && !elf.getMorphing();
 		}, new Spell[]{SPELL_SLOW}));
 		this.goalSelector.addGoal(priority++, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
