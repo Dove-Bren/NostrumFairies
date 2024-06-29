@@ -9,7 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
-import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapability;
 import com.smanzana.nostrumfairies.client.gui.container.TemplateWandGui;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.TemplateWandUpdate;
@@ -18,10 +17,13 @@ import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
+import com.smanzana.nostrummagica.item.IBlueprintHolder;
+import com.smanzana.nostrummagica.item.ISelectionItem;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
 
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -42,10 +44,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.common.util.LazyOptional;
 
 /**
  * Selects areas in the world, writes them to templates, and reads templates to instruct workers to build things.
@@ -60,7 +60,7 @@ import net.minecraftforge.common.util.LazyOptional;
  * @author Skyler
  *
  */
-public class TemplateWand extends Item implements ILoreTagged {
+public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder, ISelectionItem {
 
 	public static enum WandMode {
 		SELECTION,
@@ -90,7 +90,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 	
 	public static final String ID = "template_wand";
 	private static final int MAX_TEMPLATES = 10;
-	public static final int MAX_TEMPLATE_BLOCKS = 16 * 16 * 128;
+	public static final int MAX_TEMPLATE_BLOCKS = 16 * 16 * 16;
 	private static final String NBT_MODE = "mode";
 	private static final String NBT_TEMPLATE_INDEX = "template_index";
 	private static final String NBT_TEMPLATE_INV = "templates";
@@ -337,7 +337,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 		SetWandMode(stack, to);
 	}
 	
-	protected ActionResult<ItemStack> capture(ItemStack stack, World worldIn, PlayerEntity playerIn, @Nullable BlockPos clickedPos) {
+	protected ActionResult<ItemStack> capture(ItemStack stack, World worldIn, PlayerEntity playerIn, BlockPos captureOrigin, Direction facing) {
 		final INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
 		
 		// Check for blank map and create template scroll
@@ -379,13 +379,8 @@ public class TemplateWand extends Item implements ILoreTagged {
 		}
 			
 		// Have taken map and must succeed now
-		Direction face = null;
-		if (clickedPos != null) {
-			// Figure out facing by looking at clicked pos vs our pos
-			face = Direction.getFacingFromVector((float) (clickedPos.getX() - playerIn.getPosX()), 0f, (float) (clickedPos.getZ() - playerIn.getPosZ()));
-		}
-		BlockPos offset = (clickedPos == null ? null : clickedPos.subtract(min));
-		ItemStack scroll = TemplateScroll.Capture(worldIn, min, max, offset, face);
+		BlockPos offset = captureOrigin.subtract(min);
+		ItemStack scroll = TemplateScroll.Capture(worldIn, min, max, offset, facing);
 		
 		// Try to add to wand if not sneaking
 		if (!playerIn.isSneaking()) {
@@ -443,7 +438,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			
 			return ActionResult.resultPass(stack);
 		} else if (mode == WandMode.CAPTURE) {
-			return capture(stack, worldIn, playerIn, null);
+			return capture(stack, worldIn, playerIn, playerIn.getPosition(), Direction.fromAngle(playerIn.rotationYaw));
 		}
 		
 		return ActionResult.resultPass(stack);
@@ -471,6 +466,8 @@ public class TemplateWand extends Item implements ILoreTagged {
 		final BlockPos pos = context.getPos();
 		final ItemStack stack = playerIn.getHeldItem(hand);
 		final WandMode mode = GetWandMode(stack);
+		final BlockPos playerPos = playerIn.getPosition();
+		Direction rotate = Direction.getFacingFromVector((float) (pos.getX() - playerPos.getX()), 0f, (float) (pos.getZ() - playerPos.getZ()));
 		if (mode == WandMode.SELECTION) {
 			if (playerIn.isSneaking()) {
 				attr.clearTemplateSelection();
@@ -482,7 +479,7 @@ public class TemplateWand extends Item implements ILoreTagged {
 			
 			return ActionResultType.SUCCESS;
 		} else if (mode == WandMode.CAPTURE) {
-			return capture(stack, worldIn, playerIn, pos).getType();
+			return capture(stack, worldIn, playerIn, pos.offset(context.getFace()), rotate).getType();
 		} else if (mode == WandMode.SPAWN) {
 			// Get selected template. If it's a thing, spawn it but as template blocks
 			
@@ -491,7 +488,6 @@ public class TemplateWand extends Item implements ILoreTagged {
 				if (!templateScroll.isEmpty() && templateScroll.getItem() instanceof TemplateScroll) {
 					TemplateBlueprint blueprint = TemplateScroll.GetTemplate(templateScroll);
 					if (blueprint != null) {
-						Direction rotate = Direction.getFacingFromVector((float) (pos.getX() - playerIn.getPosX()), 0f, (float) (pos.getZ() - playerIn.getPosZ()));
 						List<BlockPos> blocks = blueprint.spawn(worldIn, pos.offset(context.getFace()), rotate);
 						for (BlockPos buildSpot : blocks) {
 							attr.addBuildSpot(buildSpot);
@@ -516,19 +512,110 @@ public class TemplateWand extends Item implements ILoreTagged {
 
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundNBT nbt) {
-		return new ICapabilityProvider() {
+//		return new ICapabilityProvider() {
+//
+//			private LazyOptional<TemplateViewerCapability> def = LazyOptional.of(()-> new TemplateViewerCapability());
+//			
+//			@Override
+//			public <T> LazyOptional<T> getCapability(Capability<T> capability, Direction facing) {
+//				if (capability == TemplateViewerCapability.CAPABILITY) {
+//					return def.cast();
+//				}
+//				
+//				return LazyOptional.empty();
+//			}
+//			
+//		};
+		return super.initCapabilities(stack, nbt);
+	}
 
-			private LazyOptional<TemplateViewerCapability> def = LazyOptional.of(()-> new TemplateViewerCapability());
+	@Override
+	public TemplateBlueprint getBlueprint(PlayerEntity player, ItemStack stack, BlockPos pos) {
+		@Nullable TemplateBlueprint blueprint = null;
+		if (!stack.isEmpty() && !GetSelectedTemplate(stack).isEmpty()) {
+			blueprint = TemplateScroll.GetTemplate(GetSelectedTemplate(stack));
+		}
+		return blueprint;
+	}
+
+	@Override
+	public boolean hasBlueprint(PlayerEntity player, ItemStack stack) {
+		return GetWandMode(stack) == WandMode.SPAWN
+				&& !stack.isEmpty()
+				&& !GetSelectedTemplate(stack).isEmpty()
+				&& TemplateScroll.GetTemplate(GetSelectedTemplate(stack)) != null;
+	}
+
+	@Override
+	public boolean shouldDisplayBlueprint(PlayerEntity player, ItemStack stack, BlockPos pos) {
+		return GetWandMode(stack) == WandMode.SPAWN && player.isSneaking();
+	}
+
+	@Override
+	public BlockPos getAnchor(PlayerEntity player, ItemStack stack) {
+		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
+		if (attr != null) {
+			return attr.getTemplateSelection().getLeft();
+		}
+		return null;
+	}
+
+	@Override
+	public BlockPos getBoundingPos(PlayerEntity player, ItemStack stack) {
+		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
+		if (attr != null) {
+			return attr.getTemplateSelection().getRight();
+		}
+		return null;
+	}
+
+	@Override
+	public boolean isSelectionValid(ClientPlayerEntity player, ItemStack stack) {
+		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
+		if (attr != null) {
+			Pair<BlockPos, BlockPos> selection = attr.getTemplateSelection();
+			BlockPos pos1 = selection.getLeft();
+			BlockPos pos2 = selection.getRight();
 			
-			@Override
-			public <T> LazyOptional<T> getCapability(Capability<T> capability, Direction facing) {
-				if (capability == TemplateViewerCapability.CAPABILITY) {
-					return def.cast();
+			if (pos1 != null && pos2 != null) {
+				// If creative, any size works
+				if (player.isCreative()) {
+					return true;
 				}
 				
-				return LazyOptional.empty();
+				// Check size
+				final int size = Math.abs(pos1.getX() - pos2.getX())
+						* Math.abs(pos1.getY() - pos2.getY())
+						* Math.abs(pos1.getZ() - pos2.getZ());
+				
+				if (size <= TemplateWand.MAX_TEMPLATE_BLOCKS) {
+					return true;
+				}
 			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean shouldRenderSelection(PlayerEntity player, ItemStack stack) {
+		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
+		if (attr != null) {
+			Pair<BlockPos, BlockPos> selection = attr.getTemplateSelection();
+			BlockPos pos1 = selection.getLeft();
+			BlockPos pos2 = selection.getRight();
 			
-		};
+			if (pos1 != null) {
+				double minDist = player.getDistanceSq(pos1.getX(), pos1.getY(), pos1.getZ());
+				if (minDist >= 5096 && pos2 != null) {
+					minDist = player.getDistanceSq(pos2.getX(), pos2.getY(), pos2.getZ());
+				}
+				
+				if (minDist < 5096) {
+					return true;
+				}
+			}
+		}
+		
+		return true;
 	}
 }

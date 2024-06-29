@@ -1,6 +1,7 @@
 package com.smanzana.nostrumfairies.templates;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,17 +11,22 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrummagica.world.blueprints.BlueprintBlock;
+import com.smanzana.nostrummagica.world.blueprints.IBlueprint;
 import com.smanzana.nostrummagica.world.blueprints.IBlueprintBlockPlacer;
+import com.smanzana.nostrummagica.world.blueprints.IBlueprintScanner;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.INBTGenerator;
 import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint.SpawnContext;
+import com.smanzana.nostrummagica.world.dungeon.NostrumDungeon.DungeonExitPoint;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MutableBoundingBox;
 import net.minecraft.world.IServerWorld;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -30,7 +36,7 @@ import net.minecraftforge.common.util.Constants.NBT;
  * @author Skyler
  *
  */
-public class TemplateBlueprint implements IBlueprintBlockPlacer {
+public class TemplateBlueprint implements IBlueprintBlockPlacer, IBlueprint {
 	
 	// TODO set of acceptable blockstates that may have tile entities that we're okay to just put down anyways
 
@@ -131,5 +137,30 @@ public class TemplateBlueprint implements IBlueprintBlockPlacer {
 
 	public BlueprintBlock[][][] getPreview() {
 		return blueprint.getPreview();
+	}
+
+	@Override
+	public BlockPos getDimensions() {
+		return blueprint.getDimensions();
+	}
+
+	@Override
+	public DungeonExitPoint getEntry() {
+		return blueprint.getEntry();
+	}
+
+	@Override
+	public Collection<DungeonExitPoint> getExits() {
+		return blueprint.getExits();
+	}
+
+	@Override
+	public void scanBlocks(IBlueprintScanner scanner) {
+		blueprint.scanBlocks(scanner);
+	}
+
+	@Override
+	public void spawn(IWorld world, BlockPos pos, Direction facing, MutableBoundingBox bounds, UUID ID,	IBlueprintBlockPlacer placer) {
+		blueprint.spawn(world, pos, facing, bounds, ID, placer);
 	}
 }
