@@ -8,7 +8,8 @@ import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
-import com.smanzana.nostrummagica.world.blueprints.RoomBlueprint;
+import com.smanzana.nostrummagica.world.blueprints.Blueprint;
+import com.smanzana.nostrummagica.world.blueprints.BlueprintLocation;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -18,7 +19,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
@@ -55,16 +55,15 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	public static ItemStack Capture(World world, BlockPos pos1, BlockPos pos2) {
-		RoomBlueprint blueprint = new RoomBlueprint(world, pos1, pos2, false);
+		return Capture(world, pos1, pos2, null);
+	}
+	
+	public static ItemStack Capture(World world, BlockPos pos1, BlockPos pos2, @Nullable BlueprintLocation origin) {
+		Blueprint blueprint = Blueprint.Capture(world, pos1, pos2, origin);
 		return Create(blueprint);
 	}
 	
-	public static ItemStack Capture(World world, BlockPos pos1, BlockPos pos2, BlockPos origin, Direction facing) {
-		RoomBlueprint blueprint = new RoomBlueprint(world, pos1, pos2, false, origin, facing);
-		return Create(blueprint);
-	}
-	
-	public static ItemStack Create(RoomBlueprint blueprint) {
+	public static ItemStack Create(Blueprint blueprint) {
 		return Create(new TemplateBlueprint(blueprint));
 	}
 	

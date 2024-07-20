@@ -22,6 +22,7 @@ import com.smanzana.nostrummagica.item.ISelectionItem;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
+import com.smanzana.nostrummagica.world.blueprints.BlueprintLocation;
 
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.util.ITooltipFlag;
@@ -380,7 +381,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 			
 		// Have taken map and must succeed now
 		BlockPos offset = captureOrigin.subtract(min);
-		ItemStack scroll = TemplateScroll.Capture(worldIn, min, max, offset, facing);
+		ItemStack scroll = TemplateScroll.Capture(worldIn, min, max, new BlueprintLocation(offset, facing));
 		
 		// Try to add to wand if not sneaking
 		if (!playerIn.isSneaking()) {
