@@ -35,3 +35,10 @@ Fairy-based logistics add-on for Nostrum Magica
 	versionRange="[1.16.5-1.3.0,)"
 	ordering="AFTER"
 	side="BOTH"
+
+[[dependencies.nostrumfairies]]
+	modId="autodungeons"
+	mandatory=true
+	versionRange="[1.16.5-1.0.0,)"
+	ordering="AFTER"
+	side="BOTH"

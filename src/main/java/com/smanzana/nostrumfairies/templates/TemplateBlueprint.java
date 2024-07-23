@@ -8,15 +8,15 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.smanzana.autodungeons.world.blueprints.Blueprint;
+import com.smanzana.autodungeons.world.blueprints.Blueprint.LoadContext;
+import com.smanzana.autodungeons.world.blueprints.BlueprintBlock;
+import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
+import com.smanzana.autodungeons.world.blueprints.BlueprintSpawnContext;
+import com.smanzana.autodungeons.world.blueprints.IBlueprint;
+import com.smanzana.autodungeons.world.blueprints.IBlueprintBlockPlacer;
+import com.smanzana.autodungeons.world.blueprints.IBlueprintScanner;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
-import com.smanzana.nostrummagica.world.blueprints.Blueprint;
-import com.smanzana.nostrummagica.world.blueprints.Blueprint.LoadContext;
-import com.smanzana.nostrummagica.world.blueprints.BlueprintBlock;
-import com.smanzana.nostrummagica.world.blueprints.BlueprintLocation;
-import com.smanzana.nostrummagica.world.blueprints.BlueprintSpawnContext;
-import com.smanzana.nostrummagica.world.blueprints.IBlueprint;
-import com.smanzana.nostrummagica.world.blueprints.IBlueprintBlockPlacer;
-import com.smanzana.nostrummagica.world.blueprints.IBlueprintScanner;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
