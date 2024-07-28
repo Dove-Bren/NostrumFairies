@@ -24,7 +24,6 @@ import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -571,7 +570,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 	}
 
 	@Override
-	public boolean isSelectionValid(ClientPlayerEntity player, ItemStack stack) {
+	public boolean isSelectionValid(PlayerEntity player, ItemStack stack) {
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
 		if (attr != null) {
 			Pair<BlockPos, BlockPos> selection = attr.getTemplateSelection();
