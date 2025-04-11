@@ -9,9 +9,9 @@ import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositRequ
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class InputChestTileEntity extends LogisticsChestTileEntity {
 
@@ -24,7 +24,7 @@ public class InputChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return SLOTS;
 	}
 	
@@ -53,17 +53,17 @@ public class InputChestTileEntity extends LogisticsChestTileEntity {
 	protected void setNetworkComponent(LogisticsTileEntityComponent component) {
 		super.setNetworkComponent(component);
 		
-		if (world != null && !world.isRemote && requester == null) {
+		if (level != null && !level.isClientSide && requester == null) {
 			requester = new LogisticsItemDepositRequester(this.networkComponent.getNetwork(), this.networkComponent); // TODO make using buffer chests configurable!
 			requester.updateRequestedItems(getItemRequests());
 		}
 	}
 	
 	@Override
-	public void setWorldAndPos(World worldIn, BlockPos pos) {
-		super.setWorldAndPos(worldIn, pos);
+	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
+		super.setLevelAndPosition(worldIn, pos);
 		
-		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
+		if (this.networkComponent != null && !worldIn.isClientSide && requester == null) {
 			requester = new LogisticsItemDepositRequester(this.networkComponent.getNetwork(), this.networkComponent);
 			requester.updateRequestedItems(getItemRequests());
 		}
@@ -71,7 +71,7 @@ public class InputChestTileEntity extends LogisticsChestTileEntity {
 	
 	@Override
 	public void onLeaveNetwork() {
-		if (!world.isRemote && requester != null) {
+		if (!level.isClientSide && requester != null) {
 			requester.clearRequests();
 			requester.setNetwork(null);
 		}
@@ -81,7 +81,7 @@ public class InputChestTileEntity extends LogisticsChestTileEntity {
 	
 	@Override
 	public void onJoinNetwork(LogisticsNetwork network) {
-		if (!world.isRemote && requester != null) {
+		if (!level.isClientSide && requester != null) {
 			requester.setNetwork(network);
 			requester.updateRequestedItems(getItemRequests());
 		}
@@ -93,16 +93,16 @@ public class InputChestTileEntity extends LogisticsChestTileEntity {
 		List<ItemStack> requests = new LinkedList<>();
 		
 		for (int i = 0; i < SLOTS; i++) {
-			requests.add(this.getStackInSlot(i));
+			requests.add(this.getItem(i));
 		}
 		
 		return requests;
 	}
 	
 	@Override
-	public void markDirty() {
-		super.markDirty();
-		if (world != null && !world.isRemote && requester != null) {
+	public void setChanged() {
+		super.setChanged();
+		if (level != null && !level.isClientSide && requester != null) {
 			requester.updateRequestedItems(getItemRequests());
 		}
 	}

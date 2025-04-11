@@ -14,20 +14,20 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.item.Rarity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.Util;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -115,15 +115,15 @@ public class FairyInstrument extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResultType onItemUse(ItemUseContext context) {
-		return ActionResultType.PASS;
+	public InteractionResult useOn(UseOnContext context) {
+		return InteractionResult.PASS;
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand hand) {
-		final ItemStack stack = playerIn.getHeldItem(hand);
+	public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand hand) {
+		final ItemStack stack = playerIn.getItemInHand(hand);
 		InstrumentType type = getType(stack);
-		if (!worldIn.isRemote) {
+		if (!worldIn.isClientSide) {
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
 			if (attr != null && !attr.isUnlocked()) {
 				// Possibly unlock
@@ -135,12 +135,12 @@ public class FairyInstrument extends Item implements ILoreTagged {
 			}
 			
 			// Check before playing sound whether it's a disable
-			if (attr != null && attr.isUnlocked() && playerIn.isSneaking()) {
+			if (attr != null && attr.isUnlocked() && playerIn.isShiftKeyDown()) {
 				// toggle enable
 				attr.setEnabled(!attr.isEnabled());
 				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
-				NostrumFairiesSounds.BELL.play(playerIn.world, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ());
-				return ActionResult.resultPass(stack);
+				NostrumFairiesSounds.BELL.play(playerIn.level, playerIn.getX(), playerIn.getY(), playerIn.getZ());
+				return InteractionResultHolder.pass(stack);
 			}
 				
 			
@@ -158,7 +158,7 @@ public class FairyInstrument extends Item implements ILoreTagged {
 				break;
 			}
 			
-			sound.play(worldIn, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ());
+			sound.play(worldIn, playerIn.getX(), playerIn.getY(), playerIn.getZ());
 			
 			if (attr != null && attr.isUnlocked()) {
 				// Open gui
@@ -168,27 +168,27 @@ public class FairyInstrument extends Item implements ILoreTagged {
 				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
 				
 				NostrumMagica.playerListener.registerTimer((t, entity, data) -> {
-					if (playerIn.isAlive() && playerIn.getHeldItem(hand) == stack) {
+					if (playerIn.isAlive() && playerIn.getItemInHand(hand) == stack) {
 						NostrumMagica.instance.proxy.openContainer(playerIn, FairyScreenGui.FairyScreenContainer.Make());
 					}
 					return true;
 				}, 30, 0);
 			} else {
-				playerIn.sendMessage(new TranslationTextComponent("info.instrument.locked"), Util.DUMMY_UUID);
+				playerIn.sendMessage(new TranslatableComponent("info.instrument.locked"), Util.NIL_UUID);
 			}
 		}
 		
-		return ActionResult.resultPass(stack);
+		return InteractionResultHolder.pass(stack);
 	}
 	
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-		super.addInformation(stack, worldIn, tooltip, flagIn);
+	public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(NostrumFairies.proxy.getPlayer());
 		if (attr != null && !attr.isEnabled()) {
-			tooltip.add(new TranslationTextComponent("info.instrument.disabled").mergeStyle(TextFormatting.DARK_RED));
+			tooltip.add(new TranslatableComponent("info.instrument.disabled").withStyle(ChatFormatting.DARK_RED));
 		}
 	}
 	

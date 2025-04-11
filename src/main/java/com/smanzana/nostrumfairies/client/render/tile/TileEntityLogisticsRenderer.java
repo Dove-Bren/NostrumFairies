@@ -3,8 +3,8 @@ package com.smanzana.nostrumfairies.client.render.tile;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.smanzana.nostrumfairies.client.render.FairyRenderTypes;
 import com.smanzana.nostrumfairies.effect.FeyEffects;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -13,38 +13,38 @@ import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
 import com.smanzana.nostrummagica.util.Curves;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity> extends TileEntityRenderer<T> {
+public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity> extends BlockEntityRenderer<T> {
 
-	public TileEntityLogisticsRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
+	public TileEntityLogisticsRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
 		super(rendererDispatcherIn);
 	}
 	
-	private void addVertex(MatrixStack matrixStackIn, IVertexBuilder buffer, int combinedLightIn, float red, float green, float blue, float alpha, Vector3d point, boolean repeat) {
-		buffer.pos(matrixStackIn.getLast().getMatrix(), (float) point.x, (float) point.y, (float) point.z).color(red, green, blue, alpha).lightmap(combinedLightIn).endVertex();
+	private void addVertex(PoseStack matrixStackIn, VertexConsumer buffer, int combinedLightIn, float red, float green, float blue, float alpha, Vec3 point, boolean repeat) {
+		buffer.vertex(matrixStackIn.last().pose(), (float) point.x, (float) point.y, (float) point.z).color(red, green, blue, alpha).uv2(combinedLightIn).endVertex();
 		if (repeat) {
 			this.addVertex(matrixStackIn, buffer, combinedLightIn, red, green, blue, alpha, point, false);
 		}
 	}
 	
-	protected void renderLine(MatrixStack matrixStackIn, IVertexBuilder buffer, int combinedLightIn, Vector3d offset,
+	protected void renderLine(PoseStack matrixStackIn, VertexConsumer buffer, int combinedLightIn, Vec3 offset,
 			int intervals, float red, float green, float blue, float alpha) {
-		final Vector3d dist = offset.scale(.25);
-		final Vector3d control1 = dist.add(dist.rotateYaw((float) (Math.PI * .5)));
-		final Vector3d control2 = offset.subtract(dist).subtract(dist.rotateYaw((float) (Math.PI * .5)));
+		final Vec3 dist = offset.scale(.25);
+		final Vec3 control1 = dist.add(dist.yRot((float) (Math.PI * .5)));
+		final Vec3 control2 = offset.subtract(dist).subtract(dist.yRot((float) (Math.PI * .5)));
 		
 		for (int i = 0; i <= intervals; i++) {
 			float prog = (float) i / (float) intervals;
-			Vector3d point = Curves.bezier(prog, Vector3d.ZERO, control1, control2, offset);
+			Vec3 point = Curves.bezier(prog, Vec3.ZERO, control1, control2, offset);
 			
 			// We aren't rendering a strip, so need to repeat every 'last' point.
 			// We can do this simply by just adding each point twice except the first and last one.
@@ -54,10 +54,10 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 	}
 	
 	@Override
-	public void render(T te, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
+	public void render(T te, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
 		Minecraft mc = Minecraft.getInstance();
-		PlayerEntity player = mc.player;
-		EffectInstance effect = player.getActivePotionEffect(FeyEffects.feyVisibility);
+		Player player = mc.player;
+		MobEffectInstance effect = player.getEffect(FeyEffects.feyVisibility);
 		
 		if (player != null && effect != null) { // REPLACE ME
 			LogisticsNetwork network = te.getNetwork();
@@ -79,16 +79,16 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 					alpha = 1f;
 				}
 				
-				final IVertexBuilder buffer = bufferIn.getBuffer(FairyRenderTypes.LOGISTICS_LINES);
+				final VertexConsumer buffer = bufferIn.getBuffer(FairyRenderTypes.LOGISTICS_LINES);
 				
-				matrixStackIn.push();
+				matrixStackIn.pushPose();
 				matrixStackIn.translate(.5, 1.05, .5);
 				for (ILogisticsComponent component : neighbors) {
-					final Vector3d offset = Vector3d.copyCentered(component.getPosition().toImmutable().subtract(te.getPos()));
+					final Vec3 offset = Vec3.atCenterOf(component.getPosition().immutable().subtract(te.getBlockPos()));
 					this.renderLine(matrixStackIn, buffer, 15728880, offset, intervals, 1f, 1f, 1f, alpha);
 				}
 				
-				matrixStackIn.pop();
+				matrixStackIn.popPose();
 			}
 		}
 	}

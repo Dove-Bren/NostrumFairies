@@ -10,9 +10,9 @@ import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /*
  * Go to a block and then 'work' it until something signals it's done.
@@ -27,7 +27,7 @@ public abstract class LogisticsTaskWorkBlock extends LogisticsTaskBase {
 	}
 	
 	private String displayName;
-	private World world;
+	private Level world;
 	private BlockPos block;
 	private ILogisticsComponent owningComponent;
 	
@@ -38,7 +38,7 @@ public abstract class LogisticsTaskWorkBlock extends LogisticsTaskBase {
 	
 	private boolean done;
 	
-	public LogisticsTaskWorkBlock(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos) {
+	public LogisticsTaskWorkBlock(ILogisticsComponent owningComponent, String displayName, Level world, BlockPos pos) {
 		this.displayName = displayName;
 		this.world = world;
 		this.block = pos;
@@ -122,7 +122,7 @@ public abstract class LogisticsTaskWorkBlock extends LogisticsTaskBase {
 		return block;
 	}
 	
-	public World getWorld() {
+	public Level getWorld() {
 		return world;
 	}
 	

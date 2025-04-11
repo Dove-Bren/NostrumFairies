@@ -16,11 +16,11 @@ import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /**
  * Wraps up build tasks and how to delegate them.
@@ -30,18 +30,18 @@ import net.minecraft.world.World;
 public class BuildTaskPlanner {
 
 	private Map<BlockPos, EntityPersonalFairy> work;
-	private IInventory inventory;
-	private World world;
+	private Container inventory;
+	private Level world;
 	
 	public BuildTaskPlanner() {
 		work = new HashMap<>();
 	}
 	
-	public void setInventory(IInventory inv) {
+	public void setInventory(Container inv) {
 		this.inventory = inv;
 	}
 	
-	public void setWorld(World world) {
+	public void setWorld(Level world) {
 		this.world = world;
 	}
 	
@@ -76,7 +76,7 @@ public class BuildTaskPlanner {
 		
 		// Anything left in tasks are new tasks
 		for (BlockPos task : tasks) {
-			work.put(task.toImmutable(), null);
+			work.put(task.immutable(), null);
 		}
 		
 		return jobless;
@@ -100,7 +100,7 @@ public class BuildTaskPlanner {
 		
 		work.remove(pos);
 		BlockState state = TemplateBlock.GetTemplatedState(world, pos);
-		world.setBlockState(pos, state);
+		world.setBlockAndUpdate(pos, state);
 		worker.removeItem(worker.getCarriedItems().get(0));
 	}
 	
@@ -147,7 +147,7 @@ public class BuildTaskPlanner {
 		}
 	}
 	
-	protected boolean isClaimable(IInventory inv, World world, BlockPos pos) {
+	protected boolean isClaimable(Container inv, Level world, BlockPos pos) {
 		if (this.inventory == null) {
 			return false;
 		}

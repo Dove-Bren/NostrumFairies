@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.entity;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 
 public interface ITrackableEntity<T extends LivingEntity> {
 

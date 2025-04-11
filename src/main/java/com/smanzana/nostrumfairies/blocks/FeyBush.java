@@ -7,22 +7,22 @@ import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrummagica.sound.NostrumMagicaSounds;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BushBlock;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.BushBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.IPlantable;
 
 /**
@@ -34,19 +34,19 @@ public class FeyBush extends BushBlock {
 	public static final String ID = "fey_bush";
 	
 	public FeyBush() {
-		super(Block.Properties.create(Material.PLANTS)
-				.sound(SoundType.PLANT)
-				.doesNotBlockMovement()
+		super(Block.Properties.of(Material.PLANT)
+				.sound(SoundType.GRASS)
+				.noCollission()
 				);
 	}
 	
 	@Override
-	public boolean isReplaceable(BlockState state, BlockItemUseContext context) {
+	public boolean canBeReplaced(BlockState state, BlockPlaceContext context) {
         return false;
     }
 	
 	@Override
-	public boolean canSustainPlant(BlockState state, IBlockReader world, BlockPos pos, Direction facing, IPlantable plantable) {
+	public boolean canSustainPlant(BlockState state, BlockGetter world, BlockPos pos, Direction facing, IPlantable plantable) {
 		boolean ret = super.canSustainPlant(state, world, pos, facing, plantable);
 		
 		return ret;
@@ -57,16 +57,16 @@ public class FeyBush extends BushBlock {
 //		return Lists.newArrayList(new ItemStack(this));
 //	}
 
-	public ActionResultType getEntityInteraction(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
+	public InteractionResult getEntityInteraction(ItemStack stack, Player playerIn, LivingEntity target, InteractionHand hand) {
 		if (target instanceof EntityFeyBase && !(target instanceof EntityPersonalFairy)) {
 			EntityFeyBase fey = (EntityFeyBase) target;
 			if (fey.getStatus() == FairyGeneralStatus.WANDERING) {
-				if (!target.world.isRemote) {
-					target.entityDropItem(FeyResource.create(FeyResourceType.TABLET, 1), .1f);
-					((ServerWorld) target.world).spawnParticle(ParticleTypes.HEART,
-							target.getPosX(),
-							target.getPosY(),	
-							target.getPosZ(),
+				if (!target.level.isClientSide) {
+					target.spawnAtLocation(FeyResource.create(FeyResourceType.TABLET, 1), .1f);
+					((ServerLevel) target.level).sendParticles(ParticleTypes.HEART,
+							target.getX(),
+							target.getY(),	
+							target.getZ(),
 							10,
 							.2,
 							.25,
@@ -77,10 +77,10 @@ public class FeyBush extends BushBlock {
 					stack.shrink(1);
 				}
 				
-				return ActionResultType.SUCCESS;
+				return InteractionResult.SUCCESS;
 			}
 		}
 		
-		return ActionResultType.PASS;
+		return InteractionResult.PASS;
 	}
 }

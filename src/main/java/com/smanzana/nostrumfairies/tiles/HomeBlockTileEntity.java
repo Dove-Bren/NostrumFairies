@@ -47,26 +47,26 @@ import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrummagica.util.Entities;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity, IAetherHandlerProvider, IAetherComponentListener {
+public class HomeBlockTileEntity extends LogisticsTileEntity implements TickableBlockEntity, IAetherHandlerProvider, IAetherComponentListener {
 	
-	public static class HomeBlockSlotInventory extends Inventory {
+	public static class HomeBlockSlotInventory extends SimpleContainer {
 
 		private final HomeBlockTileEntity owner;
 		private final FeyStoneMaterial[] allowedSpecs;
@@ -141,7 +141,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		
 		public @Nonnull ItemStack getSoulStone(int index) {
 			final int slot = getSoulSlot(index);
-			return this.getStackInSlot(slot);
+			return this.getItem(slot);
 		}
 		
 		public boolean hasStone(int index) {
@@ -151,11 +151,11 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		
 		public @Nonnull ItemStack getSpecialization(int index) {
 			final int slot = getSpecializationSlot(index);
-			return this.getStackInSlot(slot);
+			return this.getItem(slot);
 		}
 		
 		@Override
-		public boolean isItemValidForSlot(int slot, @Nonnull ItemStack stack) {
+		public boolean canPlaceItem(int slot, @Nonnull ItemStack stack) {
 			if (stack.isEmpty()) {
 				return true;
 			}
@@ -168,8 +168,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		}
 		
 		@Override
-		public void markDirty() {
-			super.markDirty();
+		public void setChanged() {
+			super.setChanged();
 			owner.dirtyAndUpdate();
 		}
 		
@@ -179,7 +179,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			}
 			
 			int slot = getSoulSlot(index);
-			this.setInventorySlotContents(slot, soulStone);
+			this.setItem(slot, soulStone);
 			return true;
 		}
 		
@@ -189,21 +189,21 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			}
 			
 			int slot = getSpecializationSlot(index);
-			this.setInventorySlotContents(slot, specialization);
+			this.setItem(slot, specialization);
 			return true;
 		}
 		
 		private static final String NBT_ITEMS = "items";
 		
-		public CompoundNBT toNBT() {
-			CompoundNBT nbt = new CompoundNBT();
+		public CompoundTag toNBT() {
+			CompoundTag nbt = new CompoundTag();
 			
 			nbt.put(NBT_ITEMS, Inventories.serializeInventory(this));
 			
 			return nbt;
 		}
 		
-		public static HomeBlockTileEntity.HomeBlockSlotInventory fromNBT(HomeBlockTileEntity owner, CompoundNBT nbt) {
+		public static HomeBlockTileEntity.HomeBlockSlotInventory fromNBT(HomeBlockTileEntity owner, CompoundTag nbt) {
 			
 			HomeBlockTileEntity.HomeBlockSlotInventory inv = new HomeBlockSlotInventory(owner, FeyHomeBlock.GetSpecMaterials(owner.type));
 			Inventories.deserializeInventory(inv, nbt.get(NBT_ITEMS));
@@ -212,7 +212,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		}
 	}
 	
-	public static class HomeBlockUpgradeInventory extends Inventory {
+	public static class HomeBlockUpgradeInventory extends SimpleContainer {
 		
 		private final HomeBlockTileEntity owner;
 		
@@ -231,28 +231,28 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			return false;
 		}
 		
-		public boolean isItemValidForSlot(int slot, @Nonnull ItemStack stack) {
+		public boolean canPlaceItem(int slot, @Nonnull ItemStack stack) {
 			return slot < MAX_UPGRADES &&
 					(stack.isEmpty() || isValidUpgrade(stack));
 		}
 		
 		@Override
-		public void markDirty() {
-			super.markDirty();
+		public void setChanged() {
+			super.setChanged();
 			owner.dirtyAndUpdate();
 		}
 		
 		private static final String NBT_ITEMS = "items";
 		
-		public CompoundNBT toNBT() {
-			CompoundNBT nbt = new CompoundNBT();
+		public CompoundTag toNBT() {
+			CompoundTag nbt = new CompoundTag();
 			
 			nbt.put(NBT_ITEMS, Inventories.serializeInventory(this));
 			
 			return nbt;
 		}
 		
-		public static HomeBlockTileEntity.HomeBlockUpgradeInventory fromNBT(HomeBlockTileEntity owner, CompoundNBT nbt) {
+		public static HomeBlockTileEntity.HomeBlockUpgradeInventory fromNBT(HomeBlockTileEntity owner, CompoundTag nbt) {
 			HomeBlockTileEntity.HomeBlockUpgradeInventory inv = new HomeBlockUpgradeInventory(owner);
 			Inventories.deserializeInventory(inv, nbt.get(NBT_ITEMS));
 			
@@ -361,7 +361,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	public boolean isResident(EntityFeyBase fey) {
-		UUID id = fey.getUniqueID();
+		UUID id = fey.getUUID();
 		return this.feyCacheMap.containsKey(id);
 	}
 	
@@ -380,9 +380,9 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		for (Entry<UUID, HomeBlockTileEntity.FeyAwayRecord> entry : feyCacheMap.entrySet()) {
 			entry.getValue().cache = null;
 			
-			Entity ent = Entities.FindEntity(world, entry.getKey());
+			Entity ent = Entities.FindEntity(level, entry.getKey());
 			if (ent != null) {
-				int idx = findFeySlot(ent.getUniqueID());
+				int idx = findFeySlot(ent.getUUID());
 				entry.getValue().cache = refreshFey(idx, (EntityFeyBase) ent);
 				entry.getValue().tickLastSeen = ticksExisted;
 			}
@@ -482,11 +482,11 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	protected int findFeySlot(EntityFeyBase fey) {
-		return findFeySlot(fey.getUniqueID());
+		return findFeySlot(fey.getUUID());
 	}
 	
 	public boolean addResident(EntityFeyBase fey) {
-		if (world == null || world.isRemote) {
+		if (level == null || level.isClientSide) {
 			return false;
 		}
 		
@@ -504,14 +504,14 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		record.name = fey.getName().getString();
 		record.cache = fey;
 		
-		this.feyCacheMap.put(fey.getUniqueID(), record);
-		this.feySlots[index] = fey.getUniqueID();
+		this.feyCacheMap.put(fey.getUUID(), record);
+		this.feySlots[index] = fey.getUUID();
 		dirtyAndUpdate();
 		return true;
 	}
 	
 	public void removeResident(UUID id) {
-		if (world == null || world.isRemote) {
+		if (level == null || level.isClientSide) {
 			return;
 		}
 		
@@ -524,15 +524,15 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	public void removeResident(EntityFeyBase fey) {
-		removeResident(fey.getUniqueID());
+		removeResident(fey.getUUID());
 	}
 	
 	public void replaceResident(EntityFeyBase original, EntityFeyBase replacement) {
-		if (world == null || world.isRemote) {
+		if (level == null || level.isClientSide) {
 			return;
 		}
 		
-		if (original == null || replacement == null || !original.getUniqueID().equals(replacement.getUniqueID())) {
+		if (original == null || replacement == null || !original.getUUID().equals(replacement.getUUID())) {
 			return;
 		}
 		
@@ -541,10 +541,10 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		record.name = replacement.getName().getString();
 		record.cache = replacement;
 		
-		this.feyCacheMap.put(replacement.getUniqueID(), record);
+		this.feyCacheMap.put(replacement.getUUID(), record);
 
-		int idx = findFeySlot(original.getUniqueID());
-		this.feySlots[idx] = replacement.getUniqueID();
+		int idx = findFeySlot(original.getUUID());
+		this.feySlots[idx] = replacement.getUUID();
 		dirtyAndUpdate();
 	}
 	
@@ -558,8 +558,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	
 	public int getUpgradeCount(FeySlotType slot, FeyStoneMaterial material) {
 		int count = 0;
-		for (int i = 0; i < upgradeInv.getSizeInventory(); i++) {
-			ItemStack stack = upgradeInv.getStackInSlot(i);
+		for (int i = 0; i < upgradeInv.getContainerSize(); i++) {
+			ItemStack stack = upgradeInv.getItem(i);
 			if (!stack.isEmpty() && ((FeyStone) stack.getItem()).getFeySlot(stack) == slot && ((FeyStone) stack.getItem()).getStoneMaterial(stack) == material) {
 				count++;
 			}
@@ -712,18 +712,18 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	@Override
-	public CompoundNBT write(CompoundNBT nbt) {
-		nbt = super.write(nbt);
+	public CompoundTag save(CompoundTag nbt) {
+		nbt = super.save(nbt);
 		
 		nbt.putString(NBT_TYPE, type.name());
 		nbt.putString(NBT_NAME, getName());
 		nbt.putInt(NBT_SLOT_COUNT, slots);
 		nbt.putFloat(NBT_SLOT_GROWTH, growth);
 		
-		ListNBT list = new ListNBT();
+		ListTag list = new ListTag();
 		for (int i = 0; i < getEffectiveSlots(); i++) {
 			UUID id = feySlots[i];
-			CompoundNBT tag = new CompoundNBT();
+			CompoundTag tag = new CompoundTag();
 			if (id != null) {
 				HomeBlockTileEntity.FeyAwayRecord record = this.feyCacheMap.get(id);
 				tag.putString(NBT_FEY_NAME, record.name);
@@ -735,14 +735,14 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		
 		nbt.put(NBT_UPGRADES, this.upgradeInv.toNBT());
 		nbt.put(NBT_SLOT_INV, slotInv.toNBT());
-		nbt.put(NBT_HANDLER, handler.writeToNBT(new CompoundNBT()));
+		nbt.put(NBT_HANDLER, handler.writeToNBT(new CompoundTag()));
 		
 		return nbt;
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT nbt) {
-		super.read(state, nbt);
+	public void load(BlockState state, CompoundTag nbt) {
+		super.load(state, nbt);
 		
 		String type = nbt.getString(NBT_TYPE);
 		this.type = ResidentType.valueOf(ResidentType.class, type.toUpperCase());
@@ -758,9 +758,9 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		this.upgradeInv = HomeBlockUpgradeInventory.fromNBT(this, nbt.getCompound(NBT_UPGRADES));
 		
 		feyCacheMap.clear();
-		ListNBT list = nbt.getList(NBT_FEY, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_FEY, NBT.TAG_COMPOUND);
 		for (int i = 0; i < getEffectiveSlots(); i++) {
-			CompoundNBT tag = list.getCompound(i);
+			CompoundTag tag = list.getCompound(i);
 			UUID id = null;
 			if (tag != null && tag.contains(NBT_FEY_UUID)) {
 				id = UUID.fromString(tag.getString(NBT_FEY_UUID));
@@ -771,7 +771,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			}
 			this.feySlots[i] = id;
 		}
-		if (this.world != null) {
+		if (this.level != null) {
 			this.refreshFeyList();
 		}
 		
@@ -782,27 +782,27 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	public void tick() {
 		ticksExisted++;
 		
-		if (!world.isRemote && this.ticksExisted == 1) {
+		if (!level.isClientSide && this.ticksExisted == 1) {
 			this.handler.setAutoFill(true);
 		}
 		
 		if (this.ticksExisted % 20 == 0) {
 			// Check on fey. Are they missing?
 			refreshFeyList();
-			if (!world.isRemote) {
+			if (!level.isClientSide) {
 				purgeFeyList();
 			}
 		}
 		
-		if (!world.isRemote) {
+		if (!level.isClientSide) {
 			//If any soul gems in our inventory have souls in them, free them!
-			for (int i = 0; i < this.slotInv.getSizeInventory(); i++) {
+			for (int i = 0; i < this.slotInv.getContainerSize(); i++) {
 				if (HomeBlockSlotInventory.isSoulSlot(i) && slotInv.hasStone(i)) {
-					ItemStack stone = slotInv.getStackInSlot(i);
+					ItemStack stone = slotInv.getItem(i);
 					if (FeySoulStone.HasStoredFey(stone)) {
-						EntityFeyBase fey = FeySoulStone.spawnStoredEntity(stone, world, pos.getX() + .5, pos.getY() + 1, pos.getZ() + .5);
-						fey.setHome(this.getPos());
-						slotInv.setInventorySlotContents(i, FeySoulStone.clearEntity(stone));
+						EntityFeyBase fey = FeySoulStone.spawnStoredEntity(stone, level, worldPosition.getX() + .5, worldPosition.getY() + 1, worldPosition.getZ() + .5);
+						fey.setHome(this.getBlockPos());
+						slotInv.setItem(i, FeySoulStone.clearEntity(stone));
 					}
 				}
 			}
@@ -820,15 +820,15 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 
 		handler.tick();
 		
-		if (!world.isRemote && aetherDirtyFlag && (ticksExisted == 1 || ticksExisted % 5 == 0)) {
+		if (!level.isClientSide && aetherDirtyFlag && (ticksExisted == 1 || ticksExisted % 5 == 0)) {
 			dirtyAndUpdate();
 			aetherDirtyFlag = false;
 		}
 		
-		if (!world.isRemote && ticksExisted % 100 == 0 && world.isDaytime()) {
+		if (!level.isClientSide && ticksExisted % 100 == 0 && level.isDay()) {
 			if (NostrumFairies.random.nextFloat() < .2f) {
 				// Don't scan if too many are nearby
-				if (world.getEntitiesWithinAABB(EntityFeyBase.class, VoxelShapes.fullCube().getBoundingBox().grow(16)).size() < 8) {
+				if (level.getEntitiesOfClass(EntityFeyBase.class, Shapes.block().bounds().inflate(16)).size() < 8) {
 					// Scan for nearby flowers and possible spawn extra fey
 					final float happiness = getAverageHappiness();
 					if (happiness > 50f && this.getAether() > 0) {
@@ -846,14 +846,14 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			Iterator<BlockPos> it = boostBlockSpots.iterator();
 			while (it.hasNext()) {
 				BlockPos pos = it.next();
-				BlockState state = world.getBlockState(pos);
+				BlockState state = level.getBlockState(pos);
 				if (getBlockSpawnBonus(pos, state) <= 0) {
 					it.remove();
 					continue;
 				}
 				
 				if (NostrumFairies.random.nextFloat() < .2f) {
-					((ServerWorld) world).spawnParticle(ParticleTypes.HAPPY_VILLAGER,
+					((ServerLevel) level).sendParticles(ParticleTypes.HAPPY_VILLAGER,
 							pos.getX() + .5,
 							pos.getY() + 1,
 							pos.getZ() + .5,
@@ -896,23 +896,23 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		this.boostBlockSpots.clear();
 		
 		float bonus = 0f;
-		BlockPos.Mutable cursor = new BlockPos.Mutable();
-		final int x = pos.getX();
-		final int y = pos.getY();
-		final int z = pos.getZ();
+		BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+		final int x = worldPosition.getX();
+		final int y = worldPosition.getY();
+		final int z = worldPosition.getZ();
 		for (int i = -scanRadius; i <= scanRadius; i++)
 		for (int j = -1; j <= 1; j++)
 		for (int k = -scanRadius; k <= scanRadius; k++) {
-			cursor.setPos(x + i, y + j, z + k);
+			cursor.set(x + i, y + j, z + k);
 			if (cursor.getY() < 0 || cursor.getY() > 255) {
 				continue;
 			}
 			
-			BlockState state = world.getBlockState(cursor);
+			BlockState state = level.getBlockState(cursor);
 			final float boost = getBlockSpawnBonus(cursor, state);
 			bonus += boost;
 			if (boost > 0f) {
-				boostBlockSpots.add(cursor.toImmutable());
+				boostBlockSpots.add(cursor.immutable());
 			}
 		}
 		return bonus;
@@ -951,26 +951,26 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			float angle = (float) (rand.nextDouble() * (2 * Math.PI));
 			float tilt = (float) (rand.nextDouble() * (2 * Math.PI)) * .5f;
 			
-			targ = new BlockPos(new Vector3d(
-					pos.getX() + (Math.cos(angle) * dist),
-					pos.getY() + (Math.cos(tilt) * dist),
-					pos.getZ() + (Math.sin(angle) * dist)));
+			targ = new BlockPos(new Vec3(
+					worldPosition.getX() + (Math.cos(angle) * dist),
+					worldPosition.getY() + (Math.cos(tilt) * dist),
+					worldPosition.getZ() + (Math.sin(angle) * dist)));
 			
-			while (targ.getY() > 0 && world.isAirBlock(targ)) {
-				targ = targ.down();
+			while (targ.getY() > 0 && level.isEmptyBlock(targ)) {
+				targ = targ.below();
 			}
 			if (targ.getY() < 256) {
-				targ = targ.up();
+				targ = targ.above();
 			}
 			
 			// We've hit a non-air block. Make sure there's space above it
-			if (world.isAirBlock(targ.up())) {
+			if (level.isEmptyBlock(targ.above())) {
 				break;
 			}
 		} while (targ == null && attempts > 0);
 		
 		if (targ == null) {
-			targ = pos.up();
+			targ = worldPosition.above();
 		}
 		
 		return targ;
@@ -998,40 +998,40 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 		final int type = NostrumFairies.random.nextInt(3);
 		switch (this.type) {
 		case DWARF:
-			if (type == 0) fey = new EntityDwarf(FairyEntities.Dwarf, world);
-			else if (type == 1) fey = new EntityDwarfBuilder(FairyEntities.DwarfBuilder, world);
-			else fey = new EntityDwarfCrafter(FairyEntities.DwarfCrafter, world);
+			if (type == 0) fey = new EntityDwarf(FairyEntities.Dwarf, level);
+			else if (type == 1) fey = new EntityDwarfBuilder(FairyEntities.DwarfBuilder, level);
+			else fey = new EntityDwarfCrafter(FairyEntities.DwarfCrafter, level);
 			break;
 		case ELF:
-			if (type == 0) fey = new EntityElf(FairyEntities.Elf, world);
-			else if (type == 1) fey = new EntityElfArcher(FairyEntities.ElfArcher, world);
-			else fey = new EntityElfCrafter(FairyEntities.ElfCrafter, world);
+			if (type == 0) fey = new EntityElf(FairyEntities.Elf, level);
+			else if (type == 1) fey = new EntityElfArcher(FairyEntities.ElfArcher, level);
+			else fey = new EntityElfCrafter(FairyEntities.ElfCrafter, level);
 			break;
 		case FAIRY:
 		default:
-			fey = new EntityFairy(FairyEntities.Fairy, world);
+			fey = new EntityFairy(FairyEntities.Fairy, level);
 			break;
 		case GNOME:
-			if (type == 0) fey = new EntityGnome(FairyEntities.Gnome, world);
-			else if (type == 1) fey = new EntityGnomeCrafter(FairyEntities.GnomeCrafter, world);
-			else fey = new EntityGnomeCollector(FairyEntities.GnomeCollector, world);
+			if (type == 0) fey = new EntityGnome(FairyEntities.Gnome, level);
+			else if (type == 1) fey = new EntityGnomeCrafter(FairyEntities.GnomeCrafter, level);
+			else fey = new EntityGnomeCollector(FairyEntities.GnomeCollector, level);
 			break;
 		}
 		
-		fey.setPosition(pos.getX() + .5, pos.getY() + .05, pos.getZ() + .5);
-		world.addEntity(fey);
+		fey.setPos(pos.getX() + .5, pos.getY() + .05, pos.getZ() + .5);
+		level.addFreshEntity(fey);
 	}
 	
 	protected void dirtyAndUpdate() {
-		markDirty();
-		if (world != null && !world.isRemote) {
-			world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 2);
+		setChanged();
+		if (level != null && !level.isClientSide) {
+			level.sendBlockUpdated(worldPosition, level.getBlockState(worldPosition), level.getBlockState(worldPosition), 2);
 		}
 	}
 	
 	@Override
-	public void markDirty() {
-		super.markDirty();
+	public void setChanged() {
+		super.setChanged();
 	}
 	
 	@Override
@@ -1041,10 +1041,10 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 				continue;
 			}
 			
-			BlockPos neighbor = pos.offset(dir);
+			BlockPos neighbor = worldPosition.relative(dir);
 			
 			// First check for a TileEntity
-			TileEntity te = world.getTileEntity(neighbor);
+			BlockEntity te = level.getBlockEntity(neighbor);
 			if (te != null && te instanceof IAetherHandler) {
 				connections.add(new AetherFlowConnection((IAetherHandler) te, dir.getOpposite()));
 				continue;
@@ -1055,10 +1055,10 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 			}
 			
 			// See if block boasts being able to get us a handler
-			BlockState attachedState = world.getBlockState(neighbor);
+			BlockState attachedState = level.getBlockState(neighbor);
 			Block attachedBlock = attachedState.getBlock();
 			if (attachedBlock instanceof IAetherCapableBlock) {
-				connections.add(new AetherFlowConnection(((IAetherCapableBlock) attachedBlock).getAetherHandler(world, attachedState, neighbor, dir), dir.getOpposite()));
+				connections.add(new AetherFlowConnection(((IAetherCapableBlock) attachedBlock).getAetherHandler(level, attachedState, neighbor, dir), dir.getOpposite()));
 				continue;
 			}
 		}
@@ -1066,7 +1066,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	
 	@Override
 	public void dirty() {
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	@Override
@@ -1075,8 +1075,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements ITickabl
 	}
 	
 	@Override
-	public void remove() {
-		super.remove();
+	public void setRemoved() {
+		super.setRemoved();
 		
 		// Clean up connections
 		handler.clearConnections();

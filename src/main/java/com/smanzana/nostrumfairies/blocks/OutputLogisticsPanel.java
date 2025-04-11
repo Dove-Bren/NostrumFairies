@@ -4,26 +4,26 @@ import com.smanzana.nostrumfairies.client.gui.container.OutputPanelGui;
 import com.smanzana.nostrumfairies.tiles.OutputPanelTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ToolType;
 
 public class OutputLogisticsPanel extends FeyContainerBlock {
@@ -31,58 +31,58 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	private static final DirectionProperty FACING = DirectionProperty.create("facing", Direction.values());
 	private static final double BB_MINOR = 1.0;
 	private static final double BB_MAJOR = 2.0;
-	private static final VoxelShape AABB_N = Block.makeCuboidShape(BB_MAJOR, BB_MAJOR, 0, 16 - BB_MAJOR, 16 - BB_MAJOR, BB_MINOR);
-	private static final VoxelShape AABB_E = Block.makeCuboidShape(16 - BB_MINOR, BB_MAJOR, BB_MAJOR, 16, 16 - BB_MAJOR, 16 - BB_MAJOR);
-	private static final VoxelShape AABB_S = Block.makeCuboidShape(BB_MAJOR, BB_MAJOR, 16 - BB_MINOR, 16 - BB_MAJOR, 16 - BB_MAJOR, 16);
-	private static final VoxelShape AABB_W = Block.makeCuboidShape(0, BB_MAJOR, BB_MAJOR, BB_MINOR, 16 - BB_MAJOR, 16 - BB_MAJOR);
-	private static final VoxelShape AABB_U = Block.makeCuboidShape(BB_MAJOR, 16 - BB_MINOR, BB_MAJOR, 16 - BB_MAJOR, 16, 16 - BB_MAJOR);
-	private static final VoxelShape AABB_D = Block.makeCuboidShape(BB_MAJOR, 0, BB_MAJOR, 16 - BB_MAJOR, BB_MINOR, 16 - BB_MAJOR);
+	private static final VoxelShape AABB_N = Block.box(BB_MAJOR, BB_MAJOR, 0, 16 - BB_MAJOR, 16 - BB_MAJOR, BB_MINOR);
+	private static final VoxelShape AABB_E = Block.box(16 - BB_MINOR, BB_MAJOR, BB_MAJOR, 16, 16 - BB_MAJOR, 16 - BB_MAJOR);
+	private static final VoxelShape AABB_S = Block.box(BB_MAJOR, BB_MAJOR, 16 - BB_MINOR, 16 - BB_MAJOR, 16 - BB_MAJOR, 16);
+	private static final VoxelShape AABB_W = Block.box(0, BB_MAJOR, BB_MAJOR, BB_MINOR, 16 - BB_MAJOR, 16 - BB_MAJOR);
+	private static final VoxelShape AABB_U = Block.box(BB_MAJOR, 16 - BB_MINOR, BB_MAJOR, 16 - BB_MAJOR, 16, 16 - BB_MAJOR);
+	private static final VoxelShape AABB_D = Block.box(BB_MAJOR, 0, BB_MAJOR, 16 - BB_MAJOR, BB_MINOR, 16 - BB_MAJOR);
 	public static final String ID = "logistics_output_panel";
 	
 	public OutputLogisticsPanel() {
-		super(Block.Properties.create(Material.WOOD)
-				.hardnessAndResistance(3.0f, 1.0f)
+		super(Block.Properties.of(Material.WOOD)
+				.strength(3.0f, 1.0f)
 				.sound(SoundType.WOOD)
 				.harvestTool(ToolType.AXE)
 				);
 	}
 	
 	@Override
-	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(FACING);
 	}
 	
 	protected static int metaFromFacing(Direction facing) {
-		return facing.getIndex();
+		return facing.get3DDataValue();
 	}
 	
 	public Direction getFacing(BlockState state) {
-		return state.get(FACING);
+		return state.getValue(FACING);
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		// Want to point towards the block we clicked
-		final World world = context.getWorld();
-		final BlockPos pos = context.getPos();
-		Direction facing = context.getFace().getOpposite();
-		if (!this.canPlaceAt(world, pos, facing) && facing.getIndex() > 1) {
+		final Level world = context.getLevel();
+		final BlockPos pos = context.getClickedPos();
+		Direction facing = context.getClickedFace().getOpposite();
+		if (!this.canPlaceAt(world, pos, facing) && facing.get3DDataValue() > 1) {
 			// Rotate and find it
 			for (int i = 0; i < 3; i++) {
-				facing = facing.rotateY();
+				facing = facing.getClockWise();
 				if (this.canPlaceAt(world, pos, facing)) {
 					break;
 				}
 			}
 		}
 		
-		return this.getDefaultState()
-				.with(FACING, facing);
+		return this.defaultBlockState()
+				.setValue(FACING, facing);
 	}
 	
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		switch (state.get(FACING)) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+		switch (state.getValue(FACING)) {
 		case NORTH:
 			return AABB_N;
 		case EAST:
@@ -99,9 +99,9 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 		}
 	}
 	
-	protected boolean canPlaceAt(IWorldReader worldIn, BlockPos pos, Direction side) {
-		BlockState state = worldIn.getBlockState(pos.offset(side));
-		if (state == null || !(state.getMaterial().blocksMovement())) {
+	protected boolean canPlaceAt(LevelReader worldIn, BlockPos pos, Direction side) {
+		BlockState state = worldIn.getBlockState(pos.relative(side));
+		if (state == null || !(state.getMaterial().blocksMotion())) {
 			return false;
 		}
 		
@@ -109,7 +109,7 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
+	public boolean canSurvive(BlockState stateIn, LevelReader worldIn, BlockPos pos) {
 		for (Direction side : Direction.values()) {
 			if (canPlaceAt(worldIn, pos, side)) {
 				return true;
@@ -121,12 +121,12 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos posFrom, boolean isMoving) {
-		Direction face = state.get(FACING);
+	public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos posFrom, boolean isMoving) {
+		Direction face = state.getValue(FACING);
 		if (!canPlaceAt(worldIn, pos, face)) {
 			worldIn.removeBlock(pos, true);
 		} else {
-			TileEntity ent = worldIn.getTileEntity(pos);
+			BlockEntity ent = worldIn.getBlockEntity(pos);
 			if (ent != null && ent instanceof OutputPanelTileEntity) {
 				((OutputPanelTileEntity) ent).notifyNeighborChanged();
 			}
@@ -136,31 +136,31 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	}
 	
 	@Override
-	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
-		OutputPanelTileEntity panel = (OutputPanelTileEntity) worldIn.getTileEntity(pos);
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult hit) {
+		OutputPanelTileEntity panel = (OutputPanelTileEntity) worldIn.getBlockEntity(pos);
 		NostrumMagica.instance.proxy.openContainer(playerIn, OutputPanelGui.OutputPanelContainer.Make(panel));
 		
-		return ActionResultType.SUCCESS;
+		return InteractionResult.SUCCESS;
 	}
 	
 	@Override
-	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+	public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
 		return new OutputPanelTileEntity();
 	}
 	
 	@Override
-	public BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+	public RenderShape getRenderShape(BlockState state) {
+		return RenderShape.MODEL;
 	}
 	
 	@Override
-	public void breakBlock(World world, BlockPos pos, BlockState state) {
+	public void breakBlock(Level world, BlockPos pos, BlockState state) {
 		destroy(world, pos, state);
 		super.breakBlock(world, pos, state);
 	}
 	
-	private void destroy(World world, BlockPos pos, BlockState state) {
-		TileEntity ent = world.getTileEntity(pos);
+	private void destroy(Level world, BlockPos pos, BlockState state) {
+		BlockEntity ent = world.getBlockEntity(pos);
 		if (ent == null || !(ent instanceof OutputPanelTileEntity))
 			return;
 		

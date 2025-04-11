@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
@@ -15,14 +15,14 @@ import com.smanzana.nostrummagica.util.Inventories;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -51,7 +51,7 @@ public class OutputChestGui {
 		protected final LogicPanel logicPanel;
 		private int chestIDStart;
 		
-		public OutputChestContainer(int windowId, PlayerInventory playerInv, OutputChestTileEntity chest) {
+		public OutputChestContainer(int windowId, Inventory playerInv, OutputChestTileEntity chest) {
 			super(FairyContainers.OutputChest, windowId, chest);
 			this.chest = chest;
 						
@@ -67,32 +67,32 @@ public class OutputChestGui {
 				this.addSlot(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
 			}
 			
-			chestIDStart = this.inventorySlots.size();
-			for (int i = 0; i < chest.getSizeInventory(); i++) {
+			chestIDStart = this.slots.size();
+			for (int i = 0; i < chest.getContainerSize(); i++) {
 				final int index = i;
 				this.addSlot(new Slot(chest, i, GUI_TOP_INV_HOFFSET + i * 18, GUI_TOP_INV_VOFFSET) {
 					@Override
-					public boolean isItemValid(@Nonnull ItemStack stack) {
-				        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
+					public boolean mayPlace(@Nonnull ItemStack stack) {
+				        return this.container.canPlaceItem(this.getSlotIndex(), stack);
 				    }
 					
 					@Override
-					public int getSlotStackLimit() {
+					public int getMaxStackSize() {
 						ItemStack template = chest.getTemplate(index);
 						if (template.isEmpty()) {
-							return super.getSlotStackLimit();
+							return super.getMaxStackSize();
 						} else {
 							return template.getCount();
 						}
 					}
 					
 					@Override
-					public void putStack(@Nonnull ItemStack stack) {
+					public void set(@Nonnull ItemStack stack) {
 //						ItemStack template = chest.getTemplate(index);
 //						if (template.isEmpty()) {
 //							chest.setTemplate(index, stack);
 //						} else {
-							super.putStack(stack);
+							super.set(stack);
 //						}
 					}
 				});
@@ -101,7 +101,7 @@ public class OutputChestGui {
 			logicPanel = new LogicPanel(this, chest, -GUI_PANEL_WIDTH, 0, GUI_PANEL_WIDTH, GUI_PANEL_HEIGHT);
 		}
 		
-		public static OutputChestContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+		public static OutputChestContainer FromNetwork(int windowId, Inventory playerInv, FriendlyByteBuf buf) {
 			return new OutputChestContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}
 		
@@ -114,18 +114,18 @@ public class OutputChestGui {
 		}
 		
 		@Override
-		public ItemStack transferStackInSlot(PlayerEntity playerIn, int fromSlot) {
+		public ItemStack quickMoveStack(Player playerIn, int fromSlot) {
 			ItemStack prev = ItemStack.EMPTY;	
-			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
+			Slot slot = (Slot) this.slots.get(fromSlot);
 			
-			if (slot != null && slot.getHasStack()) {
-				ItemStack cur = slot.getStack();
+			if (slot != null && slot.hasItem()) {
+				ItemStack cur = slot.getItem();
 				prev = cur.copy();
 				
-				if (slot.inventory == this.chest) {
+				if (slot.container == this.chest) {
 					// Trying to take one of our items
-					if (playerIn.inventory.addItemStackToInventory(cur)) {
-						slot.putStack(ItemStack.EMPTY);
+					if (playerIn.inventory.add(cur)) {
+						slot.set(ItemStack.EMPTY);
 						slot.onTake(playerIn, cur);
 					} else {
 						prev = ItemStack.EMPTY;
@@ -133,7 +133,7 @@ public class OutputChestGui {
 				} else {
 					// shift-click in player inventory
 					ItemStack leftover = Inventories.addItem(chest, cur);
-					slot.putStack(leftover.isEmpty() ? ItemStack.EMPTY : leftover);
+					slot.set(leftover.isEmpty() ? ItemStack.EMPTY : leftover);
 					if (!leftover.isEmpty() && leftover.getCount() == prev.getCount()) {
 						prev = ItemStack.EMPTY;
 					}
@@ -145,26 +145,26 @@ public class OutputChestGui {
 		}
 		
 		@Override
-		public boolean canInteractWith(PlayerEntity playerIn) {
+		public boolean stillValid(Player playerIn) {
 			return true;
 		}
 		
 		@Override
-		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player) {
+		public ItemStack clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
 			if (logicPanel.handleSlotClick(slotId, dragType, clickTypeIn, player)) {
 				return ItemStack.EMPTY;
 			}
 			
-			if (player.inventory.getItemStack().isEmpty()) {
+			if (player.inventory.getCarried().isEmpty()) {
 				// empty hand. Right-click?
-				if (slotId >= chestIDStart && dragType == 1 && clickTypeIn == ClickType.PICKUP && chest.getStackInSlot(slotId - chestIDStart).isEmpty()) {
+				if (slotId >= chestIDStart && dragType == 1 && clickTypeIn == ClickType.PICKUP && chest.getItem(slotId - chestIDStart).isEmpty()) {
 					chest.setTemplate(slotId - chestIDStart, ItemStack.EMPTY);
 					return ItemStack.EMPTY;
 				}
 			} else {
 				// Item in hand. Clicking empty output slot?
 				if (slotId >= chestIDStart && clickTypeIn == ClickType.PICKUP && chest.getTemplate(slotId - chestIDStart).isEmpty()) {
-					ItemStack template = player.inventory.getItemStack();
+					ItemStack template = player.inventory.getCarried();
 					if (dragType == 1) { // right click
 						template = template.copy();
 						template.setCount(1);
@@ -175,12 +175,12 @@ public class OutputChestGui {
 //				System.out.println("Clicktype: " + clickTypeIn);
 //				System.out.println("dragType: " + dragType);
 			}
-			return super.slotClick(slotId, dragType, clickTypeIn, player);
+			return super.clicked(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
-		public boolean canDragIntoSlot(Slot slotIn) {
-			return slotIn.slotNumber < chestIDStart;
+		public boolean canDragTo(Slot slotIn) {
+			return slotIn.index < chestIDStart;
 		}
 		
 	}
@@ -191,24 +191,24 @@ public class OutputChestGui {
 		private OutputChestContainer container;
 		private final LogicPanelGui<OutputChestGuiContainer> panelGui;
 		
-		public OutputChestGuiContainer(OutputChestContainer container, PlayerInventory playerInv, ITextComponent name) {
+		public OutputChestGuiContainer(OutputChestContainer container, Inventory playerInv, Component name) {
 			super(container, playerInv, name);
 			this.container = container;
 			this.panelGui = new LogicPanelGui<>(container.logicPanel, this, 0xFFE2E0C3, true);
 			
-			this.xSize = GUI_TEXT_WIDTH;
-			this.ySize = GUI_TEXT_HEIGHT;
+			this.imageWidth = GUI_TEXT_WIDTH;
+			this.imageHeight = GUI_TEXT_HEIGHT;
 		}
 		
 		@Override
 		public void init() {
 			super.init();
-			panelGui.init(mc, guiLeft, guiTop);
+			panelGui.init(mc, leftPos, topPos);
 		}
 		
-		private void drawStatus(MatrixStack matrixStackIn, float partialTicks, boolean available) {
+		private void drawStatus(PoseStack matrixStackIn, float partialTicks, boolean available) {
 			float alpha = (float) (.5f + (.25f * Math.sin(Math.PI * (double)(System.currentTimeMillis() % 1000) / 1000.0)));
-			mc.getTextureManager().bindTexture(TEXT);
+			mc.getTextureManager().bind(TEXT);
 			
 			final int text_hoffset = (available ? GUI_TEXT_WORKING_ICON_HOFFSET : GUI_TEXT_MISSING_ICON_HOFFSET);
 			final int text_voffset = 0;
@@ -218,22 +218,22 @@ public class OutputChestGui {
 			RenderSystem.disableBlend();
 		}
 		
-		private void drawTemplate(MatrixStack matrixStackIn, float partialTicks, @Nonnull ItemStack template) {
+		private void drawTemplate(PoseStack matrixStackIn, float partialTicks, @Nonnull ItemStack template) {
 			if (!template.isEmpty()) {
-				matrixStackIn.push();
+				matrixStackIn.pushPose();
 				{
 					RenderSystem.pushMatrix();
-					RenderSystem.multMatrix(matrixStackIn.getLast().getMatrix());
-					Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(template, 0, 0);
+					RenderSystem.multMatrix(matrixStackIn.last().pose());
+					Minecraft.getInstance().getItemRenderer().renderGuiItem(template, 0, 0);
 					RenderSystem.popMatrix();
 				}
 				matrixStackIn.translate(0, 0, 110);
 				if (template.getCount() > 1) {
 					final String count = "" + template.getCount();
 					
-					this.font.drawStringWithShadow(matrixStackIn, "" + template.getCount(),
-							GUI_INV_CELL_LENGTH - (this.font.getStringWidth(count) + 1),
-							GUI_INV_CELL_LENGTH - (this.font.FONT_HEIGHT),
+					this.font.drawShadow(matrixStackIn, "" + template.getCount(),
+							GUI_INV_CELL_LENGTH - (this.font.width(count) + 1),
+							GUI_INV_CELL_LENGTH - (this.font.lineHeight),
 							0xFFFFFFFF);
 				}
 //				else {
@@ -242,34 +242,34 @@ public class OutputChestGui {
 				RenderSystem.enableBlend();
 				RenderFuncs.drawRect(matrixStackIn, 0, 0, GUI_INV_CELL_LENGTH - 2, GUI_INV_CELL_LENGTH - 2, 0xA0636259);
 				RenderSystem.disableBlend();
-				matrixStackIn.pop();
+				matrixStackIn.popPose();
 			}
 		}
 		
 		@Override
-		protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
+		protected void renderBg(PoseStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			
-			int horizontalMargin = (width - xSize) / 2;
-			int verticalMargin = (height - ySize) / 2;
+			int horizontalMargin = (width - imageWidth) / 2;
+			int verticalMargin = (height - imageHeight) / 2;
 			
-			mc.getTextureManager().bindTexture(TEXT);
+			mc.getTextureManager().bind(TEXT);
 			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			
 			// Draw templates, if needed
-			for (int i = 0; i < container.chest.getSizeInventory(); i++) {
+			for (int i = 0; i < container.chest.getContainerSize(); i++) {
 				ItemStack template = container.chest.getTemplate(i);
-				ItemStack stack = container.chest.getStackInSlot(i);
+				ItemStack stack = container.chest.getItem(i);
 				
-				matrixStackIn.push();
+				matrixStackIn.pushPose();
 				matrixStackIn.translate(horizontalMargin + GUI_TOP_INV_HOFFSET + (i * GUI_INV_CELL_LENGTH),
 						verticalMargin + GUI_TOP_INV_VOFFSET,
 						0);
 				
-				if (container.chest.getStackInSlot(i).isEmpty()) {
-					matrixStackIn.push();
+				if (container.chest.getItem(i).isEmpty()) {
+					matrixStackIn.pushPose();
 					matrixStackIn.scale(1f, 1f, .05f);
 					drawTemplate(matrixStackIn, partialTicks, container.chest.getTemplate(i));
-					matrixStackIn.pop();
+					matrixStackIn.popPose();
 				}
 				
 				if (!template.isEmpty() && (stack.isEmpty() || stack.getCount() < template.getCount())) {
@@ -277,14 +277,14 @@ public class OutputChestGui {
 					drawStatus(matrixStackIn, partialTicks, true);
 				}
 				
-				matrixStackIn.pop();
+				matrixStackIn.popPose();
 			}
 			
 			panelGui.draw(matrixStackIn, mc, horizontalMargin, verticalMargin);
 		}
 		
 		@Override
-		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+		protected void renderLabels(PoseStack matrixStackIn, int mouseX, int mouseY) {
 			//super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 		}
 		

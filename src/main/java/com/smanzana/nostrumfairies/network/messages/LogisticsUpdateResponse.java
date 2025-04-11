@@ -11,8 +11,8 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.FakeLogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 /**
  * Server has processed a request for an update about all logistics networks and is
@@ -50,22 +50,22 @@ public class LogisticsUpdateResponse {
 		}
 	}
 	
-	public static LogisticsUpdateResponse decode(PacketBuffer buf) {
+	public static LogisticsUpdateResponse decode(FriendlyByteBuf buf) {
 		final int count = buf.readVarInt();
 		final List<LogisticsNetwork> networks = new ArrayList<>(count);
 		
 		for (int i = 0; i < count; i++) {
-			LogisticsNetwork network = FakeLogisticsNetwork.fromNBT(buf.readCompoundTag());
+			LogisticsNetwork network = FakeLogisticsNetwork.fromNBT(buf.readNbt());
 			networks.add(network);
 		}
 		
 		return new LogisticsUpdateResponse(networks);
 	}
 
-	public static void encode(LogisticsUpdateResponse msg, PacketBuffer buf) {
+	public static void encode(LogisticsUpdateResponse msg, FriendlyByteBuf buf) {
 		buf.writeVarInt(msg.networks.size());
 		for (LogisticsNetwork network : msg.networks) {
-			buf.writeCompoundTag(new FakeLogisticsNetwork(network).toNBT());
+			buf.writeNbt(new FakeLogisticsNetwork(network).toNBT());
 		}
 	}
 

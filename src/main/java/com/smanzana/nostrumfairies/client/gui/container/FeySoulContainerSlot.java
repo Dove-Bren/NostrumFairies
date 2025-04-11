@@ -5,21 +5,21 @@ import javax.annotation.Nonnull;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
 public class FeySoulContainerSlot extends Slot {
 	
 	private final SoulStoneType type;
 
-	public FeySoulContainerSlot(IInventory inventoryIn, int index, int x, int y, SoulStoneType type) {
+	public FeySoulContainerSlot(Container inventoryIn, int index, int x, int y, SoulStoneType type) {
 		super(inventoryIn, index, x, y);
 		this.type = type;
 	}
 	
 	@Override
-	public boolean isItemValid(@Nonnull ItemStack stack) {
+	public boolean mayPlace(@Nonnull ItemStack stack) {
 		if (!stack.isEmpty()) {
 			if (!(stack.getItem() instanceof FeySoulStone)) {
 				return false;
@@ -30,17 +30,17 @@ public class FeySoulContainerSlot extends Slot {
 				return false;
 			}
 		}
-        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
+        return this.container.canPlaceItem(this.getSlotIndex(), stack);
     }
 	
 	@Override
-	public int getSlotStackLimit() {
+	public int getMaxStackSize() {
 		return 1;
 	}
 	
 	@Override
-	public void putStack(@Nonnull ItemStack stack) {
-		super.putStack(stack);
+	public void set(@Nonnull ItemStack stack) {
+		super.set(stack);
 	}
 	
 	public SoulStoneType getType() {

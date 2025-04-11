@@ -24,28 +24,28 @@ import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.Container;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.Constants.NBT;
 
 /**
  * Selects areas in the world, writes them to templates, and reads templates to instruct workers to build things.
@@ -68,7 +68,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 		SPAWN
 	}
 	
-	public static final float ModelMode(ItemStack stack, @Nullable World worldIn, @Nullable LivingEntity entityIn) {
+	public static final float ModelMode(ItemStack stack, @Nullable Level worldIn, @Nullable LivingEntity entityIn) {
 		final WandMode mode = GetWandMode(stack);
 		float val = 0.0F;
 		if (mode != null) {
@@ -100,7 +100,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 	}
 	
 	@Override
-	public ITextComponent getHighlightTip(ItemStack item, ITextComponent displayName ) {
+	public Component getHighlightTip(ItemStack item, Component displayName ) {
 		return displayName;
 	}
 	
@@ -123,8 +123,8 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 			return;
 		}
 		
-		CompoundNBT tag = stack.getTag();
-		if (tag == null) tag = new CompoundNBT();
+		CompoundTag tag = stack.getTag();
+		if (tag == null) tag = new CompoundTag();
 		tag.putString(NBT_MODE, mode.name());
 		stack.setTag(tag);
 	}
@@ -134,7 +134,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 			return 0;
 		}
 		
-		CompoundNBT nbt = stack.getTag();
+		CompoundTag nbt = stack.getTag();
 		return nbt.getInt(NBT_TEMPLATE_INDEX);
 	}
 	
@@ -143,27 +143,27 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 			return;
 		}
 		
-		CompoundNBT nbt = stack.getTag();
+		CompoundTag nbt = stack.getTag();
 		if (nbt == null) {
-			nbt = new CompoundNBT();
+			nbt = new CompoundTag();
 		}
 		
 		nbt.putInt(NBT_TEMPLATE_INDEX, index);
 		stack.setTag(nbt);
 	}
 	
-	public static IInventory GetTemplateInventory(ItemStack stack) {
-		Inventory inv = new Inventory(MAX_TEMPLATES) {
+	public static Container GetTemplateInventory(ItemStack stack) {
+		SimpleContainer inv = new SimpleContainer(MAX_TEMPLATES) {
 			
 			@Override
-			public boolean isItemValidForSlot(int index, ItemStack stack) {
-				return index < this.getSizeInventory()
+			public boolean canPlaceItem(int index, ItemStack stack) {
+				return index < this.getContainerSize()
 						&& (stack.isEmpty() || stack.getItem() instanceof TemplateScroll);
 			}
 			
 			@Override
-			public void markDirty() {
-				super.markDirty();
+			public void setChanged() {
+				super.setChanged();
 				
 				// Bleed changes into wand
 				SetTemplateInventory(stack, this);
@@ -172,34 +172,34 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 		};
 		
 		if (!stack.isEmpty() && stack.getItem() instanceof TemplateWand && stack.hasTag()) {
-			ListNBT list = stack.getTag().getList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND);
+			ListTag list = stack.getTag().getList(NBT_TEMPLATE_INV, Tag.TAG_COMPOUND);
 			for (int i = 0; i < list.size() && i < MAX_TEMPLATES; i++) {
-				CompoundNBT tag = list.getCompound(i);
-				inv.setInventorySlotContents(i, ItemStack.read(tag));
+				CompoundTag tag = list.getCompound(i);
+				inv.setItem(i, ItemStack.of(tag));
 			}
 		}
 		
 		return inv;
 	}
 	
-	public static void SetTemplateInventory(ItemStack stack, IInventory inv) {
+	public static void SetTemplateInventory(ItemStack stack, Container inv) {
 		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand)) {
 			return;
 		}
 		
-		CompoundNBT nbt = stack.getTag();
+		CompoundTag nbt = stack.getTag();
 		if (nbt == null) {
-			nbt = new CompoundNBT();
+			nbt = new CompoundTag();
 		}
 		
-		ListNBT list = new ListNBT();
-		for (int i = 0; i < Math.min(inv.getSizeInventory(), MAX_TEMPLATES); i++) {
-			ItemStack inSlot = inv.getStackInSlot(i);
+		ListTag list = new ListTag();
+		for (int i = 0; i < Math.min(inv.getContainerSize(), MAX_TEMPLATES); i++) {
+			ItemStack inSlot = inv.getItem(i);
 			if (inSlot.isEmpty()) {
 				continue;
 			}
 			
-			CompoundNBT tag = inSlot.serializeNBT();
+			CompoundTag tag = inSlot.serializeNBT();
 			list.add(tag);
 		}
 		
@@ -219,14 +219,14 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 	 */
 	public static ItemStack AddTemplateToInventory(ItemStack wand, ItemStack scroll) {
 		// Try and just add an NBT tag instead of parsing the inventory
-		CompoundNBT tag = wand.getTag();
+		CompoundTag tag = wand.getTag();
 		if (tag == null) {
-			tag = new CompoundNBT();
+			tag = new CompoundTag();
 		}
 		
-		ListNBT list = tag.getList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND);
+		ListTag list = tag.getList(NBT_TEMPLATE_INV, Tag.TAG_COMPOUND);
 		if (list == null) {
-			list = new ListNBT();
+			list = new ListTag();
 		}
 		
 		if (list.size() < (MAX_TEMPLATES - 1)) {
@@ -245,10 +245,10 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 		}
 		
 		final int index = GetTemplateIndex(wand);
-		ListNBT list = wand.getTag().getList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND);
+		ListTag list = wand.getTag().getList(NBT_TEMPLATE_INV, Tag.TAG_COMPOUND);
 		if (list != null && list.size() > index) {
-			CompoundNBT tag = list.getCompound(index);
-			return ItemStack.read(tag);
+			CompoundTag tag = list.getCompound(index);
+			return ItemStack.of(tag);
 		}
 		
 		return ItemStack.EMPTY;
@@ -280,9 +280,9 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 		return InfoScreenTabs.INFO_ITEMS;
 	}
 	
-	public static void HandleScroll(PlayerEntity player, ItemStack stack, boolean forward) {
+	public static void HandleScroll(Player player, ItemStack stack, boolean forward) {
 		// On client, just send to server
-		if (player.world.isRemote) {
+		if (player.level.isClientSide) {
 			NetworkHandler.sendToServer(new TemplateWandUpdate(WandUpdateType.SCROLL, forward));
 			return;
 		}
@@ -292,13 +292,13 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 		}
 		
 		// could use wrappers but will be efficient
-		CompoundNBT nbt = stack.getTag();
+		CompoundTag nbt = stack.getTag();
 		if (nbt == null) {
-			nbt = new CompoundNBT();
+			nbt = new CompoundTag();
 		}
 		
 		int index = nbt.getInt(NBT_TEMPLATE_INDEX);
-		int templateSize = Math.max(1, nbt.getList(NBT_TEMPLATE_INV, NBT.TAG_COMPOUND).size());
+		int templateSize = Math.max(1, nbt.getList(NBT_TEMPLATE_INV, Tag.TAG_COMPOUND).size());
 		if (forward) {
 			index = (index + 1) % templateSize;
 		} else {
@@ -312,8 +312,8 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 		stack.setTag(nbt);
 	}
 	
-	public static void HandleModeChange(PlayerEntity player, ItemStack stack, boolean forward) {
-		if (player.world.isRemote) {
+	public static void HandleModeChange(Player player, ItemStack stack, boolean forward) {
+		if (player.level.isClientSide) {
 			NetworkHandler.sendToServer(new TemplateWandUpdate(WandUpdateType.MODE, forward));
 			return;
 		}
@@ -337,14 +337,14 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 		SetWandMode(stack, to);
 	}
 	
-	protected ActionResult<ItemStack> capture(ItemStack stack, World worldIn, PlayerEntity playerIn, BlockPos captureOrigin, Direction facing) {
+	protected InteractionResultHolder<ItemStack> capture(ItemStack stack, Level worldIn, Player playerIn, BlockPos captureOrigin, Direction facing) {
 		final INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
 		
 		// Check for blank map and create template scroll
 		Pair<BlockPos, BlockPos> selection = attr.getTemplateSelection();
 		if (selection == null || selection.getLeft() == null || selection.getRight() == null) {
-			playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.nopos"), Util.DUMMY_UUID);
-			return ActionResult.resultFail(stack);
+			playerIn.sendMessage(new TranslatableComponent("info.templates.capture.nopos"), Util.NIL_UUID);
+			return InteractionResultHolder.fail(stack);
 		}
 		
 		// Figure out dimensions
@@ -362,8 +362,8 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 					* Math.abs(min.getZ() - max.getZ());
 			
 			if (size > MAX_TEMPLATE_BLOCKS) {
-				playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.toobig"), Util.DUMMY_UUID);
-				return ActionResult.resultFail(stack);
+				playerIn.sendMessage(new TranslatableComponent("info.templates.capture.toobig"), Util.NIL_UUID);
+				return InteractionResultHolder.fail(stack);
 			}
 		}
 		
@@ -372,9 +372,9 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 			
 			// Find blank map
 			ItemStack map = new ItemStack(Items.MAP);
-			if (!Inventories.remove(playerIn.inventory, map).isEmpty()) {
-				playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.nomap"), Util.DUMMY_UUID);
-				return ActionResult.resultFail(stack);
+			if (!Inventories.remove(playerIn.getInventory(), map).isEmpty()) {
+				playerIn.sendMessage(new TranslatableComponent("info.templates.capture.nomap"), Util.NIL_UUID);
+				return InteractionResultHolder.fail(stack);
 			}
 		}
 			
@@ -383,93 +383,93 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 		ItemStack scroll = TemplateScroll.Capture(worldIn, min, max, new BlueprintLocation(offset, facing));
 		
 		// Try to add to wand if not sneaking
-		if (!playerIn.isSneaking()) {
+		if (!playerIn.isShiftKeyDown()) {
 			scroll = AddTemplateToInventory(stack, scroll);
 		}
 		
 		if (scroll.isEmpty()) {
-			playerIn.sendMessage(new TranslationTextComponent("info.templates.capture.towand"), Util.DUMMY_UUID);
+			playerIn.sendMessage(new TranslatableComponent("info.templates.capture.towand"), Util.NIL_UUID);
 		} else {
-			scroll = Inventories.addItem(playerIn.inventory, scroll); 
+			scroll = Inventories.addItem(playerIn.getInventory(), scroll); 
 			if (!scroll.isEmpty()) {
-				playerIn.dropItem(scroll, false);
+				playerIn.drop(scroll, false);
 			}
 		}
 		
 		// Conveniently switch to selection mode to prevent wasting maps
 		attr.clearTemplateSelection();
 		NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
-		return ActionResult.resultSuccess(stack);
+		return InteractionResultHolder.success(stack);
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand hand) {
-		final ItemStack stack = playerIn.getHeldItem(hand);
+	public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand hand) {
+		final ItemStack stack = playerIn.getItemInHand(hand);
 		final WandMode mode = GetWandMode(stack);
 		if (mode == WandMode.SPAWN) {
-			if (!playerIn.isSneaking()) {
-				int pos = Inventories.getPlayerHandSlotIndex(playerIn.inventory, Hand.MAIN_HAND);
-				ItemStack inHand = playerIn.getHeldItemMainhand();
+			if (!playerIn.isShiftKeyDown()) {
+				int pos = Inventories.getPlayerHandSlotIndex(playerIn.getInventory(), InteractionHand.MAIN_HAND);
+				ItemStack inHand = playerIn.getMainHandItem();
 				if (inHand.isEmpty()) {
-					inHand = playerIn.getHeldItemOffhand();
-					pos = Inventories.getPlayerHandSlotIndex(playerIn.inventory, Hand.OFF_HAND);
+					inHand = playerIn.getOffhandItem();
+					pos = Inventories.getPlayerHandSlotIndex(playerIn.getInventory(), InteractionHand.OFF_HAND);
 				}
 				NostrumMagica.instance.proxy.openContainer(playerIn, TemplateWandGui.TemplateWandContainer.Make(pos));
-				return ActionResult.resultSuccess(stack);
+				return InteractionResultHolder.success(stack);
 			}
 		}
 		
-		if (worldIn.isRemote) {
-			return ActionResult.resultSuccess(stack);
+		if (worldIn.isClientSide) {
+			return InteractionResultHolder.success(stack);
 		}
 		
 		final INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
 		if (attr == null || !(attr.builderFairyUnlocked())) {
-			return ActionResult.resultFail(stack);
+			return InteractionResultHolder.fail(stack);
 		}
 		
 		if (mode == WandMode.SELECTION) {
 			// Pass unless they're shifting
-			if (playerIn.isSneaking()) {
+			if (playerIn.isShiftKeyDown()) {
 				attr.clearTemplateSelection();
 				NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
-				return ActionResult.resultSuccess(stack);
+				return InteractionResultHolder.success(stack);
 			}
 			
-			return ActionResult.resultPass(stack);
+			return InteractionResultHolder.pass(stack);
 		} else if (mode == WandMode.CAPTURE) {
-			return capture(stack, worldIn, playerIn, playerIn.getPosition(), Direction.fromAngle(playerIn.rotationYaw));
+			return capture(stack, worldIn, playerIn, playerIn.blockPosition(), Direction.fromYRot(playerIn.getYRot()));
 		}
 		
-		return ActionResult.resultPass(stack);
+		return InteractionResultHolder.pass(stack);
 	}
 	
 	@Override
-	public ActionResultType onItemUse(ItemUseContext context) {
-		final World worldIn = context.getWorld();
-		if (worldIn.isRemote) {
-			return ActionResultType.SUCCESS;
+	public InteractionResult useOn(UseOnContext context) {
+		final Level worldIn = context.getLevel();
+		if (worldIn.isClientSide) {
+			return InteractionResult.SUCCESS;
 		}
 		
-		final PlayerEntity playerIn = context.getPlayer();
+		final Player playerIn = context.getPlayer();
 		final INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerIn);
 		if (attr == null) {
-			return ActionResultType.FAIL;
+			return InteractionResult.FAIL;
 		}
 		
 		final INostrumMagic magic = NostrumMagica.getMagicWrapper(playerIn);
 		if (magic == null || !magic.getCompletedResearches().contains("logistics_construction") ) {
-			return ActionResultType.FAIL;
+			return InteractionResult.FAIL;
 		}
 		
-		final Hand hand = context.getHand();
-		final BlockPos pos = context.getPos();
-		final ItemStack stack = playerIn.getHeldItem(hand);
+		final InteractionHand hand = context.getHand();
+		final BlockPos pos = context.getClickedPos();
+		final ItemStack stack = playerIn.getItemInHand(hand);
 		final WandMode mode = GetWandMode(stack);
-		final BlockPos playerPos = playerIn.getPosition();
-		Direction rotate = Direction.getFacingFromVector((float) (pos.getX() - playerPos.getX()), 0f, (float) (pos.getZ() - playerPos.getZ()));
+		final BlockPos playerPos = playerIn.blockPosition();
+		Direction rotate = Direction.getNearest((float) (pos.getX() - playerPos.getX()), 0f, (float) (pos.getZ() - playerPos.getZ()));
 		if (mode == WandMode.SELECTION) {
-			if (playerIn.isSneaking()) {
+			if (playerIn.isShiftKeyDown()) {
 				attr.clearTemplateSelection();
 			} else {
 				attr.addTemplateSelection(pos);
@@ -477,18 +477,18 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 			
 			NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
 			
-			return ActionResultType.SUCCESS;
+			return InteractionResult.SUCCESS;
 		} else if (mode == WandMode.CAPTURE) {
-			return capture(stack, worldIn, playerIn, pos.offset(context.getFace()), rotate).getType();
+			return capture(stack, worldIn, playerIn, pos.relative(context.getClickedFace()), rotate).getResult();
 		} else if (mode == WandMode.SPAWN) {
 			// Get selected template. If it's a thing, spawn it but as template blocks
 			
-			if (playerIn.isSneaking()) {
+			if (playerIn.isShiftKeyDown()) {
 				ItemStack templateScroll = GetSelectedTemplate(stack);
 				if (!templateScroll.isEmpty() && templateScroll.getItem() instanceof TemplateScroll) {
 					TemplateBlueprint blueprint = TemplateScroll.GetTemplate(templateScroll);
 					if (blueprint != null) {
-						List<BlockPos> blocks = blueprint.spawn(worldIn, pos.offset(context.getFace()), rotate);
+						List<BlockPos> blocks = blueprint.spawn(worldIn, pos.relative(context.getClickedFace()), rotate);
 						for (BlockPos buildSpot : blocks) {
 							attr.addBuildSpot(buildSpot);
 						}
@@ -497,21 +497,21 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 			}
 		}
 		
-		return ActionResultType.FAIL;
+		return InteractionResult.FAIL;
 	}
 	
 	@Override
-	public ActionResultType itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
-		return super.itemInteractionForEntity(stack, playerIn, target, hand);
+	public InteractionResult interactLivingEntity(ItemStack stack, Player playerIn, LivingEntity target, InteractionHand hand) {
+		return super.interactLivingEntity(stack, playerIn, target, hand);
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-		super.addInformation(stack, worldIn, tooltip, flagIn);
+	public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 	}
 
 	@Override
-	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundNBT nbt) {
+	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag nbt) {
 //		return new ICapabilityProvider() {
 //
 //			private LazyOptional<TemplateViewerCapability> def = LazyOptional.of(()-> new TemplateViewerCapability());
@@ -530,7 +530,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 	}
 
 	@Override
-	public TemplateBlueprint getBlueprint(PlayerEntity player, ItemStack stack, BlockPos pos) {
+	public TemplateBlueprint getBlueprint(Player player, ItemStack stack, BlockPos pos) {
 		@Nullable TemplateBlueprint blueprint = null;
 		if (!stack.isEmpty() && !GetSelectedTemplate(stack).isEmpty()) {
 			blueprint = TemplateScroll.GetTemplate(GetSelectedTemplate(stack));
@@ -539,7 +539,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 	}
 
 	@Override
-	public boolean hasBlueprint(PlayerEntity player, ItemStack stack) {
+	public boolean hasBlueprint(Player player, ItemStack stack) {
 		return GetWandMode(stack) == WandMode.SPAWN
 				&& !stack.isEmpty()
 				&& !GetSelectedTemplate(stack).isEmpty()
@@ -547,12 +547,12 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 	}
 
 	@Override
-	public boolean shouldDisplayBlueprint(PlayerEntity player, ItemStack stack, BlockPos pos) {
-		return GetWandMode(stack) == WandMode.SPAWN && player.isSneaking();
+	public boolean shouldDisplayBlueprint(Player player, ItemStack stack, BlockPos pos) {
+		return GetWandMode(stack) == WandMode.SPAWN && player.isShiftKeyDown();
 	}
 
 	@Override
-	public BlockPos getAnchor(PlayerEntity player, ItemStack stack) {
+	public BlockPos getAnchor(Player player, ItemStack stack) {
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
 		if (attr != null) {
 			return attr.getTemplateSelection().getLeft();
@@ -561,7 +561,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 	}
 
 	@Override
-	public BlockPos getBoundingPos(PlayerEntity player, ItemStack stack) {
+	public BlockPos getBoundingPos(Player player, ItemStack stack) {
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
 		if (attr != null) {
 			return attr.getTemplateSelection().getRight();
@@ -570,7 +570,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 	}
 
 	@Override
-	public boolean isSelectionValid(PlayerEntity player, ItemStack stack) {
+	public boolean isSelectionValid(Player player, ItemStack stack) {
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
 		if (attr != null) {
 			Pair<BlockPos, BlockPos> selection = attr.getTemplateSelection();
@@ -597,7 +597,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 	}
 
 	@Override
-	public boolean shouldRenderSelection(PlayerEntity player, ItemStack stack) {
+	public boolean shouldRenderSelection(Player player, ItemStack stack) {
 		INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(player);
 		if (attr != null) {
 			Pair<BlockPos, BlockPos> selection = attr.getTemplateSelection();
@@ -605,9 +605,9 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 			BlockPos pos2 = selection.getRight();
 			
 			if (pos1 != null) {
-				double minDist = player.getDistanceSq(pos1.getX(), pos1.getY(), pos1.getZ());
+				double minDist = player.distanceToSqr(pos1.getX(), pos1.getY(), pos1.getZ());
 				if (minDist >= 5096 && pos2 != null) {
-					minDist = player.getDistanceSq(pos2.getX(), pos2.getY(), pos2.getZ());
+					minDist = player.distanceToSqr(pos2.getX(), pos2.getY(), pos2.getZ());
 				}
 				
 				if (minDist < 5096) {

@@ -10,47 +10,47 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.NonNullList;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.NonNullList;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public abstract class LogisticsChestTileEntity extends LogisticsTileEntity implements IInventory {
+public abstract class LogisticsChestTileEntity extends LogisticsTileEntity implements Container {
 
 	private static final String NBT_INV = "inventory_contents";
 	
 	private NonNullList<ItemStack> slots;
 	
-	public LogisticsChestTileEntity(TileEntityType<? extends LogisticsChestTileEntity> type) {
+	public LogisticsChestTileEntity(BlockEntityType<? extends LogisticsChestTileEntity> type) {
 		super(type);
-		slots = NonNullList.withSize(getSizeInventory(), ItemStack.EMPTY);
+		slots = NonNullList.withSize(getContainerSize(), ItemStack.EMPTY);
 	}
 	
 	@Override
-	public void markDirty() {
+	public void setChanged() {
 		LogisticsNetwork network = getNetwork();
-		if (network != null && !this.world.isRemote) {
+		if (network != null && !this.level.isClientSide) {
 			network.dirty();
 		}
-		super.markDirty();
+		super.setChanged();
 	}
 
 	@Override
-	public @Nonnull ItemStack getStackInSlot(int index) {
-		if (index < 0 || index >= getSizeInventory())
+	public @Nonnull ItemStack getItem(int index) {
+		if (index < 0 || index >= getContainerSize())
 			return ItemStack.EMPTY;
 		
 		return slots.get(index);
 	}
 	
 	@Override
-	public ItemStack decrStackSize(int index, int count) {
-		if (index < 0 || index >= getSizeInventory() || slots.get(index).isEmpty())
+	public ItemStack removeItem(int index, int count) {
+		if (index < 0 || index >= getContainerSize() || slots.get(index).isEmpty())
 			return ItemStack.EMPTY;
 		
 		ItemStack stack;
@@ -63,27 +63,27 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 			slots.get(index).shrink(count);
 		}
 		
-		this.markDirty();
+		this.setChanged();
 		
 		return stack;
 	}
 
 	@Override
-	public ItemStack removeStackFromSlot(int index) {
-		if (index < 0 || index >= getSizeInventory())
+	public ItemStack removeItemNoUpdate(int index) {
+		if (index < 0 || index >= getContainerSize())
 			return ItemStack.EMPTY;
 		
 		ItemStack stack = slots.get(index);
 		slots.set(index, ItemStack.EMPTY);
 		
-		this.markDirty();
+		this.setChanged();
 		return stack;
 	}
 
 	@Override
-	public void setInventorySlotContents(int index, ItemStack stack) {
+	public void setItem(int index, ItemStack stack) {
 		setInventorySlotContentsDirty(index, stack);
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	/**
@@ -92,19 +92,19 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	 * @param stack
 	 */
 	protected void setInventorySlotContentsDirty(int index, ItemStack stack) {
-		if (!isItemValidForSlot(index, stack))
+		if (!canPlaceItem(index, stack))
 			return;
 		
 		slots.set(index, stack);
 	}
 
 	@Override
-	public int getInventoryStackLimit() {
+	public int getMaxStackSize() {
 		return 64;
 	}
 
 	@Override
-	public boolean isUsableByPlayer(PlayerEntity player) {
+	public boolean stillValid(Player player) {
 		return true;
 	}
 	
@@ -119,57 +119,57 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	}
 
 	@Override
-	public void openInventory(PlayerEntity player) {
+	public void startOpen(Player player) {
 	}
 
 	@Override
-	public void closeInventory(PlayerEntity player) {
+	public void stopOpen(Player player) {
 	}
 
 	@Override
-	public boolean isItemValidForSlot(int index, ItemStack stack) {
-		if (index < 0 || index >= getSizeInventory())
+	public boolean canPlaceItem(int index, ItemStack stack) {
+		if (index < 0 || index >= getContainerSize())
 			return false;
 		
 		return true;
 	}
 
 	@Override
-	public void clear() {
-		for (int i = 0; i < getSizeInventory(); i++) {
-			removeStackFromSlot(i);
+	public void clearContent() {
+		for (int i = 0; i < getContainerSize(); i++) {
+			removeItemNoUpdate(i);
 		}
 	}
 	
 	
 	@Override
-	public CompoundNBT write(CompoundNBT nbt) {
-		nbt = super.write(nbt);
-		CompoundNBT compound = new CompoundNBT();
+	public CompoundTag save(CompoundTag nbt) {
+		nbt = super.save(nbt);
+		CompoundTag compound = new CompoundTag();
 		
-		for (int i = 0; i < getSizeInventory(); i++) {
-			if (getStackInSlot(i).isEmpty())
+		for (int i = 0; i < getContainerSize(); i++) {
+			if (getItem(i).isEmpty())
 				continue;
 			
-			CompoundNBT tag = new CompoundNBT();
-			compound.put(i + "", getStackInSlot(i).write(tag));
+			CompoundTag tag = new CompoundTag();
+			compound.put(i + "", getItem(i).save(tag));
 		}
 		
 		if (nbt == null)
-			nbt = new CompoundNBT();
+			nbt = new CompoundTag();
 		
 		nbt.put(NBT_INV, compound);
 		return nbt;
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT nbt) {
+	public void load(BlockState state, CompoundTag nbt) {
 		if (nbt == null || !nbt.contains(NBT_INV, NBT.TAG_COMPOUND))
 			return;
 		
-		this.clear();
-		CompoundNBT items = nbt.getCompound(NBT_INV);
-		for (String key : items.keySet()) {
+		this.clearContent();
+		CompoundTag items = nbt.getCompound(NBT_INV);
+		for (String key : items.getAllKeys()) {
 			int id;
 			try {
 				id = Integer.parseInt(key);
@@ -178,11 +178,11 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 				continue;
 			}
 			
-			ItemStack stack = ItemStack.read(items.getCompound(key));
-			this.setInventorySlotContents(id, stack);
+			ItemStack stack = ItemStack.of(items.getCompound(key));
+			this.setItem(id, stack);
 		}
 
-		super.read(state, nbt);
+		super.load(state, nbt);
 	}
 	
 	@Override
@@ -204,8 +204,8 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 		//super.addItem(stack);
 		ItemStack leftover = Inventories.addItem(this, stack);
 		if (!leftover.isEmpty()) {
-			ItemEntity item = new ItemEntity(this.world, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, leftover);
-			world.addEntity(item);
+			ItemEntity item = new ItemEntity(this.level, this.worldPosition.getX() + .5, this.worldPosition.getY() + 1, this.worldPosition.getZ() + .5, leftover);
+			level.addFreshEntity(item);
 		}
 	}
 }

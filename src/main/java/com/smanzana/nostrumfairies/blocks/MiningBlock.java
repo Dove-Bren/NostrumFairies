@@ -2,36 +2,36 @@ package com.smanzana.nostrumfairies.blocks;
 
 import com.smanzana.nostrumfairies.tiles.MiningBlockTileEntity;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.HorizontalBlock;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.ToolType;
 
 public class MiningBlock extends FeyContainerBlock {
 
-	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
+	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 	public static final String ID = "logistics_mining_block";
 	public static final int WORKER_REACH = 16;
 	public static final int MAJOR_LEVEL_DIFF = 16;
@@ -40,31 +40,31 @@ public class MiningBlock extends FeyContainerBlock {
 	public static final int SHAFT_DISTANCE = 4;
 	
 	public MiningBlock() {
-		super(Block.Properties.create(Material.WOOD)
-				.hardnessAndResistance(3.0f, 1.0f)
+		super(Block.Properties.of(Material.WOOD)
+				.strength(3.0f, 1.0f)
 				.sound(SoundType.WOOD)
 				.harvestTool(ToolType.AXE)
 				);
 	}
 	
 	@Override
-	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(FACING);
 	}
 	
 	public Direction getFacing(BlockState state) {
-		return state.get(FACING);
+		return state.getValue(FACING);
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
-		return this.getDefaultState()
-				.with(FACING, context.getPlacementHorizontalFacing().getOpposite());
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
+		return this.defaultBlockState()
+				.setValue(FACING, context.getHorizontalDirection().getOpposite());
 	}
 	
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		if (state.get(FACING).getHorizontalIndex() % 2 == 0) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+		if (state.getValue(FACING).get2DDataValue() % 2 == 0) {
 			return IFeySign.AABB_NS;
 		} else {
 			return IFeySign.AABB_EW;
@@ -72,8 +72,8 @@ public class MiningBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		if (!Block.hasEnoughSolidSide(worldIn, pos.down(), Direction.UP)) {
+	public boolean canSurvive(BlockState stateIn, LevelReader worldIn, BlockPos pos) {
+		if (!Block.canSupportCenter(worldIn, pos.below(), Direction.UP)) {
 			return false;
 		}
 		
@@ -82,37 +82,37 @@ public class MiningBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
-		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
-			return Blocks.AIR.getDefaultState();
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor world, BlockPos pos, BlockPos facingPos) {
+		if (facing == Direction.DOWN && !canSurvive(stateIn, world, pos)) {
+			return Blocks.AIR.defaultBlockState();
 		}
 		return stateIn;
 	}
 	
 	@Override
-	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
-		return ActionResultType.PASS;
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult hit) {
+		return InteractionResult.PASS;
 	}
 	
 	@Override
-	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-		TileEntity ent = new MiningBlockTileEntity();
+	public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
+		BlockEntity ent = new MiningBlockTileEntity();
 		return ent;
 	}
 	
 	@Override
-	public BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+	public RenderShape getRenderShape(BlockState state) {
+		return RenderShape.MODEL;
 	}
 	
 	@Override
-	public void breakBlock(World world, BlockPos pos, BlockState state) {
+	public void breakBlock(Level world, BlockPos pos, BlockState state) {
 		destroy(world, pos, state);
 		super.breakBlock(world, pos, state);
 	}
 	
-	private void destroy(World world, BlockPos pos, BlockState state) {
-		TileEntity ent = world.getTileEntity(pos);
+	private void destroy(Level world, BlockPos pos, BlockState state) {
+		BlockEntity ent = world.getBlockEntity(pos);
 		if (ent == null || !(ent instanceof MiningBlockTileEntity))
 			return;
 		
@@ -121,13 +121,13 @@ public class MiningBlock extends FeyContainerBlock {
 		MinecraftForge.EVENT_BUS.unregister(block);
 	}
 	
-	public static boolean IsOre(World world, BlockPos pos) {
-		if (world.isAirBlock(pos)) {
+	public static boolean IsOre(Level world, BlockPos pos) {
+		if (world.isEmptyBlock(pos)) {
 			return false;
 		}
 		
 		BlockState state = world.getBlockState(pos);
-		if (state.getBlockHardness(world, pos) < 0) {
+		if (state.getDestroySpeed(world, pos) < 0) {
 			// unbreakable
 			return false;
 		}

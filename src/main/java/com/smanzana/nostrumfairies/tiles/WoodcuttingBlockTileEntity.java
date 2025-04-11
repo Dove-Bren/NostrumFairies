@@ -21,18 +21,18 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
-public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity,  ILogisticsTaskListener, IFeySign {
+public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements TickableBlockEntity,  ILogisticsTaskListener, IFeySign {
 	
 	protected static final ILogisticsTaskUniqueData<BlockPos> WOODCUTTING_POSITION = new ILogisticsTaskUniqueData<BlockPos>() { };
 
@@ -72,7 +72,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 		}
 		
 		if (!taskMap.containsKey(base) && network.taskDataAdd(WOODCUTTING_POSITION, base)) {
-			LogisticsTaskChopTree task = new LogisticsTaskChopTree(this.getNetworkComponent(), "Tree Chop Task", world, base);
+			LogisticsTaskChopTree task = new LogisticsTaskChopTree(this.getNetworkComponent(), "Tree Chop Task", level, base);
 			this.taskMap.put(base, task);
 			network.getTaskRegistry().register(task, this);
 		}
@@ -87,11 +87,11 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 		if (!taskMap.containsKey(base) && network.taskDataAdd(WOODCUTTING_POSITION, base)) {
 			// Find spot underneath on ground
 			BlockPos target = base;
-			while (!Block.hasEnoughSolidSide(world, target.down(), Direction.UP)) {
-				target = target.down();
+			while (!Block.canSupportCenter(level, target.below(), Direction.UP)) {
+				target = target.below();
 			}
 			
-			LogisticsTaskChopTree task = new LogisticsTaskChopTree(this.getNetworkComponent(), "Tree Chop Task", world, base, target);
+			LogisticsTaskChopTree task = new LogisticsTaskChopTree(this.getNetworkComponent(), "Tree Chop Task", level, base, target);
 			this.taskMap.put(base, task);
 			network.getTaskRegistry().register(task, this);
 		}
@@ -104,7 +104,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 		}
 		
 		if (!taskMap.containsKey(base)) {
-			LogisticsTaskPlantItem task = new LogisticsTaskPlantItem(this.networkComponent, "Plant Sapling", this.getSapling(), world, base);
+			LogisticsTaskPlantItem task = new LogisticsTaskPlantItem(this.networkComponent, "Plant Sapling", this.getSapling(), level, base);
 			this.taskMap.put(base, task);
 			network.getTaskRegistry().register(task, this);
 		}
@@ -148,31 +148,31 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 			}
 		}
 		
-		BlockPos.Mutable pos = new BlockPos.Mutable();
-		BlockPos center = this.getPos();
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		BlockPos center = this.getBlockPos();
 		final int startY = (int) Math.max(-pos.getY(), Math.floor(-radius));
 		final int endY = (int) Math.min(256 - pos.getY(), Math.ceil(radius));
 		for (int x = (int) Math.floor(-radius); x <= Math.ceil(radius); x++)
 		for (int z = (int) Math.floor(-radius); z <= Math.ceil(radius); z++)
 		for (int y = startY; y < endY; y++) {
 			
-			pos.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);
-			if (!NostrumMagica.isBlockLoaded(world, pos)) {
+			pos.set(center.getX() + x, center.getY() + y, center.getZ() + z);
+			if (!NostrumMagica.isBlockLoaded(level, pos)) {
 				break; // skip this whole column
 			}
 			
-			if (WoodcuttingBlock.isTree(world, pos)) {
+			if (WoodcuttingBlock.isTree(level, pos)) {
 				// Record!
 				// Don't make task cause we filter better later
-				trunks.add(pos.toImmutable());
+				trunks.add(pos.immutable());
 				
 				// climb tree to avoid checking each piece above it
 				do {
 					pos.move(Direction.UP);
 					y++;
-				} while (y < (endY - 1) && WoodcuttingBlock.isTrunkMaterial(world, pos));
-			} else if (WoodcuttingBlock.isBranch(world, pos)) {
-				branches.add(pos.toImmutable());
+				} while (y < (endY - 1) && WoodcuttingBlock.isTrunkMaterial(level, pos));
+			} else if (WoodcuttingBlock.isBranch(level, pos)) {
+				branches.add(pos.immutable());
 			}
 		}
 		
@@ -262,7 +262,7 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 	
 	@Override
 	public void tick() {
-		if (this.world.isRemote) {
+		if (this.level.isClientSide) {
 			return;
 		}
 		
@@ -289,8 +289,8 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 //		}
 	
 	@Override
-	public void setWorldAndPos(World worldIn, BlockPos pos) {
-		super.setWorldAndPos(worldIn, pos);
+	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
+		super.setLevelAndPosition(worldIn, pos);
 //			if (!worldIn.isRemote) {
 //				MinecraftForge.TERRAIN_GEN_BUS.register(this);
 //			}
@@ -341,17 +341,17 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements I
 	
 	@Override
 	public Direction getSignFacing(IFeySign sign) {
-		BlockState state = world.getBlockState(pos);
-		return state.get(WoodcuttingBlock.FACING);
+		BlockState state = level.getBlockState(worldPosition);
+		return state.getValue(WoodcuttingBlock.FACING);
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT compound) {
-		super.read(state, compound);
+	public void load(BlockState state, CompoundTag compound) {
+		super.load(state, compound);
 	}
 	
 	@Override
-	public void remove() {
-		super.remove();
+	public void setRemoved() {
+		super.setRemoved();
 	}
 }

@@ -14,15 +14,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.pathfinding.FlaggedPathPoint;
-import net.minecraft.pathfinding.NodeProcessor;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathFinder;
-import net.minecraft.pathfinding.PathHeap;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Region;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.pathfinder.Target;
+import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathFinder;
+import net.minecraft.world.level.pathfinder.BinaryHeap;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.PathNavigationRegion;
 
 /**
  * I WISH this just made some protected funcs public. But it does not!
@@ -34,61 +34,61 @@ import net.minecraft.world.Region;
  */
 public class PathFinderPublic extends PathFinder {
 
-	public PathFinderPublic(NodeProcessor processor, int maxAttempts) {
+	public PathFinderPublic(NodeEvaluator processor, int maxAttempts) {
 		super(processor, maxAttempts);
 		this.nodeProcessor = processor;
-		this.field_215751_d = maxAttempts;
+		this.maxVisitedNodes = maxAttempts;
 	}
 	
 	/*************** BEGIN COPIED STUFF ***************************/
 	
 	/** Selection of path points to add to the path */
-	private final PathPoint[] pathOptions = new PathPoint[32];
-	private final int field_215751_d;
-	private final NodeProcessor nodeProcessor;
+	private final Node[] pathOptions = new Node[32];
+	private final int maxVisitedNodes;
+	private final NodeEvaluator nodeProcessor;
 	/** The path being generated */
-	private final PathHeap path = new PathHeap();
+	private final BinaryHeap path = new BinaryHeap();
 
 	@Nullable
-	public Path func_227478_a_(Region p_227478_1_, MobEntity p_227478_2_, Set<BlockPos> p_227478_3_, float p_227478_4_, int p_227478_5_, float p_227478_6_) {
-		this.path.clearPath();
-		this.nodeProcessor.func_225578_a_(p_227478_1_, p_227478_2_);
-		PathPoint pathpoint = this.nodeProcessor.getStart();
-		Map<FlaggedPathPoint, BlockPos> map = p_227478_3_.stream().collect(Collectors.toMap((p_224782_1_) -> {
-			return this.nodeProcessor.func_224768_a((double)p_224782_1_.getX(), (double)p_224782_1_.getY(), (double)p_224782_1_.getZ());
+	public Path findPath(PathNavigationRegion p_227478_1_, Mob p_227478_2_, Set<BlockPos> p_227478_3_, float p_227478_4_, int p_227478_5_, float p_227478_6_) {
+		this.path.clear();
+		this.nodeProcessor.prepare(p_227478_1_, p_227478_2_);
+		Node pathpoint = this.nodeProcessor.getStart();
+		Map<Target, BlockPos> map = p_227478_3_.stream().collect(Collectors.toMap((p_224782_1_) -> {
+			return this.nodeProcessor.getGoal((double)p_224782_1_.getX(), (double)p_224782_1_.getY(), (double)p_224782_1_.getZ());
 		}, Function.identity()));
-		Path path = this.func_227479_a_(pathpoint, map, p_227478_4_, p_227478_5_, p_227478_6_);
-		this.nodeProcessor.postProcess();
+		Path path = this.findPath(pathpoint, map, p_227478_4_, p_227478_5_, p_227478_6_);
+		this.nodeProcessor.done();
 		return path;
 	}
 
 	// If THIS were protected instead, this would all look a lot nicer.
 	// (and the processor var)
 	@Nullable
-	public Path func_227479_a_(PathPoint p_227479_1_, Map<FlaggedPathPoint, BlockPos> p_227479_2_, float p_227479_3_, int p_227479_4_, float p_227479_5_) {
-		Set<FlaggedPathPoint> set = p_227479_2_.keySet();
-		p_227479_1_.totalPathDistance = 0.0F;
-		p_227479_1_.distanceToNext = this.func_224776_a(p_227479_1_, set);
-		p_227479_1_.distanceToTarget = p_227479_1_.distanceToNext;
-		this.path.clearPath();
-		this.path.addPoint(p_227479_1_);
-		Set<PathPoint> set1 = ImmutableSet.of();
+	public Path findPath(Node p_227479_1_, Map<Target, BlockPos> p_227479_2_, float p_227479_3_, int p_227479_4_, float p_227479_5_) {
+		Set<Target> set = p_227479_2_.keySet();
+		p_227479_1_.g = 0.0F;
+		p_227479_1_.h = this.getBestH(p_227479_1_, set);
+		p_227479_1_.f = p_227479_1_.h;
+		this.path.clear();
+		this.path.insert(p_227479_1_);
+		Set<Node> set1 = ImmutableSet.of();
 		int i = 0;
-		Set<FlaggedPathPoint> set2 = Sets.newHashSetWithExpectedSize(set.size());
-		int j = (int)((float)this.field_215751_d * p_227479_5_);
+		Set<Target> set2 = Sets.newHashSetWithExpectedSize(set.size());
+		int j = (int)((float)this.maxVisitedNodes * p_227479_5_);
 
-		while(!this.path.isPathEmpty()) {
+		while(!this.path.isEmpty()) {
 			++i;
 			if (i >= j) {
 				break;
 			}
 
-			PathPoint pathpoint = this.path.dequeue();
-			pathpoint.visited = true;
+			Node pathpoint = this.path.pop();
+			pathpoint.closed = true;
 
-			for(FlaggedPathPoint flaggedpathpoint : set) {
-				if (pathpoint.func_224757_c(flaggedpathpoint) <= (float)p_227479_4_) {
-					flaggedpathpoint.func_224764_e();
+			for(Target flaggedpathpoint : set) {
+				if (pathpoint.distanceManhattan(flaggedpathpoint) <= (float)p_227479_4_) {
+					flaggedpathpoint.setReached();
 					set2.add(flaggedpathpoint);
 				}
 			}
@@ -98,22 +98,22 @@ public class PathFinderPublic extends PathFinder {
 			}
 
 			if (!(pathpoint.distanceTo(p_227479_1_) >= p_227479_3_)) {
-				int k = this.nodeProcessor.func_222859_a(this.pathOptions, pathpoint);
+				int k = this.nodeProcessor.getNeighbors(this.pathOptions, pathpoint);
 
 				for(int l = 0; l < k; ++l) {
-					PathPoint pathpoint1 = this.pathOptions[l];
+					Node pathpoint1 = this.pathOptions[l];
 					float f = pathpoint.distanceTo(pathpoint1);
-					pathpoint1.field_222861_j = pathpoint.field_222861_j + f;
-					float f1 = pathpoint.totalPathDistance + f + pathpoint1.costMalus;
-					if (pathpoint1.field_222861_j < p_227479_3_ && (!pathpoint1.isAssigned() || f1 < pathpoint1.totalPathDistance)) {
-						pathpoint1.previous = pathpoint;
-						pathpoint1.totalPathDistance = f1;
-						pathpoint1.distanceToNext = this.func_224776_a(pathpoint1, set) * 1.5F;
-						if (pathpoint1.isAssigned()) {
-							this.path.changeDistance(pathpoint1, pathpoint1.totalPathDistance + pathpoint1.distanceToNext);
+					pathpoint1.walkedDistance = pathpoint.walkedDistance + f;
+					float f1 = pathpoint.g + f + pathpoint1.costMalus;
+					if (pathpoint1.walkedDistance < p_227479_3_ && (!pathpoint1.inOpenSet() || f1 < pathpoint1.g)) {
+						pathpoint1.cameFrom = pathpoint;
+						pathpoint1.g = f1;
+						pathpoint1.h = this.getBestH(pathpoint1, set) * 1.5F;
+						if (pathpoint1.inOpenSet()) {
+							this.path.changeCost(pathpoint1, pathpoint1.g + pathpoint1.h);
 						} else {
-							pathpoint1.distanceToTarget = pathpoint1.totalPathDistance + pathpoint1.distanceToNext;
-							this.path.addPoint(pathpoint1);
+							pathpoint1.f = pathpoint1.g + pathpoint1.h;
+							this.path.insert(pathpoint1);
 						}
 					}
 				}
@@ -121,32 +121,32 @@ public class PathFinderPublic extends PathFinder {
 		}
 
 		Optional<Path> optional = !set2.isEmpty() ? set2.stream().map((p_224778_2_) -> {
-			return this.func_224780_a(p_224778_2_.func_224763_d(), p_227479_2_.get(p_224778_2_), true);
-		}).min(Comparator.comparingInt(Path::getCurrentPathLength)) : set.stream().map((p_224777_2_) -> {
-			return this.func_224780_a(p_224777_2_.func_224763_d(), p_227479_2_.get(p_224777_2_), false);
-		}).min(Comparator.comparingDouble(Path::func_224769_l).thenComparingInt(Path::getCurrentPathLength));
+			return this.reconstructPath(p_224778_2_.getBestNode(), p_227479_2_.get(p_224778_2_), true);
+		}).min(Comparator.comparingInt(Path::getNodeCount)) : set.stream().map((p_224777_2_) -> {
+			return this.reconstructPath(p_224777_2_.getBestNode(), p_227479_2_.get(p_224777_2_), false);
+		}).min(Comparator.comparingDouble(Path::getDistToTarget).thenComparingInt(Path::getNodeCount));
 		return !optional.isPresent() ? null : optional.get();
 	}
 
-	private float func_224776_a(PathPoint p_224776_1_, Set<FlaggedPathPoint> p_224776_2_) {
+	private float getBestH(Node p_224776_1_, Set<Target> p_224776_2_) {
 		float f = Float.MAX_VALUE;
 
-		for(FlaggedPathPoint flaggedpathpoint : p_224776_2_) {
+		for(Target flaggedpathpoint : p_224776_2_) {
 			float f1 = p_224776_1_.distanceTo(flaggedpathpoint);
-			flaggedpathpoint.func_224761_a(f1, p_224776_1_);
+			flaggedpathpoint.updateBest(f1, p_224776_1_);
 			f = Math.min(f1, f);
 		}
 
 		return f;
 	}
 
-	private Path func_224780_a(PathPoint p_224780_1_, BlockPos p_224780_2_, boolean p_224780_3_) {
-		List<PathPoint> list = Lists.newArrayList();
-		PathPoint pathpoint = p_224780_1_;
+	private Path reconstructPath(Node p_224780_1_, BlockPos p_224780_2_, boolean p_224780_3_) {
+		List<Node> list = Lists.newArrayList();
+		Node pathpoint = p_224780_1_;
 		list.add(0, p_224780_1_);
 
-		while(pathpoint.previous != null) {
-			pathpoint = pathpoint.previous;
+		while(pathpoint.cameFrom != null) {
+			pathpoint = pathpoint.cameFrom;
 			list.add(0, pathpoint);
 		}
 

@@ -9,7 +9,7 @@ import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.LoreRegistry;
 
-import net.minecraft.item.Item;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -57,13 +57,13 @@ public class FairyItems {
 	
 	public static Item.Properties PropBase() {
 		return new Item.Properties()
-				.group(NostrumFairies.creativeTab)
+				.tab(NostrumFairies.creativeTab)
 				;
 	}
 	
 	public static Item.Properties PropUnstackable() {
 		return PropBase()
-				.maxStackSize(1);
+				.stacksTo(1);
 	}
 	
 	private static final void register(IForgeRegistry<Item> registry, Item item) {

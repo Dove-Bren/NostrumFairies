@@ -5,13 +5,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Wrapper to ItemStacks that ignore the original itemstack limits and instead permit a limit of a 64-bit signed int.
@@ -109,34 +107,34 @@ public class ItemDeepStack {
 		return toDeepList(out, items);
 	}
 	
-	public static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, PlayerInventory inventory) {
-		out = toDeepList(out, (IInventory) inventory);
+	public static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, Inventory inventory) {
+		out = toDeepList(out, (Container) inventory);
 		
-		final @Nonnull ItemStack heldStack = inventory.getItemStack();
-		
-		if (!heldStack.isEmpty()) {
-			boolean merged = false;
-			for (ItemDeepStack condensed : out) {
-				if (condensed.canMerge(heldStack)) {
-					condensed.add(heldStack);
-					merged = true;
-					break;
-				}
-			}
-			
-			if (!merged) {
-				out.add(new ItemDeepStack(heldStack));
-			}
-		}
+//		final @Nonnull ItemStack heldStack = inventory.getCarried();
+//		
+//		if (!heldStack.isEmpty()) {
+//			boolean merged = false;
+//			for (ItemDeepStack condensed : out) {
+//				if (condensed.canMerge(heldStack)) {
+//					condensed.add(heldStack);
+//					merged = true;
+//					break;
+//				}
+//			}
+//			
+//			if (!merged) {
+//				out.add(new ItemDeepStack(heldStack));
+//			}
+//		}
 		
 		return out;
 	}
 	
-	public static List<ItemDeepStack> toDeepList(PlayerInventory inventory) {
-		return toDeepList(new ArrayList<>(inventory.getSizeInventory()), inventory);
+	public static List<ItemDeepStack> toDeepList(Inventory inventory) {
+		return toDeepList(new ArrayList<>(inventory.getContainerSize()), inventory);
 	}
 	
-	public static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, IInventory inventory) {
+	public static List<ItemDeepStack> toDeepList(List<ItemDeepStack> out, Container inventory) {
 		return toDeepList(out, () -> {
 			return new Iterator<ItemStack>() {
 				
@@ -144,19 +142,19 @@ public class ItemDeepStack {
 				
 				@Override
 				public boolean hasNext() {
-					return i < inventory.getSizeInventory();
+					return i < inventory.getContainerSize();
 				}
 
 				@Override
 				public ItemStack next() {
-					return inventory.getStackInSlot(i++);
+					return inventory.getItem(i++);
 				}
 			};
 		});
 	}
 	
-	public static List<ItemDeepStack> toDeepList(IInventory inventory) {
-		return toDeepList(new ArrayList<>(inventory.getSizeInventory()), inventory);
+	public static List<ItemDeepStack> toDeepList(Container inventory) {
+		return toDeepList(new ArrayList<>(inventory.getContainerSize()), inventory);
 	}
 	
 	public static List<ItemDeepStack> toCondensedDeepList(Collection<ItemDeepStack> deeps) {

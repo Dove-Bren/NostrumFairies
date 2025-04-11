@@ -15,11 +15,11 @@ import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
 import net.minecraftforge.client.event.InputEvent.MouseScrollEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -29,20 +29,20 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 public class ClientProxy extends CommonProxy {
 	
-	private KeyBinding bindingScroll;
-	private KeyBinding bindingWandModeForward;
-	private KeyBinding bindingWandModeBackward;
+	private KeyMapping bindingScroll;
+	private KeyMapping bindingWandModeForward;
+	private KeyMapping bindingWandModeBackward;
 
 	public ClientProxy() {
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	public void initKeybinds() {
-		bindingScroll = new KeyBinding("key.wandscroll.desc", GLFW.GLFW_KEY_LEFT_SHIFT, "key.nostrumfairies.desc");
+		bindingScroll = new KeyMapping("key.wandscroll.desc", GLFW.GLFW_KEY_LEFT_SHIFT, "key.nostrumfairies.desc");
 		ClientRegistry.registerKeyBinding(bindingScroll);
-		bindingWandModeForward = new KeyBinding("key.wandmode.forward.desc", GLFW.GLFW_KEY_RIGHT_BRACKET, "key.nostrumfairies.desc");
+		bindingWandModeForward = new KeyMapping("key.wandmode.forward.desc", GLFW.GLFW_KEY_RIGHT_BRACKET, "key.nostrumfairies.desc");
 		ClientRegistry.registerKeyBinding(bindingWandModeForward);
-		bindingWandModeBackward = new KeyBinding("key.wandmode.backward.desc", GLFW.GLFW_KEY_LEFT_BRACKET, "key.nostrumfairies.desc");
+		bindingWandModeBackward = new KeyMapping("key.wandmode.backward.desc", GLFW.GLFW_KEY_LEFT_BRACKET, "key.nostrumfairies.desc");
 		ClientRegistry.registerKeyBinding(bindingWandModeBackward);
 	}
 	
@@ -52,7 +52,7 @@ public class ClientProxy extends CommonProxy {
 	}
 	
 	@Override
-	public PlayerEntity getPlayer() {
+	public Player getPlayer() {
 		final Minecraft mc = Minecraft.getInstance();
 		return mc.player;
 	}
@@ -76,26 +76,26 @@ public class ClientProxy extends CommonProxy {
 	}
 	
 	@Override
-	public void pushCapabilityRefresh(PlayerEntity player) {
-		if (!player.world.isRemote) {
+	public void pushCapabilityRefresh(Player player) {
+		if (!player.level.isClientSide) {
 			super.pushCapabilityRefresh(player);
 		}
 		; // Nothing on client
 	}
 	
 	@Override
-	public void openStorageMonitor(World world, BlockPos pos) {
-		if (world.isRemote())
+	public void openStorageMonitor(Level world, BlockPos pos) {
+		if (world.isClientSide())
 		{
-			StorageMonitorTileEntity monitor = (StorageMonitorTileEntity) world.getTileEntity(pos);
-			Minecraft.getInstance().displayGuiScreen(new StorageMonitorScreen(monitor));
+			StorageMonitorTileEntity monitor = (StorageMonitorTileEntity) world.getBlockEntity(pos);
+			Minecraft.getInstance().setScreen(new StorageMonitorScreen(monitor));
 		}
 	}
 	
 	@SubscribeEvent
 	public void onMouse(MouseScrollEvent event) {
 		final Minecraft mc = Minecraft.getInstance();
-		PlayerEntity player = mc.player;
+		Player player = mc.player;
 		int wheel = event.getMouseY() < 0 ? -1 : event.getMouseY() > 0 ? 1 : 0;
 		if (wheel != 0) {
 			if (!NostrumFairies.getFeyWrapper(player)
@@ -103,10 +103,10 @@ public class ClientProxy extends CommonProxy {
 				return;
 			}
 			
-			if (bindingScroll.isKeyDown()) {
-				ItemStack wand = player.getHeldItemMainhand();
+			if (bindingScroll.isDown()) {
+				ItemStack wand = player.getMainHandItem();
 				if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand) || TemplateWand.GetWandMode(wand) != WandMode.SPAWN) {
-					wand = player.getHeldItemOffhand();
+					wand = player.getOffhandItem();
 				}
 				
 				if (!wand.isEmpty() && wand.getItem() instanceof TemplateWand && TemplateWand.GetWandMode(wand) == WandMode.SPAWN) {
@@ -121,17 +121,17 @@ public class ClientProxy extends CommonProxy {
 	@SubscribeEvent
 	public void onKey(KeyInputEvent event) {
 		final Minecraft mc = Minecraft.getInstance();
-		PlayerEntity player = mc.player;
-		final boolean forwardPressed = bindingWandModeForward.isPressed(); 
-		if (forwardPressed || bindingWandModeBackward.isPressed()) {
+		Player player = mc.player;
+		final boolean forwardPressed = bindingWandModeForward.consumeClick(); 
+		if (forwardPressed || bindingWandModeBackward.consumeClick()) {
 			final INostrumMagic magic = NostrumMagica.getMagicWrapper(player);
 			if (magic == null || !magic.getCompletedResearches().contains("logistics_construction") ) {
 				return;
 			}
 			
-			ItemStack wand = player.getHeldItemMainhand();
+			ItemStack wand = player.getMainHandItem();
 			if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand)) {
-				wand = player.getHeldItemOffhand();
+				wand = player.getOffhandItem();
 			}
 			
 			if (!wand.isEmpty() && wand.getItem() instanceof TemplateWand) {

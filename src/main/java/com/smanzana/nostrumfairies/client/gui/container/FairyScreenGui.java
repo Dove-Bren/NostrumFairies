@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
@@ -22,18 +22,18 @@ import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.util.Inventories;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.gui.GuiUtils;
@@ -172,7 +172,7 @@ public class FairyScreenGui {
 		protected HideableSlot[] pushSlots;
 		protected HideableSlot gemSlot;
 		
-		public FairyScreenContainer(int windowId, PlayerInventory playerInv, FairyHolderInventory chest, INostrumFeyCapability capability) { 
+		public FairyScreenContainer(int windowId, Inventory playerInv, FairyHolderInventory chest, INostrumFeyCapability capability) { 
 			super(FairyContainers.FairyScreen, windowId, chest);
 			this.inv = chest;
 			this.capability = capability;
@@ -198,8 +198,8 @@ public class FairyScreenGui {
 				for (int i = 0; i < 3; i++) {
 					for (int j = 0; j < 3; j++) {
 						HideableSlot slot = new HideableSlot(chest, i * 3 + j, GUI_ATTACK_SLOT_HOFFSET + j * 18, GUI_ATTACK_SLOT_VOFFSET + i * 18) {
-							public boolean isItemValid(@Nonnull ItemStack stack) {
-						        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
+							public boolean mayPlace(@Nonnull ItemStack stack) {
+						        return this.container.canPlaceItem(this.getSlotIndex(), stack);
 						    }
 						};
 						this.addSlot(slot);
@@ -214,8 +214,8 @@ public class FairyScreenGui {
 				for (int i = 0; i < 3; i++) {
 					for (int j = 0; j < 3; j++) {
 						HideableSlot slot = new HideableSlot(chest, (9) + i * 3 + j, GUI_BUILD_SLOT_HOFFSET + j * 18, GUI_BUILD_SLOT_VOFFSET + i * 18) {
-							public boolean isItemValid(@Nonnull ItemStack stack) {
-						        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
+							public boolean mayPlace(@Nonnull ItemStack stack) {
+						        return this.container.canPlaceItem(this.getSlotIndex(), stack);
 						    }
 						};
 						this.addSlot(slot);
@@ -231,8 +231,8 @@ public class FairyScreenGui {
 					for (int j = 0; j < 3; j++) {
 						// TODO fancy slots that show the 'FETCH' slot contents in the corner?
 						HideableSlot slot = new HideableSlot(chest, (18) + i * 3 + j, GUI_LOGISTICS_SLOT_HOFFSET + j * 18, GUI_LOGISTICS_SLOT_VOFFSET + i * 18) {
-							public boolean isItemValid(@Nonnull ItemStack stack) {
-						        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
+							public boolean mayPlace(@Nonnull ItemStack stack) {
+						        return this.container.canPlaceItem(this.getSlotIndex(), stack);
 						    }
 						};
 						this.addSlot(slot);
@@ -248,8 +248,8 @@ public class FairyScreenGui {
 					this.scrollSlots[i] = new HideableSlot(chest, (27) + i,
 							SIDEBAR_ATTACK_HOFFSET + SIDEBAR_ATTACK_SCROLL_SLOT_HOFFSET,
 							SIDEBAR_ATTACK_VOFFSET + SIDEBAR_ATTACK_SCROLL_SLOT_VOFFSET) {
-						public boolean isItemValid(@Nonnull ItemStack stack) {
-					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
+						public boolean mayPlace(@Nonnull ItemStack stack) {
+					        return this.container.canPlaceItem(this.getSlotIndex(), stack);
 					    }
 					};
 					this.addSlot(scrollSlots[i]);
@@ -265,8 +265,8 @@ public class FairyScreenGui {
 					this.pullSlots[i] = new HideableSlot(chest, (45) + i,
 							SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_PULL_SLOT_HOFFSET + (x * 18),
 							SIDEBAR_LOGISTICS_VOFFSET + SIDEBAR_LOGISTICS_PULL_SLOT_VOFFSET + (y * 18)) {
-						public boolean isItemValid(@Nonnull ItemStack stack) {
-					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
+						public boolean mayPlace(@Nonnull ItemStack stack) {
+					        return this.container.canPlaceItem(this.getSlotIndex(), stack);
 					    }
 					};
 					this.addSlot(pullSlots[i]);
@@ -274,8 +274,8 @@ public class FairyScreenGui {
 					this.pushSlots[i] = new HideableSlot(chest, (51) + i,
 							SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_PUSH_SLOT_HOFFSET + (x * 18),
 							SIDEBAR_LOGISTICS_VOFFSET + SIDEBAR_LOGISTICS_PUSH_SLOT_VOFFSET + (y * 18)) {
-						public boolean isItemValid(@Nonnull ItemStack stack) {
-					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
+						public boolean mayPlace(@Nonnull ItemStack stack) {
+					        return this.container.canPlaceItem(this.getSlotIndex(), stack);
 					    }
 					};
 					this.addSlot(pushSlots[i]);
@@ -284,8 +284,8 @@ public class FairyScreenGui {
 				this.gemSlot = new HideableSlot(chest, 57,
 						SIDEBAR_LOGISTICS_HOFFSET + SIDEBAR_LOGISTICS_GEM_SLOT_HOFFSET,
 						SIDEBAR_LOGISTICS_VOFFSET + SIDEBAR_LOGISTICS_GEM_SLOT_VOFFSET) {
-					public boolean isItemValid(@Nonnull ItemStack stack) {
-				        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
+					public boolean mayPlace(@Nonnull ItemStack stack) {
+				        return this.container.canPlaceItem(this.getSlotIndex(), stack);
 				    }
 				};
 				this.addSlot(gemSlot);
@@ -294,7 +294,7 @@ public class FairyScreenGui {
 		
 		//FairyScreenContainer(int windowId, PlayerInventory playerInv, FairyHolderInventory chest, INostrumFeyCapability capability)
 		
-		public static FairyScreenContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+		public static FairyScreenContainer FromNetwork(int windowId, Inventory playerInv, FriendlyByteBuf buf) {
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(playerInv.player);
 			return new FairyScreenContainer(windowId, playerInv, attr.getFairyInventory(), attr);
 		}
@@ -309,18 +309,18 @@ public class FairyScreenGui {
 		}
 		
 		@Override
-		public ItemStack transferStackInSlot(PlayerEntity playerIn, int fromSlot) {
+		public ItemStack quickMoveStack(Player playerIn, int fromSlot) {
 			ItemStack prev = ItemStack.EMPTY;	
-			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
+			Slot slot = (Slot) this.slots.get(fromSlot);
 			
-			if (slot != null && slot.getHasStack()) {
-				ItemStack cur = slot.getStack();
+			if (slot != null && slot.hasItem()) {
+				ItemStack cur = slot.getItem();
 				prev = cur.copy();
 				
-				if (slot.inventory == this.inv) {
+				if (slot.container == this.inv) {
 					// Trying to take one of our items
-					if (playerIn.inventory.addItemStackToInventory(cur)) {
-						slot.putStack(ItemStack.EMPTY);
+					if (playerIn.inventory.add(cur)) {
+						slot.set(ItemStack.EMPTY);
 						slot.onTake(playerIn, cur);
 					} else {
 						prev = ItemStack.EMPTY;
@@ -328,7 +328,7 @@ public class FairyScreenGui {
 				} else {
 					// shift-click in player inventory
 					ItemStack leftover = Inventories.addItem(inv, cur);
-					slot.putStack(leftover.isEmpty() ? ItemStack.EMPTY : leftover);
+					slot.set(leftover.isEmpty() ? ItemStack.EMPTY : leftover);
 					if (!leftover.isEmpty() && leftover.getCount() == prev.getCount()) {
 						prev = ItemStack.EMPTY;
 					}
@@ -340,12 +340,12 @@ public class FairyScreenGui {
 		}
 		
 		@Override
-		public boolean canDragIntoSlot(Slot slotIn) {
+		public boolean canDragTo(Slot slotIn) {
 			return false;
 		}
 		
-		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player) {
-			Slot slot = (slotId > 0 && slotId < this.inventorySlots.size() ? this.inventorySlots.get(slotId) : null);
+		public ItemStack clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
+			Slot slot = (slotId > 0 && slotId < this.slots.size() ? this.slots.get(slotId) : null);
 			if (slot != null) {
 				if (slot instanceof HideableSlot && ((HideableSlot) slot).hidden) {
 					return ItemStack.EMPTY;
@@ -376,7 +376,7 @@ public class FairyScreenGui {
 				
 				if (slotIdx != -1) {
 					// template slot
-					if (player.inventory.getItemStack().isEmpty()) {
+					if (player.inventory.getCarried().isEmpty()) {
 						// empty hand
 						if (clickTypeIn == ClickType.PICKUP) {
 							// Right-click?
@@ -410,7 +410,7 @@ public class FairyScreenGui {
 						// Item in hand. Clicking empty output slot?
 						if (clickTypeIn == ClickType.PICKUP) {
 							// Overwrite template
-							ItemStack template = player.inventory.getItemStack().copy();
+							ItemStack template = player.inventory.getCarried().copy();
 							if (dragType == 1) { // right click
 								template.setCount(1);
 							}
@@ -425,11 +425,11 @@ public class FairyScreenGui {
 					return ItemStack.EMPTY;
 				}
 			}
-			return super.slotClick(slotId, dragType, clickTypeIn, player);
+			return super.clicked(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
-		public boolean canInteractWith(PlayerEntity playerIn) {
+		public boolean stillValid(Player playerIn) {
 			return true;
 		}
 
@@ -454,14 +454,14 @@ public class FairyScreenGui {
 			protected final int originalX;
 			protected final int originalY;
 			
-			public HideableSlot(IInventory inventoryIn, int index, int x, int y) {
+			public HideableSlot(Container inventoryIn, int index, int x, int y) {
 				super(inventoryIn, index, x, y);
 				this.originalX = x;
 				this.originalY = y;
 			}
 			
 			@Override
-			public boolean isEnabled() {
+			public boolean isActive() {
 				return !hidden;
 			}
 			
@@ -469,11 +469,11 @@ public class FairyScreenGui {
 				if (hide != hidden) {
 					hidden = hide;
 					if (hide) {
-						this.xPos = -1000;
-						this.yPos = -1000;
+						this.x = -1000;
+						this.y = -1000;
 					} else {
-						this.xPos = originalX;
-						this.yPos = originalY;
+						this.x = originalX;
+						this.y = originalY;
 					}
 				}
 			}
@@ -498,22 +498,22 @@ public class FairyScreenGui {
 		private boolean showLogistics;
 		private boolean showConstruction;
 		
-		public FairyScreenGuiContainer(FairyScreenContainer container, PlayerInventory playerInv, ITextComponent name) {
+		public FairyScreenGuiContainer(FairyScreenContainer container, Inventory playerInv, Component name) {
 			super(container, playerInv, name);
 			this.container = container;
 			this.targetButtons = new TargetButton[container.inv.getAttackConfigSize()];
 			this.placementButtons = new PlacementButton[container.inv.getAttackConfigSize()];
 			
-			this.xSize = GUI_WIDTH;
-			this.ySize = GUI_HEIGHT;
+			this.imageWidth = GUI_WIDTH;
+			this.imageHeight = GUI_HEIGHT;
 		}
 		
 		@Override
 		public void init() {
 			super.init();
 			
-			final int horizontalMargin = (width - xSize) / 2;
-			final int verticalMargin = (height - ySize) / 2;
+			final int horizontalMargin = (width - imageWidth) / 2;
+			final int verticalMargin = (height - imageHeight) / 2;
 			
 			for (int i = 0; i < container.inv.getAttackConfigSize(); i++) {
 				targetButtons[i] = new TargetButton(
@@ -561,7 +561,7 @@ public class FairyScreenGui {
 				showAttack = showLogistics = showConstruction = false;
 				selectedGroup = -1;
 			} else {
-				ItemStack gael = container.inv.getStackInSlot(slotClicked);
+				ItemStack gael = container.inv.getItem(slotClicked);
 				this.selectedEmpty = (gael.isEmpty());
 				if (FairyHolderInventory.slotIsType(FairyGaelType.ATTACK, slotClicked)) {
 					showAttack = true;
@@ -611,14 +611,14 @@ public class FairyScreenGui {
 			container.gemSlot.hide(!showLogistics);
 		}
 		
-		protected void drawAttackSlide(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
+		protected void drawAttackSlide(PoseStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			// whole thing can be skipped if no selection
 			if (selectedEmpty) {
 				return;
 			}
 			
-			final int horizontalMargin = (width - xSize) / 2;
-			final int verticalMargin = (height - ySize) / 2;
+			final int horizontalMargin = (width - imageWidth) / 2;
+			final int verticalMargin = (height - imageHeight) / 2;
 			final int sidebarX = horizontalMargin + SIDEBAR_ATTACK_HOFFSET;
 			final int sidebarY = verticalMargin + SIDEBAR_ATTACK_VOFFSET;
 			
@@ -665,7 +665,7 @@ public class FairyScreenGui {
 				} else {
 					name = selectedName;
 				}
-				matrixStackIn.push();
+				matrixStackIn.pushPose();
 				matrixStackIn.translate(sidebarX + (SIDEBAR_ATTACK_WIDTH / 2), sidebarY + 7, 0); 
 				matrixStackIn.scale(scale, scale, scale);
 				drawCenteredString(matrixStackIn, this.font,
@@ -673,13 +673,13 @@ public class FairyScreenGui {
 						0,
 						0,
 						0xFFFFFFFF);
-				matrixStackIn.pop();
+				matrixStackIn.popPose();
 			}
 		}
 		
-		protected void drawLogisticsSlide(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
-			final int horizontalMargin = (width - xSize) / 2;
-			final int verticalMargin = (height - ySize) / 2;
+		protected void drawLogisticsSlide(PoseStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
+			final int horizontalMargin = (width - imageWidth) / 2;
+			final int verticalMargin = (height - imageHeight) / 2;
 			final int sidebarX = horizontalMargin + SIDEBAR_LOGISTICS_HOFFSET;
 			final int sidebarY = verticalMargin + SIDEBAR_LOGISTICS_VOFFSET;
 			
@@ -725,7 +725,7 @@ public class FairyScreenGui {
 				} else {
 					name = selectedName;
 				}
-				matrixStackIn.push();
+				matrixStackIn.pushPose();
 				matrixStackIn.translate(sidebarX + (SIDEBAR_LOGISTICS_WIDTH / 2), sidebarY + 7, 0); 
 				matrixStackIn.scale(scale, scale, scale);
 				drawCenteredString(matrixStackIn, this.font,
@@ -733,17 +733,17 @@ public class FairyScreenGui {
 						0,
 						0,
 						0xFFFFFFFF);
-				matrixStackIn.pop();
+				matrixStackIn.popPose();
 			}
 		}
 		
-		protected void drawConstructionSlide(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
+		protected void drawConstructionSlide(PoseStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			if (selectedEmpty) {
 				return;
 			}
 			
-			final int horizontalMargin = (width - xSize) / 2;
-			final int verticalMargin = (height - ySize) / 2;
+			final int horizontalMargin = (width - imageWidth) / 2;
+			final int verticalMargin = (height - imageHeight) / 2;
 			final int sidebarX = horizontalMargin + SIDEBAR_ATTACK_HOFFSET;
 			final int sidebarY = verticalMargin + SIDEBAR_ATTACK_VOFFSET;
 			
@@ -790,7 +790,7 @@ public class FairyScreenGui {
 				} else {
 					name = selectedName;
 				}
-				matrixStackIn.push();
+				matrixStackIn.pushPose();
 				matrixStackIn.translate(sidebarX + (SIDEBAR_CONSTRUCTION_WIDTH / 2), sidebarY + 7, 0); 
 				matrixStackIn.scale(scale, scale, scale);
 				drawCenteredString(matrixStackIn, this.font,
@@ -798,20 +798,20 @@ public class FairyScreenGui {
 						0,
 						0,
 						0xFFFFFFFF);
-				matrixStackIn.pop();
+				matrixStackIn.popPose();
 			}
 		}
 		
-		protected void drawStar(MatrixStack matrixStackIn, float partialTicks) {
+		protected void drawStar(PoseStack matrixStackIn, float partialTicks) {
 			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, 0, 0,
 					ICON_STAR_TEXT_HOFFSET, ICON_STAR_TEXT_VOFFSET,
 					ICON_STAR_TEXT_WIDTH, ICON_STAR_TEXT_HEIGHT,
 					ICON_STAR_WIDTH, ICON_STAR_HEIGHT, 256, 256);
 		}
 		
-		protected void drawLevelDisplay(MatrixStack matrixStackIn, float partialTicks) {
-			final int horizontalMargin = (width - xSize) / 2;
-			final int verticalMargin = (height - ySize) / 2;
+		protected void drawLevelDisplay(PoseStack matrixStackIn, float partialTicks) {
+			final int horizontalMargin = (width - imageWidth) / 2;
+			final int verticalMargin = (height - imageHeight) / 2;
 			
 			final int GUI_FAIRY_XP_BAR_HOFFSET = 8;
 			final int GUI_FAIRY_XP_BAR_VOFFSET = 78;
@@ -835,12 +835,12 @@ public class FairyScreenGui {
 			
 			RenderSystem.enableBlend();
 			for (int i = 0; i < level; i++) {
-				matrixStackIn.push();
+				matrixStackIn.pushPose();
 				matrixStackIn.translate(x + (starWidth * i),
 						verticalMargin + GUI_FAIRY_XP_BAR_VOFFSET + (GUI_FAIRY_XP_BAR_HEIGHT / 2) + (-ICON_STAR_HEIGHT / 2),
 						0);
 				drawStar(matrixStackIn, partialTicks);
-				matrixStackIn.pop();
+				matrixStackIn.popPose();
 			}
 			RenderSystem.disableBlend();
 			
@@ -848,11 +848,11 @@ public class FairyScreenGui {
 		}
 		
 		@Override
-		protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
-			final int horizontalMargin = (width - xSize) / 2;
-			final int verticalMargin = (height - ySize) / 2;
+		protected void renderBg(PoseStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
+			final int horizontalMargin = (width - imageWidth) / 2;
+			final int verticalMargin = (height - imageHeight) / 2;
 			
-			mc.getTextureManager().bindTexture(TEXT);
+			mc.getTextureManager().bind(TEXT);
 			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, GUI_WIDTH, GUI_HEIGHT, 256, 256);
 			
 			drawLevelDisplay(matrixStackIn, partialTicks);
@@ -867,9 +867,9 @@ public class FairyScreenGui {
 		}
 		
 		@Override
-		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+		protected void renderLabels(PoseStack matrixStackIn, int mouseX, int mouseY) {
 			
-			matrixStackIn.push();
+			matrixStackIn.pushPose();
 			matrixStackIn.translate(0, 0, 500);
 			RenderSystem.enableBlend();
 			if (!container.capability.attackFairyUnlocked()) {
@@ -894,11 +894,11 @@ public class FairyScreenGui {
 						0xAA000000);
 			}
 			RenderSystem.disableBlend();
-			matrixStackIn.pop();
+			matrixStackIn.popPose();
 			
 			if (selectedGroup != -1) {
 				float bright = 1f;
-				mc.getTextureManager().bindTexture(TEXT);
+				mc.getTextureManager().bind(TEXT);
 				
 				int x = -5;
 				int y = -5;
@@ -948,11 +948,11 @@ public class FairyScreenGui {
 			}
 			
 			// Let buttons draw foregrounds
-			for (Widget button : this.buttons) {
+			for (AbstractWidget button : this.buttons) {
 				if (button instanceof TargetButton) {
-					((TargetButton) button).drawButtonForegroundLayer(matrixStackIn, mouseX - this.guiLeft, mouseY - this.guiTop);
+					((TargetButton) button).drawButtonForegroundLayer(matrixStackIn, mouseX - this.leftPos, mouseY - this.topPos);
 				} else if (button instanceof PlacementButton) {
-					((PlacementButton) button).drawButtonForegroundLayer(matrixStackIn, mouseX - this.guiLeft, mouseY - this.guiTop);
+					((PlacementButton) button).drawButtonForegroundLayer(matrixStackIn, mouseX - this.leftPos, mouseY - this.topPos);
 				}
 			}
 		}
@@ -971,17 +971,17 @@ public class FairyScreenGui {
 					}
 					
 					for (int i = 0; i < size; i++) {
-						Slot slot = container.inventorySlots.get(i + (27 + 9 + offset));
-						if (this.isPointInRegion(slot.xPos, slot.yPos, 16, 16, mouseX, mouseY)) {
+						Slot slot = container.slots.get(i + (27 + 9 + offset));
+						if (this.isHovering(slot.x, slot.y, 16, 16, mouseX, mouseY)) {
 							if (mouseButton == 1) {
 								this.setButtonsTo(i + offset);
 								return true;
 							} else {
 								// they're picking it up or plopping it down
 								if (slot.getSlotIndex() == this.selectedSlot) {
-									if (NostrumFairies.proxy.getPlayer().inventory.getItemStack().isEmpty()) {
+									if (NostrumFairies.proxy.getPlayer().inventory.getCarried().isEmpty()) {
 										this.selectedEmpty = true;
-									} else if (slot.isItemValid(NostrumFairies.proxy.getPlayer().inventory.getItemStack())) {
+									} else if (slot.mayPlace(NostrumFairies.proxy.getPlayer().inventory.getCarried())) {
 										this.selectedEmpty = false;
 									}
 									// else unaffected
@@ -997,12 +997,12 @@ public class FairyScreenGui {
 		}
 		
 		@Override
-		protected void handleMouseClick(Slot slot, int slotId, int mouseButton, ClickType type) {
+		protected void slotClicked(Slot slot, int slotId, int mouseButton, ClickType type) {
 			if (slot != null && slot instanceof HideableSlot && ((HideableSlot) slot).hidden) {
 				return;
 			}
 			
-			super.handleMouseClick(slot, slotId, mouseButton, type);
+			super.slotClicked(slot, slotId, mouseButton, type);
 		}
 		
 		private final class TargetButton extends Button {
@@ -1010,7 +1010,7 @@ public class FairyScreenGui {
 			private final int slot;
 			
 			public TargetButton(int x, int y, int slot, FairyScreenGuiContainer gui) {
-				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, StringTextComponent.EMPTY, (b) -> {
+				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, TextComponent.EMPTY, (b) -> {
 					FairyHolderInventory.FairyCastTarget current = gui.container.inv.getFairyCastTarget(slot);
 					NetworkHandler.sendToServer(new FairyGuiActionMessage(
 							GuiAction.CHANGE_TARGET, slot, current.ordinal() + 1));
@@ -1019,7 +1019,7 @@ public class FairyScreenGui {
 			}
 			
 			@Override
-			public void render(MatrixStack matrixStackIn, int mouseX, int mouseY, float partialTicks) {
+			public void render(PoseStack matrixStackIn, int mouseX, int mouseY, float partialTicks) {
 				if (this.visible) {
 					isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 					
@@ -1036,7 +1036,7 @@ public class FairyScreenGui {
 						alpha = 1f;
 					}
 					RenderSystem.enableBlend();
-					mc.getTextureManager().bindTexture(TEXT);
+					mc.getTextureManager().bind(TEXT);
 					RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, this.x, this.y,
 							ICON_SLOTHELPER_TEXT_HOFFSET, ICON_SLOTHELPER_TEXT_VOFFSET,
 							ICON_SLOTHELPER_TEXT_WIDTH, ICON_SLOTHELPER_TEXT_HEIGHT,
@@ -1066,7 +1066,7 @@ public class FairyScreenGui {
 				}
 			}
 			
-			public void drawButtonForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+			public void drawButtonForegroundLayer(PoseStack matrixStackIn, int mouseX, int mouseY) {
 				//super.drawButtonForegroundLayer(mouseX, mouseY);
 				
 				if (this.isHovered) {
@@ -1085,7 +1085,7 @@ public class FairyScreenGui {
 			private final int slot;
 			
 			public PlacementButton(int x, int y, int slot, FairyScreenGuiContainer gui) {
-				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, StringTextComponent.EMPTY, (b) -> {
+				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, TextComponent.EMPTY, (b) -> {
 					FairyHolderInventory.FairyPlacementTarget current = gui.container.inv.getFairyPlacementTarget(slot);
 					NetworkHandler.sendToServer(new FairyGuiActionMessage(
 							GuiAction.CHANGE_PLACEMENT, slot, current.ordinal() + 1));
@@ -1094,7 +1094,7 @@ public class FairyScreenGui {
 			}
 			
 			@Override
-			public void render(MatrixStack matrixStackIn, int mouseX, int mouseY, float partialTicks) {
+			public void render(PoseStack matrixStackIn, int mouseX, int mouseY, float partialTicks) {
 				if (this.visible) {
 					isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 					
@@ -1108,7 +1108,7 @@ public class FairyScreenGui {
 						red = green = blue = alpha = 1f;
 					}
 					RenderSystem.enableBlend();
-					mc.getTextureManager().bindTexture(TEXT);
+					mc.getTextureManager().bind(TEXT);
 					RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, this.x, this.y,
 							ICON_SLOTHELPER_TEXT_HOFFSET, ICON_SLOTHELPER_TEXT_VOFFSET,
 							ICON_SLOTHELPER_TEXT_WIDTH, ICON_SLOTHELPER_TEXT_HEIGHT,
@@ -1137,7 +1137,7 @@ public class FairyScreenGui {
 				}
 			}
 			
-			public void drawButtonForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+			public void drawButtonForegroundLayer(PoseStack matrixStackIn, int mouseX, int mouseY) {
 				//super.drawButtonForegroundLayer(mouseX, mouseY);
 				
 				if (this.isHovered) {

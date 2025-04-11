@@ -26,27 +26,27 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.TorchBlock;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.TorchBlock;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-public class MiningBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity, ILogisticsTaskListener, IFeySign {
+public class MiningBlockTileEntity extends LogisticsTileEntity implements TickableBlockEntity, ILogisticsTaskListener, IFeySign {
 
 		private int tickCount;
 		private Map<BlockPos, ILogisticsTask> taskMap;
@@ -142,7 +142,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		protected void setNetworkComponent(LogisticsTileEntityComponent component) {
 			super.setNetworkComponent(component);
 			
-			if (world != null && !world.isRemote) {
+			if (level != null && !level.isClientSide) {
 				if (component != null) {
 					if (materialRequester != null) {
 						materialRequester.setNetwork(component.getNetwork());
@@ -154,7 +154,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		
 		@Override
 		public void onLeaveNetwork() {
-			if (!world.isRemote) {
+			if (!level.isClientSide) {
 				if (materialRequester != null) {
 					materialRequester.clearRequests();
 					materialRequester.setNetwork(null);
@@ -165,7 +165,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 						this.getNetwork().getTaskRegistry().revoke(task);
 					}
 					for (BlockPos beacon : beacons) {
-						this.getNetwork().removeBeacon(world, beacon);
+						this.getNetwork().removeBeacon(level, beacon);
 					}
 				}
 			}
@@ -175,7 +175,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		
 		@Override
 		public void onJoinNetwork(LogisticsNetwork network) {
-			if (!world.isRemote) {
+			if (!level.isClientSide) {
 				if (materialRequester != null) {
 					materialRequester.setNetwork(network);
 					refreshRequester();
@@ -183,7 +183,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				
 				// add tasks and beacons to this network
 				for (BlockPos beacon : beacons) {
-					this.getNetwork().addBeacon(world, beacon);
+					this.getNetwork().addBeacon(level, beacon);
 				}
 				
 				for (ILogisticsTask task : this.taskMap.values()) {
@@ -235,7 +235,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			beacons.add(pos);
 			LogisticsNetwork network = this.getNetwork();
 			if (network != null) {
-				network.addBeacon(this.world, pos);
+				network.addBeacon(this.level, pos);
 			}
 		}
 		
@@ -248,20 +248,20 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			if (network == null) {
 				return;
 			}
-			pos = pos.toImmutable();
+			pos = pos.immutable();
 			
 			if (!taskMap.containsKey(pos)) {
 				// Note: I'm using different constructors so that the mine task could change someday to do different things depending
 				// on the constructor
 				LogisticsTaskMineBlock task;
 				if (mineAt == null) {
-					task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", world, pos, prereqs);
+					task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", level, pos, prereqs);
 				} else {
-					task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", world, pos, mineAt.toImmutable(), prereqs);
+					task = new LogisticsTaskMineBlock(this.getNetworkComponent(), "Mining Task", level, pos, mineAt.immutable(), prereqs);
 				}
 				this.taskMap.put(pos, task);
 				network.getTaskRegistry().register(task, null);
-				this.markDirty();
+				this.setChanged();
 			}
 		}
 		
@@ -275,7 +275,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				return;
 			}
 			
-			pos = pos.toImmutable();
+			pos = pos.immutable();
 			if (!taskMap.containsKey(pos)) {
 				// Request platform material
 				platformRequests++;
@@ -283,7 +283,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				
 				// Request block placement
 				LogisticsTaskPlaceBlock task;
-				BlockState state = Blocks.COBBLESTONE.getDefaultState();
+				BlockState state = Blocks.COBBLESTONE.defaultBlockState();
 				if (!buildingMaterial.isEmpty()) {
 					if (buildingMaterial.getItem() instanceof BlockItem) {
 						// I don't trust the null entity in there...
@@ -296,21 +296,21 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 //							int meta = itemBlock.getMetadata(buildingMaterial.getMetadata());
 //							state = itemBlock.getBlock().getStateForPlacement(world, pos, Direction.UP, 0, 0, 0, meta, null, Hand.MAIN_HAND);
 							
-							state = itemBlock.getBlock().getDefaultState();
+							state = itemBlock.getBlock().defaultBlockState();
 						} catch (Exception e) {
 							// fall back to default state
-							state = itemBlock.getBlock().getDefaultState(); 
+							state = itemBlock.getBlock().defaultBlockState(); 
 						}
 					}
 				}
 				if (standAt == null) {
 					task = new LogisticsTaskPlaceBlock(this.getNetworkComponent(), "Mine Repair Task",
 							getRepairStack(), state,
-							world, pos);
+							level, pos);
 				} else {
 					task = new LogisticsTaskPlaceBlock(this.getNetworkComponent(), "Mine Repair Task",
 							getRepairStack(), state,
-							world, pos, standAt.toImmutable());
+							level, pos, standAt.immutable());
 				}
 						
 				
@@ -341,7 +341,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		private int getYFromLevel(int level) {
-			return pos.getY() - level;
+			return worldPosition.getY() - level;
 		}
 		
 //		private int levelFromY(int y) {
@@ -369,7 +369,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				return 0;
 			}
 			
-			int platform = (int) Math.ceil((pos.getY() - y) / (double) (MiningBlock.MAJOR_LEVEL_DIFF / 2));
+			int platform = (int) Math.ceil((worldPosition.getY() - y) / (double) (MiningBlock.MAJOR_LEVEL_DIFF / 2));
 			int level = platformToLevel(platform); 
 			
 			// if platform is unavailable, do the next one up
@@ -380,17 +380,17 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			return platform;
 		}
 		
-		private boolean forEachOnLayer(int level, Function<BlockPos.Mutable, Boolean> func) {
-			final int startX = this.pos.getX() + chunkXOffset - radius;
-			final int endX = this.pos.getX() + chunkXOffset + radius;
-			final int startZ = this.pos.getZ() + chunkZOffset - radius;
-			final int endZ = this.pos.getZ() + chunkZOffset + radius;
+		private boolean forEachOnLayer(int level, Function<BlockPos.MutableBlockPos, Boolean> func) {
+			final int startX = this.worldPosition.getX() + chunkXOffset - radius;
+			final int endX = this.worldPosition.getX() + chunkXOffset + radius;
+			final int startZ = this.worldPosition.getZ() + chunkZOffset - radius;
+			final int endZ = this.worldPosition.getZ() + chunkZOffset + radius;
 			final int y = getYFromLevel(level);
 			
-			BlockPos.Mutable cursor = new BlockPos.Mutable();
+			BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 			for (int x = startX; x <= endX; x++)
 			for (int z = startZ; z <= endZ; z++) {
-				cursor.setPos(x, y, z);
+				cursor.set(x, y, z);
 				if (!func.apply(cursor)) {
 					return false;
 				}
@@ -400,9 +400,9 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		private boolean isIgnorableBlock(BlockPos pos) {
-			BlockState state = world.getBlockState(pos);
+			BlockState state = level.getBlockState(pos);
 			// We care if it's something that doesn't block movement and isn't a liquid source block
-			if (state.getMaterial().blocksMovement()) {
+			if (state.getMaterial().blocksMotion()) {
 				return false;
 			}
 			if (state.getMaterial().isLiquid()) {
@@ -415,9 +415,9 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		private boolean isEmpty(BlockPos pos) {
-			return world.isAirBlock(pos)
-					|| world.getBlockState(pos).getBlock() instanceof MagicLight
-					|| world.getBlockState(pos).getBlock() instanceof TorchBlock
+			return level.isEmptyBlock(pos)
+					|| level.getBlockState(pos).getBlock() instanceof MagicLight
+					|| level.getBlockState(pos).getBlock() instanceof TorchBlock
 					|| isIgnorableBlock(pos);
 		}
 		
@@ -428,44 +428,44 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		private boolean clearBlock(BlockPos base, boolean tall, @Nullable BlockPos lastPos) {
 			// should base be the block underneath or the first air block??
 			
-			base = base.toImmutable();
+			base = base.immutable();
 			boolean tasked = false;
 			
 			// check underneath
-			if (!Block.hasEnoughSolidSide(world, base.down(), Direction.UP)) {
-				makeRepairTask(base.down(), lastPos);
+			if (!Block.canSupportCenter(level, base.below(), Direction.UP)) {
+				makeRepairTask(base.below(), lastPos);
 				tasked = true;
 			}
 			
 			// And above and sides (but only if there's liquid flowing in
 			BlockPos[] around;
 			if (lastPos == null) {
-				around = new BlockPos[]{tall ? base.up().up().up() : base.up().up()};
+				around = new BlockPos[]{tall ? base.above().above().above() : base.above().above()};
 			} else {
 				// Figure out which ways are the sides
 				if (lastPos.getX() == base.getX()) {
 					if (tall) {
-						around = new BlockPos[] {base.up().up().up(),
-								base.east(), base.east().up(), base.east().up().up(),
-								base.west(), base.west().up(), base.west().up().up()};
+						around = new BlockPos[] {base.above().above().above(),
+								base.east(), base.east().above(), base.east().above().above(),
+								base.west(), base.west().above(), base.west().above().above()};
 					} else {
-						around = new BlockPos[] {base.up().up(),
-								base.east(), base.east().up(), base.west(), base.west().up()};
+						around = new BlockPos[] {base.above().above(),
+								base.east(), base.east().above(), base.west(), base.west().above()};
 					}
 				} else {
 					if (tall) {
-						around = new BlockPos[] {base.up().up().up(),
-								base.north(), base.north().up(), base.north().up().up(),
-								base.south(), base.south().up(), base.south().up().up()};
+						around = new BlockPos[] {base.above().above().above(),
+								base.north(), base.north().above(), base.north().above().above(),
+								base.south(), base.south().above(), base.south().above().above()};
 					} else {
-						around = new BlockPos[] {base.up().up().up(),
-								base.north(), base.north().up(), base.south(), base.south().up()};
+						around = new BlockPos[] {base.above().above().above(),
+								base.north(), base.north().above(), base.south(), base.south().above()};
 					}
 				}
 				
 			}
 			for (BlockPos aroundCurs : around) {
-				if (world.getBlockState(aroundCurs).getMaterial().isLiquid()) {
+				if (level.getBlockState(aroundCurs).getMaterial().isLiquid()) {
 					makeRepairTask(aroundCurs, lastPos);
 				}
 			}
@@ -474,8 +474,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			// check for 2 or 3 high air
 			// Make a prereq from lastPos if it's there.
 			// TODO could try and use above and below blocks as prereqs? Would that help?
-			BlockPos.Mutable lastCursor = lastPos == null ? null : new BlockPos.Mutable().setPos(lastPos);
-			BlockPos[] range = (tall ? new BlockPos[]{base, base.up(), base.up().up(), base.up().up()} : new BlockPos[]{base, base.up(), base.up()});
+			BlockPos.MutableBlockPos lastCursor = lastPos == null ? null : new BlockPos.MutableBlockPos().set(lastPos);
+			BlockPos[] range = (tall ? new BlockPos[]{base, base.above(), base.above().above(), base.above().above()} : new BlockPos[]{base, base.above(), base.above()});
 			for (BlockPos pos : range) {
 				if (!isEmpty(pos)) {
 					LogisticsTaskMineBlock[] prereq = null;
@@ -520,13 +520,13 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			// Get platform level. Then move to the right X. Then mine up to the required Z.
 			// If X isn't beyond the platform, make sure to adjust where we 'start' at the right spot.
 			// Note X is rounded to 4 to spread shafts out
-			BlockPos.Mutable cursor = new BlockPos.Mutable();
+			BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 			final int effX = pos.getX() & ~3; // chop off bottom 2 bits, rounding down to nearest 4 
 			int y = platformToY(platformForY(pos.getY()));
 			int x;
 			int z;
-			int centerX = this.pos.getX();
-			int centerZ = this.pos.getZ();
+			int centerX = this.worldPosition.getX();
+			int centerZ = this.worldPosition.getZ();
 			boolean outside = true; // outside the platform ring
 			boolean inside = false;
 			if (effX >= centerX - MiningBlock.PLATFORM_WIDTH && effX <= centerX + MiningBlock.PLATFORM_WIDTH
@@ -554,39 +554,39 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				z = pos.getZ();
 			}
 			
-			cursor.setPos(x, y, z);
+			cursor.set(x, y, z);
 			if (!inside) {
 				
 				// Set the start location (and create a beacon!)
 				if (outside) {
-					this.addBeacon(cursor.toImmutable());
+					this.addBeacon(cursor.immutable());
 				}
 				
 				// Keep track of last for platform building
-				BlockPos.Mutable last = new BlockPos.Mutable().setPos(cursor);
+				BlockPos.MutableBlockPos last = new BlockPos.MutableBlockPos().set(cursor);
 				
 				// First, get to the right x
 				int spaces = 0;
 				while (cursor.getX() != effX) {
 					clearBlock(cursor, false, last);
-					last.setPos(cursor);
+					last.set(cursor);
 					cursor.move(effX > cursor.getX() ? Direction.EAST : Direction.WEST);
 					
 					if (spaces++ % 16 == 0) {
 						// Set a new beacon every once in a while
-						this.addBeacon(cursor.toImmutable());
+						this.addBeacon(cursor.immutable());
 					}
 				}
 				
 				// Then walk to Z
 				while (cursor.getZ() != pos.getZ()) {
 					clearBlock(cursor, false, last);
-					last.setPos(cursor);
+					last.set(cursor);
 					cursor.move(pos.getZ() > cursor.getZ() ? Direction.SOUTH : Direction.NORTH);
 					
 					if (spaces++ % 16 == 0) {
 						// Set a new beacon every once in a while
-						this.addBeacon(cursor.toImmutable());
+						this.addBeacon(cursor.immutable());
 					}
 				}
 				
@@ -600,7 +600,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			makeMineTask(pos, cursor, new LogisticsTaskMineBlock[]{(LogisticsTaskMineBlock) taskMap.get(cursor)});
 			
 			// And mark that we're going there in the first place
-			oreLocations.add(pos.toImmutable());
+			oreLocations.add(pos.immutable());
 			this.dirty();
 		}
 		
@@ -638,7 +638,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				}
 				
 				// Is this something we should mine?
-				if (MiningBlock.IsOre(world, pos)) {
+				if (MiningBlock.IsOre(this.level, pos)) {
 					mineTo(pos);
 					result[0] = true;
 				}
@@ -660,7 +660,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			// 17x17 ring with a doorway to the north (or south if !whole) that leads in
 			
 			final int bounds = MiningBlock.STAIRCASE_RADIUS + MiningBlock.PLATFORM_WIDTH;
-			BlockPos.Mutable cursor = new BlockPos.Mutable();
+			BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 			//BlockPos.Mutable last = null;
 			boolean clear = true;
 			final int y = getYFromLevel(level);
@@ -675,15 +675,15 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 					|| (j >= bounds - MiningBlock.PLATFORM_WIDTH && j <= bounds)) {
 					// Note: we burrow centered on the actual TE but then shift our scan and
 					// mine area to chunk boundaries. So these x and z are not shifted.
-					final int x = pos.getX() + i;
-					final int z = pos.getZ() + j;
+					final int x = worldPosition.getX() + i;
+					final int z = worldPosition.getZ() + j;
 					
 //					if (last == null) {
 //						last = new BlockPos.Mutable(x, y, z);
 //					} else {
 //						last.setPos(cursor);
 //					}
-					cursor.setPos(x, y, z);
+					cursor.set(x, y, z);
 					if (clearBlock(cursor, false, null)) {
 						clear = false;
 					}
@@ -701,8 +701,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		 * @return
 		 */
 		private boolean makeStaircaseSegment(int level, boolean upper) {
-			BlockPos.Mutable cursor = new BlockPos.Mutable();
-			BlockPos.Mutable last = new BlockPos.Mutable();
+			BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+			BlockPos.MutableBlockPos last = new BlockPos.MutableBlockPos();
 			boolean clear = true;
 			
 			// 5x5 spiral staircase 'starting' to the north and descending 16 blocks in
@@ -714,7 +714,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			
 			final int startIdx = (upper ? 0 : MiningBlock.MAJOR_LEVEL_DIFF / 2);
 			final int endIdx = (upper ? MiningBlock.MAJOR_LEVEL_DIFF / 2 : MiningBlock.MAJOR_LEVEL_DIFF);
-			cursor.setPos(pos.getX(), getYFromLevel(level), pos.getZ() + (upper ? -startOffset : startOffset));
+			cursor.set(worldPosition.getX(), getYFromLevel(level), worldPosition.getZ() + (upper ? -startOffset : startOffset));
 			for (int i = startIdx; i < endIdx; i++) {
 				Direction side = i < startOffset ? Direction.NORTH
 						: (i < startOffset + edgeLength ? Direction.EAST 
@@ -722,7 +722,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 						: (i < startOffset + edgeLength + edgeLength + edgeLength ? Direction.WEST
 						: Direction.NORTH)));
 				
-				last.setPos(cursor);
+				last.set(cursor);
 				switch (side) {
 				case NORTH:
 					cursor.move(Direction.EAST);
@@ -748,14 +748,14 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			}
 			
 			// Finally, the door and beacon
-			this.addBeacon(cursor.toImmutable());
-			last.setPos(cursor);
+			this.addBeacon(cursor.immutable());
+			last.set(cursor);
 			cursor.move(upper ? Direction.SOUTH : Direction.NORTH);
 			if (clearBlock(cursor, false, last)) {
 				clear = false;
 			}
 			
-			last.setPos(cursor);
+			last.set(cursor);
 			cursor.move(upper ? Direction.SOUTH : Direction.NORTH);
 			if (clearBlock(cursor, false, last)) {
 				clear = false;
@@ -830,14 +830,14 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			// TODO this should also look in 5x5 (or 9x9 or 13x13?) block down to see if unmineables get in the way?
 			
 			if (lowestLevel == -1) {
-				int y = this.pos.getY();
+				int y = this.worldPosition.getY();
 				lowestLevel = 0;
 				while (y > MiningBlock.MAJOR_LEVEL_DIFF) {
 					y -= MiningBlock.MAJOR_LEVEL_DIFF;
 					// Check this layer for unbreakables/bedrock
 					if (forEachOnLayer(y, (pos) -> {
-						BlockState state = world.getBlockState(pos);
-						return state.getBlockHardness(world, pos) >= 0;
+						BlockState state = level.getBlockState(pos);
+						return state.getDestroySpeed(level, pos) >= 0;
 					})) {
 						lowestLevel += MiningBlock.MAJOR_LEVEL_DIFF;
 					} else {
@@ -854,7 +854,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			if (lowestLevel != 0) {
 				return Math.max(0, getYFromLevel(lowestLevel) - MiningBlock.WORKER_REACH);
 			} else {
-				return pos.getY();
+				return worldPosition.getY();
 			}
 		}
 		
@@ -946,7 +946,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		
 		@Override
 		public void tick() {
-			if (this.world.isRemote) {
+			if (this.level.isClientSide) {
 				return;
 			}
 			
@@ -956,7 +956,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			
 			if (this.tickCount == 0) {
 				for (BlockPos pos : this.beacons) {
-					this.getNetwork().addBeacon(world, pos);
+					this.getNetwork().addBeacon(level, pos);
 				}
 			}
 			
@@ -980,19 +980,19 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				return;
 			}
 			
-			if (e.getWorld() == this.world) {
+			if (e.getWorld() == this.level) {
 				removeTask(e.getPos());
 			}
 		}
 		
 		@Override
-		public void setWorldAndPos(World worldIn, BlockPos pos) {
-			super.setWorldAndPos(worldIn, pos);
-			if (!worldIn.isRemote) {
+		public void setLevelAndPosition(Level worldIn, BlockPos pos) {
+			super.setLevelAndPosition(worldIn, pos);
+			if (!worldIn.isClientSide) {
 				MinecraftForge.EVENT_BUS.register(this);
 			}
 			
-			if (this.networkComponent != null && !worldIn.isRemote && materialRequester == null) {
+			if (this.networkComponent != null && !worldIn.isClientSide && materialRequester == null) {
 				refreshRequester();
 			}
 			
@@ -1007,26 +1007,26 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		public static final String NBT_TORCHES = "torches";
 		
 		@Override
-		public CompoundNBT write(CompoundNBT nbt) {
+		public CompoundTag save(CompoundTag nbt) {
 			// We STORE the UUID of our network... but only so we can communicate it to the client.
 			// We hook things back up on the server when we load by position.
-			nbt = super.write(nbt);
+			nbt = super.save(nbt);
 			
-			ListNBT list = new ListNBT();
+			ListTag list = new ListTag();
 			for (BlockPos pos : oreLocations) {
-				list.add(NBTUtil.writeBlockPos(pos));
+				list.add(NbtUtils.writeBlockPos(pos));
 			}
 			nbt.put(NBT_ORES, list);
 			
-			list = new ListNBT();
+			list = new ListTag();
 			for (BlockPos pos : repairLocations) {
-				list.add(NBTUtil.writeBlockPos(pos));
+				list.add(NbtUtils.writeBlockPos(pos));
 			}
 			nbt.put(NBT_REPAIRS, list);
 			
-			list = new ListNBT();
+			list = new ListTag();
 			for (BlockPos pos : beacons) {
-				list.add(NBTUtil.writeBlockPos(pos));
+				list.add(NbtUtils.writeBlockPos(pos));
 			}
 			nbt.put(NBT_BEACONS, list);
 			
@@ -1037,9 +1037,9 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 				nbt.put(NBT_TORCHES, this.torches.serializeNBT());
 			}
 			
-			list = new ListNBT();
+			list = new ListTag();
 			for (BlockPos pos : taskMap.keySet()) {
-				list.add(NBTUtil.writeBlockPos(pos));
+				list.add(NbtUtils.writeBlockPos(pos));
 			}
 			nbt.put("paths", list);
 			
@@ -1047,43 +1047,43 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		}
 		
 		@Override
-		public void read(BlockState state, CompoundNBT nbt) {
-			super.read(state, nbt);
+		public void load(BlockState state, CompoundTag nbt) {
+			super.load(state, nbt);
 			
 			this.oreLocations.clear();
 			this.repairLocations.clear();
-			if (world != null && world.isRemote) {
-				ListNBT list = nbt.getList(NBT_ORES, NBT.TAG_COMPOUND);
+			if (level != null && level.isClientSide) {
+				ListTag list = nbt.getList(NBT_ORES, NBT.TAG_COMPOUND);
 				for (int i = 0; i < list.size(); i++) {
-					BlockPos pos = NBTUtil.readBlockPos(list.getCompound(i));
+					BlockPos pos = NbtUtils.readBlockPos(list.getCompound(i));
 					oreLocations.add(pos);
 				}
 				list = nbt.getList(NBT_REPAIRS, NBT.TAG_COMPOUND);
 				for (int i = 0; i < list.size(); i++) {
-					BlockPos pos = NBTUtil.readBlockPos(list.getCompound(i));
+					BlockPos pos = NbtUtils.readBlockPos(list.getCompound(i));
 					repairLocations.add(pos);
 				}
 				this.taskMap.clear();
 				list = nbt.getList("paths", NBT.TAG_COMPOUND);
 				for (int i = 0; i < list.size(); i++) {
-					BlockPos pos = NBTUtil.readBlockPos(list.getCompound(i));
+					BlockPos pos = NbtUtils.readBlockPos(list.getCompound(i));
 					taskMap.put(pos, null);
 				}
 			} else {
-				ListNBT list = nbt.getList(NBT_BEACONS, NBT.TAG_COMPOUND);
+				ListTag list = nbt.getList(NBT_BEACONS, NBT.TAG_COMPOUND);
 				for (int i = 0; i < list.size(); i++) {
-					BlockPos pos = NBTUtil.readBlockPos(list.getCompound(i));
+					BlockPos pos = NbtUtils.readBlockPos(list.getCompound(i));
 					beacons.add(pos);
 				}
 			}
 			
 			this.buildingMaterial = ItemStack.EMPTY;
 			if (nbt.contains(NBT_PLATFORMS)) {
-				this.buildingMaterial = ItemStack.read(nbt.getCompound(NBT_PLATFORMS));
+				this.buildingMaterial = ItemStack.of(nbt.getCompound(NBT_PLATFORMS));
 			}
 			this.torches = ItemStack.EMPTY;
 			if (nbt.contains(NBT_TORCHES)) {
-				this.torches = ItemStack.read(nbt.getCompound(NBT_TORCHES));
+				this.torches = ItemStack.of(nbt.getCompound(NBT_TORCHES));
 			}
 		}
 
@@ -1138,8 +1138,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		
 		private void dirty() {
 			//world.markBlockRangeForRenderUpdate(pos, pos);
-			world.notifyBlockUpdate(pos, this.world.getBlockState(pos), this.world.getBlockState(pos), 3);
-			this.markDirty();
+			level.sendBlockUpdated(worldPosition, this.level.getBlockState(worldPosition), this.level.getBlockState(worldPosition), 3);
+			this.setChanged();
 		}
 		
 		/**
@@ -1188,7 +1188,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 			}
 			*/
 			
-			for (BlockPos other : new BlockPos[] {pos.up(), pos.north(), pos.south(), pos.east(), pos.west(), pos.down()}) {
+			for (BlockPos other : new BlockPos[] {pos.above(), pos.north(), pos.south(), pos.east(), pos.west(), pos.below()}) {
 				ILogisticsTask otherTask = taskMap.get(other);
 				if (otherTask != null && network.getTaskRegistry().getCurrentWorker(otherTask) == worker) {
 					return true;
@@ -1207,13 +1207,13 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements ITicka
 		
 		@Override
 		public Direction getSignFacing(IFeySign sign) {
-			BlockState state = world.getBlockState(pos);
-			return state.get(MiningBlock.FACING);
+			BlockState state = level.getBlockState(worldPosition);
+			return state.getValue(MiningBlock.FACING);
 		}
 		
 		@Override
-		public void remove() {
-			super.remove();
+		public void setRemoved() {
+			super.setRemoved();
 		}
 		
 		public void collectOreLocations(Collection<BlockPos> locationSet) {

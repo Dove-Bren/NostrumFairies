@@ -1,6 +1,6 @@
 package com.smanzana.nostrumfairies.client.gui.container;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
@@ -10,15 +10,15 @@ import com.smanzana.nostrummagica.util.ContainerUtil;
 import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -44,9 +44,9 @@ public class LogisticsSensorGui {
 		
 		protected LogisticsSensorTileEntity sensor;
 		protected final LogicPanel panel;
-		protected final IInventory playerInv;
+		protected final Container playerInv;
 		
-		public LogisticsSensorContainer(int windowId, PlayerInventory playerInv, LogisticsSensorTileEntity sensor) {
+		public LogisticsSensorContainer(int windowId, Inventory playerInv, LogisticsSensorTileEntity sensor) {
 			super(FairyContainers.LogisticsSensor, windowId, null);
 			this.sensor = sensor;
 			this.playerInv = playerInv;
@@ -67,7 +67,7 @@ public class LogisticsSensorGui {
 			this.panel = new LogicPanel(this, sensor, 0, 0, GUI_TEXT_MAIN_WIDTH, 90);
 		}
 		
-		public static LogisticsSensorContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+		public static LogisticsSensorContainer FromNetwork(int windowId, Inventory playerInv, FriendlyByteBuf buf) {
 			return new LogisticsSensorContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}
 		
@@ -80,7 +80,7 @@ public class LogisticsSensorGui {
 		}
 		
 		@Override
-		public ItemStack transferStackInSlot(PlayerEntity playerIn, int fromSlot) {
+		public ItemStack quickMoveStack(Player playerIn, int fromSlot) {
 //			ItemStack prev = ItemStack.EMPTY;	
 //			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
 //			
@@ -101,24 +101,24 @@ public class LogisticsSensorGui {
 		}
 		
 		@Override
-		public boolean canInteractWith(PlayerEntity playerIn) {
+		public boolean stillValid(Player playerIn) {
 			return true;
 		}
 		
 		@Override
-		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player) {
+		public ItemStack clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
 			if (panel.handleSlotClick(slotId, dragType, clickTypeIn, player)) {
 				return ItemStack.EMPTY;
 			}
 			
 			// Nothing special to do for sensor
 			
-			return super.slotClick(slotId, dragType, clickTypeIn, player);
+			return super.clicked(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
-		public boolean canDragIntoSlot(Slot slotIn) {
-			return slotIn.inventory == playerInv;
+		public boolean canDragTo(Slot slotIn) {
+			return slotIn.container == playerInv;
 		}
 	}
 	
@@ -128,38 +128,38 @@ public class LogisticsSensorGui {
 		//private LogisticsSensorContainer container;
 		private final LogicPanelGui<LogisticsSensorGuiContainer> panelGui;
 		
-		public LogisticsSensorGuiContainer(LogisticsSensorContainer container, PlayerInventory playerInv, ITextComponent name) {
+		public LogisticsSensorGuiContainer(LogisticsSensorContainer container, Inventory playerInv, Component name) {
 			super(container, playerInv, name);
 			//this.container = container;
 			this.panelGui = new LogicPanelGui<>(container.panel, this, 0xFF88C0CC, false);
 			
-			this.xSize = GUI_TEXT_MAIN_WIDTH;
-			this.ySize = GUI_TEXT_MAIN_HEIGHT;
+			this.imageWidth = GUI_TEXT_MAIN_WIDTH;
+			this.imageHeight = GUI_TEXT_MAIN_HEIGHT;
 		}
 		
 		@Override
 		public void init() {
 			super.init();
-			panelGui.init(mc, guiLeft, guiTop);
+			panelGui.init(mc, leftPos, topPos);
 		}
 		
 		
 		@Override
-		protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
+		protected void renderBg(PoseStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			
-			int horizontalMargin = this.guiLeft;
-			int verticalMargin = this.guiTop;
+			int horizontalMargin = this.leftPos;
+			int verticalMargin = this.topPos;
 			
-			mc.getTextureManager().bindTexture(TEXT);
+			mc.getTextureManager().bind(TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_MAIN_WIDTH, GUI_TEXT_MAIN_HEIGHT, 256, 256);
 			
-			panelGui.draw(matrixStackIn, mc, guiLeft, guiTop);
+			panelGui.draw(matrixStackIn, mc, leftPos, topPos);
 			
 		}
 		
 		@Override
-		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+		protected void renderLabels(PoseStack matrixStackIn, int mouseX, int mouseY) {
 			//super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 		}
 	}

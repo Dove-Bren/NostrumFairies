@@ -11,16 +11,16 @@ import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateSingleRespons
 import com.smanzana.nostrumfairies.network.messages.StorageMonitorRequestMessage;
 import com.smanzana.nostrumfairies.network.messages.TemplateWandUpdate;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkDirection;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.fml.network.PacketDistributor.TargetPoint;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.fmllegacy.network.NetworkDirection;
+import net.minecraftforge.fmllegacy.network.NetworkRegistry;
+import net.minecraftforge.fmllegacy.network.PacketDistributor;
+import net.minecraftforge.fmllegacy.network.PacketDistributor.TargetPoint;
+import net.minecraftforge.fmllegacy.network.simple.SimpleChannel;
 
 public class NetworkHandler {
 
@@ -65,8 +65,8 @@ public class NetworkHandler {
 		syncChannel.registerMessage(discriminator++, StorageMonitorRequestMessage.class, StorageMonitorRequestMessage::encode, StorageMonitorRequestMessage::decode, StorageMonitorRequestMessage::handle);
 	}
 	
-	public static <T> void sendTo(T msg, ServerPlayerEntity player) {
-		NetworkHandler.syncChannel.sendTo(msg, player.connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT);
+	public static <T> void sendTo(T msg, ServerPlayer player) {
+		NetworkHandler.syncChannel.sendTo(msg, player.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
 	}
 	
 	public static <T> void sendToServer(T msg) {
@@ -77,7 +77,7 @@ public class NetworkHandler {
 		NetworkHandler.syncChannel.send(PacketDistributor.ALL.noArg(), msg);
 	}
 
-	public static <T> void sendToDimension(T msg, RegistryKey<World> dimension) {
+	public static <T> void sendToDimension(T msg, ResourceKey<Level> dimension) {
 		NetworkHandler.syncChannel.send(PacketDistributor.DIMENSION.with(() -> dimension), msg);
 	}
 	

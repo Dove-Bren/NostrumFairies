@@ -6,12 +6,12 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrummagica.tile.MimicBlockTileEntity;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	
@@ -37,7 +37,7 @@ public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 		this.state = state;
 		this.setDataBlock(state);
 		this.updateBlock(); // Refresh model
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	public @Nullable BlockState getTemplateState() {
@@ -45,61 +45,61 @@ public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	}
 	
 	@Override
-	public void setWorldAndPos(World worldIn, BlockPos pos) {
-		super.setWorldAndPos(worldIn, pos);
+	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
+		super.setLevelAndPosition(worldIn, pos);
 	}
 	
 	@Override
 	protected @Nonnull BlockState refreshState() {
 		// Don't detect any world blocks and just send ours
-		return getTemplateState() == null ? Blocks.STONE.getDefaultState() : getTemplateState();
+		return getTemplateState() == null ? Blocks.STONE.defaultBlockState() : getTemplateState();
 	}
 	
 	// Notably, this makes sending chunked updates AND discrete updates send the whole TE instead of a trimmed version
 	@Override
-	public CompoundNBT getUpdateTag() {
-		return this.write(new CompoundNBT());
+	public CompoundTag getUpdateTag() {
+		return this.save(new CompoundTag());
 	}
 	
 	@Override
-	public CompoundNBT write(CompoundNBT compound) {
-		super.write(compound);
+	public CompoundTag save(CompoundTag compound) {
+		super.save(compound);
 		
 		if (state != null) {
-			compound.put(NBT_STATE, NBTUtil.writeBlockState(state));
+			compound.put(NBT_STATE, NbtUtils.writeBlockState(state));
 		}
 		
 		return compound;
 	}
 
 	@Override
-	public void read(BlockState state, CompoundNBT compound) {
-		super.read(state, compound);
+	public void load(BlockState state, CompoundTag compound) {
+		super.load(state, compound);
 		
 		if (this.state != null) {
 			this.setBlockState(null);
 		}
 		
 		if (compound.contains(NBT_STATE)) {
-			this.state = NBTUtil.readBlockState(compound.getCompound(NBT_STATE));
-			if (this.world != null && this.world.isRemote) {
-				StaticTESRRenderer.instance.update(world, pos, this);
+			this.state = NbtUtils.readBlockState(compound.getCompound(NBT_STATE));
+			if (this.level != null && this.level.isClientSide) {
+				StaticTESRRenderer.instance.update(level, worldPosition, this);
 			}
 		}
 	}
 	
 	protected void flush() {
-		if (world != null && !world.isRemote) {
-			BlockState state = world.getBlockState(pos);
-			world.notifyBlockUpdate(pos, state, state, 2);
+		if (level != null && !level.isClientSide) {
+			BlockState state = level.getBlockState(worldPosition);
+			level.sendBlockUpdated(worldPosition, state, state, 2);
 		}
 	}
 	
 	@Override
-	public void remove() {
-		super.remove();
-		if (world != null && world.isRemote) {
-			StaticTESRRenderer.instance.update(world, pos, null);
+	public void setRemoved() {
+		super.setRemoved();
+		if (level != null && level.isClientSide) {
+			StaticTESRRenderer.instance.update(level, worldPosition, null);
 		}
 	}
 }

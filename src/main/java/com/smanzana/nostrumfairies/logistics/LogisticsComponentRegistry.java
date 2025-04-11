@@ -5,7 +5,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 /**
  * Has the mapping between component key and factory
@@ -16,7 +16,7 @@ public class LogisticsComponentRegistry  {
 	
 	public static interface ILogisticsComponentFactory<T extends ILogisticsComponent> {
 		
-		public T construct(CompoundNBT nbt, LogisticsNetwork network);
+		public T construct(CompoundTag nbt, LogisticsNetwork network);
 		
 	}
 	

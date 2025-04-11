@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
@@ -18,17 +18,17 @@ import com.smanzana.nostrummagica.util.Inventories;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -60,7 +60,7 @@ public class LogicPanel {
 	
 	protected final HideableSlot templateSlot;
 	protected final ItemStack[] invArray;
-	protected final IInventory inv;
+	protected final Container inv;
 	
 	public LogicPanel(LogicContainer parentGui, ILogisticsLogicProvider logicProvider, int x, int y, int width, int height) {
 		this.parent = parentGui;
@@ -102,9 +102,9 @@ public class LogicPanel {
 	 * @param player
 	 * @return
 	 */
-	public boolean handleSlotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player) {
-		if (slotId == templateSlot.slotNumber) {
-			if (player.inventory.getItemStack().isEmpty()) {
+	public boolean handleSlotClick(int slotId, int dragType, ClickType clickTypeIn, Player player) {
+		if (slotId == templateSlot.index) {
+			if (player.inventory.getCarried().isEmpty()) {
 				// empty hand. Right-click?
 				if (dragType == 1 && clickTypeIn == ClickType.PICKUP) {
 					setTemplate(ItemStack.EMPTY);
@@ -112,8 +112,8 @@ public class LogicPanel {
 			} else {
 				// Item in hand. Clicking empty templatable slot?
 				if (clickTypeIn == ClickType.PICKUP) {
-					if (!templateSlot.getHasStack()) {
-						ItemStack template = player.inventory.getItemStack().copy();
+					if (!templateSlot.hasItem()) {
+						ItemStack template = player.inventory.getCarried().copy();
 						template.setCount(1);
 						setTemplate(template);
 					}
@@ -151,14 +151,14 @@ public class LogicPanel {
 		protected final int originalX;
 		protected final int originalY;
 		
-		public HideableSlot(IInventory inventoryIn, int index, int x, int y) {
+		public HideableSlot(Container inventoryIn, int index, int x, int y) {
 			super(inventoryIn, index, x, y);
 			this.originalX = x;
 			this.originalY = y;
 		}
 		
 		@Override
-		public boolean isEnabled() {
+		public boolean isActive() {
 			return !hidden;
 		}
 		
@@ -166,18 +166,18 @@ public class LogicPanel {
 			if (hide != hidden) {
 				hidden = hide;
 				if (hide) {
-					this.xPos = -1000;
-					this.yPos = -1000;
+					this.x = -1000;
+					this.y = -1000;
 				} else {
-					this.xPos = originalX;
-					this.yPos = originalY;
+					this.x = originalX;
+					this.y = originalY;
 				}
 			}
 		}
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static class LogicPanelGui<T extends LogicGuiContainer<?>> extends Widget {
+	public static class LogicPanelGui<T extends LogicGuiContainer<?>> extends AbstractWidget {
 		
 		private static final ResourceLocation TEXT = new ResourceLocation(NostrumFairies.MODID + ":textures/gui/container/logic_panel.png");
 		
@@ -206,10 +206,10 @@ public class LogicPanel {
 		private OpButton opButton;
 		private ModeButton modeButton;
 		
-		private TextFieldWidget criteriaField;
+		private EditBox criteriaField;
 		
 		public LogicPanelGui(LogicPanel panel, T parent, int color, boolean drawBackground) {
-			super(panel.x, panel.y, panel.width, panel.height, new StringTextComponent("logistics panel"));
+			super(panel.x, panel.y, panel.width, panel.height, new TextComponent("logistics panel"));
 			this.panel = panel;
 			this.parent = parent;
 			this.drawBackground = drawBackground;
@@ -220,9 +220,9 @@ public class LogicPanel {
 			colorBlue = (float) ((color >> 0) & 255) / 255f;
 			
 			final Minecraft mc = Minecraft.getInstance();
-			this.criteriaField = new TextFieldWidget(mc.fontRenderer, 0, 0, 30, 5, new StringTextComponent("logic panel value field"));
-			this.criteriaField.setText(panel.comp.getLogicCount() + "");
-			this.criteriaField.setValidator((s) -> {
+			this.criteriaField = new EditBox(mc.font, 0, 0, 30, 5, new TextComponent("logic panel value field"));
+			this.criteriaField.setValue(panel.comp.getLogicCount() + "");
+			this.criteriaField.setFilter((s) -> {
 				if (s.isEmpty()) {
 					return true;
 				}
@@ -260,7 +260,7 @@ public class LogicPanel {
 			}
 			
 			final int barWidth = Math.min(panel.width - 12, 100);
-			final int barHeight = mc.fontRenderer.FONT_HEIGHT + 2;
+			final int barHeight = mc.font.lineHeight + 2;
 			final int barHOffset = left + Math.max(0, ((panel.width - barWidth) / 2));
 			final int barVOffset = top + panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin + PANEL_BUTTON_HEIGHT + panel.margin;
 			
@@ -276,28 +276,28 @@ public class LogicPanel {
 			criteriaField.setVisible(logicMode);
 		}
 		
-		public void draw(MatrixStack matrixStackIn, Minecraft mc, int guiLeft, int guiTop) {
+		public void draw(PoseStack matrixStackIn, Minecraft mc, int guiLeft, int guiTop) {
 			final int left = guiLeft + panel.x;
 			final int top = guiTop + panel.y;
 			//final boolean logicMode = (panel.comp.getLogicMode() == LogicMode.LOGIC);
 			
 			if (this.drawBackground) {
-				mc.getTextureManager().bindTexture(TEXT);
+				mc.getTextureManager().bind(TEXT);
 				RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, left, top, 0, 0,
 						GUI_PANEL_TEXT_WIDTH, GUI_PANEL_TEXT_HEIGHT, panel.width, panel.height, 256, 256,
 						colorRed, colorGreen, colorBlue, colorAlpha);
 			}
 			
 			// Vertical offset and arrangement of stuff depends on whether we allow logic or not
-			matrixStackIn.push();
+			matrixStackIn.pushPose();
 			//GlStateManager.translate(guiLeft + panel.x - (GUI_INV_CELL_LENGTH / 2) - 1, guiTop + panel.y - 1, 0);
-			matrixStackIn.translate(guiLeft + panel.templateSlot.xPos - 1, guiTop + panel.templateSlot.yPos - 1, 0);
+			matrixStackIn.translate(guiLeft + panel.templateSlot.x - 1, guiTop + panel.templateSlot.y - 1, 0);
 			drawSlot(matrixStackIn, mc);
-			matrixStackIn.pop();
+			matrixStackIn.popPose();
 		}
 		
-		private void drawSlot(MatrixStack matrixStackIn, Minecraft mc) {
-			mc.getTextureManager().bindTexture(TEXT);
+		private void drawSlot(PoseStack matrixStackIn, Minecraft mc) {
+			mc.getTextureManager().bind(TEXT);
 			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, 0, 0, GUI_SLOT_TEXT_HOFFSET, GUI_SLOT_TEXT_VOFFSET, PANEL_SLOT_WIDTH, PANEL_SLOT_HEIGHT, PANEL_SLOT_WIDTH, PANEL_SLOT_HEIGHT, 256, 256,
 					colorRed, colorGreen, colorBlue, colorAlpha);
 		}
@@ -321,7 +321,7 @@ public class LogicPanel {
 //			}
 //		}
 		
-		private void drawCriteriaMode(MatrixStack matrixStackIn, Minecraft mc, LogicMode mode) {
+		private void drawCriteriaMode(PoseStack matrixStackIn, Minecraft mc, LogicMode mode) {
 			int textX = GUI_MODE_ICON_TEXT_HOFFSET;
 			switch (mode) {
 			case ALWAYS:
@@ -340,7 +340,7 @@ public class LogicPanel {
 			
 			}
 			
-			mc.getTextureManager().bindTexture(TEXT);
+			mc.getTextureManager().bind(TEXT);
 			RenderSystem.enableBlend();
 			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, 1, 1,
 					textX, GUI_MODE_ICON_TEXT_VOFFSET,
@@ -350,7 +350,7 @@ public class LogicPanel {
 			RenderSystem.disableBlend();
 		}
 		
-		private void drawCriteriaOp(MatrixStack matrixStackIn, FontRenderer fonter, LogicOp op) {
+		private void drawCriteriaOp(PoseStack matrixStackIn, Font fonter, LogicOp op) {
 			final String s;
 			switch (op) {
 			case EQUAL:
@@ -365,8 +365,8 @@ public class LogicPanel {
 				break;
 			}
 			
-			final int sWidth = fonter.getStringWidth(s);
-			fonter.drawString(matrixStackIn, s, (PANEL_BUTTON_WIDTH + -sWidth) / 2, 1 + (PANEL_BUTTON_HEIGHT - fonter.FONT_HEIGHT) / 2, 0xFFFFFFFF);
+			final int sWidth = fonter.width(s);
+			fonter.draw(matrixStackIn, s, (PANEL_BUTTON_WIDTH + -sWidth) / 2, 1 + (PANEL_BUTTON_HEIGHT - fonter.lineHeight) / 2, 0xFFFFFFFF);
 		}
 		
 		protected boolean mouseClicked(int mouseX, int mouseY, int mouseButton, int guiLeft, int guiTop) throws IOException {
@@ -377,7 +377,7 @@ public class LogicPanel {
 			final int minX = guiLeft + panel.x + xHalf - (barWidth / 2);
 			final int maxX = guiLeft + panel.x + xHalf + (barWidth / 2);
 			final int minY = guiTop + panel.y + barVOffset;
-			final int maxY = guiTop + panel.y + barVOffset + mc.fontRenderer.FONT_HEIGHT + 2;
+			final int maxY = guiTop + panel.y + barVOffset + mc.font.lineHeight + 2;
 			
 			if (mouseX >= minX && mouseX <= maxX && mouseY >= minY && mouseY <= maxY) {
 				//editSelected = true;
@@ -393,7 +393,7 @@ public class LogicPanel {
 			private boolean pressed;
 			
 			public ModeButton(int x, int y, LogicPanelGui<?> gui) {
-				super(x, y, PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT, StringTextComponent.EMPTY, (b) -> {
+				super(x, y, PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT, TextComponent.EMPTY, (b) -> {
 					LogicMode mode = gui.panel.comp.getLogicMode();
 					// Cycle up modes
 					mode = (LogicMode.values()[(mode.ordinal() + 1) % LogicMode.values().length]);
@@ -410,7 +410,7 @@ public class LogicPanel {
 			}
 			
 			@Override
-			public void render(MatrixStack matrixStackIn, int mouseX, int mouseY, float partialTicks) {
+			public void render(PoseStack matrixStackIn, int mouseX, int mouseY, float partialTicks) {
 				final Minecraft mc = Minecraft.getInstance();
 				this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 				
@@ -421,9 +421,9 @@ public class LogicPanel {
 					textX += PANEL_BUTTON_WIDTH;
 				}
 				
-				mc.getTextureManager().bindTexture(TEXT);
+				mc.getTextureManager().bind(TEXT);
 				RenderSystem.enableBlend();
-				matrixStackIn.push();
+				matrixStackIn.pushPose();
 				matrixStackIn.translate(x, y, 0);
 				RenderFuncs.blit(matrixStackIn, 0, 0,
 						textX, GUI_BUTTON_TEXT_VOFFSET,
@@ -433,7 +433,7 @@ public class LogicPanel {
 				// Then draw mode
 				LogicMode mode = panel.comp.getLogicMode();
 				drawCriteriaMode(matrixStackIn, mc, mode);
-				matrixStackIn.pop();
+				matrixStackIn.popPose();
 				RenderSystem.disableBlend();
 			}
 			
@@ -456,7 +456,7 @@ public class LogicPanel {
 			private boolean pressed;
 			
 			public OpButton(int x, int y, LogicPanelGui<?> gui) {
-				super(x, y, PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT, StringTextComponent.EMPTY, (b) -> {
+				super(x, y, PANEL_BUTTON_WIDTH, PANEL_BUTTON_HEIGHT, TextComponent.EMPTY, (b) -> {
 					LogicOp op = gui.panel.comp.getLogicOp();
 					// Cycle up modes
 					op = (LogicOp.values()[(op.ordinal() + 1) % LogicOp.values().length]);
@@ -467,7 +467,7 @@ public class LogicPanel {
 			}
 			
 			@Override
-			public void render(MatrixStack matrixStackIn, int mouseX, int mouseY, float partialTicks) {
+			public void render(PoseStack matrixStackIn, int mouseX, int mouseY, float partialTicks) {
 				if (!this.visible) {
 					return;
 				}
@@ -482,9 +482,9 @@ public class LogicPanel {
 					textX += PANEL_BUTTON_WIDTH;
 				}
 				
-				mc.getTextureManager().bindTexture(TEXT);
+				mc.getTextureManager().bind(TEXT);
 				RenderSystem.enableBlend();
-				matrixStackIn.push();
+				matrixStackIn.pushPose();
 				matrixStackIn.translate(x, y, 0);
 				RenderFuncs.blit(matrixStackIn, 0, 0,
 						textX, GUI_BUTTON_TEXT_VOFFSET,
@@ -492,8 +492,8 @@ public class LogicPanel {
 						colorRed, colorGreen, colorBlue, colorAlpha);
 				
 				// Then draw mode
-				drawCriteriaOp(matrixStackIn, mc.fontRenderer, panel.comp.getLogicOp());
-				matrixStackIn.pop();
+				drawCriteriaOp(matrixStackIn, mc.font, panel.comp.getLogicOp());
+				matrixStackIn.popPose();
 				RenderSystem.disableBlend();
 			}
 			

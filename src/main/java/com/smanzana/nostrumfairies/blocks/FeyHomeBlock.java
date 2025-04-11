@@ -11,34 +11,34 @@ import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.HorizontalBlock;
-import net.minecraft.block.LeavesBlock;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootContext;
-import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ToolType;
 
 /**
@@ -49,24 +49,24 @@ import net.minecraftforge.common.ToolType;
  */
 public class FeyHomeBlock extends FeyContainerBlock {
 	
-	private static enum BlockFunction implements IStringSerializable {
+	private static enum BlockFunction implements StringRepresentable {
 		CENTER,
 		TOP;
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return this.name().toLowerCase();
 		}
 		
 		@Override
 		public String toString() {
-			return this.getString();
+			return this.getSerializedName();
 		}
 	}
 	
 	//public static final PropertyEnum<ResidentType> TYPE = PropertyEnum.<ResidentType>create("type", ResidentType.class);
 	public static final EnumProperty<BlockFunction> BLOCKFUNC = EnumProperty.<BlockFunction>create("func", BlockFunction.class);
-	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
+	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 	
 	protected static final String ID_PREFIX = "home_block_";
 	public static final String ID_DWARF = ID_PREFIX + "dwarf";
@@ -77,8 +77,8 @@ public class FeyHomeBlock extends FeyContainerBlock {
 	private final ResidentType type;
 	
 	public FeyHomeBlock(ResidentType type) {
-		super(Block.Properties.create(Material.WOOD)
-				.hardnessAndResistance(4f, 100.0f)
+		super(Block.Properties.of(Material.WOOD)
+				.strength(4f, 100.0f)
 				.sound(SoundType.WOOD)
 				.harvestTool(ToolType.AXE)
 				);
@@ -101,7 +101,7 @@ public class FeyHomeBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(BLOCKFUNC, FACING);
 	}
 	
@@ -117,79 +117,79 @@ public class FeyHomeBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult hit) {
 		if (state == null || !(state.getBlock() instanceof FeyHomeBlock)) {
-			return ActionResultType.FAIL;
+			return InteractionResult.FAIL;
 		}
 		
 		BlockPos center = ((FeyHomeBlock) state.getBlock()).getMasterPos(worldIn, pos, state);
-		TileEntity te = worldIn.getTileEntity(center);
+		BlockEntity te = worldIn.getBlockEntity(center);
 		if (te == null || !(te instanceof HomeBlockTileEntity)) {
-			return ActionResultType.FAIL;
+			return InteractionResult.FAIL;
 		}
 		
 		NostrumMagica.instance.proxy.openContainer(playerIn, HomeBlockGui.HomeBlockContainer.Make((HomeBlockTileEntity) te));
 		
-		return ActionResultType.SUCCESS;
+		return InteractionResult.SUCCESS;
 	}
 	
 	@Override
-	public BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+	public RenderShape getRenderShape(BlockState state) {
+		return RenderShape.MODEL;
 	}
 	
 	public boolean isCenter(BlockState state) {
-		return state.get(BLOCKFUNC) == BlockFunction.CENTER;
+		return state.getValue(BLOCKFUNC) == BlockFunction.CENTER;
 	}
 	
 	public ResidentType getType(BlockState state) {
 		return type;
 	}
 	
-	private void destroy(World world, BlockPos pos, BlockState state) {
+	private void destroy(Level world, BlockPos pos, BlockState state) {
 		if (state == null)
 			state = world.getBlockState(pos);
 		
 		if (state == null)
 			return;
 		
-		TileEntity ent = world.getTileEntity(pos);
+		BlockEntity ent = world.getBlockEntity(pos);
 		if (ent != null && ent instanceof HomeBlockTileEntity) {
 			HomeBlockTileEntity te = (HomeBlockTileEntity) ent;
 			te.unlinkFromNetwork();
 			
 			// Slot inventory and upgrade inventories
-			for (IInventory inv : new IInventory[] {te.getSlotInventory(), te.getUpgradeInventory()}) {
-				for (int i = 0; i < inv.getSizeInventory(); i++) {
-					if (!inv.getStackInSlot(i).isEmpty()) {
+			for (Container inv : new Container[] {te.getSlotInventory(), te.getUpgradeInventory()}) {
+				for (int i = 0; i < inv.getContainerSize(); i++) {
+					if (!inv.getItem(i).isEmpty()) {
 						ItemEntity item = new ItemEntity(
 								world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
-								inv.removeStackFromSlot(i));
-						world.addEntity(item);
+								inv.removeItemNoUpdate(i));
+						world.addFreshEntity(item);
 					}
 				}
 			}
 		}
-		world.removeTileEntity(pos);
+		world.removeBlockEntity(pos);
 		
 		world.destroyBlock(getPaired(state, pos), true);
 	}
 	
 	private BlockPos getPaired(BlockState state, BlockPos pos) {
-		return pos.offset(state.get(BLOCKFUNC) == BlockFunction.CENTER ? Direction.UP : Direction.DOWN);
+		return pos.relative(state.getValue(BLOCKFUNC) == BlockFunction.CENTER ? Direction.UP : Direction.DOWN);
 	}
 	
 	@Override
-	public void breakBlock(World world, BlockPos pos, BlockState oldState) {
+	public void breakBlock(Level world, BlockPos pos, BlockState oldState) {
 		this.destroy(world, pos, oldState);
-		world.removeTileEntity(pos);
+		world.removeBlockEntity(pos);
 		super.breakBlock(world, pos, oldState);
 	}
 	
 	@Override
-	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
+	public boolean canSurvive(BlockState stateIn, LevelReader worldIn, BlockPos pos) {
 		
-		for (BlockPos cursor : new BlockPos[] {pos, pos.up(), pos.up().up()}) {
+		for (BlockPos cursor : new BlockPos[] {pos, pos.above(), pos.above().above()}) {
 			if (cursor.getY() > 255 || cursor.getY() <= 0) {
 				return false;
 			}
@@ -201,7 +201,7 @@ public class FeyHomeBlock extends FeyContainerBlock {
 				return false;
 			}
 			
-			if (worldIn.getTileEntity(cursor) != null) {
+			if (worldIn.getBlockEntity(cursor) != null) {
 				return false;
 			}
 		}
@@ -210,18 +210,18 @@ public class FeyHomeBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
-		return this.getDefaultState()
-				.with(BLOCKFUNC, BlockFunction.CENTER)
-				.with(FACING, context.getPlacementHorizontalFacing().getOpposite());
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
+		return this.defaultBlockState()
+				.setValue(BLOCKFUNC, BlockFunction.CENTER)
+				.setValue(FACING, context.getHorizontalDirection().getOpposite());
 				
 	}
 	
 	@Override
-	public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+	public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
 		// This method hopefully is ONLY called when placed manually in the world.
 		// Auto-create slave state
-		Direction facing = state.get(FACING);
+		Direction facing = state.getValue(FACING);
 		this.spawn(worldIn, pos, type, facing);
 		
 //		worldIn.setBlockState(pos.up(), this.getDefaultState()
@@ -229,7 +229,7 @@ public class FeyHomeBlock extends FeyContainerBlock {
 	}
 	
 	@Override
-	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+	public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
 		if (isCenter(state)) {
 			return new HomeBlockTileEntity(type);
 		}
@@ -237,7 +237,7 @@ public class FeyHomeBlock extends FeyContainerBlock {
 		return null;
 	}
 	
-	public BlockPos getMasterPos(World world, BlockPos pos, BlockState state) {
+	public BlockPos getMasterPos(Level world, BlockPos pos, BlockState state) {
 		if (state == null) {
 			state = world.getBlockState(pos);
 		}
@@ -245,7 +245,7 @@ public class FeyHomeBlock extends FeyContainerBlock {
 		if (isCenter(state)) {
 			return pos;
 		}
-		return pos.down();
+		return pos.below();
 	}
 	
 	/**
@@ -254,13 +254,13 @@ public class FeyHomeBlock extends FeyContainerBlock {
 	 * @param base
 	 * @param type
 	 */
-	public void spawn(World world, BlockPos base, ResidentType type, Direction direction) {
+	public void spawn(Level world, BlockPos base, ResidentType type, Direction direction) {
 		//world.setBlockState(base, getDefaultState().with(BLOCKFUNC, BlockFunction.CENTER).with(FACING, direction));
-		world.setBlockState(base.up(), getDefaultState().with(BLOCKFUNC, BlockFunction.TOP).with(FACING, direction)); // could be random
-		world.setBlockState(base.up().up(), Blocks.DARK_OAK_LOG.getDefaultState());
+		world.setBlockAndUpdate(base.above(), defaultBlockState().setValue(BLOCKFUNC, BlockFunction.TOP).setValue(FACING, direction)); // could be random
+		world.setBlockAndUpdate(base.above().above(), Blocks.DARK_OAK_LOG.defaultBlockState());
 		
-		BlockState leaves = Blocks.DARK_OAK_LEAVES.getDefaultState();
-		BlockPos origin = base.up().up();
+		BlockState leaves = Blocks.DARK_OAK_LEAVES.defaultBlockState();
+		BlockPos origin = base.above().above();
 		for (BlockPos cursor : new BlockPos[] {
 				// Layer 1
 				origin.north().north(),
@@ -270,16 +270,16 @@ public class FeyHomeBlock extends FeyContainerBlock {
 				origin.south().south(),
 				
 				// Layer 2
-				origin.up().north().east(), origin.up().north(), origin.up().north().west(),
-				origin.up().east().east(), origin.up().east(), origin.up(), origin.up().west(), origin.up().west().west(),
-				origin.up().south().east(), origin.up().south(), origin.up().south().west(),
+				origin.above().north().east(), origin.above().north(), origin.above().north().west(),
+				origin.above().east().east(), origin.above().east(), origin.above(), origin.above().west(), origin.above().west().west(),
+				origin.above().south().east(), origin.above().south(), origin.above().south().west(),
 				
 				// Layer 3
-				origin.up().up().north(),
-				origin.up().up().east(), origin.up().up(), origin.up().up().west(),
-				origin.up().up().south(),
+				origin.above().above().north(),
+				origin.above().above().east(), origin.above().above(), origin.above().above().west(),
+				origin.above().above().south(),
 		}) {
-			world.setBlockState(cursor, leaves);
+			world.setBlockAndUpdate(cursor, leaves);
 		}
 	}
 	

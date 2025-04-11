@@ -12,12 +12,12 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrummagica.util.Inventories;
 import com.smanzana.nostrummagica.util.Inventories.ItemStackArrayWrapper;
 
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
 
 public class ItemDeepStacks {
 	
-	public static final @Nullable List<ItemDeepStack> addAllItems(IInventory inventory, Collection<ItemDeepStack> stacks) {
+	public static final @Nullable List<ItemDeepStack> addAllItems(Container inventory, Collection<ItemDeepStack> stacks) {
 		// Just go through each and try to add
 		List<ItemDeepStack> ret = null;
 		
@@ -50,7 +50,7 @@ public class ItemDeepStacks {
 		return addAllItems(new ItemStackArrayWrapper(inventory), stacks);
 	}
 	
-	public static final boolean canFitAll(IInventory inventory, Collection<ItemDeepStack> stacks) {
+	public static final boolean canFitAll(Container inventory, Collection<ItemDeepStack> stacks) {
 		// Instead of just trying to add all (with commit = false, which would mean no state saved) we need
 		// to try and quantify how much FREE SPACE there is instead.
 		
@@ -71,13 +71,13 @@ public class ItemDeepStacks {
 		stacks = dupeList;
 		
 		int freeSlots = 0;
-		for (int i = 0; i < inventory.getSizeInventory(); i++) {
-			@Nonnull ItemStack inSlot = inventory.getStackInSlot(i);
+		for (int i = 0; i < inventory.getContainerSize(); i++) {
+			@Nonnull ItemStack inSlot = inventory.getItem(i);
 			if (inSlot.isEmpty()) {
 				freeSlots++;
 			} else if (!stacks.isEmpty()) {
 				// Find any of our stacks that match the item in this slot
-				int room = Math.min(inventory.getInventoryStackLimit(), inSlot.getMaxStackSize()) - inSlot.getCount();
+				int room = Math.min(inventory.getMaxStackSize(), inSlot.getMaxStackSize()) - inSlot.getCount();
 				
 				if (room == 0) {
 					continue;
@@ -109,7 +109,7 @@ public class ItemDeepStacks {
 			for (; freeSlots > 0 && deep != null; freeSlots--) {
 				
 				// subtract however many would be able to fit into this slot
-				int stack = Math.min(inventory.getInventoryStackLimit(), deep.getTemplate().getMaxStackSize());
+				int stack = Math.min(inventory.getMaxStackSize(), deep.getTemplate().getMaxStackSize());
 				deep.splitStack(stack);
 				
 				if (deep.getCount() <= 0) {

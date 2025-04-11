@@ -12,17 +12,17 @@ import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.FallingBlock;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.FallingBlock;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
 /*
  * Travel to a block and mine it. If the block drops anything, return it to the surface.
@@ -38,7 +38,7 @@ public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 	}
 	
 	private String displayName;
-	private World world;
+	private Level world;
 	private BlockPos block;
 	private BlockPos mineAt;
 	private ILogisticsComponent owningComponent;
@@ -59,12 +59,12 @@ public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 	private boolean lastOreResult;
 
 	public LogisticsTaskMineBlock(ILogisticsComponent owningComponent, String displayName,
-			World world, BlockPos pos, @Nullable LogisticsTaskMineBlock[] prereqs) {
+			Level world, BlockPos pos, @Nullable LogisticsTaskMineBlock[] prereqs) {
 		this(owningComponent, displayName, world, pos, pos, prereqs);
 	}
 	
 	public LogisticsTaskMineBlock(ILogisticsComponent owningComponent, String displayName,
-			World world, BlockPos pos, BlockPos mineAt, @Nullable LogisticsTaskMineBlock[] prereqs) {
+			Level world, BlockPos pos, BlockPos mineAt, @Nullable LogisticsTaskMineBlock[] prereqs) {
 		this.displayName = displayName;
 		this.block = pos;
 		this.mineAt = mineAt;
@@ -251,7 +251,7 @@ public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 		return Lists.newArrayList(mergedTasks);
 	}
 	
-	public World getWorld() {
+	public Level getWorld() {
 		return this.world;
 	}
 	
@@ -290,7 +290,7 @@ public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 			// Figure out hardness for anim count
 			// TODO different tools for dwarves?
 			BlockState state = world.getBlockState(block);
-			float secs = (state.getBlockHardness(world, block)) * 5;
+			float secs = (state.getDestroySpeed(world, block)) * 5;
 			
 			if (state.getMaterial().isLiquid()) {
 				secs = .5f;
@@ -442,16 +442,16 @@ public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 		NonNullList<ItemStack> drops = NonNullList.create();
 		if (state.getBlock() instanceof FallingBlock) {
 			// Walk and DESTROY ALL GRAVEL that's up
-			BlockPos.Mutable cursor = new BlockPos.Mutable().setPos(block);
+			BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos().set(block);
 			do {
-				drops.addAll(Block.getDrops(state, (ServerWorld) world, cursor, world.getTileEntity(cursor)));
+				drops.addAll(Block.getDrops(state, (ServerLevel) world, cursor, world.getBlockEntity(cursor)));
 				world.destroyBlock(cursor, false);
 				
 				cursor.move(Direction.UP);
 				state = world.getBlockState(cursor);
 			} while (cursor.getY() < 256 && state.getBlock() instanceof FallingBlock);
 		} else {
-			drops.addAll(Block.getDrops(state, (ServerWorld) world, block, world.getTileEntity(block)));
+			drops.addAll(Block.getDrops(state, (ServerLevel) world, block, world.getBlockEntity(block)));
 			world.destroyBlock(block, false);
 		}
 		
@@ -461,7 +461,7 @@ public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 				fairy.addItem(drop);
 			} else {
 				// drop on the floor
-				world.addEntity(new ItemEntity(world, block.getX() + .5, block.getY() + .5, block.getZ() + .5, drop));
+				world.addFreshEntity(new ItemEntity(world, block.getX() + .5, block.getY() + .5, block.getZ() + .5, drop));
 			}
 		}
 	}
@@ -476,9 +476,9 @@ public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 		double y;
 		double z;
 		if (fairy instanceof LivingEntity) {
-			x = ((LivingEntity) fairy).getPosX();
-			y = ((LivingEntity) fairy).getPosY();
-			z = ((LivingEntity) fairy).getPosZ();
+			x = ((LivingEntity) fairy).getX();
+			y = ((LivingEntity) fairy).getY();
+			z = ((LivingEntity) fairy).getZ();
 		} else {
 			BlockPos pos = owningComponent.getPosition();
 			x = pos.getX() + .5;
@@ -498,7 +498,7 @@ public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 				continue;
 			}
 			fairy.removeItem(stack);
-			world.addEntity(new ItemEntity(world, x, y, z, stack));
+			world.addFreshEntity(new ItemEntity(world, x, y, z, stack));
 		}
 	}
 	
@@ -529,7 +529,7 @@ public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 			if (this.phase == Phase.IDLE || this.phase == Phase.MOVING || phase == Phase.MINING) {
 				// Make sure block is still there
 				if (lastOreCheck == 0 || this.world.getGameTime() - lastOreCheck > 100) {
-					lastOreResult = !world.isAirBlock(block) && world.getBlockState(block).getBlockHardness(world, block) >= 0;
+					lastOreResult = !world.isEmptyBlock(block) && world.getBlockState(block).getDestroySpeed(world, block) >= 0;
 					lastOreCheck = world.getGameTime();
 				}
 				

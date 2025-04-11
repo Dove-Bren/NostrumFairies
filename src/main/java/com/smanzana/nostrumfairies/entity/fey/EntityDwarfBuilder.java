@@ -11,19 +11,19 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsSubTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
 import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class EntityDwarfBuilder extends EntityDwarf {
 	
 	public static final String ID = "dwarf_builder";
 	
-	protected static Map<World, Map<BlockPos, BlockPos>> BuildSpots = new HashMap<>();
+	protected static Map<Level, Map<BlockPos, BlockPos>> BuildSpots = new HashMap<>();
 	
-	protected static void AddBuildSpot(World world, BlockPos pos, BlockPos spot) {
+	protected static void AddBuildSpot(Level world, BlockPos pos, BlockPos spot) {
 		Map<BlockPos, BlockPos> map = BuildSpots.get(world);
 		if (map == null) {
 			map = new HashMap<>();
@@ -33,7 +33,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		map.put(pos, spot);
 	}
 	
-	protected static @Nullable BlockPos GetBuildSpot(World world, BlockPos pos) {
+	protected static @Nullable BlockPos GetBuildSpot(Level world, BlockPos pos) {
 		Map<BlockPos, BlockPos> map = BuildSpots.get(world);
 		if (map == null) {
 			return null;
@@ -42,7 +42,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		return map.get(pos);
 	}
 	
-	protected static void ClearBuildSpot(World world, BlockPos pos) {
+	protected static void ClearBuildSpot(Level world, BlockPos pos) {
 		Map<BlockPos, BlockPos> map = BuildSpots.get(world);
 		if (map == null) {
 			return;
@@ -51,12 +51,12 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		map.remove(pos);
 	}
 
-	public EntityDwarfBuilder(EntityType<? extends EntityDwarfBuilder> type, World world) {
+	public EntityDwarfBuilder(EntityType<? extends EntityDwarfBuilder> type, Level world) {
 		super(type, world);
 	}
 	
 	protected @Nullable BlockPos findBuildSpot(BlockPos buildCell) {
-		BlockPos buildPos = GetBuildSpot(world, buildCell);
+		BlockPos buildPos = GetBuildSpot(level, buildCell);
 		if (buildPos != null) {
 			return buildPos;
 		}
@@ -64,23 +64,23 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		buildPos = findEmptySpot(buildCell, false, true);
 		
 		// Is the block we shifted to where we are?
-		if (this.getPosition().equals(buildPos) || this.getDistanceSqToCenter(buildPos) <= 1) {
-			AddBuildSpot(world, buildCell, buildPos);
+		if (this.blockPosition().equals(buildPos) || this.getDistanceSqToCenter(buildPos) <= 1) {
+			AddBuildSpot(level, buildCell, buildPos);
 			return buildPos; // do nothing. Next loop will call it 'success'
 		}
-		if (this.getNavigator().tryMoveToXYZ(buildPos.getX(), buildPos.getY(), buildPos.getZ(), 1.0f)) {
-			AddBuildSpot(world, buildCell, buildPos);
+		if (this.getNavigation().moveTo(buildPos.getX(), buildPos.getY(), buildPos.getZ(), 1.0f)) {
+			AddBuildSpot(level, buildCell, buildPos);
 			return buildPos; // Sweet.
 		}
 		
 		// Otherwise try and find a place underneat the build spot to walk to instead
-		BlockPos.Mutable cursor = new BlockPos.Mutable();
-		final int yIncr = 1 * (buildPos.getY() > getPosY() ? -1 : 1);
+		BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+		final int yIncr = 1 * (buildPos.getY() > getY() ? -1 : 1);
 		
 		boolean lastSolid = true;
 		for (int x = -1; x <= 1; x++)
 		for (int z = -1; z <= 1; z++) {
-			cursor.setPos(buildCell.getX() + x, buildCell.getY() + yIncr, buildCell.getZ() + z);
+			cursor.set(buildCell.getX() + x, buildCell.getY() + yIncr, buildCell.getZ() + z);
 			
 			for (int i = 0; i < 15; i++) {
 				if (cursor.getY() <= 0) {
@@ -91,21 +91,21 @@ public class EntityDwarfBuilder extends EntityDwarf {
 				}
 				if (!lastSolid) {
 					// Last block was breathable. Are we suddenly in solid ground?
-					lastSolid = world.getBlockState(cursor).getMaterial().blocksMovement();
+					lastSolid = level.getBlockState(cursor).getMaterial().blocksMotion();
 					if (lastSolid) {
 						// Can we path there?
 						//System.out.println("Solid: " + cursor);
-						BlockPos candidate = cursor.toImmutable().up();
-						if (this.getPosition().equals(candidate)
+						BlockPos candidate = cursor.immutable().above();
+						if (this.blockPosition().equals(candidate)
 								|| this.getDistanceSqToCenter(candidate) <= 1
-								|| this.getNavigator().tryMoveToXYZ(candidate.getX(), candidate.getY(), candidate.getZ(), 1.0f)) {
-							AddBuildSpot(world, buildCell, candidate);
+								|| this.getNavigation().moveTo(candidate.getX(), candidate.getY(), candidate.getZ(), 1.0f)) {
+							AddBuildSpot(level, buildCell, candidate);
 							return candidate; // Yay
 						}
 					}
 				} else {
 					// Last block was solid so we can't stand there. Keep travelling down looking for air
-					lastSolid = world.getBlockState(cursor).getMaterial().blocksMovement();
+					lastSolid = level.getBlockState(cursor).getMaterial().blocksMotion();
 				}
 				cursor.setY(cursor.getY() + yIncr);
 			}
@@ -120,7 +120,7 @@ public class EntityDwarfBuilder extends EntityDwarf {
 			// TODO require a specialization\
 			LogisticsTaskBuildBlock build = (LogisticsTaskBuildBlock) task;
 			
-			if (build.getWorld() != this.world) {
+			if (build.getWorld() != this.level) {
 				return false;
 			}
 			
@@ -181,13 +181,13 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		LogisticsSubTask sub = task.getActiveSubtask();
 		if (sub != null && sub.getType() == LogisticsSubTask.Type.MOVE && task instanceof LogisticsTaskBuildBlock) {
 			this.setPose(ArmPoseDwarf.IDLE);
-			if (this.navigator.noPath()) {
+			if (this.navigation.isDone()) {
 				// First time through?
 				if ((movePos != null && this.isAtMoveTarget(movePos))
 					|| (moveEntity != null && this.isAtMoveTarget(moveEntity))) {
 					task.markSubtaskComplete();
 					if (movePos != null) {
-						ClearBuildSpot(world, movePos);
+						ClearBuildSpot(level, movePos);
 					}
 					movePos = null;
 					moveEntity = null;
@@ -199,8 +199,8 @@ public class EntityDwarfBuilder extends EntityDwarf {
 				movePos = sub.getPos();
 				if (movePos == null) {
 					moveEntity = sub.getEntity();
-					if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
-						this.getMoveHelper().setMoveTo(moveEntity.getPosX(), moveEntity.getPosY(), moveEntity.getPosZ(), 1.0f);
+					if (!this.getNavigation().moveTo(moveEntity,  1)) {
+						this.getMoveControl().setWantedPosition(moveEntity.getX(), moveEntity.getY(), moveEntity.getZ(), 1.0f);
 					}
 				} else {
 					BlockPos betterSpot = findBuildSpot(movePos);
@@ -209,10 +209,10 @@ public class EntityDwarfBuilder extends EntityDwarf {
 						movePos = betterSpot;
 					}
 					
-					if (this.getNavigator().noPath()) {
-						if (!navigator.tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0)) {
+					if (this.getNavigation().isDone()) {
+						if (!navigation.moveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0)) {
 							//this.getMoveHelper().setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
-							this.setPosition(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5);
+							this.setPos(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5);
 						}
 					}
 				}
@@ -227,12 +227,12 @@ public class EntityDwarfBuilder extends EntityDwarf {
 		super.registerGoals();
 	}
 
-	public static final AttributeModifierMap.MutableAttribute BuildBuilderAttributes() {
+	public static final AttributeSupplier.Builder BuildBuilderAttributes() {
 		return EntityDwarf.BuildAttributes()
-				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .22)
-				.createMutableAttribute(Attributes.MAX_HEALTH, 30)
-				.createMutableAttribute(Attributes.ATTACK_DAMAGE, 5.0)
-				.createMutableAttribute(Attributes.ARMOR, 3.0)
+				.add(Attributes.MOVEMENT_SPEED, .22)
+				.add(Attributes.MAX_HEALTH, 30)
+				.add(Attributes.ATTACK_DAMAGE, 5.0)
+				.add(Attributes.ARMOR, 3.0)
 			;
 	}
 	

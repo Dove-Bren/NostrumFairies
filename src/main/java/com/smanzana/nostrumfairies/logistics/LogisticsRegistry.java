@@ -10,21 +10,21 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Sets;
 import com.smanzana.nostrumfairies.NostrumFairies;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.util.Constants.NBT;
 
 /**
  * Has a serialized master list of all current logistics networks.
  * @author Skyler
  *
  */
-public class LogisticsRegistry extends WorldSavedData {
+public class LogisticsRegistry extends SavedData {
 	
 	public static final String DATA_NAME =  NostrumFairies.MODID + "_LogisticsNetwork";
 	private static final String NBT_NETWORKS = "networks";
@@ -32,32 +32,33 @@ public class LogisticsRegistry extends WorldSavedData {
 	private Set<LogisticsNetwork> networks; // persisted
 	
 	public LogisticsRegistry() {
-		this(DATA_NAME);
-	}
-	
-	public LogisticsRegistry(String name) {
-		super(name);
+		super();
 		
 		this.networks = new HashSet<>();
 	}
 
-	@Override
-	public void read(CompoundNBT nbt) {
-		ListNBT list = nbt.getList(NBT_NETWORKS, NBT.TAG_COMPOUND);
+	public void load(CompoundTag nbt) {
+		ListTag list = nbt.getList(NBT_NETWORKS, Tag.TAG_COMPOUND);
 		for (int i = list.size() - 1; i >= 0; i--) {
-			CompoundNBT compound = list.getCompound(i);
+			CompoundTag compound = list.getCompound(i);
 			this.networks.add(LogisticsNetwork.fromNBT(compound));
 		}
 	}
+	
+	public static LogisticsRegistry Load(CompoundTag nbt) {
+		LogisticsRegistry reg = new LogisticsRegistry();
+		reg.load(nbt);
+		return reg;
+	}
 
 	@Override
-	public CompoundNBT write(CompoundNBT compound) {
+	public CompoundTag save(CompoundTag compound) {
 		if (compound == null) {
-			compound = new CompoundNBT();
+			compound = new CompoundTag();
 		}
 		
 		if (!this.networks.isEmpty()) {
-			ListNBT list = new ListNBT();
+			ListTag list = new ListTag();
 			for (LogisticsNetwork network : this.networks) {
 				list.add(network.toNBT());
 			}
@@ -69,12 +70,12 @@ public class LogisticsRegistry extends WorldSavedData {
 	
 	public void addNetwork(LogisticsNetwork network) {
 		this.networks.add(network);
-		this.markDirty();
+		this.setDirty();
 	}
 	
 	public void removeNetwork(LogisticsNetwork network) {
 		this.networks.remove(network);
-		this.markDirty();
+		this.setDirty();
 	}
 	
 	public @Nullable LogisticsNetwork findNetwork(UUID id) {
@@ -97,7 +98,7 @@ public class LogisticsRegistry extends WorldSavedData {
 		return null;
 	}
 	
-	public @Nullable LogisticsNetwork findNetwork(World world, BlockPos pos) {
+	public @Nullable LogisticsNetwork findNetwork(Level world, BlockPos pos) {
 		for (LogisticsNetwork network : this.networks) {
 			for (ILogisticsComponent comp : network.components) {
 				if (comp.getWorld().equals(world) && pos.equals(comp.getPosition())) {
@@ -113,7 +114,7 @@ public class LogisticsRegistry extends WorldSavedData {
 		return networks;
 	}
 	
-	public @Nullable LogisticsNetwork getLogisticsNetworkFor(World world, BlockPos pos) {
+	public @Nullable LogisticsNetwork getLogisticsNetworkFor(Level world, BlockPos pos) {
 		for (LogisticsNetwork network : this.networks) {
 			if (network.getLogisticsFor(world, pos) != null) {
 				return network;
@@ -123,7 +124,7 @@ public class LogisticsRegistry extends WorldSavedData {
 		return null;
 	}
 	
-	public void getLogisticsNetworksFor(World world, BlockPos pos, Collection<LogisticsNetwork> networks) {
+	public void getLogisticsNetworksFor(Level world, BlockPos pos, Collection<LogisticsNetwork> networks) {
 		networks.clear();
 		for (LogisticsNetwork network : this.networks) {
 			if (network.getLogisticsFor(world, pos) != null) {

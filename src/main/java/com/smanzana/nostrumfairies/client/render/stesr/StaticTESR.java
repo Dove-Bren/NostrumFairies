@@ -1,12 +1,12 @@
 package com.smanzana.nostrumfairies.client.render.stesr;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.vertex.VertexFormat;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 
 /**
  * A heavily-cached version of a TESR.
@@ -21,7 +21,7 @@ import net.minecraft.world.World;
  *
  * @param <T>
  */
-public interface StaticTESR<T extends TileEntity> {
+public interface StaticTESR<T extends BlockEntity> {
 
 	/**
 	 * Render the tile entity renderer.
@@ -38,7 +38,7 @@ public interface StaticTESR<T extends TileEntity> {
 	 * @param fakeStack an identit matrixStack that shouldn't actually be modified, for ease of use of drawing functions. You should draw in relation to
 	 * a stack that's set up for your TESR and not do any stack modifications.
 	 */
-	public void render(T tileEntity, double x, double y, double z, BlockState state, World world, IVertexBuilder buffer, final MatrixStack fakeStack,
+	public void render(T tileEntity, double x, double y, double z, BlockState state, Level world, VertexConsumer buffer, final PoseStack fakeStack,
 			int combinedLightIn, int combinedOverlayIn);
 	
 	/**

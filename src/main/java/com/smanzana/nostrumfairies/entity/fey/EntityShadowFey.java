@@ -26,55 +26,55 @@ import com.smanzana.nostrummagica.spell.component.SpellEffectPart;
 import com.smanzana.nostrummagica.spell.component.SpellShapePart;
 import com.smanzana.nostrummagica.spell.component.shapes.NostrumSpellShapes;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.IRangedAttackMob;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.AvoidEntityGoal;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
-import net.minecraft.entity.monster.IMob;
-import net.minecraft.entity.monster.MonsterEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.network.play.server.SAnimateHandPacket;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityPredicates;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.monster.RangedAttackMob;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntitySelector;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
-public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
+public class EntityShadowFey extends Monster implements RangedAttackMob {
 	
 	public static final String ID = "shadow_fey";
 	
-	protected static final DataParameter<BattleStanceShadowFey> STANCE  = EntityDataManager.<BattleStanceShadowFey>createKey(EntityShadowFey.class, BattleStanceShadowFey.instance());
-	protected static final DataParameter<Boolean> MORPHING = EntityDataManager.<Boolean>createKey(EntityShadowFey.class, DataSerializers.BOOLEAN);
+	protected static final EntityDataAccessor<BattleStanceShadowFey> STANCE  = SynchedEntityData.<BattleStanceShadowFey>defineId(EntityShadowFey.class, BattleStanceShadowFey.instance());
+	protected static final EntityDataAccessor<Boolean> MORPHING = SynchedEntityData.<Boolean>defineId(EntityShadowFey.class, EntityDataSerializers.BOOLEAN);
 
 	private static Spell SPELL_SLOW = null;
 	
@@ -102,9 +102,9 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	protected int idleChatTicks;
 	protected int morphTicks;
 	
-	public EntityShadowFey(EntityType<? extends EntityShadowFey> type, World world) {
+	public EntityShadowFey(EntityType<? extends EntityShadowFey> type, Level world) {
 		super(type, world);
-		this.experienceValue = 9;
+		this.xpReward = 9;
 		
 		idleChatTicks = -1;
 		
@@ -115,8 +115,8 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 
 	// only available on server
 	protected boolean shouldUseBow() {
-		LivingEntity target = this.getAttackTarget();
-		if (target != null && this.getDistanceSq(target) < 9) {
+		LivingEntity target = this.getTarget();
+		if (target != null && this.distanceToSqr(target) < 9) {
 			return false;
 		}
 		
@@ -124,29 +124,29 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	}
 	
 	public void setBattleStance(BattleStanceShadowFey stance) {
-		this.dataManager.set(STANCE, stance);
+		this.entityData.set(STANCE, stance);
 	}
 	
 	public BattleStanceShadowFey getStance() {
-		return this.dataManager.get(STANCE);
+		return this.entityData.get(STANCE);
 	}
 	
 	public void setMorphing(boolean morphing) {
-		dataManager.set(MORPHING, morphing);
+		entityData.set(MORPHING, morphing);
 	}
 	
 	public boolean getMorphing() {
-		return dataManager.get(MORPHING);
+		return entityData.get(MORPHING);
 	}
 
 	@Override
 	protected void registerGoals() {
 		int priority = 1;
 
-		this.goalSelector.addGoal(priority++, new SwimGoal(this));
+		this.goalSelector.addGoal(priority++, new FloatGoal(this));
 		//EntityCreature theEntityIn, Class<T> classToAvoidIn, Predicate <? super T > avoidTargetSelectorIn, float avoidDistanceIn, double farSpeedIn, double nearSpeedIn
-		this.goalSelector.addGoal(priority++, new AvoidEntityGoal<PlayerEntity>(this, PlayerEntity.class, 5, 1, 1.2, (player) -> {
-			return isDangerItem(player.getHeldItemMainhand()) || isDangerItem(player.getHeldItemOffhand());
+		this.goalSelector.addGoal(priority++, new AvoidEntityGoal<Player>(this, Player.class, 5, 1, 1.2, (player) -> {
+			return isDangerItem(player.getMainHandItem()) || isDangerItem(player.getOffhandItem());
 		}));
 		this.goalSelector.addGoal(priority++, new AttackRangedGoal<EntityShadowFey>(this, 1.0, 0, 25) { // All delay in animation
 			@Override
@@ -156,12 +156,12 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			
 			@Override
 			protected boolean isAttackAnimationComplete(EntityShadowFey elf) {
-				return !elf.isSwingInProgress;
+				return !elf.swinging;
 			}
 			
 			@Override
 			protected void startAttackAnimation(EntityShadowFey elf) {
-				elf.swingArm(Hand.OFF_HAND);
+				elf.swing(InteractionHand.OFF_HAND);
 			}
 		});
 		
@@ -173,61 +173,61 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 			
 			@Override
 			protected boolean isAttackAnimationComplete(EntityShadowFey elf) {
-				return elf.swingProgress >= .7;// slash is .7 through animation
+				return elf.attackAnim >= .7;// slash is .7 through animation
 			}
 			
 			@Override
 			protected void startAttackAnimation(EntityShadowFey elf) {
-				elf.swingArm(Hand.MAIN_HAND);
+				elf.swing(InteractionHand.MAIN_HAND);
 			}
 		});
 		
 		this.goalSelector.addGoal(priority++, new SpellAttackGoal<EntityShadowFey>(this, 60, 10, true, (elf) -> {
-			return elf.getAttackTarget() != null && !elf.getMorphing();
+			return elf.getTarget() != null && !elf.getMorphing();
 		}, new Spell[]{SPELL_SLOW}));
-		this.goalSelector.addGoal(priority++, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
-		this.goalSelector.addGoal(priority++, new LookAtGoal(this, PlayerEntity.class, 8.0F));
-		this.goalSelector.addGoal(priority++, new LookRandomlyGoal(this));
+		this.goalSelector.addGoal(priority++, new WaterAvoidingRandomStrollGoal(this, 1.0D));
+		this.goalSelector.addGoal(priority++, new LookAtPlayerGoal(this, Player.class, 8.0F));
+		this.goalSelector.addGoal(priority++, new RandomLookAroundGoal(this));
 		
 		priority = 1;
-		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setCallsForHelp(EntityShadowFey.class));
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setAlertOthers(EntityShadowFey.class));
 		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<EntityFeyBase>(this, EntityFeyBase.class, 5, true, false, null));
-		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<PlayerEntity>(this, PlayerEntity.class, 10, true, false, (player) -> {
-			return !player.isSneaking();
+		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<Player>(this, Player.class, 10, true, false, (player) -> {
+			return !player.isShiftKeyDown();
 		}));
-		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<MobEntity>(this, MobEntity.class, 5, true, false, (living) -> {
-			return living != null && living.isAlive() && !(living instanceof IMob);
+		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<Mob>(this, Mob.class, 5, true, false, (living) -> {
+			return living != null && living.isAlive() && !(living instanceof Enemy);
 		}));
 	}
 
-	public static final AttributeModifierMap.MutableAttribute BuildAttributes() {
-		return MonsterEntity.func_234295_eP_()
-				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .24)
-				.createMutableAttribute(Attributes.MAX_HEALTH, 14.0)
-				.createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0)
-				.createMutableAttribute(Attributes.ARMOR, 2.0)
-				.createMutableAttribute(Attributes.FOLLOW_RANGE, 20.0)
-				.createMutableAttribute(NostrumAttributes.magicResist, 0)
+	public static final AttributeSupplier.Builder BuildAttributes() {
+		return Monster.createMonsterAttributes()
+				.add(Attributes.MOVEMENT_SPEED, .24)
+				.add(Attributes.MAX_HEALTH, 14.0)
+				.add(Attributes.ATTACK_DAMAGE, 4.0)
+				.add(Attributes.ARMOR, 2.0)
+				.add(Attributes.FOLLOW_RANGE, 20.0)
+				.add(NostrumAttributes.magicResist, 0)
 			;
 	}
 	
 	@Override
-	protected void registerData() {
-		super.registerData();
-		dataManager.register(STANCE, BattleStanceShadowFey.IDLE);
-		dataManager.register(MORPHING, false);
+	protected void defineSynchedData() {
+		super.defineSynchedData();
+		entityData.define(STANCE, BattleStanceShadowFey.IDLE);
+		entityData.define(MORPHING, false);
 	}
 	
 	@Override
 	public void baseTick() {
 		super.baseTick();
 		
-		if (this.getAttackTarget() != null && !this.getAttackTarget().isAlive()) {
-			this.setAttackTarget(null);
+		if (this.getTarget() != null && !this.getTarget().isAlive()) {
+			this.setTarget(null);
 		}
 		
-		if (!world.isRemote) {
-			if (this.getAttackTarget() == null || this.getMorphing()) {
+		if (!level.isClientSide) {
+			if (this.getTarget() == null || this.getMorphing()) {
 				setBattleStance(BattleStanceShadowFey.IDLE);
 			} else {
 				if (this.shouldUseBow()) {
@@ -240,14 +240,14 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		
 		if (this.getStance() == BattleStanceShadowFey.IDLE) {
 			this.idleTicks++;
-			if (world.isRemote) {
+			if (level.isClientSide) {
 				if (idleChatTicks == 0) {
-					NostrumFairiesSounds.SHADOW_FEY_IDLE.play(NostrumFairies.proxy.getPlayer(), world, getPosX(), getPosY(), getPosZ());
+					NostrumFairiesSounds.SHADOW_FEY_IDLE.play(NostrumFairies.proxy.getPlayer(), level, getX(), getY(), getZ());
 					idleChatTicks = -1;
 				}
 				
 				if (idleChatTicks == -1) {
-					idleChatTicks = (rand.nextInt(10) + 5) * 20; 
+					idleChatTicks = (random.nextInt(10) + 5) * 20; 
 				}
 				
 				idleChatTicks--;
@@ -267,65 +267,65 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 		
 	}
 	
-	protected static final Predicate<Entity> SHADOW_FEY_ARROW_FILTER = EntityPredicates.NOT_SPECTATING.and(EntityPredicates.IS_ALIVE).and(new Predicate<Entity>() {
+	protected static final Predicate<Entity> SHADOW_FEY_ARROW_FILTER = EntitySelector.NO_SPECTATORS.and(EntitySelector.ENTITY_STILL_ALIVE).and(new Predicate<Entity>() {
 		public boolean test(@Nullable Entity ent) {
-			return ent.canBeCollidedWith() && !(ent instanceof EntityShadowFey);
+			return ent.isPickable() && !(ent instanceof EntityShadowFey);
 		}
 	});
 	
 	protected void shootArrowAt(LivingEntity target, float distanceFactor) {
-		EntityArrowEx entitytippedarrow = new EntityArrowEx(this.world, this);
+		EntityArrowEx entitytippedarrow = new EntityArrowEx(this.level, this);
 		entitytippedarrow.setFilter(SHADOW_FEY_ARROW_FILTER);
-		double d0 = target.getPosX() - this.getPosX();
-		double d1 = target.getBoundingBox().minY + (double)(target.getHeight() / 3.0F) - entitytippedarrow.getPosY();
-		double d2 = target.getPosZ() - this.getPosZ();
-		double d3 = (double)MathHelper.sqrt(d0 * d0 + d2 * d2);
+		double d0 = target.getX() - this.getX();
+		double d1 = target.getBoundingBox().minY + (double)(target.getBbHeight() / 3.0F) - entitytippedarrow.getY();
+		double d2 = target.getZ() - this.getZ();
+		double d3 = (double)Mth.sqrt(d0 * d0 + d2 * d2);
 		entitytippedarrow.shoot(d0, d1 + d3 * 0.20000000298023224D, d2, 1.6F, .5f);
-		int i = EnchantmentHelper.getMaxEnchantmentLevel(Enchantments.POWER, this);
-		int j = EnchantmentHelper.getMaxEnchantmentLevel(Enchantments.PUNCH, this);
-		entitytippedarrow.setDamage((double)(distanceFactor * 2.0F) + this.rand.nextGaussian() * 0.25D + 3);
+		int i = EnchantmentHelper.getEnchantmentLevel(Enchantments.POWER_ARROWS, this);
+		int j = EnchantmentHelper.getEnchantmentLevel(Enchantments.PUNCH_ARROWS, this);
+		entitytippedarrow.setBaseDamage((double)(distanceFactor * 2.0F) + this.random.nextGaussian() * 0.25D + 3);
 
 		if (i > 0)
 		{
-			entitytippedarrow.setDamage(entitytippedarrow.getDamage() + (double)i * 0.5D + 0.5D);
+			entitytippedarrow.setBaseDamage(entitytippedarrow.getBaseDamage() + (double)i * 0.5D + 0.5D);
 		}
 
 		if (j > 0)
 		{
-			entitytippedarrow.setKnockbackStrength(j);
+			entitytippedarrow.setKnockback(j);
 		}
 
-		boolean flag = this.isBurning() && this.rand.nextBoolean();
-		flag = flag || EnchantmentHelper.getMaxEnchantmentLevel(Enchantments.FLAME, this) > 0;
+		boolean flag = this.isOnFire() && this.random.nextBoolean();
+		flag = flag || EnchantmentHelper.getEnchantmentLevel(Enchantments.FLAMING_ARROWS, this) > 0;
 
 		if (flag)
 		{
-			entitytippedarrow.setFire(100);
+			entitytippedarrow.setSecondsOnFire(100);
 		}
 
-		ItemStack itemstack = this.getHeldItem(Hand.OFF_HAND);
+		ItemStack itemstack = this.getItemInHand(InteractionHand.OFF_HAND);
 
 		if (!itemstack.isEmpty() && itemstack.getItem() == Items.TIPPED_ARROW)
 		{
-			entitytippedarrow.setPotionEffect(itemstack);
+			entitytippedarrow.setEffectsFromItem(itemstack);
 		}
-		else if (rand.nextBoolean() && rand.nextBoolean() && rand.nextBoolean())
+		else if (random.nextBoolean() && random.nextBoolean() && random.nextBoolean())
 		{
-			entitytippedarrow.addEffect(new EffectInstance(Effects.POISON, 600));
+			entitytippedarrow.addEffect(new MobEffectInstance(MobEffects.POISON, 600));
 		}
 
 		//this.playSound(SoundEvents.ENTITY_SKELETON_SHOOT, 1.0F, 1.0F / (this.getRNG().nextFloat() * 0.4F + 0.8F));
-		this.world.addEntity(entitytippedarrow);
+		this.level.addFreshEntity(entitytippedarrow);
 	}
 	
 	protected void slashAt(LivingEntity target, float distanceFactor) {
-		if (this.attackEntityAsMob(target)) {
+		if (this.doHurtTarget(target)) {
 			this.heal(1f);
 		}
 	}
 
 	@Override
-	public void attackEntityWithRangedAttack(LivingEntity target, float distanceFactor) {
+	public void performRangedAttack(LivingEntity target, float distanceFactor) {
 		if (this.shouldUseBow()) {
 			shootArrowAt(target, distanceFactor);
 		} else {
@@ -339,83 +339,83 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	 * Note: Copied from vanilla where you can't override it :(
 	 */
 	protected int getArmSwingAnimationEnd() {
-		return this.isPotionActive(Effects.HASTE)
-				? getDefaultSwingAnimationDuration() - (1 + this.getActivePotionEffect(Effects.HASTE).getAmplifier())
-				: (this.isPotionActive(Effects.MINING_FATIGUE)
-						? getDefaultSwingAnimationDuration() + (1 + this.getActivePotionEffect(Effects.MINING_FATIGUE).getAmplifier()) * 2
+		return this.hasEffect(MobEffects.DIG_SPEED)
+				? getDefaultSwingAnimationDuration() - (1 + this.getEffect(MobEffects.DIG_SPEED).getAmplifier())
+				: (this.hasEffect(MobEffects.DIG_SLOWDOWN)
+						? getDefaultSwingAnimationDuration() + (1 + this.getEffect(MobEffects.DIG_SLOWDOWN).getAmplifier()) * 2
 						: getDefaultSwingAnimationDuration());
 	}
 
 	@Override
-	public void swingArm(Hand hand) {
+	public void swing(InteractionHand hand) {
 		int unused; //Why not just call super?
-		ItemStack stack = this.getHeldItem(hand);
+		ItemStack stack = this.getItemInHand(hand);
 		if (!stack.isEmpty()) {
 			if (stack.getItem().onEntitySwing(stack, this)) {
 				return;
 			}
 		}
 		
-		if (!this.isSwingInProgress || this.swingProgressInt >= this.getArmSwingAnimationEnd() / 2 || this.swingProgressInt < 0) {
-			this.swingProgressInt = -1;
-			this.isSwingInProgress = true;
-			this.swingingHand = hand;
+		if (!this.swinging || this.swingTime >= this.getArmSwingAnimationEnd() / 2 || this.swingTime < 0) {
+			this.swingTime = -1;
+			this.swinging = true;
+			this.swingingArm = hand;
 
-			if (this.world instanceof ServerWorld) {
-				((ServerWorld)this.world).getChunkProvider().sendToAllTracking(this, new SAnimateHandPacket(this, hand == Hand.MAIN_HAND ? 0 : 3));
+			if (this.level instanceof ServerLevel) {
+				((ServerLevel)this.level).getChunkSource().broadcast(this, new ClientboundAnimatePacket(this, hand == InteractionHand.MAIN_HAND ? 0 : 3));
 			}
 		}
 	}
 	
 	@Override
-	protected void updateArmSwingProgress() {
+	protected void updateSwingTime() {
 		int i = this.getArmSwingAnimationEnd();
 
-		if (this.isSwingInProgress) {
-			++this.swingProgressInt;
+		if (this.swinging) {
+			++this.swingTime;
 
-			if (this.swingProgressInt >= i) {
-				this.swingProgressInt = 0;
-				this.isSwingInProgress = false;
+			if (this.swingTime >= i) {
+				this.swingTime = 0;
+				this.swinging = false;
 			}
 		}else {
-			this.swingProgressInt = 0;
+			this.swingTime = 0;
 		}
 
-		this.swingProgress = (float)this.swingProgressInt / (float)i;
+		this.attackAnim = (float)this.swingTime / (float)i;
 	}
 	
 	protected void transform() {
 		final EntityFeyBase fey;
-		switch (rand.nextInt(5)) {
+		switch (random.nextInt(5)) {
 		case 0:
-			fey = new EntityFairy(FairyEntities.Fairy, world);
+			fey = new EntityFairy(FairyEntities.Fairy, level);
 			break;
 		case 1:
-			fey = new EntityDwarf(FairyEntities.Dwarf, world);
+			fey = new EntityDwarf(FairyEntities.Dwarf, level);
 			break;
 		case 2:
-			fey = new EntityGnome(FairyEntities.Gnome, world);
+			fey = new EntityGnome(FairyEntities.Gnome, level);
 			break;
 		case 3:
-			fey = new EntityElf(FairyEntities.Elf, world);
+			fey = new EntityElf(FairyEntities.Elf, level);
 			break;
 		case 4:
 		default:
-			fey = new EntityElfArcher(FairyEntities.ElfArcher, world);
+			fey = new EntityElfArcher(FairyEntities.ElfArcher, level);
 			break;
 		}
-		fey.copyLocationAndAnglesFrom(this);
-		fey.onInitialSpawn((IServerWorld) world, world.getDifficultyForLocation(fey.getPosition()), SpawnReason.CONVERSION, (ILivingEntityData)null, null);
+		fey.copyPosition(this);
+		fey.finalizeSpawn((ServerLevelAccessor) level, level.getCurrentDifficultyAt(fey.blockPosition()), MobSpawnType.CONVERSION, (SpawnGroupData)null, null);
 		
 		this.remove();
-		world.addEntity(fey);
+		level.addFreshEntity(fey);
 		fey.setCursed(true);
 		
-		this.world.playEvent((PlayerEntity)null, 1027, new BlockPos((int)this.getPosX(), (int)this.getPosY(), (int)this.getPosZ()), 0);
+		this.level.levelEvent((Player)null, 1027, new BlockPos((int)this.getX(), (int)this.getY(), (int)this.getZ()), 0);
 		
-		for (PlayerEntity player : ((ServerWorld) world).getPlayers()) {
-			if (player.getDistanceSq(this) < 36) {
+		for (Player player : ((ServerLevel) level).players()) {
+			if (player.distanceToSqr(this) < 36) {
 				INostrumMagic attr = NostrumMagica.getMagicWrapper(player);
 				if (attr != null) {
 					attr.giveFullLore(ShadowFeyConversionLore.instance());
@@ -428,14 +428,14 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	public void tick() {
 		super.tick();
 		
-		this.updateArmSwingProgress();
+		this.updateSwingTime();
 		
 		// I'll just go ahead and loop this. Can't be that big.
-		if (!world.isRemote) {
+		if (!level.isClientSide) {
 			boolean morphing = false;
-			for (PlayerEntity player : ((ServerWorld) world).getPlayers()) {
-				if ((isDangerItem(player.getHeldItemMainhand()) || isDangerItem(player.getHeldItemOffhand()))
-						&& player.getDistanceSq(this) < 36) {
+			for (Player player : ((ServerLevel) level).players()) {
+				if ((isDangerItem(player.getMainHandItem()) || isDangerItem(player.getOffhandItem()))
+						&& player.distanceToSqr(this) < 36) {
 					morphing = true;
 					break;
 				}
@@ -463,23 +463,23 @@ public class EntityShadowFey extends MonsterEntity implements IRangedAttackMob {
 	}
 	
 	@Override
-	public ILivingEntityData onInitialSpawn(IServerWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
-		livingdata = super.onInitialSpawn(world, difficulty, reason, livingdata, tag);
+	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, @Nullable SpawnGroupData livingdata, @Nullable CompoundTag tag) {
+		livingdata = super.finalizeSpawn(world, difficulty, reason, livingdata, tag);
 		
-		this.setLeftHanded(this.rand.nextBoolean());
+		this.setLeftHanded(this.random.nextBoolean());
 		
 		return livingdata;
 	}
 	
 	@Override
-	public boolean canSpawn(IWorld worldIn, SpawnReason spawnReasonIn) {
+	public boolean checkSpawnRules(LevelAccessor worldIn, MobSpawnType spawnReasonIn) {
 		// Shadow fey amass ar mies in the twilight forest. So let's make sure to only spawn them when other things can spawn.
-		if ((spawnReasonIn == SpawnReason.NATURAL || spawnReasonIn == SpawnReason.CHUNK_GENERATION)
-				&& this.world.getBiome(this.getPosition()).getMobSpawnInfo().getSpawners(EntityClassification.MONSTER).size() <= 2) {
+		if ((spawnReasonIn == MobSpawnType.NATURAL || spawnReasonIn == MobSpawnType.CHUNK_GENERATION)
+				&& this.level.getBiome(this.blockPosition()).getMobSettings().getMobs(MobCategory.MONSTER).size() <= 2) {
 			return false;
 		}
 		
-		return super.canSpawn(worldIn, spawnReasonIn);
+		return super.checkSpawnRules(worldIn, spawnReasonIn);
 	}
 	
 	@Override

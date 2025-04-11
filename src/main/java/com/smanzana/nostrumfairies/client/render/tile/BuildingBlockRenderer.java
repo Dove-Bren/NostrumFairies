@@ -1,14 +1,14 @@
 package com.smanzana.nostrumfairies.client.render.tile;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.Direction;
+import com.mojang.math.Vector3f;
 
 public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEntity> {
 
@@ -24,13 +24,13 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 			new Vector3f(.5f + THICCNESS,					HEIGHT - .2f, .5f - ICON_INNEROFFSETX2 - (ICON_SIZE / 2)), // E
 	};
 	
-	public BuildingBlockRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
+	public BuildingBlockRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
 		super(rendererDispatcherIn);
 		// TODO Auto-generated constructor stub
 	}
 	
 	@Override
-	public void render(BuildingBlockTileEntity te, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
+	public void render(BuildingBlockTileEntity te, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
 		// Use super to render sign icon
 		super.render(te, partialTicks, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn);
 		
@@ -38,13 +38,13 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 		ItemStack template = te.getTemplateScroll();
 		if (!template.isEmpty()) {
 			final Direction facing = te.getSignFacing(te);
-			final Vector3f offset = SCROLL_OFFSETS[facing.getHorizontalIndex()];
+			final Vector3f offset = SCROLL_OFFSETS[facing.get2DDataValue()];
 
-			matrixStackIn.push();
-			matrixStackIn.translate(offset.getX(), offset.getY(), offset.getZ());
+			matrixStackIn.pushPose();
+			matrixStackIn.translate(offset.x(), offset.y(), offset.z());
 			matrixStackIn.scale(.5f, .5f, .5f);
 			RenderFuncs.RenderWorldItem(template, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn);
-			matrixStackIn.pop();
+			matrixStackIn.popPose();
 		}
 	}
 }

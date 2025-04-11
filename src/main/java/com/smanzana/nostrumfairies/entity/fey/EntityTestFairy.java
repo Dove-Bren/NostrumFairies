@@ -24,23 +24,23 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
@@ -50,14 +50,14 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	private static final String NBT_ITEMS = "helditems";
 	private static final int INV_SIZE = 5;
 	
-	private Inventory inventory;
+	private SimpleContainer inventory;
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	
-	public EntityTestFairy(EntityType<? extends EntityTestFairy> type, World world) {
+	public EntityTestFairy(EntityType<? extends EntityTestFairy> type, Level world) {
 		super(type, world);
 		this.workDistanceSq = 24 * 24;
-		this.inventory = new Inventory(INV_SIZE);
+		this.inventory = new SimpleContainer(INV_SIZE);
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		NonNullList<ItemStack> stacks = NonNullList.withSize(INV_SIZE, ItemStack.EMPTY);
 		int idx = 0;
 		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack stack = inventory.getStackInSlot(i);
+			ItemStack stack = inventory.getItem(i);
 			if (!stack.isEmpty()) {
 				stacks.set(idx++, stack);
 			}
@@ -120,7 +120,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	
 	protected boolean hasItems() {
 		for (int i = 0; i < INV_SIZE; i++) {
-			if (!inventory.getStackInSlot(i).isEmpty()) {
+			if (!inventory.getItem(i).isEmpty()) {
 				return true;
 			}
 		}
@@ -253,7 +253,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		if (task instanceof LogisticsTaskPlantItem) {
 			LogisticsTaskPlantItem plant = (LogisticsTaskPlantItem) task;
 			
-			if (plant.getWorld() != this.world) {
+			if (plant.getWorld() != this.level) {
 				return false;
 			}
 			
@@ -272,24 +272,24 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			}
 			
 			// Check for pathing
-			if (this.getDistanceSq(target.getX() + .5, target.getY(), target.getZ() + .5) < .2) {
+			if (this.distanceToSqr(target.getX() + .5, target.getY(), target.getZ() + .5) < .2) {
 				return true;
 			}
-			Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			Path currentPath = navigation.getPath();
+			boolean success = navigation.moveTo(target.getX(), target.getY(), target.getZ(), 1.0);
 			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
+				success = Paths.IsComplete(navigation.getPath(), target, 2);
 			}
 			if (currentPath == null) {
 				if (!success) {
-					navigator.setPath(currentPath, 1.0);
+					navigation.moveTo(currentPath, 1.0);
 				}
 			} else {
-				navigator.setPath(currentPath, 1.0);
+				navigation.moveTo(currentPath, 1.0);
 			}
 			if (success) {
 				return true;
-			} else if (target.distanceSq(getPosition()) < 1) {
+			} else if (target.distSqr(blockPosition()) < 1) {
 				// extra case for if the navigator refuses cause we're too close
 				return true;
 			}
@@ -300,14 +300,14 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	
 	private void dropItems() {
 		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack heldItem = inventory.getStackInSlot(i);
+			ItemStack heldItem = inventory.getItem(i);
 			if (heldItem.isEmpty()) {
 				continue;
 			}
-			ItemEntity item = new ItemEntity(this.world, getPosX(), getPosY(), getPosZ(), heldItem);
-			world.addEntity(item);
+			ItemEntity item = new ItemEntity(this.level, getX(), getY(), getZ(), heldItem);
+			level.addFreshEntity(item);
 		}
-		inventory.clear();
+		inventory.clearContent();
 	}
 
 	@Override
@@ -337,7 +337,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			ItemStack held = ItemStack.EMPTY;
 			
 			for (int i = 0; i < INV_SIZE; i++) {
-				held = inventory.getStackInSlot(i);
+				held = inventory.getItem(i);
 				if (!held.isEmpty()) {
 					break;
 				}
@@ -346,7 +346,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			if (!held.isEmpty()) {
 				LogisticsNetwork network = this.getLogisticsNetwork();
 				if (network != null) {
-					@Nullable ILogisticsComponent storage = network.getStorageForItem(world, getPosition(), held);
+					@Nullable ILogisticsComponent storage = network.getStorageForItem(level, blockPosition(), held);
 					if (storage != null) {
 						ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", held.copy());
 						network.getTaskRegistry().register(task, null);
@@ -363,9 +363,9 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		}
 		
 		// See if we're too far away from our home block
-		if (this.navigator.noPath()) {
+		if (this.navigation.isDone()) {
 			BlockPos home = this.getHome();
-			if (home != null && !this.canReach(this.getPosition(), false)) {
+			if (home != null && !this.canReach(this.blockPosition(), false)) {
 				
 				// Go to a random place around our home
 				final BlockPos center = home;
@@ -373,31 +373,31 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				int attempts = 20;
 				final double maxDistSq = Math.min(25, this.wanderDistanceSq);
 				do {
-					double dist = this.rand.nextDouble() * Math.sqrt(maxDistSq);
-					float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
-					float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
+					double dist = this.random.nextDouble() * Math.sqrt(maxDistSq);
+					float angle = (float) (this.random.nextDouble() * (2 * Math.PI));
+					float tilt = (float) (this.random.nextDouble() * (2 * Math.PI)) * .5f;
 					
-					targ = new BlockPos(new Vector3d(
+					targ = new BlockPos(new Vec3(
 							center.getX() + (Math.cos(angle) * dist),
 							center.getY() + (Math.cos(tilt) * dist),
 							center.getZ() + (Math.sin(angle) * dist)));
-					while (targ.getY() > 0 && world.isAirBlock(targ)) {
-						targ = targ.down();
+					while (targ.getY() > 0 && level.isEmptyBlock(targ)) {
+						targ = targ.below();
 					}
 					if (targ.getY() < 256) {
-						targ = targ.up();
+						targ = targ.above();
 					}
 					
 					// We've hit a non-air block. Make sure there's space above it
 					BlockPos airBlock = null;
-					for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
+					for (int i = 0; i < Math.ceil(this.getBbHeight()); i++) {
 						if (airBlock == null) {
-							airBlock = targ.up();
+							airBlock = targ.above();
 						} else {
-							airBlock = airBlock.up();
+							airBlock = airBlock.above();
 						}
 						
-						if (!world.isAirBlock(airBlock)) {
+						if (!level.isEmptyBlock(airBlock)) {
 							targ = null;
 							break;
 						}
@@ -405,10 +405,10 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				} while (targ == null && attempts > 0);
 				
 				if (targ == null) {
-					targ = center.up();
+					targ = center.above();
 				}
-				if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-					this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+				if (!this.getNavigation().moveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
+					this.getMoveControl().setWantedPosition(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 				}
 				
 			}
@@ -419,27 +419,27 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	protected void onTaskTick(ILogisticsTask task) {
 		
 		// Mining dwarves should place down lights in the mines and refresh those around them
-		if (task instanceof LogisticsTaskMineBlock && this.ticksExisted % 5 == 0) {
-			if (!this.world.canBlockSeeSky(this.getPosition())) {
+		if (task instanceof LogisticsTaskMineBlock && this.tickCount % 5 == 0) {
+			if (!this.level.canSeeSkyFromBelowWater(this.blockPosition())) {
 				// No light from the 'sky' which means we're underground
 				// Refreseh magic lights around. Then see if it's too dark
 				BlockState state;
-				BlockPos.Mutable cursor = new BlockPos.Mutable();
+				BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 				for (int x = -1; x <= 1; x++)
 				for (int y = -1; y <= 1; y++)
 				for (int z = -1; z <= 1; z++) {
-					cursor.setPos(x, y, z);
-					state = world.getBlockState(cursor);
+					cursor.set(x, y, z);
+					state = level.getBlockState(cursor);
 					if (state != null && state.getBlock() instanceof MagicLight) {
-						FairyBlocks.magicLightBright.refresh(world, cursor.toImmutable());
+						FairyBlocks.magicLightBright.refresh(level, cursor.immutable());
 					}
 				}
 				
-				if (this.world.getLightFor(LightType.BLOCK, this.getPosition()) < 8) {
-					if (this.world.isAirBlock(this.getPosition().up().up())) {
-						world.setBlockState(this.getPosition().up().up(), FairyBlocks.magicLightBright.getDefaultState());
-					} else if (this.world.isAirBlock(this.getPosition().up())) {
-						world.setBlockState(this.getPosition().up(), FairyBlocks.magicLightBright.getDefaultState());
+				if (this.level.getBrightness(LightLayer.BLOCK, this.blockPosition()) < 8) {
+					if (this.level.isEmptyBlock(this.blockPosition().above().above())) {
+						level.setBlockAndUpdate(this.blockPosition().above().above(), FairyBlocks.magicLightBright.defaultBlockState());
+					} else if (this.level.isEmptyBlock(this.blockPosition().above())) {
+						level.setBlockAndUpdate(this.blockPosition().above(), FairyBlocks.magicLightBright.defaultBlockState());
 					}
 				}
 			}
@@ -449,58 +449,58 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		if (sub != null) {
 			switch (sub.getType()) {
 			case ATTACK:
-				this.faceEntity(sub.getEntity(), 30, 180);
+				this.lookAt(sub.getEntity(), 30, 180);
 				break;
 			case BREAK:
 				// this is where we'd play some animation?
 				if (this.onGround) {
 					BlockPos pos = sub.getPos();
-					double d0 = pos.getX() - this.getPosX();
-			        double d2 = pos.getZ() - this.getPosZ();
-					float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
+					double d0 = pos.getX() - this.getX();
+			        double d2 = pos.getZ() - this.getZ();
+					float desiredYaw = (float)(Mth.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 					
-					this.rotationYaw = desiredYaw;
+					this.yRot = desiredYaw;
 					
 					task.markSubtaskComplete();
 					if (task.getActiveSubtask() != sub) {
 						break;
 					}
-					this.jump();
+					this.jumpFromGround();
 				}
 				break;
 			case IDLE:
-				if (this.navigator.noPath()) {
+				if (this.navigation.isDone()) {
 					if (movePos == null) {
 						final BlockPos center = sub.getPos();
 						BlockPos targ = null;
 						int attempts = 20;
 						final double maxDistSq = 25;
 						do {
-							double dist = this.rand.nextDouble() * Math.sqrt(maxDistSq);
-							float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
-							float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
+							double dist = this.random.nextDouble() * Math.sqrt(maxDistSq);
+							float angle = (float) (this.random.nextDouble() * (2 * Math.PI));
+							float tilt = (float) (this.random.nextDouble() * (2 * Math.PI)) * .5f;
 							
-							targ = new BlockPos(new Vector3d(
+							targ = new BlockPos(new Vec3(
 									center.getX() + (Math.cos(angle) * dist),
 									center.getY() + (Math.cos(tilt) * dist),
 									center.getZ() + (Math.sin(angle) * dist)));
-							while (targ.getY() > 0 && world.isAirBlock(targ)) {
-								targ = targ.down();
+							while (targ.getY() > 0 && level.isEmptyBlock(targ)) {
+								targ = targ.below();
 							}
 							if (targ.getY() < 256) {
-								targ = targ.up();
+								targ = targ.above();
 							}
 							
 							// We've hit a non-air block. Make sure there's space above it
 							BlockPos airBlock = null;
-							for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
+							for (int i = 0; i < Math.ceil(this.getBbHeight()); i++) {
 								if (airBlock == null) {
-									airBlock = targ.up();
+									airBlock = targ.above();
 								} else {
-									airBlock = airBlock.up();
+									airBlock = airBlock.above();
 								}
 								
-								if (!world.isAirBlock(airBlock)) {
+								if (!level.isEmptyBlock(airBlock)) {
 									targ = null;
 									break;
 								}
@@ -508,10 +508,10 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 						} while (targ == null && attempts > 0);
 						
 						if (targ == null) {
-							targ = center.up();
+							targ = center.above();
 						}
-						if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-							this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+						if (!this.getNavigation().moveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
+							this.getMoveControl().setWantedPosition(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 						}
 						this.movePos = targ;
 					} else {
@@ -525,10 +525,10 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 				break;
 			case MOVE:
 				{
-					if (this.navigator.noPath()) {
+					if (this.navigation.isDone()) {
 						// First time through?
-						if ((movePos != null && this.getDistanceSq(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5) < 1)
-							|| (moveEntity != null && this.getDistanceSq(moveEntity) < 1)) {
+						if ((movePos != null && this.distanceToSqr(movePos.getX() + .5, movePos.getY(), movePos.getZ() + .5) < 1)
+							|| (moveEntity != null && this.distanceToSqr(moveEntity) < 1)) {
 							task.markSubtaskComplete();
 							movePos = null;
 							moveEntity = null;
@@ -540,16 +540,16 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 						movePos = sub.getPos();
 						if (movePos == null) {
 							moveEntity = sub.getEntity();
-							if (!this.getNavigator().tryMoveToEntityLiving(moveEntity,  1)) {
-								this.getMoveHelper().setMoveTo(moveEntity.getPosX(), moveEntity.getPosY(), moveEntity.getPosZ(), 1.0f);
+							if (!this.getNavigation().moveTo(moveEntity,  1)) {
+								this.getMoveControl().setWantedPosition(moveEntity.getX(), moveEntity.getY(), moveEntity.getZ(), 1.0f);
 							}
 						} else {
 							movePos = findEmptySpot(movePos, false);
 							
 							// Is the block we shifted to where we are?
-							if (!this.getPosition().equals(movePos) && movePos.distanceSq(getPosition()) > 1) {
-								if (!this.getNavigator().tryMoveToXYZ(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f)) {
-									this.getMoveHelper().setMoveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
+							if (!this.blockPosition().equals(movePos) && movePos.distSqr(blockPosition()) > 1) {
+								if (!this.getNavigation().moveTo(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f)) {
+									this.getMoveControl().setWantedPosition(movePos.getX(), movePos.getY(), movePos.getZ(), 1.0f);
 								}
 							}
 						}
@@ -569,18 +569,18 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		// Or if we're idle... wander?
 	}
 
-	public static final AttributeModifierMap.MutableAttribute BuildAttributes() {
+	public static final AttributeSupplier.Builder BuildAttributes() {
 		return EntityFeyBase.BuildFeyAttributes()
-				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .24)
-				.createMutableAttribute(Attributes.MAX_HEALTH, 2.0)
+				.add(Attributes.MOVEMENT_SPEED, .24)
+				.add(Attributes.MAX_HEALTH, 2.0)
 			;
 	}
 	
-	private ListNBT inventoryToNBT() {
-		ListNBT list = new ListNBT();
+	private ListTag inventoryToNBT() {
+		ListTag list = new ListTag();
 		
 		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack stack = inventory.getStackInSlot(i);
+			ItemStack stack = inventory.getItem(i);
 			if (!stack.isEmpty()) {
 				list.add(stack.serializeNBT());
 			}
@@ -590,23 +590,23 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void writeAdditional(CompoundNBT compound) {
-		super.writeAdditional(compound);
+	public void addAdditionalSaveData(CompoundTag compound) {
+		super.addAdditionalSaveData(compound);
 		
 		compound.put(NBT_ITEMS, inventoryToNBT());
 	}
 	
-	private void loadInventoryFromNBT(ListNBT list) {
-		inventory.clear();
+	private void loadInventoryFromNBT(ListTag list) {
+		inventory.clearContent();
 		
 		for (int i = 0; i < list.size(); i++) {
-			inventory.setInventorySlotContents(i, ItemStack.read(list.getCompound(i)));
+			inventory.setItem(i, ItemStack.of(list.getCompound(i)));
 		}
 	}
 	
 	@Override
-	public void readAdditional(CompoundNBT compound) {
-		super.readAdditional(compound);
+	public void readAdditionalSaveData(CompoundTag compound) {
+		super.readAdditionalSaveData(compound);
 		
 		loadInventoryFromNBT(compound.getList(NBT_ITEMS, NBT.TAG_COMPOUND));
 	}
@@ -617,7 +617,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	protected void collideWithEntity(Entity entityIn) {
+	protected void doPush(Entity entityIn) {
 		if (this.getCurrentTask() != null && this.getCurrentTask() instanceof LogisticsTaskMineBlock
 				&& entityIn instanceof IFeyWorker) {
 			ILogisticsTask theirs = ((IFeyWorker) entityIn).getCurrentTask();
@@ -626,12 +626,12 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			}
 		}
 		
-		super.collideWithEntity(entityIn);
+		super.doPush(entityIn);
 	}
 
 	@Override
 	protected String getRandomName() {
-		return "Test Fairy " + rand.nextInt();
+		return "Test Fairy " + random.nextInt();
 	}
 	
 	@Override
@@ -661,15 +661,15 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	protected boolean shouldJoin(BlockPos pos, BlockState state, HomeBlockTileEntity te) {
-		return rand.nextBoolean() && rand.nextBoolean();
+		return random.nextBoolean() && random.nextBoolean();
 	}
 
 	@Override
 	protected void onWanderTick() {
 		// Wander around
-		if (this.navigator.noPath() && ticksExisted % 200 == 0 && rand.nextBoolean()) {
+		if (this.navigation.isDone() && tickCount % 200 == 0 && random.nextBoolean()) {
 			// Go to a random place
-			EntityFeyBase.FeyWander(this, this.getPosition(), Math.min(100, this.wanderDistanceSq));
+			EntityFeyBase.FeyWander(this, this.blockPosition(), Math.min(100, this.wanderDistanceSq));
 		}
 	}
 

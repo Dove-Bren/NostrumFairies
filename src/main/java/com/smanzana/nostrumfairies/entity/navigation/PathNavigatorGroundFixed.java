@@ -1,13 +1,13 @@
 package com.smanzana.nostrumfairies.entity.navigation;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.level.Level;
 
-public class PathNavigatorGroundFixed extends GroundPathNavigator {
+public class PathNavigatorGroundFixed extends GroundPathNavigation {
 	private int unused; // eval
 
-	public PathNavigatorGroundFixed(MobEntity entitylivingIn, World worldIn) {
+	public PathNavigatorGroundFixed(Mob entitylivingIn, Level worldIn) {
 		super(entitylivingIn, worldIn);
 	}
 	
@@ -18,13 +18,13 @@ public class PathNavigatorGroundFixed extends GroundPathNavigator {
 //	@Override
 //	protected void checkForStuck(Vector3d positionVec3) {
 //		//Field totalTicksField = ReflectionHelper.findField(PathNavigate.class, "totalTicks");
-//		final int totalTicks = ObfuscationReflectionHelper.getPrivateValue(PathNavigate.class, this, "field_75510_g");//"totalTicks");
-//		Field ticksAtLastPosField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_75520_h");//"ticksAtLastPos");
-//		Field lastPosCheckField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_75521_i");//"lastPosCheck");
-//		Field timeoutCachedNodeField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_188557_k");//"timeoutCachedNode");
-//		Field timeoutLimitField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_188560_n");//"timeoutLimit");
-//		Field timeoutTimerField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_188558_l");//"timeoutTimer");
-//		Field lastTimeoutCheckField = ObfuscationReflectionHelper.findField(PathNavigate.class, "field_188559_m");//"lastTimeoutCheck");
+//		final int totalTicks = ObfuscationReflectionHelper.getPrivateValue(PathNavigate.class, this, "tick");//"totalTicks");
+//		Field ticksAtLastPosField = ObfuscationReflectionHelper.findField(PathNavigate.class, "lastStuckCheck");//"ticksAtLastPos");
+//		Field lastPosCheckField = ObfuscationReflectionHelper.findField(PathNavigate.class, "lastStuckCheckPos");//"lastPosCheck");
+//		Field timeoutCachedNodeField = ObfuscationReflectionHelper.findField(PathNavigate.class, "timeoutCachedNode");//"timeoutCachedNode");
+//		Field timeoutLimitField = ObfuscationReflectionHelper.findField(PathNavigate.class, "timeoutLimit");//"timeoutLimit");
+//		Field timeoutTimerField = ObfuscationReflectionHelper.findField(PathNavigate.class, "timeoutTimer");//"timeoutTimer");
+//		Field lastTimeoutCheckField = ObfuscationReflectionHelper.findField(PathNavigate.class, "lastTimeoutCheck");//"lastTimeoutCheck");
 //		
 //		try {
 //			if (totalTicks - ticksAtLastPosField.getInt(this) > 100) {

@@ -20,15 +20,15 @@ import com.smanzana.nostrumfairies.proxy.ClientProxy;
 import com.smanzana.nostrumfairies.proxy.CommonProxy;
 import com.smanzana.nostrummagica.util.DimensionUtils;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
-import net.minecraft.entity.monster.MonsterEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
@@ -37,7 +37,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
 
 @Mod(NostrumFairies.MODID)
 public class NostrumFairies {
@@ -48,7 +48,7 @@ public class NostrumFairies {
     public static NostrumFairies instance;
     public static CommonProxy proxy;
     public static Logger logger = LogManager.getLogger(MODID);
-    public static ItemGroup creativeTab;
+    public static CreativeModeTab creativeTab;
     public static Random random = new Random();
 	public static LogisticsComponentRegistry logisticsComponentRegistry;
     
@@ -61,10 +61,10 @@ public class NostrumFairies {
     	proxy = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
     	logisticsRegistryInitRecurseGuard = false;
     	
-    	NostrumFairies.creativeTab = new ItemGroup(MODID){
+    	NostrumFairies.creativeTab = new CreativeModeTab(MODID){
 	    	@Override
 	        @OnlyIn(Dist.CLIENT)
-			public ItemStack createIcon() {
+			public ItemStack makeIcon() {
 	    		return FeySoulStone.create(FeySoulStone.SoulStoneType.GEM);
 	        }
 	    };
@@ -75,8 +75,8 @@ public class NostrumFairies {
     
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
-    	if (!event.getWorld().isRemote()) {
-    		initLogisticsRegistry((ServerWorld) event.getWorld());
+    	if (!event.getWorld().isClientSide()) {
+    		initLogisticsRegistry((ServerLevel) event.getWorld());
     	}
     }
     
@@ -91,15 +91,15 @@ public class NostrumFairies {
     	return logisticsRegistry;
     }
     
-    private void initLogisticsRegistry(ServerWorld world) {
+    private void initLogisticsRegistry(ServerLevel world) {
     	if (logisticsRegistryInitRecurseGuard) {
     		throw new RuntimeException("Recursed into logistics registry init code while initting registry");
     	}
     	logisticsRegistry = null;
     	logisticsRegistryInitRecurseGuard = true;
     	
-    	logisticsRegistry = (LogisticsRegistry) world.getServer().getWorld(World.OVERWORLD).getSavedData().getOrCreate(
-    			LogisticsRegistry::new, LogisticsRegistry.DATA_NAME);
+    	logisticsRegistry = (LogisticsRegistry) world.getServer().getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(
+    			LogisticsRegistry::Load, LogisticsRegistry::new, LogisticsRegistry.DATA_NAME);
 		
 //		if (logisticsRegistry == null) { // still
 //			logisticsRegistry = new LogisticsRegistry();
@@ -109,16 +109,16 @@ public class NostrumFairies {
 		logisticsRegistryInitRecurseGuard = false;
     }
     
-    public static @Nullable World getWorld(RegistryKey<World> dimension) {
-    	PlayerEntity p = proxy.getPlayer();
-    	if (p != null && p.world.isRemote()) {
+    public static @Nullable Level getWorld(ResourceKey<Level> dimension) {
+    	Player p = proxy.getPlayer();
+    	if (p != null && p.level.isClientSide()) {
     		if (DimensionUtils.InDimension(p, dimension)) {
-    			return p.world;
+    			return p.level;
     		}
     		return null;
     	}
     	
-    	return ServerLifecycleHooks.getCurrentServer().getWorld(dimension);
+    	return ServerLifecycleHooks.getCurrentServer().getLevel(dimension);
     }
     
     @SubscribeEvent
@@ -127,9 +127,9 @@ public class NostrumFairies {
     		return;
     	}
     	
-    	if (e.getEntity() instanceof MonsterEntity) {
-    		MonsterEntity mob = (MonsterEntity) e.getEntity();
-    		if (e.getEntity() instanceof MonsterEntity) {
+    	if (e.getEntity() instanceof Monster) {
+    		Monster mob = (Monster) e.getEntity();
+    		if (e.getEntity() instanceof Monster) {
 	    		mob.targetSelector.addGoal(2, new NearestAttackableTargetGoal<EntityFeyBase>(mob, EntityFeyBase.class, true));
     		}
     	}

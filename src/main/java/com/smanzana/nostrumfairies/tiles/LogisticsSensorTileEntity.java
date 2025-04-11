@@ -4,14 +4,14 @@ import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
-public class LogisticsSensorTileEntity extends LogisticsTileEntity implements ITickableTileEntity, ILogicListener, ILogisticsLogicProvider {
+public class LogisticsSensorTileEntity extends LogisticsTileEntity implements TickableBlockEntity, ILogicListener, ILogisticsLogicProvider {
 	
 	private boolean logicLastWorld;
 	
@@ -27,10 +27,10 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public CompoundNBT write(CompoundNBT nbt) {
-		nbt = super.write(nbt);
+	public CompoundTag save(CompoundTag nbt) {
+		nbt = super.save(nbt);
 		
-		CompoundNBT tag = new CompoundNBT();
+		CompoundTag tag = new CompoundTag();
 		logicComp.write(tag);
 		nbt.put(NBT_LOGIC_COMP, tag);
 		
@@ -38,10 +38,10 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT nbt) {
-		super.read(state, nbt);
+	public void load(BlockState state, CompoundTag nbt) {
+		super.load(state, nbt);
 		
-		CompoundNBT sub = nbt.getCompound(NBT_LOGIC_COMP);
+		CompoundTag sub = nbt.getCompound(NBT_LOGIC_COMP);
 		if (sub != null) {
 			logicComp.read(sub);
 		}
@@ -54,8 +54,8 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public void setWorldAndPos(World worldIn, BlockPos pos) {
-		super.setWorldAndPos(worldIn, pos);
+	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
+		super.setLevelAndPosition(worldIn, pos);
 		
 		logicComp.setLocation(worldIn, pos);
 	}
@@ -74,8 +74,8 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public void markDirty() {
-		super.markDirty();
+	public void setChanged() {
+		super.setChanged();
 	}
 	
 	public void notifyNeighborChanged() {
@@ -83,30 +83,30 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 	}
 	
 	@Override
-	public void validate() {
-		super.validate();
+	public void clearRemoved() {
+		super.clearRemoved();
 	}
 	
 	@Override
 	public void tick() {
-		if (!placed || world.getGameTime() % 5 == 0) {
-			if (!world.isRemote) {
+		if (!placed || level.getGameTime() % 5 == 0) {
+			if (!level.isClientSide) {
 				final boolean activated = this.logicComp.isActivated(); 
 
 				if (!placed || logicLastWorld != activated) {
 					// Make sure to update the world so that redstone will be updated
 					//world.notifyNeighborsOfStateChange(pos, world.getBlockState(pos).getBlock());
-					world.setBlockState(pos, FairyBlocks.logisticsSensor.getStateWithActive(activated), 3);
+					level.setBlock(worldPosition, FairyBlocks.logisticsSensor.getStateWithActive(activated), 3);
 					logicLastWorld = activated;
 					
 					// Copied from comparator
 					{
 						for (Direction direction : Direction.values()) {
-							BlockPos blockpos = pos.offset(direction);
-							if (net.minecraftforge.event.ForgeEventFactory.onNeighborNotify(world, pos, world.getBlockState(pos), java.util.EnumSet.of(direction), false).isCanceled())
+							BlockPos blockpos = worldPosition.relative(direction);
+							if (net.minecraftforge.event.ForgeEventFactory.onNeighborNotify(level, worldPosition, level.getBlockState(worldPosition), java.util.EnumSet.of(direction), false).isCanceled())
 								return;
-							world.neighborChanged(blockpos, this.getBlockState().getBlock(), pos);
-							world.notifyNeighborsOfStateExcept(blockpos, this.getBlockState().getBlock(), direction.getOpposite());
+							level.neighborChanged(blockpos, this.getBlockState().getBlock(), worldPosition);
+							level.updateNeighborsAtExceptFromFacing(blockpos, this.getBlockState().getBlock(), direction.getOpposite());
 						}
 					}
 				}
@@ -134,7 +134,7 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements IT
 
 	@Override
 	public void onDirty() {
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	@Override

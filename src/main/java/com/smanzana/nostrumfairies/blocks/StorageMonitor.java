@@ -6,61 +6,61 @@ import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.HorizontalBlock;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
 
 public class StorageMonitor extends FeyContainerBlock {
 	
 	// TODO what about viewing tasks? Condensed tasks that is.
-	private static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
+	private static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 	private static final double BB_MINOR = 2.0;
-	private static final VoxelShape AABB_N = Block.makeCuboidShape(0, 0, 16 - BB_MINOR, 16, 16, 16);
-	private static final VoxelShape AABB_E = Block.makeCuboidShape(0, 0, 0, BB_MINOR, 16, 16);
-	private static final VoxelShape AABB_S = Block.makeCuboidShape(0, 0, 0, 16, 16, BB_MINOR);
-	private static final VoxelShape AABB_W = Block.makeCuboidShape(16 - BB_MINOR, 0, 0, 16, 16, 16);
+	private static final VoxelShape AABB_N = Block.box(0, 0, 16 - BB_MINOR, 16, 16, 16);
+	private static final VoxelShape AABB_E = Block.box(0, 0, 0, BB_MINOR, 16, 16);
+	private static final VoxelShape AABB_S = Block.box(0, 0, 0, 16, 16, BB_MINOR);
+	private static final VoxelShape AABB_W = Block.box(16 - BB_MINOR, 0, 0, 16, 16, 16);
 	public static final String ID = "logistics_storage_monitor";
 	
 	public StorageMonitor() {
-		super(Block.Properties.create(Material.WOOD)
-				.hardnessAndResistance(2.0f, 1.0f)
+		super(Block.Properties.of(Material.WOOD)
+				.strength(2.0f, 1.0f)
 				.sound(SoundType.WOOD)
-				.setLightLevel((s) -> 4)
-				.notSolid()
+				.lightLevel((s) -> 4)
+				.noOcclusion()
 				);
 	}
 	
 	@Override
-	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(FACING);
 	}
 	
 	public Direction getFacing(BlockState state) {
-		return state.get(FACING);
+		return state.getValue(FACING);
 	}
 	
-	protected boolean canPlaceAt(IWorldReader worldIn, BlockPos pos, Direction side) {
-		if (!Block.hasEnoughSolidSide(worldIn, pos.offset(side.getOpposite()), side)) {
+	protected boolean canPlaceAt(LevelReader worldIn, BlockPos pos, Direction side) {
+		if (!Block.canSupportCenter(worldIn, pos.relative(side.getOpposite()), side)) {
 			return false;
 		}
 		
@@ -68,28 +68,28 @@ public class StorageMonitor extends FeyContainerBlock {
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
-		Direction side = context.getPlacementHorizontalFacing().getOpposite();
-		final World world = context.getWorld();
-		final BlockPos pos = context.getPos();
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
+		Direction side = context.getHorizontalDirection().getOpposite();
+		final Level world = context.getLevel();
+		final BlockPos pos = context.getClickedPos();
 		
 		if (!this.canPlaceAt(world, pos, side)) {
 			// Rotate and find it
 			for (int i = 0; i < 3; i++) {
-				side = side.rotateY();
+				side = side.getClockWise();
 				if (this.canPlaceAt(world, pos, side)) {
 					break;
 				}
 			}
 		}
 		
-		return this.getDefaultState()
-				.with(FACING, side);
+		return this.defaultBlockState()
+				.setValue(FACING, side);
 	}
 	
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		switch (state.get(FACING)) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+		switch (state.getValue(FACING)) {
 		case NORTH:
 		case UP:
 		case DOWN:
@@ -106,24 +106,24 @@ public class StorageMonitor extends FeyContainerBlock {
 	}
 	
 	@Override
-	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
+	public boolean canSurvive(BlockState stateIn, LevelReader worldIn, BlockPos pos) {
 		return this.canPlaceAt(worldIn, pos, getFacing(stateIn));
 	}
 	
 	@Override
-	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
-		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
-			return Blocks.AIR.getDefaultState();
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor world, BlockPos pos, BlockPos facingPos) {
+		if (facing == Direction.DOWN && !canSurvive(stateIn, world, pos)) {
+			return Blocks.AIR.defaultBlockState();
 		}
 		return stateIn;
 	}
 	
 	@Override
-	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult hit) {
 		
 		// Kick off a request to refresh info.
-		if (worldIn.isRemote) {
-			TileEntity te = worldIn.getTileEntity(pos);
+		if (worldIn.isClientSide) {
+			BlockEntity te = worldIn.getBlockEntity(pos);
 			if (te != null && te instanceof StorageMonitorTileEntity) {
 				StorageMonitorTileEntity storage = (StorageMonitorTileEntity) te;
 				LogisticsNetwork network = storage.getNetwork();
@@ -137,27 +137,27 @@ public class StorageMonitor extends FeyContainerBlock {
 			NostrumFairies.proxy.openStorageMonitor(worldIn, pos);
 		}
 		
-		return ActionResultType.SUCCESS;
+		return InteractionResult.SUCCESS;
 	}
 	
 	@Override
-	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+	public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
 		return new StorageMonitorTileEntity();
 	}
 	
 	@Override
-	public BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+	public RenderShape getRenderShape(BlockState state) {
+		return RenderShape.MODEL;
 	}
 	
 	@Override
-	public void breakBlock(World world, BlockPos pos, BlockState state) {
+	public void breakBlock(Level world, BlockPos pos, BlockState state) {
 		destroy(world, pos, state);
 		super.breakBlock(world, pos, state);
 	}
 	
-	private void destroy(World world, BlockPos pos, BlockState state) {
-		TileEntity ent = world.getTileEntity(pos);
+	private void destroy(Level world, BlockPos pos, BlockState state) {
+		BlockEntity ent = world.getBlockEntity(pos);
 		if (ent == null || !(ent instanceof StorageMonitorTileEntity))
 			return;
 		

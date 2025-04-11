@@ -5,7 +5,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
 import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -20,10 +20,10 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.TextComponent;
 
 public class StorageMonitorScreen extends Screen {
 	
@@ -60,7 +60,7 @@ public class StorageMonitorScreen extends Screen {
 	private boolean scrollClicked;
 	
 	public StorageMonitorScreen(StorageMonitorTileEntity monitor) {
-		super(new StringTextComponent("Storage Monitor"));
+		super(new TextComponent("Storage Monitor"));
 		this.monitor = monitor;
 	}
 	
@@ -87,7 +87,7 @@ public class StorageMonitorScreen extends Screen {
 			}
 		}
 		
-		if (monitor.getWorld().getGameTime() % 20 == 0) {
+		if (monitor.getLevel().getGameTime() % 20 == 0) {
 			LogisticsNetwork network = monitor.getNetwork();
 			if (network != null) {
 				NetworkHandler.sendToServer(new LogisticsUpdateRequest(network.getUUID()));
@@ -97,33 +97,33 @@ public class StorageMonitorScreen extends Screen {
 		}
 	}
 	
-	private void drawMenuItem(MatrixStack matrixStackIn, int x, int y, ItemStack request, boolean mouseOver) {
-		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
+	private void drawMenuItem(PoseStack matrixStackIn, int x, int y, ItemStack request, boolean mouseOver) {
+		Minecraft.getInstance().getTextureManager().bind(TEXT);
 		//RenderSystem.disableLighting();
 
 		final float value = (mouseOver ? .8f : 1f);
 		RenderFuncs.blit(matrixStackIn, x, y, GUI_TEXT_MENUITEM_HOFFSET, GUI_TEXT_MENUITEM_VOFFSET, GUI_TEXT_MENUITEM_WIDTH, GUI_TEXT_MENUITEM_HEIGHT, value, value, value, 1f);
 		if (!request.isEmpty()) {
-			Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET);
-			Minecraft.getInstance().getItemRenderer().renderItemOverlayIntoGUI(this.font, request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET, request.getCount() + "");
+			Minecraft.getInstance().getItemRenderer().renderGuiItem(request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET);
+			Minecraft.getInstance().getItemRenderer().renderGuiItemDecorations(this.font, request, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET, request.getCount() + "");
 		}
 		
 		if (mouseOver) {
 			RenderSystem.enableBlend();
 			RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-			matrixStackIn.push();
+			matrixStackIn.pushPose();
 			matrixStackIn.translate(0, 0, 1000);
 			RenderFuncs.drawRect(matrixStackIn, x + GUI_TEXT_MENUITEM_SLOT_HOFFSET, y + GUI_TEXT_MENUITEM_SLOT_VOFFSET,
 					x + GUI_TEXT_MENUITEM_SLOT_HOFFSET + (GUI_INV_CELL_LENGTH - 1), y + GUI_TEXT_MENUITEM_SLOT_VOFFSET + (GUI_INV_CELL_LENGTH - 1),
 					0x60FFFFFF);
-			matrixStackIn.pop();
+			matrixStackIn.popPose();
 			RenderSystem.disableBlend();
 		}
 		
 	}
 	
-	private void drawCell(MatrixStack matrixStackIn, int x, int y, @Nullable ItemDeepStack stack, boolean mouseOver) {
-		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
+	private void drawCell(PoseStack matrixStackIn, int x, int y, @Nullable ItemDeepStack stack, boolean mouseOver) {
+		Minecraft.getInstance().getTextureManager().bind(TEXT);
 		//RenderSystem.disableLighting();
 		blit(matrixStackIn, x, y, GUI_TEXT_CELL_HOFFSET, 0, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
 		if (stack != null) {
@@ -136,38 +136,38 @@ public class StorageMonitorScreen extends Screen {
 			} else {
 				count = (countNum / 1000000) + "m";
 			}
-			final int width = this.font.getStringWidth(count);
-			final int height = this.font.FONT_HEIGHT;
-			Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(stack.getTemplate(), x + 1, y + 1);
+			final int width = this.font.width(count);
+			final int height = this.font.lineHeight;
+			Minecraft.getInstance().getItemRenderer().renderGuiItem(stack.getTemplate(), x + 1, y + 1);
 			
-			matrixStackIn.push();
+			matrixStackIn.pushPose();
 			matrixStackIn.translate(0, 0, 200);
 			RenderFuncs.drawRect(matrixStackIn, x + 1, y + (GUI_INV_CELL_LENGTH - 6) , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60000000);
 			matrixStackIn.translate(x + GUI_INV_CELL_LENGTH + (-2) + (-width / 2), y + GUI_INV_CELL_LENGTH + (-height / 2) - 1, 5);
 			matrixStackIn.scale(.5f, .5f, 1f);
-			this.font.drawStringWithShadow(matrixStackIn, count, 0, 0, 0xFFFFFFFF);
-			matrixStackIn.pop();
+			this.font.drawShadow(matrixStackIn, count, 0, 0, 0xFFFFFFFF);
+			matrixStackIn.popPose();
 		}
 		
 		if (mouseOver) {
 			RenderSystem.enableBlend();
 			RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 			
-			matrixStackIn.push();
+			matrixStackIn.pushPose();
 			matrixStackIn.translate(0, 0, 1000);
 			RenderFuncs.drawRect(matrixStackIn, x + 1, y + 1 , x + (GUI_INV_CELL_LENGTH - 1), y + (GUI_INV_CELL_LENGTH - 1), 0x60FFFFFF);
-			matrixStackIn.pop();
+			matrixStackIn.popPose();
 			RenderSystem.disableBlend();
 		}
 	}
 	
-	private void drawSlider(MatrixStack matrixStackIn, int x, int y, boolean mouseOver) {
-		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
+	private void drawSlider(PoseStack matrixStackIn, int x, int y, boolean mouseOver) {
+		Minecraft.getInstance().getTextureManager().bind(TEXT);
 		blit(matrixStackIn, x, y, GUI_TEXT_SLIDER_HOFFSET, mouseOver ? GUI_INV_SLIDER_HEIGHT : 0, GUI_INV_SLIDER_WIDTH, GUI_INV_SLIDER_HEIGHT);
 	}
 	
 	@Override
-	public void render(MatrixStack matrixStackIn, int mouseX, int mouseY, float p_73863_3_) {
+	public void render(PoseStack matrixStackIn, int mouseX, int mouseY, float p_73863_3_) {
 		
 		final int leftOffset = (this.width - GUI_TEXT_WIDTH) / 2; //distance from left
 		final int topOffset = (this.height - GUI_TEXT_HEIGHT) / 2;
@@ -181,7 +181,7 @@ public class StorageMonitorScreen extends Screen {
 			final int spilloverRows = rows - GUI_CELL_ROWS;
 			int invOffset = 0;
 			
-			matrixStackIn.push();
+			matrixStackIn.pushPose();
 			
 			// Adjust up or down depending on scroll
 			if (spilloverRows <= 0 || scrollLag == 0f) {
@@ -223,20 +223,20 @@ public class StorageMonitorScreen extends Screen {
 				i++;
 			}
 			
-			matrixStackIn.pop();
+			matrixStackIn.popPose();
 		}
 		
-		matrixStackIn.push();
+		matrixStackIn.pushPose();
 		matrixStackIn.translate(0, 0, 1000);
 		//RenderSystem.disableLighting();
-		Minecraft.getInstance().getTextureManager().bindTexture(TEXT);
+		Minecraft.getInstance().getTextureManager().bind(TEXT);
 		blit(matrixStackIn, leftOffset, topOffset, 0, 0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT);
 		int sliderX = leftOffset + GUI_INV_SLIDER_HOFFSET;
 		int sliderY = topOffset + GUI_INV_SLIDER_VOFFSET + (int) Math.ceil(GUI_INV_SLIDER_TOTAL_HEIGHT * scroll);
 		drawSlider(matrixStackIn, sliderX, sliderY,
 				mouseX >= sliderX && mouseX < sliderX + GUI_INV_SLIDER_WIDTH
 				&& mouseY >= sliderY && mouseY < sliderY + GUI_INV_SLIDER_HEIGHT);
-		matrixStackIn.pop();
+		matrixStackIn.popPose();
 		
 		super.render(matrixStackIn, mouseX, mouseY, p_73863_3_);
 	}

@@ -1,8 +1,8 @@
 package com.smanzana.nostrumfairies.logistics.task;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.BlockPos;
 
 public final class LogisticsSubTask {
 	

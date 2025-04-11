@@ -5,8 +5,8 @@ import java.util.function.Supplier;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 /**
  * Client has requested an update about the their fey capability
@@ -28,11 +28,11 @@ public class CapabilityRequest {
 		;
 	}
 	
-	public static CapabilityRequest decode(PacketBuffer buf) {
+	public static CapabilityRequest decode(FriendlyByteBuf buf) {
 		return new CapabilityRequest();
 	}
 
-	public static void encode(CapabilityRequest msg, PacketBuffer buf) {
+	public static void encode(CapabilityRequest msg, FriendlyByteBuf buf) {
 		;
 	}
 

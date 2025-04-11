@@ -13,21 +13,21 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -67,12 +67,12 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static final float ModelFilled(ItemStack stack, @Nullable World worldIn, @Nullable LivingEntity entityIn) {
+	public static final float ModelFilled(ItemStack stack, @Nullable Level worldIn, @Nullable LivingEntity entityIn) {
 		return HasStoredFey(stack) ? 1.0F : 0.0F;
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static final float ModelType(ItemStack stack, @Nullable World worldIn, @Nullable LivingEntity entityIn) {
+	public static final float ModelType(ItemStack stack, @Nullable Level worldIn, @Nullable LivingEntity entityIn) {
 		float val = 0.0F;
 		final ResidentType feyType = getStoredFeyType(stack);
 		if (feyType == null) {
@@ -131,7 +131,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 			return null;
 		}
 		
-		CompoundNBT tag = stack.getTag();
+		CompoundTag tag = stack.getTag();
 		ResidentType type = null;
 		if (tag.contains(NBT_FEY_TYPE)) {
 			try {
@@ -145,9 +145,9 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	protected void setFeyType(ItemStack stack, ResidentType type) {
-		CompoundNBT tag = stack.getTag();
+		CompoundTag tag = stack.getTag();
 		if (tag == null) {
-			tag = new CompoundNBT();
+			tag = new CompoundTag();
 		}
 		
 		if (type != null) {
@@ -157,7 +157,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		stack.setTag(tag);
 	}
 	
-	protected @Nullable CompoundNBT getFeyData(ItemStack stack) {
+	protected @Nullable CompoundTag getFeyData(ItemStack stack) {
 		if (stack.isEmpty() || !stack.hasTag()) {
 			return null;
 		}
@@ -165,10 +165,10 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return stack.getTag().getCompound(NBT_FEY_DATA);
 	}
 	
-	protected void setFeyData(ItemStack stack, @Nullable CompoundNBT data) {
-		CompoundNBT tag = stack.getTag();
+	protected void setFeyData(ItemStack stack, @Nullable CompoundTag data) {
+		CompoundTag tag = stack.getTag();
 		if (tag == null) {
-			tag = new CompoundNBT();
+			tag = new CompoundTag();
 		}
 		
 		if (data == null) {
@@ -189,9 +189,9 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	protected void setFeyName(ItemStack stack, String name) {
-		CompoundNBT tag = stack.getTag();
+		CompoundTag tag = stack.getTag();
 		if (tag == null) {
-			tag = new CompoundNBT();
+			tag = new CompoundTag();
 		}
 		
 		if (name == null) {
@@ -232,7 +232,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	public static @Nonnull ItemStack create(SoulStoneType type, EntityFeyBase fey) {
-		CompoundNBT nbt = null;
+		CompoundTag nbt = null;
 		String name = null;
 		ResidentType feyType = null;
 		if (fey != null) {
@@ -247,7 +247,7 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return create(type, name, feyType, nbt);
 	}
 	
-	protected static ItemStack create(SoulStoneType type, String name, ResidentType residentType, CompoundNBT nbt) {
+	protected static ItemStack create(SoulStoneType type, String name, ResidentType residentType, CompoundTag nbt) {
 		final FeySoulStone item = getItem(type);
 		ItemStack stack = new ItemStack(item);
 		item.setFeyType(stack, residentType);
@@ -260,19 +260,19 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		return create(getTypeOf(stack));
 	}
 	
-	public static @Nullable EntityFeyBase spawnStoredEntity(ItemStack stack, World world, double x, double y, double z) {
+	public static @Nullable EntityFeyBase spawnStoredEntity(ItemStack stack, Level world, double x, double y, double z) {
 		EntityFeyBase fey = null;
-		CompoundNBT feyData = ((FeySoulStone) stack.getItem()).getFeyData(stack);
+		CompoundTag feyData = ((FeySoulStone) stack.getItem()).getFeyData(stack);
 		if (feyData != null) {
-			Entity entity = EntitySpawning.readEntity(world, feyData, new Vector3d(x, y, z));
+			Entity entity = EntitySpawning.readEntity(world, feyData, new Vec3(x, y, z));
 			//Entity entity = AnvilChunkLoader.readWorldEntityPos(nbt.getCompound("data"), world, x, y, z, true);
 			if (entity == null) {
 				;
 			} else if (entity instanceof EntityFeyBase) {
 				fey = (EntityFeyBase) entity;
-				world.addEntity(fey);
+				world.addFreshEntity(fey);
 			} else {
-				entity.remove();//.isDead = true;
+				entity.discard();//.isDead = true;
 				//world.removeEntity(entity);
 			}
 		}
@@ -303,11 +303,11 @@ public class FeySoulStone extends Item implements ILoreTagged {
 		
 		ItemStack stack = create(soulType);
 		((FeySoulStone) stack.getItem()).setFeyType(stack, type);
-		((FeySoulStone) stack.getItem()).setFeyData(stack, new CompoundNBT()); // Empty data
+		((FeySoulStone) stack.getItem()).setFeyData(stack, new CompoundTag()); // Empty data
 		return stack;
 	}
 	
-	public static CompoundNBT getStoredEntityTag(ItemStack stack) {
+	public static CompoundTag getStoredEntityTag(ItemStack stack) {
 		return ((FeySoulStone) stack.getItem()).getFeyData(stack);
 	}
 	
@@ -342,70 +342,70 @@ public class FeySoulStone extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResultType onItemUse(ItemUseContext context) {
-		final World worldIn = context.getWorld();
-		final PlayerEntity playerIn = context.getPlayer();
-		final Hand hand = context.getHand();
-		final Vector3d hitPos = context.getHitVec();
+	public InteractionResult useOn(UseOnContext context) {
+		final Level worldIn = context.getLevel();
+		final Player playerIn = context.getPlayer();
+		final InteractionHand hand = context.getHand();
+		final Vec3 hitPos = context.getClickLocation();
 		
-		if (worldIn.isRemote) {
-			return ActionResultType.SUCCESS;
+		if (worldIn.isClientSide) {
+			return InteractionResult.SUCCESS;
 		}
 		
-		ItemStack stack = playerIn.getHeldItem(hand);
+		ItemStack stack = playerIn.getItemInHand(hand);
 		if (this.hasStoredFey(stack)) {
 			// Drop entity at the provided spot
 			EntityFeyBase fey = spawnStoredEntity(stack, worldIn, hitPos.x, hitPos.y, hitPos.z);
 			if (fey != null) {
 				stack = clearEntity(stack);
-				playerIn.setHeldItem(hand, stack);
-				return ActionResultType.SUCCESS;
+				playerIn.setItemInHand(hand, stack);
+				return InteractionResult.SUCCESS;
 			} else {
-				return ActionResultType.FAIL;
+				return InteractionResult.FAIL;
 			}
 		}
-		return ActionResultType.PASS;
+		return InteractionResult.PASS;
 	}
 	
 	@Override
-	public ActionResultType itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
-		if (playerIn.world.isRemote) {
-			return ActionResultType.SUCCESS;
+	public InteractionResult interactLivingEntity(ItemStack stack, Player playerIn, LivingEntity target, InteractionHand hand) {
+		if (playerIn.level.isClientSide) {
+			return InteractionResult.SUCCESS;
 		}
 		
 		if (!this.hasStoredFey(stack)) {
 			// Pick up fey, if it is one
 			if (!(target instanceof EntityFeyBase)) {
-				return ActionResultType.FAIL;
+				return InteractionResult.FAIL;
 			}
 			
 			if (target instanceof EntityPersonalFairy) {
-				return ActionResultType.FAIL;
+				return InteractionResult.FAIL;
 			}
 			
 			ItemStack newStack = storeEntity(stack, (EntityFeyBase) target);
 			if (!newStack.isEmpty()) {
-				playerIn.setHeldItem(hand, newStack);
-				target.remove();
+				playerIn.setItemInHand(hand, newStack);
+				target.discard();
 				//playerIn.world.removeEntity(target);
-				return ActionResultType.SUCCESS;
+				return InteractionResult.SUCCESS;
 			}
 		}
-		return ActionResultType.FAIL;
+		return InteractionResult.FAIL;
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+	public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 		if (this.hasStoredFey(stack)) {
 			String name = this.getFeyName(stack);
 			if (name == null || name.isEmpty()) {
 				name = "An unknown entity";
 			}
-			tooltip.add(new StringTextComponent(name).mergeStyle(TextFormatting.AQUA));
+			tooltip.add(new TextComponent(name).withStyle(ChatFormatting.AQUA));
 			
 			ResidentType type = getStoredFeyType(stack);
 			if (type != null) {
-				tooltip.add(new StringTextComponent(type.getString()).mergeStyle(TextFormatting.DARK_AQUA));
+				tooltip.add(new TextComponent(type.getSerializedName()).withStyle(ChatFormatting.DARK_AQUA));
 			}
 		}
 	}

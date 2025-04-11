@@ -11,9 +11,9 @@ import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /*
  * Go to and then harvest a crop
@@ -28,7 +28,7 @@ public class LogisticsTaskHarvest extends LogisticsTaskBase {
 	}
 	
 	private String displayName;
-	private World world;
+	private Level world;
 	private BlockPos crop;
 	private ILogisticsComponent owningComponent;
 	
@@ -42,7 +42,7 @@ public class LogisticsTaskHarvest extends LogisticsTaskBase {
 	private long lastCropCheck;
 	private boolean lastCropResult;
 
-	public LogisticsTaskHarvest(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos) {
+	public LogisticsTaskHarvest(ILogisticsComponent owningComponent, String displayName, Level world, BlockPos pos) {
 		this.displayName = displayName;
 		this.world = world;
 		this.crop = pos;
@@ -132,7 +132,7 @@ public class LogisticsTaskHarvest extends LogisticsTaskBase {
 		return crop;
 	}
 	
-	public World getWorld() {
+	public Level getWorld() {
 		return world;
 	}
 	
@@ -212,7 +212,7 @@ public class LogisticsTaskHarvest extends LogisticsTaskBase {
 		if (this.phase != Phase.DONE) {
 			if (lastCropCheck == 0 || this.world.getGameTime() - lastCropCheck > 100) {
 				// Validate there's still a crop there
-				lastCropResult = !world.isAirBlock(crop);
+				lastCropResult = !world.isEmptyBlock(crop);
 				lastCropCheck = world.getGameTime();
 			}
 			

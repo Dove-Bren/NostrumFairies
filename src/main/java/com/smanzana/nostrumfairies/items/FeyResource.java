@@ -18,28 +18,28 @@ import com.smanzana.nostrummagica.listener.PlayerListener.Event;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.passive.GolemEntity;
-import net.minecraft.entity.passive.IronGolemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.animal.AbstractGolem;
+import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -140,7 +140,7 @@ public class FeyResource extends Item implements ILoreTagged {
 		return this.type;
 	}
 	
-	protected void spawnFey(ServerWorld worldIn, BlockPos at) {
+	protected void spawnFey(ServerLevel worldIn, BlockPos at) {
 		final EntityFeyBase fey;
 		switch (NostrumFairies.random.nextInt(5)) {
 		case 0:
@@ -160,12 +160,12 @@ public class FeyResource extends Item implements ILoreTagged {
 			fey = new EntityElfArcher(FairyEntities.ElfArcher, worldIn);
 			break;
 		}
-		fey.setPosition(at.getX() + .5, at.getY(), at.getZ() + .5);
-		fey.onInitialSpawn(worldIn, worldIn.getDifficultyForLocation(fey.getPosition()), SpawnReason.MOB_SUMMONED, (ILivingEntityData)null, null);
+		fey.setPos(at.getX() + .5, at.getY(), at.getZ() + .5);
+		fey.finalizeSpawn(worldIn, worldIn.getCurrentDifficultyAt(fey.blockPosition()), MobSpawnType.MOB_SUMMONED, (SpawnGroupData)null, null);
 		
-		worldIn.addEntity(fey);
+		worldIn.addFreshEntity(fey);
 		
-		((ServerWorld) worldIn).spawnParticle(ParticleTypes.END_ROD,
+		((ServerLevel) worldIn).sendParticles(ParticleTypes.END_ROD,
 				at.getX() + .5,
 				at.getY() + .25,
 				at.getZ() + .5,
@@ -177,28 +177,28 @@ public class FeyResource extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResultType onItemUse(ItemUseContext context) {
-		final PlayerEntity playerIn = context.getPlayer();
-		final Hand hand = context.getHand();
-		final World worldIn = context.getWorld();
-		final ItemStack stack = playerIn.getHeldItem(hand);
-		final BlockPos pos = context.getPos();
+	public InteractionResult useOn(UseOnContext context) {
+		final Player playerIn = context.getPlayer();
+		final InteractionHand hand = context.getHand();
+		final Level worldIn = context.getLevel();
+		final ItemStack stack = playerIn.getItemInHand(hand);
+		final BlockPos pos = context.getClickedPos();
 		FeyResourceType type = getType(stack);
 		
 		if (type == FeyResourceType.FLOWER) {
 			
-			if (!worldIn.isRemote) {
-				spawnFey((ServerWorld) worldIn, pos.up());
+			if (!worldIn.isClientSide) {
+				spawnFey((ServerLevel) worldIn, pos.above());
 				int count = NostrumFairies.random.nextInt(3) + 1;
-				BlockPos.Mutable cursor = new BlockPos.Mutable();
+				BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 				for (int i = 0; i < count; i++) {
-					cursor.setPos(pos.up()).move(Direction.Plane.HORIZONTAL.random(NostrumFairies.random), NostrumFairies.random.nextInt(2) + 1);
+					cursor.set(pos.above()).move(Direction.Plane.HORIZONTAL.getRandomDirection(NostrumFairies.random), NostrumFairies.random.nextInt(2) + 1);
 					for (int j = 0; j < 5; j++) {
-						if (worldIn.isAirBlock(cursor)) {
-							if (FairyBlocks.feyBush.isValidPosition(FairyBlocks.feyBush.getDefaultState(), worldIn, cursor)) {
+						if (worldIn.isEmptyBlock(cursor)) {
+							if (FairyBlocks.feyBush.canSurvive(FairyBlocks.feyBush.defaultBlockState(), worldIn, cursor)) {
 								// Found a spot!
-								worldIn.setBlockState(cursor.toImmutable(), FairyBlocks.feyBush.getDefaultState());
-								((ServerWorld) worldIn).spawnParticle(ParticleTypes.HAPPY_VILLAGER,
+								worldIn.setBlockAndUpdate(cursor.immutable(), FairyBlocks.feyBush.defaultBlockState());
+								((ServerLevel) worldIn).sendParticles(ParticleTypes.HAPPY_VILLAGER,
 										cursor.getX() + .5,
 										cursor.getY() + .25,
 										cursor.getZ() + .5,
@@ -220,57 +220,57 @@ public class FeyResource extends Item implements ILoreTagged {
 			}
 			
 			stack.shrink(1);
-			return ActionResultType.SUCCESS;
+			return InteractionResult.SUCCESS;
 		}
 		
-		return ActionResultType.PASS;
+		return InteractionResult.PASS;
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand hand) {
-		final ItemStack stack = playerIn.getHeldItem(hand);
+	public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand hand) {
+		final ItemStack stack = playerIn.getItemInHand(hand);
 		FeyResourceType type = getType(stack);
 		if (type == FeyResourceType.TABLET) {
-			if (!worldIn.isRemote) {
+			if (!worldIn.isClientSide) {
 				INostrumMagic attr = NostrumMagica.getMagicWrapper(playerIn);
 				if (attr != null) {
 					if (!attr.hasLore(FeyFriendLore.instance)) {
 						attr.giveFullLore(FeyFriendLore.instance());
 						stack.shrink(1);
-						return new ActionResult<ItemStack>(ActionResultType.SUCCESS, stack);
+						return new InteractionResultHolder<ItemStack>(InteractionResult.SUCCESS, stack);
 					} else {
-						playerIn.sendMessage(new TranslationTextComponent("info.tablet.fail"), Util.DUMMY_UUID);
-						return new ActionResult<ItemStack>(ActionResultType.FAIL, stack);
+						playerIn.sendMessage(new TranslatableComponent("info.tablet.fail"), Util.NIL_UUID);
+						return new InteractionResultHolder<ItemStack>(InteractionResult.FAIL, stack);
 					}
 				}
 			} else {
-				return new ActionResult<ItemStack>(ActionResultType.SUCCESS, stack);
+				return new InteractionResultHolder<ItemStack>(InteractionResult.SUCCESS, stack);
 			}
 		} else if (type == FeyResourceType.BELL) {
-			if (!worldIn.isRemote) {
-				for (EntityShadowFey ent : worldIn.getEntitiesWithinAABB(EntityShadowFey.class, VoxelShapes.fullCube().getBoundingBox().offset(playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ()).grow(30))) {
-					ent.addPotionEffect(new EffectInstance(Effects.GLOWING, 20 * 5));
+			if (!worldIn.isClientSide) {
+				for (EntityShadowFey ent : worldIn.getEntitiesOfClass(EntityShadowFey.class, Shapes.block().bounds().move(playerIn.getX(), playerIn.getY(), playerIn.getZ()).inflate(30))) {
+					ent.addEffect(new MobEffectInstance(MobEffects.GLOWING, 20 * 5));
 					NostrumMagica.playerListener.registerTimer((/*Event*/ eType, /*LivingEntity*/ entity, /*Object*/ data) -> {
 						if (eType == Event.TIME) {
-							NostrumFairiesSounds.BELL.play(worldIn, ent.getPosX(), ent.getPosY(), ent.getPosZ());
+							NostrumFairiesSounds.BELL.play(worldIn, ent.getX(), ent.getY(), ent.getZ());
 						}
 						return true;
 					}, 10, 10);
 				}
 				
-				NostrumFairiesSounds.BELL.play(worldIn, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ());
+				NostrumFairiesSounds.BELL.play(worldIn, playerIn.getX(), playerIn.getY(), playerIn.getZ());
 			}
-			return new ActionResult<ItemStack>(ActionResultType.SUCCESS, stack);
+			return new InteractionResultHolder<ItemStack>(InteractionResult.SUCCESS, stack);
 		}
 		
-		return new ActionResult<ItemStack>(ActionResultType.PASS, stack);
+		return new InteractionResultHolder<ItemStack>(InteractionResult.PASS, stack);
 	}
 	
 	public static void onMobDrop(LivingDropsEvent event) {
 		final float chance;
-		if (event.getEntityLiving() instanceof IronGolemEntity) {
+		if (event.getEntityLiving() instanceof IronGolem) {
 			chance = .2f;
-		} else if (event.getEntityLiving() instanceof GolemEntity) {
+		} else if (event.getEntityLiving() instanceof AbstractGolem) {
 			chance = .01f;
 		} else {
 			chance = 0f;
@@ -282,10 +282,10 @@ public class FeyResource extends Item implements ILoreTagged {
 		
 		for (int i = 0; i <= event.getLootingLevel(); i++) {
 			if (NostrumFairies.random.nextFloat() < chance) {
-				ItemEntity entity = new ItemEntity(event.getEntity().world,
-						event.getEntity().getPosX(),
-						event.getEntity().getPosY(),
-						event.getEntity().getPosZ(),
+				ItemEntity entity = new ItemEntity(event.getEntity().level,
+						event.getEntity().getX(),
+						event.getEntity().getY(),
+						event.getEntity().getZ(),
 						create(FeyResourceType.GOLEM_TOKEN, 1));
 				event.getDrops().add(entity);
 			}

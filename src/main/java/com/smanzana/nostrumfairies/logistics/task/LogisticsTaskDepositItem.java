@@ -22,10 +22,10 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.util.Inventories;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
 
 /*
  * Pick up an item and then deposit it somewhere in the network
@@ -278,8 +278,8 @@ public class LogisticsTaskDepositItem extends LogisticsTaskBase implements ILogi
 				// If this is a composite task, trust what the merge tasks have picked (and be
 				// comfy because we make sure only same-destination tasks can be merged)
 				if (this.mergedTasks == null) {
-					dropoffComponent = network.getStorageForItem(component == null ? entity.world : component.getWorld(),
-							component == null ? entity.getPosition() : component.getPosition(),
+					dropoffComponent = network.getStorageForItem(component == null ? entity.level : component.getWorld(),
+							component == null ? entity.blockPosition() : component.getPosition(),
 							item,
 							(comp) -> {
 								if (component != null) {
@@ -383,9 +383,9 @@ public class LogisticsTaskDepositItem extends LogisticsTaskBase implements ILogi
 				component.takeItem(stack);
 			} else {
 				// take items from the entity
-				if (entity instanceof PlayerEntity) {
-					PlayerEntity player = (PlayerEntity) entity;
-					Inventories.remove(player.inventory, stack);
+				if (entity instanceof Player) {
+					Player player = (Player) entity;
+					Inventories.remove(player.getInventory(), stack);
 				} else if (entity instanceof IItemCarrierFey) {
 					IItemCarrierFey carrier = (IItemCarrierFey) entity;
 					carrier.removeItem(stack);

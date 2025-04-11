@@ -11,31 +11,31 @@ import javax.annotation.Nullable;
 import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.utils.Location;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.renderer.culling.ClippingHelper;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.Camera;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexBuffer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.Shapes;
+import com.mojang.math.Matrix4f;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -48,13 +48,13 @@ public class StaticTESRRenderer {
 	// TODO this should really do a frustrum check of some sort
 	
 	private static final class RenderTarget {
-		public TileEntity te;
+		public BlockEntity te;
 		public VertexBuffer drawlist;
 	}
 	
 	// Render thread exclusives
 	private Map<Location, RenderTarget> cache;
-	private Map<TileEntityType<? extends TileEntity>, StaticTESR<?>> renders;
+	private Map<BlockEntityType<? extends BlockEntity>, StaticTESR<?>> renders;
 	
 	// Synced update collections
 	private Map<Location, RenderTarget> updates; 
@@ -67,17 +67,17 @@ public class StaticTESRRenderer {
 		clear = false;
 	}
 	
-	public <T extends TileEntity> void registerRender(TileEntityType<T> entClass, Function<? super TileEntityRendererDispatcher, ? extends StaticTESR<T>> renderFactory) {
-		renders.put(entClass, renderFactory.apply(TileEntityRendererDispatcher.instance));
+	public <T extends BlockEntity> void registerRender(BlockEntityType<T> entClass, Function<? super BlockEntityRenderDispatcher, ? extends StaticTESR<T>> renderFactory) {
+		renders.put(entClass, renderFactory.apply(BlockEntityRenderDispatcher.instance));
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T extends TileEntity> StaticTESR<T> getRender(T ent) {
+	public <T extends BlockEntity> StaticTESR<T> getRender(T ent) {
 		return (StaticTESR<T>) renders.get(ent.getType());
 	}
 	
 	@SuppressWarnings("deprecation")
-	public void render(MatrixStack matrixStackIn, Matrix4f projectionMatrix, Minecraft mc, ClientPlayerEntity player, float partialTicks) {
+	public void render(PoseStack matrixStackIn, Matrix4f projectionMatrix, Minecraft mc, LocalPlayer player, float partialTicks) {
 		final boolean shouldClear;
 		final Map<Location, RenderTarget> updatesCopy;
 		
@@ -125,7 +125,7 @@ public class StaticTESRRenderer {
 					cache.remove(loc);
 				} else {
 					// Set
-					StaticTESR<TileEntity> render = this.getRender(put.te);
+					StaticTESR<BlockEntity> render = this.getRender(put.te);
 					put.drawlist = compile(put.te, render, buffer);
 
 					cache.put(loc, put);
@@ -134,40 +134,40 @@ public class StaticTESRRenderer {
 		}
 		
 		// Draw cached displays
-		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-		final ActiveRenderInfo renderInfo = mc.gameRenderer.getActiveRenderInfo();
-		final Vector3d camera = renderInfo.getProjectedView();
-		final ClippingHelper clippinghelper;
+		mc.getTextureManager().bind(TextureAtlas.LOCATION_BLOCKS);
+		final Camera renderInfo = mc.gameRenderer.getMainCamera();
+		final Vec3 camera = renderInfo.getPosition();
+		final Frustum clippinghelper;
 		// This is what WorldRenderer does. Wish it was passed in to us!
-		clippinghelper = new ClippingHelper(matrixStackIn.getLast().getMatrix(), projectionMatrix);
-		clippinghelper.setCameraPosition(camera.getX(), camera.getY(), camera.getZ());
+		clippinghelper = new Frustum(matrixStackIn.last().pose(), projectionMatrix);
+		clippinghelper.prepare(camera.x(), camera.y(), camera.z());
 		
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
 		for (RenderTarget targ : cache.values()) {
-			AxisAlignedBB bb;
+			AABB bb;
 			// getRenderBoundingBox returns an infinite BB if block collision size is 0...
-			if (targ.te.getBlockState().getCollisionShape(targ.te.getWorld(), targ.te.getPos()) == VoxelShapes.empty()) {
-				bb = VoxelShapes.fullCube().getBoundingBox().offset(targ.te.getPos());
+			if (targ.te.getBlockState().getCollisionShape(targ.te.getLevel(), targ.te.getBlockPos()) == Shapes.empty()) {
+				bb = Shapes.block().bounds().move(targ.te.getBlockPos());
 			} else {
 				bb = targ.te.getRenderBoundingBox();
 			}
 			
 			
-			if (targ.te.getPos().distanceSq(camera.getX(), camera.getY(), camera.getZ(), true) < 10000
-					&& clippinghelper.isBoundingBoxInFrustum(bb)) {
+			if (targ.te.getBlockPos().distSqr(camera.x(), camera.y(), camera.z(), true) < 10000
+					&& clippinghelper.isVisible(bb)) {
 				drawTarget(targ, matrixStackIn, renderInfo, player, partialTicks);
 			}
 		}
-		VertexBuffer.unbindBuffer();
-        DefaultVertexFormats.BLOCK.clearBufferState();
+		VertexBuffer.unbind();
+        DefaultVertexFormat.BLOCK.clearBufferState();
 		RenderSystem.disableBlend();
 	}
 	
-	private <T extends TileEntity> VertexBuffer compile(T te, StaticTESR<T> render, @Nullable VertexBuffer bufferIn) {
-		final int combinedLightIn = WorldRenderer.getCombinedLight(te.getWorld(), te.getPos());
+	private <T extends BlockEntity> VertexBuffer compile(T te, StaticTESR<T> render, @Nullable VertexBuffer bufferIn) {
+		final int combinedLightIn = LevelRenderer.getLightColor(te.getLevel(), te.getBlockPos());
 		final int combinedOverlayIn = OverlayTexture.NO_OVERLAY;
-		final MatrixStack fakeStack = new MatrixStack(); // identity
+		final PoseStack fakeStack = new PoseStack(); // identity
 		
 		if (bufferIn == null) {
 			bufferIn = new VertexBuffer(render.getRenderFormat(te));
@@ -176,42 +176,42 @@ public class StaticTESRRenderer {
 		BufferBuilder builder = new BufferBuilder(4096);
 		builder.begin(GL11.GL_QUADS, render.getRenderFormat(te));
 		{
-			BlockPos pos = te.getPos();
-			World world = te.getWorld();
+			BlockPos pos = te.getBlockPos();
+			Level world = te.getLevel();
 			BlockState state = world.getBlockState(pos);
 			render.render(te, pos.getX(), pos.getY(), pos.getZ(), state, world, builder, fakeStack, combinedLightIn, combinedOverlayIn);
 		}
-		builder.finishDrawing();
+		builder.end();
 		
 		// Copy built buffers into the vertex buffer
 		bufferIn.upload(builder);
 		return bufferIn;
 	}
 	
-	private void drawTarget(RenderTarget target, MatrixStack matrixStackIn, ActiveRenderInfo info, ClientPlayerEntity player, float partialTicks) {
-		Vector3d playerPos = info.getProjectedView();
-		BlockPos pos = target.te.getPos();
-		Vector3d offset = new Vector3d(pos.getX() - playerPos.x,
+	private void drawTarget(RenderTarget target, PoseStack matrixStackIn, Camera info, LocalPlayer player, float partialTicks) {
+		Vec3 playerPos = info.getPosition();
+		BlockPos pos = target.te.getBlockPos();
+		Vec3 offset = new Vec3(pos.getX() - playerPos.x,
 				pos.getY() - playerPos.y,
 				pos.getZ() - playerPos.z);
 		
-		matrixStackIn.push();
+		matrixStackIn.pushPose();
 		matrixStackIn.translate(offset.x, offset.y, offset.z);
-		target.drawlist.bindBuffer();
-		DefaultVertexFormats.BLOCK.setupBufferState(0);
-		target.drawlist.draw(matrixStackIn.getLast().getMatrix(), GL11.GL_QUADS);
-		matrixStackIn.pop();
+		target.drawlist.bind();
+		DefaultVertexFormat.BLOCK.setupBufferState(0);
+		target.drawlist.draw(matrixStackIn.last().pose(), GL11.GL_QUADS);
+		matrixStackIn.popPose();
 	}
 	
-	private Set<TileEntityType<?>> missingTypesSeen = new HashSet<>(); 
-	public void update(World world, BlockPos pos, @Nullable TileEntity te) {
+	private Set<BlockEntityType<?>> missingTypesSeen = new HashSet<>(); 
+	public void update(Level world, BlockPos pos, @Nullable BlockEntity te) {
 		if (te != null && this.getRender(te) == null) {
 			if (missingTypesSeen.add(te.getType())) {
 				NostrumFairies.logger.error("No static TEST render registered for " + te.getType());
 			}
 		}
 		
-		Location loc = new Location(world, pos.toImmutable());
+		Location loc = new Location(world, pos.immutable());
 		final RenderTarget targ;
 		if (te == null) {
 			targ = null;

@@ -5,16 +5,16 @@ import com.smanzana.nostrumfairies.tiles.ReinforcedDiamondChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedGoldChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedIronChestTileEntity;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ToolType;
 
 public class ReinforcedStorageLogisticsChest extends FeyContainerBlock {
@@ -33,8 +33,8 @@ public class ReinforcedStorageLogisticsChest extends FeyContainerBlock {
 	private final Type type;
 	
 	public ReinforcedStorageLogisticsChest(Type type) {
-		super(Block.Properties.create(Material.WOOD)
-				.hardnessAndResistance(3.0f, 1.0f)
+		super(Block.Properties.of(Material.WOOD)
+				.strength(3.0f, 1.0f)
 				.sound(SoundType.WOOD)
 				.harvestTool(ToolType.AXE)
 				);
@@ -55,7 +55,7 @@ public class ReinforcedStorageLogisticsChest extends FeyContainerBlock {
 	}
 
 	@Override
-	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+	public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
 		switch (this.type) {
 		case IRON:
 		default:
@@ -68,30 +68,30 @@ public class ReinforcedStorageLogisticsChest extends FeyContainerBlock {
 	}
 	
 	@Override
-	public BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+	public RenderShape getRenderShape(BlockState state) {
+		return RenderShape.MODEL;
 	}
 	
 	@Override
-	public void breakBlock(World world, BlockPos pos, BlockState state) {
+	public void breakBlock(Level world, BlockPos pos, BlockState state) {
 		destroy(world, pos, state);
 		super.breakBlock(world, pos, state);
 	}
 	
-	private void destroy(World world, BlockPos pos, BlockState state) {
-		TileEntity ent = world.getTileEntity(pos);
+	private void destroy(Level world, BlockPos pos, BlockState state) {
+		BlockEntity ent = world.getBlockEntity(pos);
 		if (ent == null || !(ent instanceof ReinforcedChestTileEntity))
 			return;
 		
 		// TODO! This is missing some items sometimmes!@
 		
 		ReinforcedChestTileEntity table = (ReinforcedChestTileEntity) ent;
-		for (int i = 0; i < table.getSizeInventory(); i++) {
-			if (!table.getStackInSlot(i).isEmpty()) {
+		for (int i = 0; i < table.getContainerSize(); i++) {
+			if (!table.getItem(i).isEmpty()) {
 				ItemEntity item = new ItemEntity(
 						world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5,
-						table.removeStackFromSlot(i));
-				world.addEntity(item);
+						table.removeItemNoUpdate(i));
+				world.addFreshEntity(item);
 			}
 		}
 		

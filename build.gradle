@@ -11,16 +11,17 @@ apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
 version = "1.16.5-1.3.0"
 group= "com.smanzana.nostrumfairies" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "nostrumfairies"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
+java.toolchain.languageVersion = JavaLanguageVersion.of(16) // Mojang ships Java 8 to end users, so your mod should target Java 8.
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-	mappings channel: 'snapshot', version: "20201028-1.16.3"
+	mappings channel: 'official', version: "1.17.1"
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 	
 	// GUI Slots have a final position, but we do some magic with moving them...
@@ -135,7 +136,7 @@ repositories {
 }
 
 dependencies {
-	minecraft 'net.minecraftforge:forge:1.16.5-36.2.34'
+	minecraft 'net.minecraftforge:forge:1.17.1-37.1.1'
 
 	compileOnly fg.deobf("com.smanzana:nostrumaetheria:${aetheria_version}:api")
 	runtimeOnly fg.deobf("com.smanzana:nostrumaetheria:${aetheria_version}")

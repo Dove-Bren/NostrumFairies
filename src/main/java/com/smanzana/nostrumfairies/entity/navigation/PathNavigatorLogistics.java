@@ -22,16 +22,16 @@ import com.smanzana.nostrumfairies.utils.Location;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.util.DimensionUtils;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.pathfinding.FlaggedPathPoint;
-import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathFinder;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Region;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.pathfinder.Target;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathFinder;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.PathNavigationRegion;
+import net.minecraft.world.level.Level;
 
 /**
  * Navigator that uses a logistics network to aid path finding.
@@ -40,7 +40,7 @@ import net.minecraft.world.World;
  * @author Skyler
  *
  */
-public class PathNavigatorLogistics extends GroundPathNavigator {
+public class PathNavigatorLogistics extends GroundPathNavigation {
 	final double MAX_BEACON_DIST = 30 * 30;
 	
 	private IFeyWorker fey;
@@ -53,7 +53,7 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 	// stupid encapsulation breaking things
 	protected PathFinderPublic pathFinder;
 	
-	public PathNavigatorLogistics(MobEntity entitylivingIn, World worldIn) {
+	public PathNavigatorLogistics(Mob entitylivingIn, Level worldIn) {
 		super(entitylivingIn, worldIn);
 		this.fey = (IFeyWorker) entitylivingIn; // CAST! Fail if not a fey! Need a network!
 		lastTicks = -1;
@@ -61,34 +61,34 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 	}
 	
 	@Override
-	protected PathFinder getPathFinder(int maxAttempts) {
-		super.getPathFinder(maxAttempts); // dumbly sets up stuff so we have to call it still
-		this.pathFinder = new PathFinderPublic(this.nodeProcessor, maxAttempts);
+	protected PathFinder createPathFinder(int maxAttempts) {
+		super.createPathFinder(maxAttempts); // dumbly sets up stuff so we have to call it still
+		this.pathFinder = new PathFinderPublic(this.nodeEvaluator, maxAttempts);
 		return this.pathFinder;
 	}
 	
 	protected void clearStuckEntity() {
 		// If entity was on a part of a path we got from the logistics network, notify the network that the path is bad
-		if (currentPath != null && fey.getLogisticsNetwork() != null) {
+		if (path != null && fey.getLogisticsNetwork() != null) {
 			final Path subpath;
 			final BlockPos start;
 			final BlockPos end;
-			if (currentPath instanceof CompositePath) {
-				subpath = ((CompositePath) currentPath).getCurrentPath();
-				start = ((CompositePath) currentPath).getSegmentStart();
-				end = ((CompositePath) currentPath).getSegmentEnd();
+			if (path instanceof CompositePath) {
+				subpath = ((CompositePath) path).getCurrentPath();
+				start = ((CompositePath) path).getSegmentStart();
+				end = ((CompositePath) path).getSegmentEnd();
 			} else {
-				subpath = currentPath;
-				PathPoint point = subpath.getPathPointFromIndex(0);
+				subpath = path;
+				Node point = subpath.getNode(0);
 				start = new BlockPos(point.x, point.y, point.z);
-				point = subpath.getFinalPathPoint();
+				point = subpath.getEndNode();
 				end = new BlockPos(point.x, point.y, point.z);
 			}
 			
 			if (subpath != null && start != null && end != null) {
 				LogisticsNetwork network = fey.getLogisticsNetwork();
-				Location startL = new Location(entity.world, start);
-				Location endL = new Location(entity.world, end);
+				Location startL = new Location(mob.level, start);
+				Location endL = new Location(mob.level, end);
 				network.removeCachedPath(startL, endL, subpath);
 			}
 		}
@@ -96,13 +96,13 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 	
 	private boolean shouldAttempt(BlockPos target) {
 		
-		if (!entity.getPosition().equals(lastSource)) {
+		if (!mob.blockPosition().equals(lastSource)) {
 			lastTargets.clear();
 		}
 		
 		// Only invoke all of the expensive failure stuff if it's been a while or if we're attempting from a new location.
 		if (lastTargets.contains(target)) {
-			if (lastTicks != -1 && (entity.ticksExisted - lastTicks) < (20 * 60)) {
+			if (lastTicks != -1 && (mob.tickCount - lastTicks) < (20 * 60)) {
 				// hasn't been enough time to try again
 				return false;
 			}
@@ -112,9 +112,9 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 	}
 	
 	private void setFailCache(BlockPos target) {
-		lastTicks = entity.ticksExisted;
+		lastTicks = mob.tickCount;
 		lastTargets.add(target);
-		lastSource = entity.getPosition();
+		lastSource = mob.blockPosition();
 	}
 
 //	private double getWeightedDistanceSq(BlockPos pos, BlockPos target) {
@@ -128,7 +128,7 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 //	}
 	
 	private double getH(BlockPos target, BlockPos pos) {
-		return target.distanceSq(pos);
+		return target.distSqr(pos);
 	}
 	
 	private double getEdgeCost(Path path) {
@@ -139,15 +139,15 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 		//	for (PathPoint point : ((CompositePath) path).)
 		} else {
 			// start at 1
-			for (int i = 0; i < path.getCurrentPathLength(); i++) {
-				cost += path.getPathPointFromIndex(i).distanceToNext;
+			for (int i = 0; i < path.getNodeCount(); i++) {
+				cost += path.getNode(i).h;
 			}
 		}
 			
 		return cost;
 	}
 	
-	private @Nullable Path getMinorPathTo(Region region, MobEntity entity, BlockPos src, BlockPos dest, float range) {
+	private @Nullable Path getMinorPathTo(PathNavigationRegion region, Mob entity, BlockPos src, BlockPos dest, float range) {
 		
 		final int notsure = 0;
 		
@@ -161,13 +161,13 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 		// That func by default 'inits' the node processor and then gets the starting point out of it.
 		// But we need to set a custom start point.
 		{
-			this.nodeProcessor.func_225578_a_(region, entity); // /*init*/
-			PathPoint pathpoint = new PathPoint(src.getX(), src.getY(), src.getZ());//this.nodeProcessor.getStart();
-			Map<FlaggedPathPoint, BlockPos> map = ImmutableSet.of(dest).stream().collect(Collectors.toMap((p_224782_1_) -> {
-				return this.nodeProcessor.func_224768_a((double)p_224782_1_.getX(), (double)p_224782_1_.getY(), (double)p_224782_1_.getZ());
+			this.nodeEvaluator.prepare(region, entity); // /*init*/
+			Node pathpoint = new Node(src.getX(), src.getY(), src.getZ());//this.nodeProcessor.getStart();
+			Map<Target, BlockPos> map = ImmutableSet.of(dest).stream().collect(Collectors.toMap((p_224782_1_) -> {
+				return this.nodeEvaluator.getGoal((double)p_224782_1_.getX(), (double)p_224782_1_.getY(), (double)p_224782_1_.getZ());
 			}, Function.identity()));
-			path = pathFinder.func_227479_a_(pathpoint, map, range, notsure, /*this.getRangeMultiplier()*/1f);
-			this.nodeProcessor.postProcess();
+			path = pathFinder.findPath(pathpoint, map, range, notsure, /*this.getRangeMultiplier()*/1f);
+			this.nodeEvaluator.done();
 		}
 		
 		
@@ -180,10 +180,10 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 		return path;
 	}
 	
-	protected Region makeNavigatorRegion(BlockPos start, MobEntity entity) {
+	protected PathNavigationRegion makeNavigatorRegion(BlockPos start, Mob entity) {
 		final int regionOffset = (int) (8 // Default for pathfinding to a block pos in vanilla navigator
 				+ entity.getAttributeValue(Attributes.FOLLOW_RANGE));
-			return new Region(entity.world, start.add(-regionOffset, -regionOffset, -regionOffset), start.add(regionOffset, regionOffset, regionOffset));
+			return new PathNavigationRegion(entity.level, start.offset(-regionOffset, -regionOffset, -regionOffset), start.offset(regionOffset, regionOffset, regionOffset));
 	}
 	
 	/**
@@ -195,24 +195,24 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 		List<Location> beacons = Lists.newArrayList(network.getAllBeacons());
 		
 		beacons.removeIf((loc) -> {
-			return (DimensionUtils.DimEquals(loc.getDimension(), DimensionUtils.GetDimension(entity)));
+			return (DimensionUtils.DimEquals(loc.getDimension(), DimensionUtils.GetDimension(mob)));
 		});
 		
 		if (!beacons.isEmpty()) {
 			Collections.sort(beacons, (l, r) -> {
 				final BlockPos lPos = l.getPos();
 				final BlockPos rPos = r.getPos();
-				final double ldist = entity.getDistanceSq(lPos.getX(), lPos.getY(), lPos.getZ());
-				final double rdist = entity.getDistanceSq(rPos.getX(), rPos.getY(), rPos.getZ());
+				final double ldist = mob.distanceToSqr(lPos.getX(), lPos.getY(), lPos.getZ());
+				final double rdist = mob.distanceToSqr(rPos.getX(), rPos.getY(), rPos.getZ());
 				
 				return (int) (ldist - rdist);
 			});
 			
 			for (Location beacon : beacons) {
-				Region region = this.makeNavigatorRegion(beacon.getPos(), entity);
+				PathNavigationRegion region = this.makeNavigatorRegion(beacon.getPos(), mob);
 				//Path subpath = super.getPathToPos(beacon.getPos());
-				Path subpath = getMinorPathTo(region, entity, beacon.getPos(), target, range);
-				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), entity.world.isAirBlock(beacon.getPos()) ? 0 : 1)) {
+				Path subpath = getMinorPathTo(region, mob, beacon.getPos(), target, range);
+				if (subpath != null && Paths.IsComplete(subpath, beacon.getPos(), mob.level.isEmptyBlock(beacon.getPos()) ? 0 : 1)) {
 					LogisticsNode node = new LogisticsNode(beacon.getPos(), null, subpath, 0, getH(target, beacon.getPos()));
 					return node;
 					
@@ -284,7 +284,7 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 			}
 			
 			// Is this the final node???? AKA can we path from it straight to the destination?
-			finalPath = getMinorPathTo(makeNavigatorRegion(node.pos, entity), entity, node.pos, target, range);
+			finalPath = getMinorPathTo(makeNavigatorRegion(node.pos, mob), mob, node.pos, target, range);
 			if (finalPath != null) {
 				lastNode = node;
 				break;
@@ -300,7 +300,7 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 			
 			// Now check all of our neighbors. This is the set of all graph neighbors + the set of beacons that
 			// are within range
-			Collection<ILogisticsComponent> components = network.getConnectedComponents(new Location(entity.world, node.pos));
+			Collection<ILogisticsComponent> components = network.getConnectedComponents(new Location(mob.level, node.pos));
 			if (components != null) {
 				for (ILogisticsComponent comp : components) {
 					if (seen.contains(comp.getPosition())) {
@@ -311,12 +311,12 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 					// See if we can even path to this node.
 					boolean newPath = false;
 					final Path path;
-					final Location locStart = new Location(entity.world, node.pos);
-					final Location locEnd = new Location(entity.world, comp.getPosition());
+					final Location locStart = new Location(mob.level, node.pos);
+					final Location locEnd = new Location(mob.level, comp.getPosition());
 					if (network.hasCachedPath(locStart, locEnd)) {
 						path = network.getCachedPathRaw(locStart, locEnd); 
 					} else {
-						path = getMinorPathTo(makeNavigatorRegion(node.pos, entity), entity, node.pos, comp.getPosition(), range);
+						path = getMinorPathTo(makeNavigatorRegion(node.pos, mob), mob, node.pos, comp.getPosition(), range);
 						newPath = true;
 					}
 					
@@ -341,7 +341,7 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 					continue;
 				}
 				
-				double dist = beacon.getPos().distanceSq(node.pos); // same as HCOST. Ever gonna change?
+				double dist = beacon.getPos().distSqr(node.pos); // same as HCOST. Ever gonna change?
 				if (dist > MAX_BEACON_DIST) {
 					continue;
 				}
@@ -349,12 +349,12 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 				// See if we can even path to this node.
 				boolean newPath = false;
 				final Path path;
-				final Location locStart = new Location(entity.world, node.pos);
-				final Location locEnd = new Location(entity.world, beacon.getPos());
+				final Location locStart = new Location(mob.level, node.pos);
+				final Location locEnd = new Location(mob.level, beacon.getPos());
 				if (network.hasCachedPath(locStart, locEnd)) {
 					path = network.getCachedPathRaw(locStart, locEnd); 
 				} else {
-					path = getMinorPathTo(makeNavigatorRegion(node.pos, entity), entity, node.pos, beacon.getPos(), range);
+					path = getMinorPathTo(makeNavigatorRegion(node.pos, mob), mob, node.pos, beacon.getPos(), range);
 					newPath = true;
 				}
 				
@@ -382,8 +382,8 @@ public class PathNavigatorLogistics extends GroundPathNavigator {
 	}
 	
 	@Override
-	public Path getPathToPos(BlockPos target, int distance) {
-		@Nullable Path path = super.getPathToPos(target, distance);
+	public Path createPath(BlockPos target, int distance) {
+		@Nullable Path path = super.createPath(target, distance);
 		
 		// If we've failed too recently on the same request, don't even try
 		if (!shouldAttempt(target)) {

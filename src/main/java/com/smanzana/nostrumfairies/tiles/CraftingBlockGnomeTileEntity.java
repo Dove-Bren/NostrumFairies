@@ -2,8 +2,8 @@ package com.smanzana.nostrumfairies.tiles;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class CraftingBlockGnomeTileEntity extends CraftingBlockTileEntity {
 

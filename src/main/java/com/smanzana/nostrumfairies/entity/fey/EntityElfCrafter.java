@@ -7,20 +7,20 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.serializers.ArmPoseElf;
 import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class EntityElfCrafter extends EntityElf {
 	
 	public static final String ID = "elf_crafter";
 	
-	public EntityElfCrafter(EntityType<? extends EntityElfCrafter> type, World world) {
+	public EntityElfCrafter(EntityType<? extends EntityElfCrafter> type, Level world) {
 		super(type, world);
 	}
 
@@ -30,7 +30,7 @@ public class EntityElfCrafter extends EntityElf {
 			// TODO require a specialization
 			LogisticsTaskWorkBlock work = (LogisticsTaskWorkBlock) task;
 			
-			if (work.getWorld() != this.world) {
+			if (work.getWorld() != this.level) {
 				return false;
 			}
 			
@@ -41,7 +41,7 @@ public class EntityElfCrafter extends EntityElf {
 			}
 			
 			// Dwarves only want to work at ones from dwarf blocks
-			BlockState block = world.getBlockState(target);
+			BlockState block = level.getBlockState(target);
 			if (block == null || !(block.getBlock() instanceof CraftingBlockElf)) {
 				return false;
 			}
@@ -56,17 +56,17 @@ public class EntityElfCrafter extends EntityElf {
 			if (this.getDistanceSq(target) < .2) {
 				return true;
 			}
-			Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			Path currentPath = navigation.getPath();
+			boolean success = navigation.moveTo(target.getX(), target.getY(), target.getZ(), 1.0);
 			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
+				success = Paths.IsComplete(navigation.getPath(), target, 2);
 			}
 			if (currentPath == null) {
 				if (!success) {
-					navigator.setPath(currentPath, 1.0);
+					navigation.moveTo(currentPath, 1.0);
 				}
 			} else {
-				navigator.setPath(currentPath, 1.0);
+				navigation.moveTo(currentPath, 1.0);
 			}
 			if (success) {
 				return true;
@@ -85,17 +85,17 @@ public class EntityElfCrafter extends EntityElf {
 		super.onIdleTick();
 	}
 	
-	public static final AttributeModifierMap.MutableAttribute BuildCrafterAttributes() {
+	public static final AttributeSupplier.Builder BuildCrafterAttributes() {
 		return EntityElf.BuildAttributes()
-				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .24)
-				.createMutableAttribute(Attributes.MAX_HEALTH, 4.0)
-				.createMutableAttribute(Attributes.ATTACK_DAMAGE, 1.0)
+				.add(Attributes.MOVEMENT_SPEED, .24)
+				.add(Attributes.MAX_HEALTH, 4.0)
+				.add(Attributes.ATTACK_DAMAGE, 1.0)
 			;
 	}
 	
 	@Override
-	protected void registerData() {
-		super.registerData();
+	protected void defineSynchedData() {
+		super.defineSynchedData();
 	}
 	
 	@Override
@@ -110,15 +110,15 @@ public class EntityElfCrafter extends EntityElf {
 	
 	@Override
 	protected void onCientTick() {
-		if (this.ticksExisted % 10 == 0 && this.getElfPose() == ArmPoseElf.WORKING) {
+		if (this.tickCount % 10 == 0 && this.getElfPose() == ArmPoseElf.WORKING) {
 			
-			double angle = this.rotationYawHead + ((this.isLeftHanded() ? -1 : 1) * 22.5);
+			double angle = this.yHeadRot + ((this.isLeftHanded() ? -1 : 1) * 22.5);
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;
 			double zdiff = Math.cos(angle / 180.0 * Math.PI) * .4;
 			
-			double x = getPosX() - xdiff;
-			double z = getPosZ() + zdiff;
-			world.addParticle(ParticleTypes.SMOKE, x, getPosY() + 1.25, z, 0, .015, 0);
+			double x = getX() - xdiff;
+			double z = getZ() + zdiff;
+			level.addParticle(ParticleTypes.SMOKE, x, getY() + 1.25, z, 0, .015, 0);
 		}
 	}
 	

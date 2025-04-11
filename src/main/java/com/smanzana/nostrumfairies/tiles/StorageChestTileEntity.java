@@ -14,7 +14,7 @@ public class StorageChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return SLOTS;
 	}
 	

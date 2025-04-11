@@ -23,14 +23,14 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.RequestedItemRecor
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SoundType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /*
  * Travel to a location and place a block there
@@ -47,7 +47,7 @@ public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 	}
 	
 	private String displayName;
-	private World world;
+	private Level world;
 	private BlockPos block;
 	private BlockPos placeAt;
 	private @Nonnull ItemStack item = ItemStack.EMPTY; // Item to pickup
@@ -73,7 +73,7 @@ public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 	protected int animCount = 0;
 	
 	protected LogisticsTaskPlaceBlock(@Nullable ILogisticsComponent owningComponent, @Nullable LivingEntity entity,
-			String displayName, @Nonnull ItemStack item, BlockState state, World world, BlockPos pos, BlockPos placeAt) {
+			String displayName, @Nonnull ItemStack item, BlockState state, Level world, BlockPos pos, BlockPos placeAt) {
 		Validate.notNull(item);
 		this.displayName = displayName;
 		this.block = pos;
@@ -87,22 +87,22 @@ public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 	}
 
 	public LogisticsTaskPlaceBlock(ILogisticsComponent owningComponent, String displayName,
-			ItemStack item, BlockState state,World world, BlockPos pos) {
+			ItemStack item, BlockState state,Level world, BlockPos pos) {
 		this(owningComponent, displayName, item, state, world, pos, pos);
 	}
 	
 	public LogisticsTaskPlaceBlock(ILogisticsComponent owningComponent, String displayName,
-			ItemStack item, BlockState state, World world, BlockPos pos, BlockPos placeAt) {
+			ItemStack item, BlockState state, Level world, BlockPos pos, BlockPos placeAt) {
 		this(owningComponent, null, displayName, item, state, world, pos, placeAt);
 	}
 	
 	public LogisticsTaskPlaceBlock(LivingEntity entity, String displayName,
-			ItemStack item, BlockState state, World world, BlockPos pos) {
+			ItemStack item, BlockState state, Level world, BlockPos pos) {
 		this(entity, displayName, item, state, world, pos, pos);
 	}
 	
 	public LogisticsTaskPlaceBlock(LivingEntity entity, String displayName,
-			ItemStack item, BlockState state, World world, BlockPos pos, BlockPos placeAt) {
+			ItemStack item, BlockState state, Level world, BlockPos pos, BlockPos placeAt) {
 		this(null, entity, displayName, item, state, world, pos, placeAt);
 	}
 	
@@ -224,7 +224,7 @@ public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 		return Lists.newArrayList(this);
 	}
 	
-	public World getWorld() {
+	public Level getWorld() {
 		return this.world;
 	}
 	
@@ -262,9 +262,9 @@ public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 			if (network != null) {
 				// Entity tasks can pull from the entity's inventory
 				if (entity != null) {
-					if (entity instanceof PlayerEntity) {
-						PlayerEntity player = (PlayerEntity) entity;
-						if (player.inventory.hasItemStack(item)) {
+					if (entity instanceof Player) {
+						Player player = (Player) entity;
+						if (player.getInventory().contains(item)) {
 							pickupTask = LogisticsSubTask.Move(player);
 						}
 					}
@@ -275,8 +275,8 @@ public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 				
 				// If we didn't figure it out already, pull from network
 				if (pickupTask == null) {
-					Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.world : component.getWorld(),
-							component == null ? entity.getPosition() : component.getPosition(),
+					Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.level : component.getWorld(),
+							component == null ? entity.blockPosition() : component.getPosition(),
 							250.0, ItemCacheType.NET);
 					ItemDeepStack match = null;
 					ILogisticsComponent comp = null;
@@ -313,7 +313,7 @@ public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 		if (this.pickupTask != null) {
 			moveTask = LogisticsSubTask.Move(placeAt);
 			workTask = LogisticsSubTask.Break(placeAt);
-			idleTask = LogisticsSubTask.Idle(pickupComponent == null ? pickupEntity.getPosition() : pickupComponent.getPosition());
+			idleTask = LogisticsSubTask.Idle(pickupComponent == null ? pickupEntity.blockPosition() : pickupComponent.getPosition());
 		}
 		
 		return true;
@@ -388,9 +388,9 @@ public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 	}
 	
 	protected void placeBlock() {
-		world.setBlockState(block, state);
+		world.setBlockAndUpdate(block, state);
 		SoundType soundtype = world.getBlockState(block).getBlock().getSoundType(world.getBlockState(block), world, block, null);
-		world.playSound(null, block, soundtype.getPlaceSound(), SoundCategory.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
+		world.playSound(null, block, soundtype.getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
 		
 		fairy.removeItem(item);
 	}
@@ -414,11 +414,11 @@ public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 		return this.phase == Phase.DONE;
 	}
 	
-	protected boolean isSpotValid(World world, BlockPos pos) {
-		if (world.isAirBlock(pos)
+	protected boolean isSpotValid(Level world, BlockPos pos) {
+		if (world.isEmptyBlock(pos)
 				|| world.getBlockState(pos).getMaterial().isReplaceable()
 				|| world.getBlockState(pos).getBlock() instanceof TemplateBlock) {
-			return (state.isValidPosition(world, pos));
+			return (state.canSurvive(world, pos));
 		}
 		
 		return false;

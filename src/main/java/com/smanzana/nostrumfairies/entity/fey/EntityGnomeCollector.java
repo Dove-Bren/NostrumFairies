@@ -4,17 +4,17 @@ import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class EntityGnomeCollector extends EntityGnome {
 	
 	public static final String ID = "gnome_collector";
 	
-	public EntityGnomeCollector(EntityType<? extends EntityGnomeCollector> type, World world) {
+	public EntityGnomeCollector(EntityType<? extends EntityGnomeCollector> type, Level world) {
 		super(type, world);
 		this.workDistanceSq = 24 * 24;
 	}
@@ -31,7 +31,7 @@ public class EntityGnomeCollector extends EntityGnome {
 			}
 			
 			// Check for pathing
-			if (this.getDistanceSq(pickupTask.getItemEntity()) < .2) {
+			if (this.distanceToSqr(pickupTask.getItemEntity()) < .2) {
 				return true;
 			}
 			
@@ -41,10 +41,10 @@ public class EntityGnomeCollector extends EntityGnome {
 		return false;
 	}
 	
-	public static final AttributeModifierMap.MutableAttribute BuildCollectorAttributes() {
+	public static final AttributeSupplier.Builder BuildCollectorAttributes() {
 		return EntityGnome.BuildAttributes()
-				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .20)
-				.createMutableAttribute(Attributes.MAX_HEALTH, 4.0)
+				.add(Attributes.MOVEMENT_SPEED, .20)
+				.add(Attributes.MAX_HEALTH, 4.0)
 			;
 	}
 	

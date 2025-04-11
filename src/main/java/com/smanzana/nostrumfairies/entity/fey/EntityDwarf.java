@@ -34,57 +34,57 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathNodeType;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	public static final String ID = "dwarf";
 
-	protected static final DataParameter<ArmPoseDwarf> POSE  = EntityDataManager.<ArmPoseDwarf>createKey(EntityDwarf.class, ArmPoseDwarf.instance());
-	protected static final DataParameter<ItemStack[]> ITEMS = EntityDataManager.<ItemStack[]>createKey(EntityDwarf.class, ItemArraySerializer.instance());
+	protected static final EntityDataAccessor<ArmPoseDwarf> POSE  = SynchedEntityData.<ArmPoseDwarf>defineId(EntityDwarf.class, ArmPoseDwarf.instance());
+	protected static final EntityDataAccessor<ItemStack[]> ITEMS = SynchedEntityData.<ItemStack[]>defineId(EntityDwarf.class, ItemArraySerializer.instance());
 	
 	private static final String NBT_ITEMS = "helditems";
 	private static final int INV_SIZE = 5;
 	
-	public EntityDwarf(EntityType<? extends EntityDwarf> type, World world) {
+	public EntityDwarf(EntityType<? extends EntityDwarf> type, Level world) {
 		super(type, world);
 
-		this.setPathPriority(PathNodeType.WATER, -1.0F);
-		this.setPathPriority(PathNodeType.LAVA, 0.0F);
-		this.setPathPriority(PathNodeType.DANGER_FIRE, 0.0F);
-		this.setPathPriority(PathNodeType.DAMAGE_FIRE, 0.0F);
+		this.setPathfindingMalus(BlockPathTypes.WATER, -1.0F);
+		this.setPathfindingMalus(BlockPathTypes.LAVA, 0.0F);
+		this.setPathfindingMalus(BlockPathTypes.DANGER_FIRE, 0.0F);
+		this.setPathfindingMalus(BlockPathTypes.DAMAGE_FIRE, 0.0F);
 	}
 	
 	@Override
@@ -113,12 +113,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected ItemStack[] getCarriedItemsRaw() {
-		return dataManager.get(ITEMS);
+		return entityData.get(ITEMS);
 	}
 
 	@Override
 	public NonNullList<ItemStack> getCarriedItems() {
-		return NonNullList.from(null, getCarriedItemsRaw());
+		return NonNullList.of(null, getCarriedItemsRaw());
 	}
 
 	@Override
@@ -132,13 +132,13 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected void updateItems(ItemStack items[]) {
-		dataManager.set(ITEMS, items);
+		entityData.set(ITEMS, items);
 		//dataManager.setDirty(ITEMS);
 	}
 
 	@Override
 	public void addItem(ItemStack stack) {
-		ItemStack[] oldItems = dataManager.get(ITEMS);
+		ItemStack[] oldItems = entityData.get(ITEMS);
 		ItemStack[] items = Arrays.copyOf(oldItems, oldItems.length);
 		Inventories.addItem(items, stack);
 		updateItems(items);
@@ -146,7 +146,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	public void removeItem(ItemStack stack) {
-		ItemStack[] oldItems = dataManager.get(ITEMS);
+		ItemStack[] oldItems = entityData.get(ITEMS);
 		ItemStack[] items = Arrays.copyOf(oldItems, oldItems.length);
 		Inventories.remove(items, stack);
 		updateItems(items);
@@ -199,33 +199,33 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		// We also change the order we evaluate spots based on the same thing. we prefer above for repair, and prefer at or below
 		// for non-repair
 		
-		if (repair || ((!world.isAirBlock(targetPos) && world.getBlockState(targetPos).getMaterial().blocksMovement() && world.getBlockState(targetPos).getMaterial() != Material.LAVA)
-						|| !isSolid(world, targetPos.down(), Direction.UP))) {
+		if (repair || ((!level.isEmptyBlock(targetPos) && level.getBlockState(targetPos).getMaterial().blocksMotion() && level.getBlockState(targetPos).getMaterial() != Material.LAVA)
+						|| !isSolid(level, targetPos.below(), Direction.UP))) {
 			// could get enum facing from diffs in dir to start at the side closest!
 			BlockPos[] initOffsets = {targetPos.north(), targetPos.east(), targetPos.south(), targetPos.west()};
 			BlockPos[] offsets;
 			if (repair) {
 				// Prefer up, double up, same, then down
 				offsets = new BlockPos[] {
-					initOffsets[0].up(), initOffsets[1].up(), initOffsets[2].up(), initOffsets[3].up(),
-					initOffsets[0].up().up(), initOffsets[1].up().up(), initOffsets[2].up().up(), initOffsets[3].up().up(),
+					initOffsets[0].above(), initOffsets[1].above(), initOffsets[2].above(), initOffsets[3].above(),
+					initOffsets[0].above().above(), initOffsets[1].above().above(), initOffsets[2].above().above(), initOffsets[3].above().above(),
 					initOffsets[0], initOffsets[1], initOffsets[2], initOffsets[3],
-					targetPos.down(), initOffsets[0].down(), initOffsets[1].down(), initOffsets[2].down(), initOffsets[3].down(),
+					targetPos.below(), initOffsets[0].below(), initOffsets[1].below(), initOffsets[2].below(), initOffsets[3].below(),
 				};
 			} else {
 				// Prefer same, below, above
 				offsets = new BlockPos[] {
 					initOffsets[0], initOffsets[1], initOffsets[2], initOffsets[3],
-					initOffsets[0].down(), initOffsets[1].down(), initOffsets[2].down(), initOffsets[3].down(),
-					targetPos.down(), targetPos.up(),
-					initOffsets[0].up(), initOffsets[1].up(), initOffsets[2].up(), initOffsets[3].up(),
+					initOffsets[0].below(), initOffsets[1].below(), initOffsets[2].below(), initOffsets[3].below(),
+					targetPos.below(), targetPos.above(),
+					initOffsets[0].above(), initOffsets[1].above(), initOffsets[2].above(), initOffsets[3].above(),
 				};
 			}
 		
 			// Check each candidate to see if we can stand there
 			for (BlockPos pos : offsets) {
-				if ((world.isAirBlock(pos) || world.getBlockState(pos).getMaterial() == Material.LAVA || !world.getBlockState(pos).getMaterial().blocksMovement())
-						&& world.getBlockState(pos.down()).getMaterial().blocksMovement()) {
+				if ((level.isEmptyBlock(pos) || level.getBlockState(pos).getMaterial() == Material.LAVA || !level.getBlockState(pos).getMaterial().blocksMotion())
+						&& level.getBlockState(pos.below()).getMaterial().blocksMotion()) {
 					targetPos = pos;
 					break;
 				}
@@ -307,9 +307,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 //		}
 		
 		if (allOrNothing) {
-			if (!world.isAirBlock(targetPos)
-					&& world.getBlockState(targetPos).getMaterial().blocksMovement()
-					&& world.getBlockState(targetPos).getMaterial() != Material.LAVA) {
+			if (!level.isEmptyBlock(targetPos)
+					&& level.getBlockState(targetPos).getMaterial().blocksMotion()
+					&& level.getBlockState(targetPos).getMaterial() != Material.LAVA) {
 				targetPos = null;
 			}
 		}
@@ -322,7 +322,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		if (task instanceof LogisticsTaskMineBlock) {
 			LogisticsTaskMineBlock mine = (LogisticsTaskMineBlock) task;
 			
-			if (mine.getWorld() != this.world) {
+			if (mine.getWorld() != this.level) {
 				return false;
 			}
 			
@@ -344,7 +344,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 					&& this.getCurrentTask() instanceof LogisticsTaskMineBlock) {
 				
 				// Try to stay around the other tasks
-				if (((LogisticsTaskMineBlock)this.getCurrentTask()).getTargetMineLoc().distanceSq(mine.getTargetMineLoc()) > 25) {
+				if (((LogisticsTaskMineBlock)this.getCurrentTask()).getTargetMineLoc().distSqr(mine.getTargetMineLoc()) > 25) {
 					return false;
 				}
 				
@@ -352,7 +352,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				// with what we already have.
 				// Otherwise we look for an empty spot and see if we can path.
 				if (mine.getSourceComponent() != null) {
-					TileEntity te = world.getTileEntity(mine.getSourceComponent().getPosition());
+					BlockEntity te = level.getBlockEntity(mine.getSourceComponent().getPosition());
 					if (te != null && te instanceof MiningBlockTileEntity) {
 						return ((MiningBlockTileEntity) te).taskAccessibleWithTasks(mine, this);
 					}
@@ -378,17 +378,17 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				if (this.getDistanceSq(target) < .2) {
 					return true;
 				}
-				Path currentPath = navigator.getPath();
-				boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+				Path currentPath = navigation.getPath();
+				boolean success = navigation.moveTo(target.getX(), target.getY(), target.getZ(), 1.0);
 				if (success) {
-					success = Paths.IsComplete(navigator.getPath(), target, 2);
+					success = Paths.IsComplete(navigation.getPath(), target, 2);
 				}
 				if (currentPath == null) {
 					if (!success) {
-						navigator.setPath(currentPath, 1.0);
+						navigation.moveTo(currentPath, 1.0);
 					}
 				} else {
-					navigator.setPath(currentPath, 1.0);
+					navigation.moveTo(currentPath, 1.0);
 				}
 				if (success || this.getDistanceSq(target) < 1) {
 					// extra case for if the navigator refuses cause we're too close
@@ -400,7 +400,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				&& !(task instanceof LogisticsTaskBuildBlock)) {
 			LogisticsTaskPlaceBlock place = (LogisticsTaskPlaceBlock) task;
 			
-			if (place.getWorld() != this.world) {
+			if (place.getWorld() != this.level) {
 				return false;
 			}
 			
@@ -429,17 +429,17 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			if (this.getDistanceSq(target) < .2) {
 				return true;
 			}
-			Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			Path currentPath = navigation.getPath();
+			boolean success = navigation.moveTo(target.getX(), target.getY(), target.getZ(), 1.0);
 			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
+				success = Paths.IsComplete(navigation.getPath(), target, 2);
 			}
 			if (currentPath == null) {
 				if (!success) {
-					navigator.setPath(currentPath, 1.0);
+					navigation.moveTo(currentPath, 1.0);
 				}
 			} else {
-				navigator.setPath(currentPath, 1.0);
+				navigation.moveTo(currentPath, 1.0);
 			}
 			if (success) {
 				return true;
@@ -454,12 +454,12 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	private void dropItems() {
 		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack heldItem = dataManager.get(ITEMS)[i];
+			ItemStack heldItem = entityData.get(ITEMS)[i];
 			if (heldItem.isEmpty()) {
 				continue;
 			}
-			ItemEntity item = new ItemEntity(this.world, getPosX(), getPosY(), getPosZ(), heldItem);
-			world.addEntity(item);
+			ItemEntity item = new ItemEntity(this.level, getX(), getY(), getZ(), heldItem);
+			level.addFreshEntity(item);
 		}
 		updateItems(new ItemStack[INV_SIZE]);
 	}
@@ -500,7 +500,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			ItemStack held = ItemStack.EMPTY;
 			
 			for (int i = 0; i < INV_SIZE; i++) {
-				held = dataManager.get(ITEMS)[i];
+				held = entityData.get(ITEMS)[i];
 				if (!held.isEmpty()) {
 					break;
 				}
@@ -509,7 +509,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			if (!held.isEmpty()) {
 				LogisticsNetwork network = this.getLogisticsNetwork();
 				if (network != null) {
-					@Nullable ILogisticsComponent storage = network.getStorageForItem(world, getPosition(), held);
+					@Nullable ILogisticsComponent storage = network.getStorageForItem(level, blockPosition(), held);
 					if (storage != null) {
 						ILogisticsTask task = new LogisticsTaskDepositItem(this, "Returning item", held.copy());
 						network.getTaskRegistry().register(task, null);
@@ -526,9 +526,9 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		}
 		
 		// See if we're too far away from our home block
-		if (this.navigator.noPath()) {
+		if (this.navigation.isDone()) {
 			BlockPos home = this.getHome();
-			if (home != null && (this.getDistanceSq(home) > 100 || this.ticksExisted % (20 * 10) == 0 && rand.nextBoolean())) {
+			if (home != null && (this.getDistanceSq(home) > 100 || this.tickCount % (20 * 10) == 0 && random.nextBoolean())) {
 				
 				// Go to a random place around our home
 				final BlockPos center = home;
@@ -536,31 +536,31 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				int attempts = 20;
 				final double maxDistSq = Math.min(100, this.wanderDistanceSq);
 				do {
-					double dist = this.rand.nextDouble() * Math.sqrt(maxDistSq);
-					float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
-					float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
+					double dist = this.random.nextDouble() * Math.sqrt(maxDistSq);
+					float angle = (float) (this.random.nextDouble() * (2 * Math.PI));
+					float tilt = (float) (this.random.nextDouble() * (2 * Math.PI)) * .5f;
 					
-					targ = new BlockPos(new Vector3d(
+					targ = new BlockPos(new Vec3(
 							center.getX() + (Math.cos(angle) * dist),
 							center.getY() + (Math.cos(tilt) * dist),
 							center.getZ() + (Math.sin(angle) * dist)));
-					while (targ.getY() > 0 && world.isAirBlock(targ)) {
-						targ = targ.down();
+					while (targ.getY() > 0 && level.isEmptyBlock(targ)) {
+						targ = targ.below();
 					}
 					if (targ.getY() < 256) {
-						targ = targ.up();
+						targ = targ.above();
 					}
 					
 					// We've hit a non-air block. Make sure there's space above it
 					BlockPos airBlock = null;
-					for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
+					for (int i = 0; i < Math.ceil(this.getBbHeight()); i++) {
 						if (airBlock == null) {
-							airBlock = targ.up();
+							airBlock = targ.above();
 						} else {
-							airBlock = airBlock.up();
+							airBlock = airBlock.above();
 						}
 						
-						if (!world.isAirBlock(airBlock)) {
+						if (!level.isEmptyBlock(airBlock)) {
 							targ = null;
 							break;
 						}
@@ -568,10 +568,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				} while (targ == null && attempts > 0);
 				
 				if (targ == null) {
-					targ = center.up();
+					targ = center.above();
 				}
-				if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-					this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+				if (!this.getNavigation().moveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
+					this.getMoveControl().setWantedPosition(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 				}
 				
 			}
@@ -582,29 +582,29 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	protected void onTaskTick(ILogisticsTask task) {
 		
 		// Mining dwarves should place down lights in the mines and refresh those around them
-		if (task instanceof LogisticsTaskMineBlock && this.ticksExisted % 5 == 0) {
-			if (!this.world.canBlockSeeSky(this.getPosition())) {
+		if (task instanceof LogisticsTaskMineBlock && this.tickCount % 5 == 0) {
+			if (!this.level.canSeeSkyFromBelowWater(this.blockPosition())) {
 				// No light from the 'sky' which means we're underground
 				// Refreseh magic lights around. Then see if it's too dark
 				BlockState state;
-				BlockPos.Mutable cursor = new BlockPos.Mutable();
+				BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 				for (int x = -3; x <= 3; x++)
 				for (int y = -1; y <= 1; y++)
 				for (int z = -3; z <= 3; z++) {
-					cursor.setPos(getPosX() + x, getPosY() + y, getPosZ() + z);
-					state = world.getBlockState(cursor);
+					cursor.set(getX() + x, getY() + y, getZ() + z);
+					state = level.getBlockState(cursor);
 					if (state != null && state.getBlock() instanceof MagicLight) {
-						FairyBlocks.magicLightBright.refresh(world, cursor.toImmutable());
+						FairyBlocks.magicLightBright.refresh(level, cursor.immutable());
 					}
 				}
 				
-				if (this.world.getLightFor(LightType.BLOCK, this.getPosition()) < 8) {
-					if (!this.world.isAirBlock(this.getPosition().up().up().up())
-							&& this.world.isAirBlock(this.getPosition().up().up())) {
-						world.setBlockState(this.getPosition().up().up(), FairyBlocks.magicLightBright.getDefaultState());
-					} else if (!this.world.isAirBlock(this.getPosition().up().up())
-							&& this.world.isAirBlock(this.getPosition().up())) {
-						world.setBlockState(this.getPosition().up(), FairyBlocks.magicLightBright.getDefaultState());
+				if (this.level.getBrightness(LightLayer.BLOCK, this.blockPosition()) < 8) {
+					if (!this.level.isEmptyBlock(this.blockPosition().above().above().above())
+							&& this.level.isEmptyBlock(this.blockPosition().above().above())) {
+						level.setBlockAndUpdate(this.blockPosition().above().above(), FairyBlocks.magicLightBright.defaultBlockState());
+					} else if (!this.level.isEmptyBlock(this.blockPosition().above().above())
+							&& this.level.isEmptyBlock(this.blockPosition().above())) {
+						level.setBlockAndUpdate(this.blockPosition().above(), FairyBlocks.magicLightBright.defaultBlockState());
 					}
 				}
 			}
@@ -615,10 +615,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			switch (sub.getType()) {
 			case ATTACK:
 				this.setPose(ArmPoseDwarf.ATTACKING);
-				this.faceEntity(sub.getEntity(), 30, 180);
+				this.lookAt(sub.getEntity(), 30, 180);
 				break;
 			case BREAK:
-				if (this.isSwingInProgress) {
+				if (this.swinging) {
 					;
 				} else {
 					this.setPose(ArmPoseDwarf.MINING);
@@ -627,13 +627,13 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 						this.setPose(ArmPoseDwarf.IDLE);
 						break;
 					}
-					this.swingArm(getActiveHand());
+					this.swing(getUsedItemHand());
 					BlockPos pos = sub.getPos();
-					double d0 = pos.getX() - this.getPosX();
-			        double d2 = pos.getZ() - this.getPosZ();
-					float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
+					double d0 = pos.getX() - this.getX();
+			        double d2 = pos.getZ() - this.getZ();
+					float desiredYaw = (float)(Mth.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 					
-					this.rotationYaw = desiredYaw;
+					this.yRot = desiredYaw;
 				}
 //				// this is where we'd play some animation?
 //				if (this.onGround) {
@@ -653,38 +653,38 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				break;
 			case IDLE:
 				this.setPose(ArmPoseDwarf.IDLE);
-				if (this.navigator.noPath()) {
+				if (this.navigation.isDone()) {
 					if (movePos == null) {
 						final BlockPos center = sub.getPos();
 						BlockPos targ = null;
 						int attempts = 20;
 						final double maxDistSq = 25;
 						do {
-							double dist = this.rand.nextDouble() * Math.sqrt(maxDistSq);
-							float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
-							float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
+							double dist = this.random.nextDouble() * Math.sqrt(maxDistSq);
+							float angle = (float) (this.random.nextDouble() * (2 * Math.PI));
+							float tilt = (float) (this.random.nextDouble() * (2 * Math.PI)) * .5f;
 							
-							targ = new BlockPos(new Vector3d(
+							targ = new BlockPos(new Vec3(
 									center.getX() + (Math.cos(angle) * dist),
 									center.getY() + (Math.cos(tilt) * dist),
 									center.getZ() + (Math.sin(angle) * dist)));
-							while (targ.getY() > 0 && world.isAirBlock(targ)) {
-								targ = targ.down();
+							while (targ.getY() > 0 && level.isEmptyBlock(targ)) {
+								targ = targ.below();
 							}
 							if (targ.getY() < 256) {
-								targ = targ.up();
+								targ = targ.above();
 							}
 							
 							// We've hit a non-air block. Make sure there's space above it
 							BlockPos airBlock = null;
-							for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
+							for (int i = 0; i < Math.ceil(this.getBbHeight()); i++) {
 								if (airBlock == null) {
-									airBlock = targ.up();
+									airBlock = targ.above();
 								} else {
-									airBlock = airBlock.up();
+									airBlock = airBlock.above();
 								}
 								
-								if (!world.isAirBlock(airBlock)) {
+								if (!level.isEmptyBlock(airBlock)) {
 									targ = null;
 									break;
 								}
@@ -692,10 +692,10 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 						} while (targ == null && attempts > 0);
 						
 						if (targ == null) {
-							targ = center.up();
+							targ = center.above();
 						}
-						if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-							this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+						if (!this.getNavigation().moveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
+							this.getMoveControl().setWantedPosition(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 						}
 						this.movePos = targ;
 					} else {
@@ -720,20 +720,20 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected void registerGoals() {
 		int priority = 1;
-		this.goalSelector.addGoal(priority++, new SwimGoal(this) {
+		this.goalSelector.addGoal(priority++, new FloatGoal(this) {
 			@Override
-			public boolean shouldExecute() {
+			public boolean canUse() {
 				// Ignore water when working
 				if (EntityDwarf.this.getCurrentTask() != null) {
 					return false;
 				}
-				return super.shouldExecute();
+				return super.canUse();
 			}
 		});
 		this.goalSelector.addGoal(priority++, new MeleeAttackGoal(this, 1.0, true)); // also gated on target, like 'combat tick' on fey mechs
 		
 		priority = 1;
-		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setCallsForHelp(EntityDwarf.class));
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setAlertOthers(EntityDwarf.class));
 		
 		// Could hunt mobs
 //		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<MonsterEntity>(this, MonsterEntity.class, 10, true, false, (mob) -> {
@@ -748,19 +748,19 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		// Or if we're idle... wander?
 	}
 
-	public static final AttributeModifierMap.MutableAttribute BuildAttributes() {
+	public static final AttributeSupplier.Builder BuildAttributes() {
 		return EntityFeyBase.BuildFeyAttributes()
-				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .2)
-				.createMutableAttribute(Attributes.MAX_HEALTH, 24)
-				.createMutableAttribute(Attributes.ATTACK_DAMAGE, 3.0)
-				.createMutableAttribute(Attributes.ARMOR, 2.0)
+				.add(Attributes.MOVEMENT_SPEED, .2)
+				.add(Attributes.MAX_HEALTH, 24)
+				.add(Attributes.ATTACK_DAMAGE, 3.0)
+				.add(Attributes.ARMOR, 2.0)
 			;
 	}
 	
-	private ListNBT inventoryToNBT() {
-		ListNBT list = new ListNBT();
+	private ListTag inventoryToNBT() {
+		ListTag list = new ListTag();
 		
-		ItemStack items[] = dataManager.get(ITEMS);
+		ItemStack items[] = entityData.get(ITEMS);
 		for (int i = 0; i < INV_SIZE; i++) {
 			ItemStack stack = items[i];
 			if (!stack.isEmpty()) {
@@ -772,18 +772,18 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void writeAdditional(CompoundNBT compound) {
-		super.writeAdditional(compound);
+	public void addAdditionalSaveData(CompoundTag compound) {
+		super.addAdditionalSaveData(compound);
 		
 		compound.put(NBT_ITEMS, inventoryToNBT());
 	}
 	
-	private void loadInventoryFromNBT(ListNBT list) {
+	private void loadInventoryFromNBT(ListTag list) {
 		ItemStack items[] = new ItemStack[INV_SIZE];
 		
 		for (int i = 0; i < INV_SIZE; i++) {
 			if (i < list.size()) {
-				items[i] = ItemStack.read(list.getCompound(i));
+				items[i] = ItemStack.of(list.getCompound(i));
 			} else {
 				items[i] = ItemStack.EMPTY;
 			}
@@ -793,8 +793,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public void readAdditional(CompoundNBT compound) {
-		super.readAdditional(compound);
+	public void readAdditionalSaveData(CompoundTag compound) {
+		super.readAdditionalSaveData(compound);
 		
 		loadInventoryFromNBT(compound.getList(NBT_ITEMS, NBT.TAG_COMPOUND));
 	}
@@ -805,7 +805,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	protected void collideWithEntity(Entity entityIn) {
+	protected void doPush(Entity entityIn) {
 		if (entityIn instanceof IFeyWorker) {
 			IFeyWorker other = (IFeyWorker) entityIn;
 			if ((this.getCurrentTask() != null)
@@ -814,15 +814,15 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			}
 		}
 		
-		super.collideWithEntity(entityIn);
+		super.doPush(entityIn);
 	}
 	
 	@Override
-	public ILivingEntityData onInitialSpawn(IServerWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
-		livingdata = super.onInitialSpawn(world, difficulty, reason, livingdata, tag);
+	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, @Nullable SpawnGroupData livingdata, @Nullable CompoundTag tag) {
+		livingdata = super.finalizeSpawn(world, difficulty, reason, livingdata, tag);
 		
 		// Dwarves are 40:60 lefthanded
-		if (this.rand.nextFloat() < .4f) {
+		if (this.random.nextFloat() < .4f) {
 			this.setLeftHanded(true);
 		}
 		
@@ -850,7 +850,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				"Torkohm",
 				"Bandus",
 				"Amnik",};
-		return names[this.rand.nextInt(names.length)];
+		return names[this.random.nextInt(names.length)];
 	}
 	
 	private String getRandomLastName() {
@@ -875,7 +875,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 				"Twilightmail",
 				"Amberchest",
 				"Hillgranite"};
-		return names[this.rand.nextInt(names.length)];
+		return names[this.random.nextInt(names.length)];
 	}
 
 	@Override
@@ -884,20 +884,20 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	protected void registerData() {
-		super.registerData();
-		dataManager.register(POSE, ArmPoseDwarf.IDLE);
+	protected void defineSynchedData() {
+		super.defineSynchedData();
+		entityData.define(POSE, ArmPoseDwarf.IDLE);
 		ItemStack[] arr = new ItemStack[INV_SIZE];
 		Arrays.fill(arr, ItemStack.EMPTY);
-		dataManager.register(ITEMS, arr);
+		entityData.define(ITEMS, arr);
 	}
 	
 	public ArmPoseDwarf getDwarfPose() {
-		return dataManager.get(POSE);
+		return entityData.get(POSE);
 	}
 	
 	public void setPose(ArmPoseDwarf pose) {
-		this.dataManager.set(POSE, pose);
+		this.entityData.set(POSE, pose);
 	}
 
 	@Override
@@ -916,17 +916,17 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected void playWorkSound() {
-		NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), world, getPosX(), getPosY(), getPosZ());
+		NostrumFairiesSounds.PICKAXE_HIT.play(NostrumFairies.proxy.getPlayer(), level, getX(), getY(), getZ());
 	}
 	
 	@Override
 	public void tick() {
 		super.tick();
 		
-		if (world.isRemote && isSwingInProgress) {
+		if (level.isClientSide && swinging) {
 			if (this.getDwarfPose() == ArmPoseDwarf.MINING) {
 				// 20% into animation is the hit
-				if (this.swingProgressInt == Math.floor(this.getArmSwingAnimationEnd() * .2)) {
+				if (this.swingTime == Math.floor(this.getArmSwingAnimationEnd() * .2)) {
 					playWorkSound();
 				}
 			}
@@ -934,7 +934,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public boolean isPushedByWater() {
+	public boolean isPushedByFluid() {
 		return false;
 	}
 	
@@ -960,7 +960,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
 	@Override
 	protected int decreaseAirSupply(int air) {
-		if (this.ticksExisted % 3 == 0) {
+		if (this.tickCount % 3 == 0) {
 			return super.decreaseAirSupply(air);
 		}
 		return air;
@@ -978,20 +978,20 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	protected boolean shouldJoin(BlockPos pos, BlockState state, HomeBlockTileEntity te) {
-		return rand.nextBoolean() && rand.nextBoolean();
+		return random.nextBoolean() && random.nextBoolean();
 	}
 
 	@Override
 	protected void onWanderTick() {
 		// Wander around
-		if (this.navigator.noPath() && ticksExisted % 100 == 0 && rand.nextBoolean()) {
+		if (this.navigation.isDone() && tickCount % 100 == 0 && random.nextBoolean()) {
 			if (!EntityFeyBase.FeyLazyFollowNearby(this, EntityFeyBase.DOMESTIC_FEY_AND_PLAYER_FILTER, 15, 3, 6)) {
 				// Go to a random place
-				EntityFeyBase.FeyWander(this, this.getPosition(), Math.min(10, Math.sqrt(this.wanderDistanceSq)));
+				EntityFeyBase.FeyWander(this, this.blockPosition(), Math.min(10, Math.sqrt(this.wanderDistanceSq)));
 			}
 		}
 
-		if (this.getAttackTarget() == null) {
+		if (this.getTarget() == null) {
 			this.setPose(ArmPoseDwarf.IDLE);
 		}
 	}
@@ -1024,7 +1024,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	protected void teleportFromStuck() {
 		if (this.getCurrentTask() != null && this.getCurrentTask() instanceof LogisticsTaskMineBlock) {
 			BlockPos target = findEmptySpot(((LogisticsTaskMineBlock) this.getCurrentTask()).getTargetMineLoc(), false);
-			this.attemptTeleport(target.getX() + .5, target.getY() + .05, target.getZ() + .5, false);
+			this.randomTeleport(target.getX() + .5, target.getY() + .05, target.getZ() + .5, false);
 		} else {
 			super.teleportFromStuck();
 		}
@@ -1033,7 +1033,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 
 	@Override
 	public EntityFeyBase switchToSpecialization(FeyStoneMaterial material) {
-		if (world.isRemote) {
+		if (level.isClientSide) {
 			return this;
 		}
 		
@@ -1041,20 +1041,20 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		if (material != this.getCurrentSpecialization()) {
 			if (material == FeyStoneMaterial.GARNET) {
 				// Crafting
-				replacement = new EntityDwarfCrafter(FairyEntities.DwarfCrafter, world);
+				replacement = new EntityDwarfCrafter(FairyEntities.DwarfCrafter, level);
 			} else if (material == FeyStoneMaterial.EMERALD) {
 				// Builder
-				replacement = new EntityDwarfBuilder(FairyEntities.DwarfBuilder, world);
+				replacement = new EntityDwarfBuilder(FairyEntities.DwarfBuilder, level);
 			} else {
-				replacement = new EntityDwarf(FairyEntities.Dwarf, world);
+				replacement = new EntityDwarf(FairyEntities.Dwarf, level);
 			}
 		}
 		
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			((ServerWorld) world).removeEntity(this);
-			world.addEntity(replacement);
+			((ServerLevel) level).despawn(this);
+			level.addFreshEntity(replacement);
 		}
 		
 		return replacement == null ? this : replacement;

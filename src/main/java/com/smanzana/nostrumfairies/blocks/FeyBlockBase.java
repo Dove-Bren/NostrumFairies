@@ -1,9 +1,9 @@
 package com.smanzana.nostrumfairies.blocks;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 // Just cause I'm sick of these methods lol
 public abstract class FeyBlockBase extends Block {
@@ -13,13 +13,13 @@ public abstract class FeyBlockBase extends Block {
 	}
 	
 	@Override
-	public void onReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
+	public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean isMoving) {
 		if (state.getBlock() != newState.getBlock()) {
 			this.breakBlock(world, pos, state);
 		}
 	}
 	
-	public void breakBlock(World world, BlockPos pos, BlockState state) {
-		world.removeTileEntity(pos);
+	public void breakBlock(Level world, BlockPos pos, BlockState state) {
+		world.removeBlockEntity(pos);
 	}
 }

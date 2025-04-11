@@ -17,22 +17,22 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.item.ItemExpireEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.ItemPickupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity, ILogisticsTaskListener, IFeySign {
+public class GatheringBlockTileEntity extends LogisticsTileEntity implements TickableBlockEntity, ILogisticsTaskListener, IFeySign {
 	
 	protected static final ILogisticsTaskUniqueData<ItemEntity> GATHERING_ITEM = new ILogisticsTaskUniqueData<ItemEntity>() { };
 
@@ -40,7 +40,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	private Map<ItemEntity, LogisticsTaskPickupItem> taskMap;
 	private double radius;
 	
-	private AxisAlignedBB boxCache;
+	private AABB boxCache;
 	private double radiusCache;
 	
 	public GatheringBlockTileEntity() {
@@ -100,7 +100,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	private void scan() {
 		// Update BB cache if needed
 		if (boxCache == null || radiusCache != radius) {
-			boxCache = new AxisAlignedBB(this.pos).grow(radius);
+			boxCache = new AABB(this.worldPosition).inflate(radius);
 			this.radiusCache = radius;
 		}
 		
@@ -109,7 +109,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		}
 		
 		// Check items on the ground nearby and create/destroy any tasks needed
-		List<ItemEntity> items = this.world.getEntitiesWithinAABB(ItemEntity.class, boxCache);
+		List<ItemEntity> items = this.level.getEntitiesOfClass(ItemEntity.class, boxCache);
 		Set<ItemEntity> known = Sets.newHashSet(taskMap.keySet());
 		for (ItemEntity item : items) {
 			if (known.remove(item)) {
@@ -135,7 +135,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	
 	@Override
 	public void tick() {
-		if (this.world.isRemote) {
+		if (this.level.isClientSide) {
 			return;
 		}
 		
@@ -150,8 +150,8 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 		// sqrt(3) is ~1.7321
 		
 		// Idk if this is actually faster than 6 conditionals.
-		return (e.world == this.world &&
-				this.pos.distanceSq(e.getPosX(), e.getPosY(), e.getPosZ(), true) <=
+		return (e.level == this.level &&
+				this.worldPosition.distSqr(e.getX(), e.getY(), e.getZ(), true) <=
 					Math.pow(radius * 1.7321, 2));
 	}
 	
@@ -177,9 +177,9 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	}
 	
 	@Override
-	public void setWorldAndPos(World worldIn, BlockPos pos) {
-		super.setWorldAndPos(worldIn, pos);
-		if (!worldIn.isRemote) {
+	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
+		super.setLevelAndPosition(worldIn, pos);
+		if (!worldIn.isClientSide) {
 			MinecraftForge.EVENT_BUS.register(this);
 		}
 	}
@@ -211,17 +211,17 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements ITi
 	
 	@Override
 	public Direction getSignFacing(IFeySign sign) {
-		BlockState state = world.getBlockState(pos);
-		return state.get(GatheringBlock.FACING);
+		BlockState state = level.getBlockState(worldPosition);
+		return state.getValue(GatheringBlock.FACING);
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT compound) {
-		super.read(state, compound);
+	public void load(BlockState state, CompoundTag compound) {
+		super.load(state, compound);
 	}
 	
 	@Override
-	public void remove() {
-		super.remove();
+	public void setRemoved() {
+		super.setRemoved();
 	}
 }

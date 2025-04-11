@@ -31,13 +31,13 @@ import com.smanzana.nostrumfairies.utils.Location;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.Path;
 
 /**
  * One logical logistics network, with all nodes and the summed availability of each.
@@ -188,14 +188,14 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		}
 	}
 	
-	public CompoundNBT toNBT() {
-		CompoundNBT tag = new CompoundNBT();
-		tag.putUniqueId(NBT_UUID, uuid);
+	public CompoundTag toNBT() {
+		CompoundTag tag = new CompoundTag();
+		tag.putUUID(NBT_UUID, uuid);
 		
-		ListNBT list = new ListNBT();
+		ListTag list = new ListTag();
 		
 		for (ILogisticsComponent component : this.components) {
-			CompoundNBT subtag = new CompoundNBT();
+			CompoundTag subtag = new CompoundTag();
 			subtag.putString(NBT_COMPONENT_KEY, component.getSerializationTag());
 			subtag.put(NBT_COMPONENT_VALUE, component.toNBT());
 			list.add(subtag);
@@ -203,7 +203,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		
 		tag.put(NBT_COMPONENTS, list);
 		
-		list = new ListNBT();
+		list = new ListTag();
 		
 		for (Location beacon : extraBeacons) {
 			list.add(beacon.toNBT());
@@ -215,17 +215,17 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		return tag;
 	}
 	
-	public static LogisticsNetwork fromNBT(CompoundNBT tag) {
-		if (!tag.hasUniqueId(NBT_UUID)) {
+	public static LogisticsNetwork fromNBT(CompoundTag tag) {
+		if (!tag.hasUUID(NBT_UUID)) {
 			throw new RuntimeException("Missing UUID in LogisticsNetwork tag");
 		}
 		
-		UUID id = tag.getUniqueId(NBT_UUID);
+		UUID id = tag.getUUID(NBT_UUID);
 		LogisticsNetwork network = new LogisticsNetwork(id, false);
 		
-		ListNBT list = tag.getList(NBT_COMPONENTS, NBT.TAG_COMPOUND);
+		ListTag list = tag.getList(NBT_COMPONENTS, Tag.TAG_COMPOUND);
 		for (int i = list.size() - 1; i >= 0; i--) {
-			CompoundNBT wrapper = list.getCompound(i);
+			CompoundTag wrapper = list.getCompound(i);
 			String key = wrapper.getString(NBT_COMPONENT_KEY);
 			ILogisticsComponentFactory<?> factory = NostrumFairies.logisticsComponentRegistry.lookupFactory(key);
 			
@@ -237,9 +237,9 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 			}
 		}
 		
-		list = tag.getList(NBT_BEACONS, NBT.TAG_COMPOUND);
+		list = tag.getList(NBT_BEACONS, Tag.TAG_COMPOUND);
 		for (int i = list.size() - 1; i >= 0; i--) {
-			CompoundNBT wrapper = list.getCompound(i);
+			CompoundTag wrapper = list.getCompound(i);
 			network.addBeacon(Location.FromNBT(wrapper));
 		}
 		
@@ -274,7 +274,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		// If either distance reaches, call it a success
 		final double dist = Math.max(component.getLogisticsLinkRange(), other.getLogisticsLinkRange());
 		
-		return (component.getPosition().distanceSq(other.getPosition()) < dist * dist);
+		return (component.getPosition().distSqr(other.getPosition()) < dist * dist);
 	}
 	
 	/**
@@ -302,7 +302,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 	 * @param pos
 	 * @return
 	 */
-	public @Nullable ILogisticsComponent getLogisticsFor(World world, BlockPos pos) {
+	public @Nullable ILogisticsComponent getLogisticsFor(Level world, BlockPos pos) {
 		if (components.isEmpty()) {
 			return null; // First component
 		}
@@ -315,7 +315,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 				continue;
 			}
 			
-			final double dist = myComponent.getPosition().distanceSq(pos);
+			final double dist = myComponent.getPosition().distSqr(pos);
 			if (dist > Math.pow(myComponent.getLogisticRange(), 2)) {
 				// too far away
 				continue;
@@ -337,7 +337,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 	 * @param pos
 	 * @return
 	 */
-	public boolean canLogisticsReach(World world, BlockPos pos) {
+	public boolean canLogisticsReach(Level world, BlockPos pos) {
 		return getLogisticsFor(world, pos) != null;
 	}
 	
@@ -359,7 +359,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		return node == null ? null : node.component;
 	}
 	
-	public @Nullable ILogisticsComponent getComponentAt(World world, BlockPos pos) {
+	public @Nullable ILogisticsComponent getComponentAt(Level world, BlockPos pos) {
 		return getComponentAt(new Location(world, pos));
 	}
 	
@@ -373,7 +373,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		this.components.add(component);
 		dirty();
 		rebuildGraph();
-		NostrumFairies.instance.getLogisticsRegistry().markDirty();
+		NostrumFairies.instance.getLogisticsRegistry().setDirty();
 	}
 	
 	/**
@@ -457,7 +457,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 			
 			dirty();
 			rebuildGraph();
-			NostrumFairies.instance.getLogisticsRegistry().markDirty();
+			NostrumFairies.instance.getLogisticsRegistry().setDirty();
 		}
 	}
 	
@@ -478,7 +478,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		otherNetwork.dirty();
 		otherNetwork.removeNetwork();
 		
-		NostrumFairies.instance.getLogisticsRegistry().markDirty();
+		NostrumFairies.instance.getLogisticsRegistry().setDirty();
 		
 		this.dirty();
 		this.rebuildGraph();
@@ -736,7 +736,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 	 * @param rawContents if true, return the actaul contents of the component without adjusting for deliveries or item requests.
 	 * @return
 	 */
-	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(@Nullable World world, @Nullable BlockPos pos, double maxDistance, ItemCacheType type) {
+	public Map<ILogisticsComponent, List<ItemDeepStack>> getNetworkItems(@Nullable Level world, @Nullable BlockPos pos, double maxDistance, ItemCacheType type) {
 		refresh();
 		
 		Map<ILogisticsComponent, List<ItemDeepStack>> filteredMap;
@@ -744,8 +744,8 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 			filteredMap = new HashMap<>();
 		} else {
 			filteredMap = new TreeMap<>((l, r) -> {
-				double lDist = l.getPosition().distanceSq(pos);
-				double rDist = r.getPosition().distanceSq(pos);
+				double lDist = l.getPosition().distSqr(pos);
+				double rDist = r.getPosition().distSqr(pos);
 				return (lDist < rDist ? -1 : 1);
 			});
 		}
@@ -757,7 +757,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 				continue;
 			}
 			
-			if (pos == null || component.getPosition().distanceSq(pos) < maxDistSq) {
+			if (pos == null || component.getPosition().distSqr(pos) < maxDistSq) {
 				switch (type) {
 				case GROSS:
 					filteredMap.put(component, entry.getValue().grossItems);
@@ -776,7 +776,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		return filteredMap;
 	}
 	
-	public @Nullable ILogisticsComponent getStorageForItem(World world, BlockPos pos, @Nonnull ItemStack stack, @Nullable Predicate<ILogisticsComponent> filter) {
+	public @Nullable ILogisticsComponent getStorageForItem(Level world, BlockPos pos, @Nonnull ItemStack stack, @Nullable Predicate<ILogisticsComponent> filter) {
 		ILogisticsComponent nearest = null;
 		double minDist = 0;
 		
@@ -803,7 +803,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 				continue;
 			}
 			
-			final double dist = comp.getPosition().distanceSq(pos);
+			final double dist = comp.getPosition().distSqr(pos);
 			if (nearest == null || dist < minDist) {
 				minDist = dist;
 				nearest = comp;
@@ -813,7 +813,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		return nearest;
 	}
 	
-	public @Nullable ILogisticsComponent getStorageForItem(World world, BlockPos pos, ItemStack stack) {
+	public @Nullable ILogisticsComponent getStorageForItem(Level world, BlockPos pos, ItemStack stack) {
 		return getStorageForItem(world, pos, stack, null);
 	}
 	
@@ -963,7 +963,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		}
 	}
 	
-	public void addBeacon(World world, BlockPos pos) {
+	public void addBeacon(Level world, BlockPos pos) {
 		this.addBeacon(new Location(world, pos));
 	}
 	
@@ -973,7 +973,7 @@ public class LogisticsNetwork implements LogisticsTaskLogger {
 		}
 	}
 	
-	public void removeBeacon(World world, BlockPos pos) {
+	public void removeBeacon(Level world, BlockPos pos) {
 		this.removeBeacon(new Location(world, pos));
 	}
 	

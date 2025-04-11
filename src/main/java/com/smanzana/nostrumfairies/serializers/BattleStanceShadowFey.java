@@ -1,37 +1,37 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.IDataSerializer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializer;
 
 public enum BattleStanceShadowFey {
 	RANGED,
 	MELEE,
 	IDLE;
 	
-	public final static class BattleStanceSerializer implements IDataSerializer<BattleStanceShadowFey> {
+	public final static class BattleStanceSerializer implements EntityDataSerializer<BattleStanceShadowFey> {
 		
 		private BattleStanceSerializer() {
 			;
 		}
 		
 		@Override
-		public void write(PacketBuffer buf, BattleStanceShadowFey value) {
-			buf.writeEnumValue(value);
+		public void write(FriendlyByteBuf buf, BattleStanceShadowFey value) {
+			buf.writeEnum(value);
 		}
 
 		@Override
-		public BattleStanceShadowFey read(PacketBuffer buf) {
-			return buf.readEnumValue(BattleStanceShadowFey.class);
+		public BattleStanceShadowFey read(FriendlyByteBuf buf) {
+			return buf.readEnum(BattleStanceShadowFey.class);
 		}
 
 		@Override
-		public DataParameter<BattleStanceShadowFey> createKey(int id) {
-			return new DataParameter<>(id, this);
+		public EntityDataAccessor<BattleStanceShadowFey> createAccessor(int id) {
+			return new EntityDataAccessor<>(id, this);
 		}
 
 		@Override
-		public BattleStanceShadowFey copyValue(BattleStanceShadowFey value) {
+		public BattleStanceShadowFey copy(BattleStanceShadowFey value) {
 			return value;
 		}
 	}

@@ -5,10 +5,10 @@ import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.CapabilitySyncMessage;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class CommonProxy {
 	
@@ -16,7 +16,7 @@ public class CommonProxy {
 		;
 	}
 	
-	public PlayerEntity getPlayer() {
+	public Player getPlayer() {
 		return null; // Doesn't mean anything on the server
 	}
 	
@@ -28,14 +28,14 @@ public class CommonProxy {
 		; // Nothing on server
 	}
 	
-	public void pushCapabilityRefresh(PlayerEntity player) {
+	public void pushCapabilityRefresh(Player player) {
 		INostrumFeyCapability feyAttr = NostrumFairies.getFeyWrapper(player);
 		if (feyAttr != null) {
-			NetworkHandler.sendTo(new CapabilitySyncMessage(feyAttr), (ServerPlayerEntity) player);
+			NetworkHandler.sendTo(new CapabilitySyncMessage(feyAttr), (ServerPlayer) player);
 		}
 	}
 	
-	public void openStorageMonitor(World world, BlockPos pos) {
+	public void openStorageMonitor(Level world, BlockPos pos) {
 		; // Nothing on server
 	}
 }

@@ -25,36 +25,36 @@ import com.smanzana.nostrummagica.spell.component.SpellEffectPart;
 import com.smanzana.nostrummagica.spell.component.SpellShapePart;
 import com.smanzana.nostrummagica.spell.component.shapes.NostrumSpellShapes;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.IRangedAttackMob;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.monster.RangedAttackMob;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.core.NonNullList;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
-public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRangedAttackMob {
+public class EntityElf extends EntityFeyBase implements IItemCarrierFey, RangedAttackMob {
 	
 	public static final String ID = "elf";
 
@@ -75,12 +75,12 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		}
 	}
 	
-	protected static final DataParameter<ArmPoseElf> POSE  = EntityDataManager.<ArmPoseElf>createKey(EntityElf.class, ArmPoseElf.instance());
+	protected static final EntityDataAccessor<ArmPoseElf> POSE  = SynchedEntityData.<ArmPoseElf>defineId(EntityElf.class, ArmPoseElf.instance());
 	
 	private @Nullable BlockPos movePos;
 	private @Nullable Entity moveEntity;
 	
-	public EntityElf(EntityType<? extends EntityElf> type, World world) {
+	public EntityElf(EntityType<? extends EntityElf> type, Level world) {
 		super(type, world);
 		this.workDistanceSq = 32 * 32;
 		
@@ -175,7 +175,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		if (task instanceof LogisticsTaskChopTree) {
 			LogisticsTaskChopTree chop = (LogisticsTaskChopTree) task;
 			
-			if (chop.getWorld() != this.world) {
+			if (chop.getWorld() != this.level) {
 				return false;
 			}
 			
@@ -194,8 +194,8 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			if (this.getDistanceSq(pickup) < .2) {
 				return true;
 			}
-			if (this.navigator.tryMoveToXYZ(pickup.getX(), pickup.getY(), pickup.getZ(), 1.0)) {
-				navigator.clearPath();
+			if (this.navigation.moveTo(pickup.getX(), pickup.getY(), pickup.getZ(), 1.0)) {
+				navigation.stop();
 				return true;
 			}
 		}
@@ -236,9 +236,9 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		this.setPose(ArmPoseElf.IDLE);
 		
 		// See if we're too far away from our home block
-		if (this.navigator.noPath()) {
+		if (this.navigation.isDone()) {
 			BlockPos home = this.getHome();
-			if (home != null && !this.canReach(this.getPosition(), false)) {
+			if (home != null && !this.canReach(this.blockPosition(), false)) {
 				
 				// Go to a random place around our home
 				final BlockPos center = home;
@@ -246,31 +246,31 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 				int attempts = 20;
 				final double maxDistSq = Math.min(25, this.wanderDistanceSq);
 				do {
-					double dist = this.rand.nextDouble() * Math.sqrt(maxDistSq);
-					float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
-					float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
+					double dist = this.random.nextDouble() * Math.sqrt(maxDistSq);
+					float angle = (float) (this.random.nextDouble() * (2 * Math.PI));
+					float tilt = (float) (this.random.nextDouble() * (2 * Math.PI)) * .5f;
 					
-					targ = new BlockPos(new Vector3d(
+					targ = new BlockPos(new Vec3(
 							center.getX() + (Math.cos(angle) * dist),
 							center.getY() + (Math.cos(tilt) * dist),
 							center.getZ() + (Math.sin(angle) * dist)));
-					while (targ.getY() > 0 && world.isAirBlock(targ)) {
-						targ = targ.down();
+					while (targ.getY() > 0 && level.isEmptyBlock(targ)) {
+						targ = targ.below();
 					}
 					if (targ.getY() < 256) {
-						targ = targ.up();
+						targ = targ.above();
 					}
 					
 					// We've hit a non-air block. Make sure there's space above it
 					BlockPos airBlock = null;
-					for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
+					for (int i = 0; i < Math.ceil(this.getBbHeight()); i++) {
 						if (airBlock == null) {
-							airBlock = targ.up();
+							airBlock = targ.above();
 						} else {
-							airBlock = airBlock.up();
+							airBlock = airBlock.above();
 						}
 						
-						if (!world.isAirBlock(airBlock)) {
+						if (!level.isEmptyBlock(airBlock)) {
 							targ = null;
 							break;
 						}
@@ -278,10 +278,10 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 				} while (targ == null && attempts > 0);
 				
 				if (targ == null) {
-					targ = center.up();
+					targ = center.above();
 				}
-				if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-					this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+				if (!this.getNavigation().moveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
+					this.getMoveControl().setWantedPosition(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 				}
 				
 			}
@@ -295,27 +295,27 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			switch (sub.getType()) {
 			case ATTACK:
 				setPose(ArmPoseElf.ATTACKING);
-				this.faceEntity(sub.getEntity(), 30, 180);
+				this.lookAt(sub.getEntity(), 30, 180);
 				break;
 			case BREAK:
 				setPose(ArmPoseElf.WORKING);
 				BlockPos pos = sub.getPos();
-				double d0 = pos.getX() - this.getPosX();
-		        double d2 = pos.getZ() - this.getPosZ();
-				float desiredYaw = (float)(MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
-				this.setRotation(desiredYaw, .2f);
+				double d0 = pos.getX() - this.getX();
+		        double d2 = pos.getZ() - this.getZ();
+				float desiredYaw = (float)(Mth.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
+				this.setRot(desiredYaw, .2f);
 				//this.rotationYaw = desiredYaw;
 				//this.rotationPitch = 1;
-				if (this.isSwingInProgress) {
+				if (this.swinging) {
 					// On the client, spawn some particles if we're using our wand
-					if (ticksExisted % 5 == 0 && getElfPose() == ArmPoseElf.WORKING) {
-						world.addParticle(ParticleTypes.DRAGON_BREATH,
-								getPosX(), getPosY(), getPosZ(),
+					if (tickCount % 5 == 0 && getElfPose() == ArmPoseElf.WORKING) {
+						level.addParticle(ParticleTypes.DRAGON_BREATH,
+								getX(), getY(), getZ(),
 								0, 0.3, 0
 								);
 					}
-					if (taskTickCount % 15 == 0 && getElfPose() == ArmPoseElf.WORKING && rand.nextBoolean()) {
-						world.playSound(null, getPosX(), getPosY(), getPosZ(), SoundEvents.BLOCK_WOOD_HIT, SoundCategory.NEUTRAL, 1f, 1.6f);
+					if (taskTickCount % 15 == 0 && getElfPose() == ArmPoseElf.WORKING && random.nextBoolean()) {
+						level.playSound(null, getX(), getY(), getZ(), SoundEvents.WOOD_HIT, SoundSource.NEUTRAL, 1f, 1.6f);
 					}
 				} else {
 					task.markSubtaskComplete();
@@ -323,43 +323,43 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 						setPose(ArmPoseElf.IDLE);
 						break;
 					}
-					this.swingArm(this.getActiveHand());
+					this.swing(this.getUsedItemHand());
 				}
 				break;
 			case IDLE:
 				setPose(ArmPoseElf.IDLE);
-				if (this.navigator.noPath()) {
+				if (this.navigation.isDone()) {
 					if (movePos == null) {
 						final BlockPos center = sub.getPos();
 						BlockPos targ = null;
 						int attempts = 20;
 						final double maxDistSq = 25;
 						do {
-							double dist = this.rand.nextDouble() * Math.sqrt(maxDistSq);
-							float angle = (float) (this.rand.nextDouble() * (2 * Math.PI));
-							float tilt = (float) (this.rand.nextDouble() * (2 * Math.PI)) * .5f;
+							double dist = this.random.nextDouble() * Math.sqrt(maxDistSq);
+							float angle = (float) (this.random.nextDouble() * (2 * Math.PI));
+							float tilt = (float) (this.random.nextDouble() * (2 * Math.PI)) * .5f;
 							
-							targ = new BlockPos(new Vector3d(
+							targ = new BlockPos(new Vec3(
 									center.getX() + (Math.cos(angle) * dist),
 									center.getY() + (Math.cos(tilt) * dist),
 									center.getZ() + (Math.sin(angle) * dist)));
-							while (targ.getY() > 0 && world.isAirBlock(targ)) {
-								targ = targ.down();
+							while (targ.getY() > 0 && level.isEmptyBlock(targ)) {
+								targ = targ.below();
 							}
 							if (targ.getY() < 256) {
-								targ = targ.up();
+								targ = targ.above();
 							}
 							
 							// We've hit a non-air block. Make sure there's space above it
 							BlockPos airBlock = null;
-							for (int i = 0; i < Math.ceil(this.getHeight()); i++) {
+							for (int i = 0; i < Math.ceil(this.getBbHeight()); i++) {
 								if (airBlock == null) {
-									airBlock = targ.up();
+									airBlock = targ.above();
 								} else {
-									airBlock = airBlock.up();
+									airBlock = airBlock.above();
 								}
 								
-								if (!world.isAirBlock(airBlock)) {
+								if (!level.isEmptyBlock(airBlock)) {
 									targ = null;
 									break;
 								}
@@ -367,10 +367,10 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 						} while (targ == null && attempts > 0);
 						
 						if (targ == null) {
-							targ = center.up();
+							targ = center.above();
 						}
-						if (!this.getNavigator().tryMoveToXYZ(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
-							this.getMoveHelper().setMoveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
+						if (!this.getNavigation().moveTo(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f)) {
+							this.getMoveControl().setWantedPosition(targ.getX() + .5, targ.getY(), targ.getZ() + .5, 1.0f);
 						}
 						this.movePos = targ;
 					} else {
@@ -395,7 +395,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	@Override
 	protected void registerGoals() {
 		int priority = 1;
-		this.goalSelector.addGoal(priority++, new SwimGoal(this));
+		this.goalSelector.addGoal(priority++, new FloatGoal(this));
 		//this.goalSelector.addGoal(priority++, new AttackRangedGoal(this, 1.0, 20 * 3, 10));
 		this.goalSelector.addGoal(priority++, new AttackRangedGoal<EntityElf>(this, 1.0, 20 * 3, 10) {
 			@Override
@@ -417,24 +417,24 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 //		}, new Spell[]{SPELL_POISON_WIND}));
 		
 		priority = 1;
-		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setCallsForHelp(EntityElf.class));
+		this.targetSelector.addGoal(priority++, new HurtByTargetGoal(this).setAlertOthers(EntityElf.class));
 	}
 
-	public static final AttributeModifierMap.MutableAttribute BuildAttributes() {
+	public static final AttributeSupplier.Builder BuildAttributes() {
 		return EntityFeyBase.BuildFeyAttributes()
-				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .28)
-				.createMutableAttribute(Attributes.MAX_HEALTH, 8.0)
+				.add(Attributes.MOVEMENT_SPEED, .28)
+				.add(Attributes.MAX_HEALTH, 8.0)
 			;
 	}
 	
 	@Override
-	public void writeAdditional(CompoundNBT compound) {
-		super.writeAdditional(compound);
+	public void addAdditionalSaveData(CompoundTag compound) {
+		super.addAdditionalSaveData(compound);
 	}
 	
 	@Override
-	public void readAdditional(CompoundNBT compound) {
-		super.readAdditional(compound);
+	public void readAdditionalSaveData(CompoundTag compound) {
+		super.readAdditionalSaveData(compound);
 	}
 
 	@Override
@@ -443,8 +443,8 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 	
 	@Override
-	protected void collideWithEntity(Entity entityIn) {
-		super.collideWithEntity(entityIn);
+	protected void doPush(Entity entityIn) {
+		super.doPush(entityIn);
 	}
 
 	@Override
@@ -481,7 +481,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			"Elyon Farro",
 			"Elred Wysamaer",
 		};
-		return names[rand.nextInt(names.length)];
+		return names[random.nextInt(names.length)];
 	}
 
 	@Override
@@ -490,17 +490,17 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 	
 	@Override
-	protected void registerData() {
-		super.registerData();
-		dataManager.register(POSE, ArmPoseElf.IDLE);
+	protected void defineSynchedData() {
+		super.defineSynchedData();
+		entityData.define(POSE, ArmPoseElf.IDLE);
 	}
 	
 	@Override
-	public ILivingEntityData onInitialSpawn(IServerWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
-		livingdata = super.onInitialSpawn(world, difficulty, reason, livingdata, tag);
+	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, @Nullable SpawnGroupData livingdata, @Nullable CompoundTag tag) {
+		livingdata = super.finalizeSpawn(world, difficulty, reason, livingdata, tag);
 		
 		// Elves are 70:30 lefthanded
-		if (this.rand.nextFloat() < .7f) {
+		if (this.random.nextFloat() < .7f) {
 			this.setLeftHanded(true);
 		}
 		
@@ -508,11 +508,11 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	}
 	
 	public ArmPoseElf getElfPose() {
-		return dataManager.get(POSE);
+		return entityData.get(POSE);
 	}
 	
 	public void setPose(ArmPoseElf pose) {
-		this.dataManager.set(POSE, pose);
+		this.entityData.set(POSE, pose);
 	}
 	
 	@Override
@@ -522,21 +522,21 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	
 	@Override
 	protected void onCientTick() {
-		if (this.ticksExisted % 10 == 0 && this.getElfPose() == ArmPoseElf.WORKING) {
+		if (this.tickCount % 10 == 0 && this.getElfPose() == ArmPoseElf.WORKING) {
 			
-			double angle = this.rotationYawHead + ((this.isLeftHanded() ? -1 : 1) * 22.5);
+			double angle = this.yHeadRot + ((this.isLeftHanded() ? -1 : 1) * 22.5);
 			double xdiff = Math.sin(angle / 180.0 * Math.PI) * .4;
 			double zdiff = Math.cos(angle / 180.0 * Math.PI) * .4;
 			
-			double x = getPosX() - xdiff;
-			double z = getPosZ() + zdiff;
-			world.addParticle(ParticleTypes.DRAGON_BREATH, x, getPosY() + 1.25, z, 0, .015, 0);
+			double x = getX() - xdiff;
+			double z = getZ() + zdiff;
+			level.addParticle(ParticleTypes.DRAGON_BREATH, x, getY() + 1.25, z, 0, .015, 0);
 		}
 	}
 
 	@Override
-	public void attackEntityWithRangedAttack(LivingEntity target, float distanceFactor) {
-		if (rand.nextFloat() < .1) {
+	public void performRangedAttack(LivingEntity target, float distanceFactor) {
+		if (random.nextFloat() < .1) {
 			SPELL_VINES.cast(this, 1.0f);
 		} else {
 			SPELL_POISON_WIND.cast(this, 1.0f);
@@ -555,20 +555,20 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 	
 	@Override
 	protected boolean shouldJoin(BlockPos pos, BlockState state, HomeBlockTileEntity te) {
-		return rand.nextBoolean() && rand.nextBoolean();
+		return random.nextBoolean() && random.nextBoolean();
 	}
 
 	@Override
 	protected void onWanderTick() {
 		// Wander around
-		if (this.navigator.noPath() && ticksExisted % 50 == 0 && rand.nextBoolean() && rand.nextBoolean()) {
+		if (this.navigation.isDone() && tickCount % 50 == 0 && random.nextBoolean() && random.nextBoolean()) {
 			if (!EntityFeyBase.FeyLazyFollowNearby(this, EntityFeyBase.DOMESTIC_FEY_AND_PLAYER_FILTER, 20, 4, 8)) {
 				// Go to a random place
-				EntityFeyBase.FeyWander(this, this.getPosition(), Math.min(10, Math.sqrt(this.wanderDistanceSq)));
+				EntityFeyBase.FeyWander(this, this.blockPosition(), Math.min(10, Math.sqrt(this.wanderDistanceSq)));
 			}
 		}
 		
-		if (this.getAttackTarget() == null) {
+		if (this.getTarget() == null) {
 			this.setPose(ArmPoseElf.IDLE);
 		}
 	}
@@ -593,7 +593,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 
 	@Override
 	public EntityFeyBase switchToSpecialization(FeyStoneMaterial material) {
-		if (world.isRemote) {
+		if (level.isClientSide) {
 			return this;
 		}
 		
@@ -601,12 +601,12 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 		if (material != this.getCurrentSpecialization()) {
 			if (material == FeyStoneMaterial.GARNET) {
 				// Crafting
-				replacement = new EntityElfCrafter(FairyEntities.ElfCrafter, world);
+				replacement = new EntityElfCrafter(FairyEntities.ElfCrafter, level);
 			} else if (material == FeyStoneMaterial.AQUAMARINE) {
 				// Archery
-				replacement = new EntityElfArcher(FairyEntities.ElfArcher, world);
+				replacement = new EntityElfArcher(FairyEntities.ElfArcher, level);
 			} else {
-				replacement = new EntityElf(FairyEntities.Elf, world);
+				replacement = new EntityElf(FairyEntities.Elf, level);
 			}
 		}
 		
@@ -614,8 +614,8 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, IRanged
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
 			//this.remove();
-			((ServerWorld) world).removeEntity(this);
-			world.addEntity(replacement);
+			((ServerLevel) level).despawn(this);
+			level.addFreshEntity(replacement);
 		}
 		
 		return replacement == null ? this : replacement;

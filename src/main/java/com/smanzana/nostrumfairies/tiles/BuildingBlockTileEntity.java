@@ -24,20 +24,20 @@ import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity,  ILogisticsTaskListener, IFeySign {
+public class BuildingBlockTileEntity extends LogisticsTileEntity implements TickableBlockEntity,  ILogisticsTaskListener, IFeySign {
 
 	private static final String NBT_SLOT = "itemslot";
 	
@@ -84,7 +84,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 			@Nonnull ItemStack item = TemplateBlock.GetRequiredItem(missingState);
 			LogisticsTaskBuildBlock task = new LogisticsTaskBuildBlock(this.getNetworkComponent(), "Repair Task",
 					item, missingState,
-					world, base);
+					level, base);
 			this.taskMap.put(base, task);
 			network.getTaskRegistry().register(task, this);
 		}
@@ -117,10 +117,10 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		
 		final long startTime = System.currentTimeMillis();
 		
-		List<BlockPos> blocks = blueprint.spawn(world, pos, Direction.NORTH);
+		List<BlockPos> blocks = blueprint.spawn(level, worldPosition, Direction.NORTH);
 		if (!blocks.isEmpty()) {
 			for (BlockPos pos : blocks) {
-				this.makePlaceTask(pos, TemplateBlock.GetTemplatedState(world, pos));
+				this.makePlaceTask(pos, TemplateBlock.GetTemplatedState(level, pos));
 			}
 		}
 		
@@ -135,7 +135,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 			return;
 		}
 		
-		final BlockPos center = this.getPos();
+		final BlockPos center = this.getBlockPos();
 		
 		if (center.getY() + y < 0 || center.getY() + y > 255) {
 			return;
@@ -146,17 +146,17 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 		Set<BlockPos> known = Sets.newHashSet(taskMap.keySet());
 		List<BlockPos> templateSpots = new LinkedList<>();
 		
-		final BlockPos.Mutable cursor = new BlockPos.Mutable();
+		final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 		for (int x = (int) Math.floor(-radius); x <= Math.ceil(radius); x++)
 		for (int z = (int) Math.floor(-radius); z <= Math.ceil(radius); z++) {
-			cursor.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);
-			if (!NostrumMagica.isBlockLoaded(world, cursor)) {
+			cursor.set(center.getX() + x, center.getY() + y, center.getZ() + z);
+			if (!NostrumMagica.isBlockLoaded(level, cursor)) {
 				break; // skip this whole column
 			}
 			
-			BlockState state = world.getBlockState(cursor);
+			BlockState state = level.getBlockState(cursor);
 			if (state != null && state.getBlock() instanceof TemplateBlock) {
-				templateSpots.add(cursor.toImmutable());
+				templateSpots.add(cursor.immutable());
 			}
 		}
 		
@@ -166,7 +166,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 			} else {
 				// Didn't know, so record!
 				// Don't make task cause we filter better later
-				makePlaceTask(base, TemplateBlock.GetTemplatedState(world, base));
+				makePlaceTask(base, TemplateBlock.GetTemplatedState(level, base));
 			}
 		}
 		
@@ -185,7 +185,7 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	
 	@Override
 	public void tick() {
-		if (this.world.isRemote) {
+		if (this.level.isClientSide) {
 			return;
 		}
 		
@@ -225,31 +225,31 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	
 	@SubscribeEvent
 	public void onExplosion(ExplosionEvent.Detonate event) {
-		if (event.isCanceled() || !event.getWorld().equals(world)) {
+		if (event.isCanceled() || !event.getWorld().equals(level)) {
 			return;
 		}
 		
 		List<BlockPos> positions = new ArrayList<>();
 		List<BlockState> states = new ArrayList<>();
 		for (BlockPos loc : event.getAffectedBlocks()) {
-			if (loc.equals(pos)) {
+			if (loc.equals(worldPosition)) {
 				// We got blown up
 				return;
 			}
 			
-			if (Math.abs(pos.getX() - loc.getX()) < radius
-					|| Math.abs(pos.getY() - loc.getY()) < radius
-					|| Math.abs(pos.getZ() - loc.getZ()) < radius) {
+			if (Math.abs(worldPosition.getX() - loc.getX()) < radius
+					|| Math.abs(worldPosition.getY() - loc.getY()) < radius
+					|| Math.abs(worldPosition.getZ() - loc.getZ()) < radius) {
 				positions.add(loc);
-				states.add(world.getBlockState(loc));
+				states.add(level.getBlockState(loc));
 			}
 		}
 		
 		if (!positions.isEmpty()) {
 			NostrumMagica.playerListener.registerTimer((type, entity, data) -> {
 				for (int i = 0; i < positions.size(); i++) {
-					if (world.isAirBlock(positions.get(i))) {
-						TemplateBlock.SetTemplate(world, positions.get(i), states.get(i));
+					if (level.isEmptyBlock(positions.get(i))) {
+						TemplateBlock.SetTemplate(level, positions.get(i), states.get(i));
 					}
 				}
 				
@@ -260,8 +260,8 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	@Override
-	public CompoundNBT write(CompoundNBT nbt) {
-		nbt = super.write(nbt);
+	public CompoundTag save(CompoundTag nbt) {
+		nbt = super.save(nbt);
 		
 		if (this.slot != null) {
 			nbt.put(NBT_SLOT, slot.serializeNBT());
@@ -271,36 +271,36 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT nbt) {
-		super.read(state, nbt);
+	public void load(BlockState state, CompoundTag nbt) {
+		super.load(state, nbt);
 		
-		this.slot = ItemStack.read(nbt.getCompound(NBT_SLOT));
+		this.slot = ItemStack.of(nbt.getCompound(NBT_SLOT));
 	}
 	
-	public IInventory getInventory() {
+	public Container getInventory() {
 		BuildingBlockTileEntity self = this;
-		IInventory inv = new Inventory(1) {
+		Container inv = new SimpleContainer(1) {
 			
 			@Override
-			public void markDirty() {
-				if (!slot.isEmpty() && this.getStackInSlot(0).isEmpty() && !self.world.isRemote) {
+			public void setChanged() {
+				if (!slot.isEmpty() && this.getItem(0).isEmpty() && !self.level.isClientSide) {
 					System.out.println("Clearing item");
 				}
 				
-				slot = this.getStackInSlot(0);
-				super.markDirty();
-				self.markDirty();
-				BlockState state = self.world.getBlockState(pos);
-				self.world.notifyBlockUpdate(pos, state, state, 2);
+				slot = this.getItem(0);
+				super.setChanged();
+				self.setChanged();
+				BlockState state = self.level.getBlockState(worldPosition);
+				self.level.sendBlockUpdated(worldPosition, state, state, 2);
 			}
 			
 			@Override
-			public boolean isItemValidForSlot(int index, ItemStack stack) {
+			public boolean canPlaceItem(int index, ItemStack stack) {
 				return index == 0 && (stack.isEmpty() || stack.getItem() instanceof TemplateScroll);
 			}
 		};
 		
-		inv.setInventorySlotContents(0, slot);
+		inv.setItem(0, slot);
 		return inv;
 	}
 	
@@ -313,13 +313,13 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements ITic
 	
 	@Override
 	public Direction getSignFacing(IFeySign sign) {
-		BlockState state = world.getBlockState(pos);
-		return state.get(BuildingBlock.FACING);
+		BlockState state = level.getBlockState(worldPosition);
+		return state.getValue(BuildingBlock.FACING);
 	}
 	
 	@Override
-	public void remove() {
-		super.remove();
+	public void setRemoved() {
+		super.setRemoved();
 	}
 	
 	public @Nonnull ItemStack getTemplateScroll() {

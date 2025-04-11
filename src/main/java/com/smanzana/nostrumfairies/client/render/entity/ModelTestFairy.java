@@ -1,27 +1,27 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelPart;
 
 public class ModelTestFairy extends EntityModel<EntityTestFairy> {
 
-	private ModelRenderer main;
+	private ModelPart main;
 	
 	public ModelTestFairy() {
-		main = new ModelRenderer(this, 0, 0);
+		main = new ModelPart(this, 0, 0);
 		
-		main.setTextureSize(32, 32);
+		main.setTexSize(32, 32);
 		//main.setRotationPoint(0, 20, 0);
 //		main.addBox(-10, 12, -10, 20, 20, 20);
 		main.addBox(-5,14,-5,10,10,10);
 	}
 	
 	@Override
-	public void render(MatrixStack matrixStackIn, IVertexBuilder buffer, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+	public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer buffer, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
 		main.render(matrixStackIn, buffer, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 		
 //		ItemStack stack = entity.getCarriedItems().get(0);
@@ -34,7 +34,7 @@ public class ModelTestFairy extends EntityModel<EntityTestFairy> {
 	}
 
 	@Override
-	public void setRotationAngles(EntityTestFairy entityIn, float limbSwing, float limbSwingAmount, float ageInTicks,
+	public void setupAnim(EntityTestFairy entityIn, float limbSwing, float limbSwingAmount, float ageInTicks,
 			float netHeadYaw, float headPitch) {
 		// TODO Auto-generated method stub
 		

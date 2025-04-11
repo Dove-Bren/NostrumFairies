@@ -1,37 +1,37 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.IDataSerializer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializer;
 
 public enum ArmPoseDwarf {
 	IDLE,
 	MINING,
 	ATTACKING;
 	
-	public final static class PoseSerializer implements IDataSerializer<ArmPoseDwarf> {
+	public final static class PoseSerializer implements EntityDataSerializer<ArmPoseDwarf> {
 		
 		private PoseSerializer() {
 			;
 		}
 		
 		@Override
-		public void write(PacketBuffer buf, ArmPoseDwarf value) {
-			buf.writeEnumValue(value);
+		public void write(FriendlyByteBuf buf, ArmPoseDwarf value) {
+			buf.writeEnum(value);
 		}
 
 		@Override
-		public ArmPoseDwarf read(PacketBuffer buf) {
-			return buf.readEnumValue(ArmPoseDwarf.class);
+		public ArmPoseDwarf read(FriendlyByteBuf buf) {
+			return buf.readEnum(ArmPoseDwarf.class);
 		}
 
 		@Override
-		public DataParameter<ArmPoseDwarf> createKey(int id) {
-			return new DataParameter<>(id, this);
+		public EntityDataAccessor<ArmPoseDwarf> createAccessor(int id) {
+			return new EntityDataAccessor<>(id, this);
 		}
 
 		@Override
-		public ArmPoseDwarf copyValue(ArmPoseDwarf value) {
+		public ArmPoseDwarf copy(ArmPoseDwarf value) {
 			return value;
 		}
 	}

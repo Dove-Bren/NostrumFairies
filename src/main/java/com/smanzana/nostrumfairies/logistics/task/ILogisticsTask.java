@@ -7,9 +7,9 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /**
  * Generic fairy task.
@@ -144,11 +144,11 @@ public interface ILogisticsTask {
 	 */
 	public boolean isValid();
 	
-	public static World GetSourceWorld(ILogisticsTask task) {
-		World world;
+	public static Level GetSourceWorld(ILogisticsTask task) {
+		Level world;
 		ILogisticsComponent comp = task.getSourceComponent();
 		if (comp == null) {
-			world = task.getSourceEntity().getEntityWorld();
+			world = task.getSourceEntity().getCommandSenderWorld();
 		} else {
 			world = comp.getWorld();
 		}
@@ -160,7 +160,7 @@ public interface ILogisticsTask {
 		BlockPos pos;
 		ILogisticsComponent comp = task.getSourceComponent();
 		if (comp == null) {
-			pos = task.getSourceEntity().getPosition();
+			pos = task.getSourceEntity().blockPosition();
 		} else {
 			pos = comp.getPosition();
 		}

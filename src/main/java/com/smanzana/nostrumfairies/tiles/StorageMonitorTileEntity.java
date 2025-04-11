@@ -11,14 +11,14 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILogisticsTaskListener {
@@ -50,9 +50,9 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	
 	@Override
 	public void addItem(ItemStack stack) {
-		if (!world.isRemote) {
-			ItemEntity ent = new ItemEntity(world, pos.getX() + .5, pos.getY() + .2, pos.getZ() + .5, stack);
-			world.addEntity(ent);
+		if (!level.isClientSide) {
+			ItemEntity ent = new ItemEntity(level, worldPosition.getX() + .5, worldPosition.getY() + .2, worldPosition.getZ() + .5, stack);
+			level.addFreshEntity(ent);
 		}
 	}
 	
@@ -66,23 +66,23 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	protected void setNetworkComponent(LogisticsTileEntityComponent component) {
 		super.setNetworkComponent(component);
 		
-		if (world != null && !world.isRemote && requester == null) {
+		if (level != null && !level.isClientSide && requester == null) {
 			makeRequester();
 		}
 	}
 	
 	@Override
-	public void setWorldAndPos(World worldIn, BlockPos pos) {
-		super.setWorldAndPos(worldIn, pos);
+	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
+		super.setLevelAndPosition(worldIn, pos);
 		
-		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
+		if (this.networkComponent != null && !worldIn.isClientSide && requester == null) {
 			makeRequester();
 		}
 	}
 	
 	@Override
 	public void onLeaveNetwork() {
-		if (!world.isRemote && requester != null) {
+		if (!level.isClientSide && requester != null) {
 			requester.clearRequests();
 			requester.setNetwork(null);
 		}
@@ -92,7 +92,7 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	
 	@Override
 	public void onJoinNetwork(LogisticsNetwork network) {
-		if (!world.isRemote && requester != null) {
+		if (!level.isClientSide && requester != null) {
 			requester.setNetwork(network);
 			requester.updateRequestedItems(getItemRequests());
 		}
@@ -141,20 +141,20 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 			}
 		}
 
-		BlockState state = world.getBlockState(pos);
-		world.notifyBlockUpdate(pos, state, state, 2);
+		BlockState state = level.getBlockState(worldPosition);
+		level.sendBlockUpdated(worldPosition, state, state, 2);
 		
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	public void addRequest(ItemStack stack) {
 		requests.add(stack);
 		requester.updateRequestedItems(getItemRequests());
 
-		BlockState state = world.getBlockState(pos);
-		world.notifyBlockUpdate(pos, state, state, 2);
+		BlockState state = level.getBlockState(worldPosition);
+		level.sendBlockUpdated(worldPosition, state, state, 2);
 		
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	public void removeRequest(ItemStack stack) {
@@ -165,20 +165,20 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 				it.remove();
 				requester.updateRequestedItems(getItemRequests());
 
-				BlockState state = world.getBlockState(pos);
-				world.notifyBlockUpdate(pos, state, state, 2);
+				BlockState state = level.getBlockState(worldPosition);
+				level.sendBlockUpdated(worldPosition, state, state, 2);
 				
-				this.markDirty();
+				this.setChanged();
 				break;
 			}
 		}
 	}
 	
 	@Override
-	public CompoundNBT write(CompoundNBT nbt) {
-		super.write(nbt);
+	public CompoundTag save(CompoundTag nbt) {
+		super.save(nbt);
 		
-		ListNBT list = new ListNBT();
+		ListTag list = new ListTag();
 		for (ItemStack stack : requests) {
 			list.add(stack.serializeNBT());
 		}
@@ -188,22 +188,22 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT nbt) {
-		super.read(state, nbt);
+	public void load(BlockState state, CompoundTag nbt) {
+		super.load(state, nbt);
 		
 		requests.clear();
-		ListNBT list = nbt.getList(NBT_REQUESTS, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_REQUESTS, NBT.TAG_COMPOUND);
 		if (list != null && list.size() > 0) {
 			for (int i = 0; i < list.size(); i++) {
-				CompoundNBT tag = list.getCompound(i);
-				ItemStack stack = ItemStack.read(tag);
+				CompoundTag tag = list.getCompound(i);
+				ItemStack stack = ItemStack.of(tag);
 				if (!stack.isEmpty()) {
 					requests.add(stack);
 				}
 			}
 		}
 		
-		if (this.world != null && this.requester != null) {
+		if (this.level != null && this.requester != null) {
 			this.requester.updateRequestedItems(getItemRequests());
 		}
 	}

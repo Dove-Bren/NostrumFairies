@@ -7,16 +7,16 @@ import javax.annotation.Nonnull;
 import com.google.gson.JsonObject;
 import com.smanzana.nostrumfairies.items.FairyItems;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.conditions.ILootCondition;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.common.loot.LootModifier;
 
 public class TokenDropMod extends LootModifier {
 	
-	public TokenDropMod(ILootCondition[] conditionsIn) {
+	public TokenDropMod(LootItemCondition[] conditionsIn) {
 		super(conditionsIn);
 	}
 	
@@ -32,7 +32,7 @@ public class TokenDropMod extends LootModifier {
 		public static final String ID = "token_drop";
 
 		@Override
-		public TokenDropMod read(ResourceLocation location, JsonObject object, ILootCondition[] ailootcondition) {
+		public TokenDropMod read(ResourceLocation location, JsonObject object, LootItemCondition[] ailootcondition) {
         	return new TokenDropMod(ailootcondition);
 		}
 

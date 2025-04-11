@@ -2,20 +2,20 @@ package com.smanzana.nostrumfairies.entity.navigation;
 
 import java.util.List;
 
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.core.BlockPos;
 
 public class PathPublic extends Path {
 
-	protected List<PathPoint> pathpoints;
+	protected List<Node> pathpoints;
 	
-	public PathPublic(List<PathPoint> pathpoints, BlockPos target, boolean flagged) {
+	public PathPublic(List<Node> pathpoints, BlockPos target, boolean flagged) {
 		super(pathpoints, target, flagged);
 		this.pathpoints = pathpoints;
 	}
 	
-	public List<PathPoint> getPathPoints() {
+	public List<Node> getPathPoints() {
 		return pathpoints;
 	}
 

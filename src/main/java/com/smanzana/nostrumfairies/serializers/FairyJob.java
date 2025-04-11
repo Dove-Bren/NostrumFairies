@@ -1,37 +1,37 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.IDataSerializer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializer;
 
 public enum FairyJob {
 	WARRIOR,
 	BUILDER,
 	LOGISTICS;
 	
-	public final static class JobSerializer implements IDataSerializer<FairyJob> {
+	public final static class JobSerializer implements EntityDataSerializer<FairyJob> {
 		
 		private JobSerializer() {
 			;
 		}
 		
 		@Override
-		public void write(PacketBuffer buf, FairyJob value) {
-			buf.writeEnumValue(value);
+		public void write(FriendlyByteBuf buf, FairyJob value) {
+			buf.writeEnum(value);
 		}
 
 		@Override
-		public FairyJob read(PacketBuffer buf) {
-			return buf.readEnumValue(FairyJob.class);
+		public FairyJob read(FriendlyByteBuf buf) {
+			return buf.readEnum(FairyJob.class);
 		}
 
 		@Override
-		public DataParameter<FairyJob> createKey(int id) {
-			return new DataParameter<>(id, this);
+		public EntityDataAccessor<FairyJob> createAccessor(int id) {
+			return new EntityDataAccessor<>(id, this);
 		}
 
 		@Override
-		public FairyJob copyValue(FairyJob value) {
+		public FairyJob copy(FairyJob value) {
 			return value;
 		}
 	}

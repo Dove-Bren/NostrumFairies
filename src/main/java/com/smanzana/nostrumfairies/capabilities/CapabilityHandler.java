@@ -3,9 +3,9 @@ package com.smanzana.nostrumfairies.capabilities;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -24,11 +24,11 @@ public class CapabilityHandler {
 		
 		//if player. Or not. Should get config going. For now, if it's a player make it?
 		//also need to catch death, etc
-		if (event.getObject() instanceof PlayerEntity) {
+		if (event.getObject() instanceof Player) {
 			//attach that shizz
 			event.addCapability(FEY_CAP_LOC, new AttributeProvider(event.getObject()));
 			
-			if (event.getObject().world != null && event.getObject().world.isRemote) {
+			if (event.getObject().level != null && event.getObject().level.isClientSide) {
 				//NostrumFairies.proxy.requestCapabilityRefresh();
 			}
 		}

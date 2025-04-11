@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.tiles.InputChestTileEntity;
@@ -12,14 +12,14 @@ import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.util.Inventories;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -37,14 +37,14 @@ public class InputChestGui {
 	//private static final int GUI_INV_CELL_LENGTH = 18;
 	//private static final int GUI_INV_CELL_SPACING = 2;
 
-	public static class InputChestContainer extends Container {
+	public static class InputChestContainer extends AbstractContainerMenu {
 		
 		public static final String ID = "input_chest";
 		
 		protected InputChestTileEntity chest;
 		//private int chestIDStart;
 		
-		public InputChestContainer(int windowId, PlayerInventory playerInv, InputChestTileEntity chest) {
+		public InputChestContainer(int windowId, Inventory playerInv, InputChestTileEntity chest) {
 			super(FairyContainers.InputChest, windowId);
 			this.chest = chest;
 						
@@ -65,15 +65,15 @@ public class InputChestGui {
 				for (int j = 0; j < 9; j++) {
 					
 					this.addSlot(new Slot(chest, i * 9 + j, GUI_TOP_INV_HOFFSET + j * 18, GUI_TOP_INV_VOFFSET + i * 18) {
-						public boolean isItemValid(@Nonnull ItemStack stack) {
-					        return this.inventory.isItemValidForSlot(this.getSlotIndex(), stack);
+						public boolean mayPlace(@Nonnull ItemStack stack) {
+					        return this.container.canPlaceItem(this.getSlotIndex(), stack);
 					    }
 					});
 				}
 			}
 		}
 		
-		public static InputChestContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+		public static InputChestContainer FromNetwork(int windowId, Inventory playerInv, FriendlyByteBuf buf) {
 			return new InputChestContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}
 		
@@ -86,18 +86,18 @@ public class InputChestGui {
 		}
 		
 		@Override
-		public ItemStack transferStackInSlot(PlayerEntity playerIn, int fromSlot) {
+		public ItemStack quickMoveStack(Player playerIn, int fromSlot) {
 			ItemStack prev = ItemStack.EMPTY;	
-			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
+			Slot slot = (Slot) this.slots.get(fromSlot);
 			
-			if (slot != null && slot.getHasStack()) {
-				ItemStack cur = slot.getStack();
+			if (slot != null && slot.hasItem()) {
+				ItemStack cur = slot.getItem();
 				prev = cur.copy();
 				
-				if (slot.inventory == this.chest) {
+				if (slot.container == this.chest) {
 					// Trying to take one of our items
-					if (playerIn.inventory.addItemStackToInventory(cur)) {
-						slot.putStack(ItemStack.EMPTY);
+					if (playerIn.inventory.add(cur)) {
+						slot.set(ItemStack.EMPTY);
 						slot.onTake(playerIn, cur);
 					} else {
 						prev = ItemStack.EMPTY;
@@ -105,7 +105,7 @@ public class InputChestGui {
 				} else {
 					// shift-click in player inventory
 					ItemStack leftover = Inventories.addItem(chest, cur);
-					slot.putStack(leftover.isEmpty() ? ItemStack.EMPTY : leftover);
+					slot.set(leftover.isEmpty() ? ItemStack.EMPTY : leftover);
 					if (!leftover.isEmpty() && leftover.getCount() == prev.getCount()) {
 						prev = ItemStack.EMPTY;
 					}
@@ -117,12 +117,12 @@ public class InputChestGui {
 		}
 		
 		@Override
-		public boolean canDragIntoSlot(Slot slotIn) {
+		public boolean canDragTo(Slot slotIn) {
 			return true;
 		}
 		
 		@Override
-		public boolean canInteractWith(PlayerEntity playerIn) {
+		public boolean stillValid(Player playerIn) {
 			return true;
 		}
 		
@@ -133,12 +133,12 @@ public class InputChestGui {
 
 		//private TestChestContainer container;
 		
-		public InputChestGuiContainer(InputChestContainer container, PlayerInventory playerInv, ITextComponent name) {
+		public InputChestGuiContainer(InputChestContainer container, Inventory playerInv, Component name) {
 			super(container, playerInv, name);
 			//this.container = container;
 			
-			this.xSize = GUI_TEXT_WIDTH;
-			this.ySize = GUI_TEXT_HEIGHT;
+			this.imageWidth = GUI_TEXT_WIDTH;
+			this.imageHeight = GUI_TEXT_HEIGHT;
 		}
 		
 		@Override
@@ -147,18 +147,18 @@ public class InputChestGui {
 		}
 		
 		@Override
-		protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
+		protected void renderBg(PoseStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			
-			int horizontalMargin = (width - xSize) / 2;
-			int verticalMargin = (height - ySize) / 2;
+			int horizontalMargin = (width - imageWidth) / 2;
+			int verticalMargin = (height - imageHeight) / 2;
 			
-			mc.getTextureManager().bindTexture(TEXT);
+			mc.getTextureManager().bind(TEXT);
 			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			
 		}
 		
 		@Override
-		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+		protected void renderLabels(PoseStack matrixStackIn, int mouseX, int mouseY) {
 			//super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 		}
 		

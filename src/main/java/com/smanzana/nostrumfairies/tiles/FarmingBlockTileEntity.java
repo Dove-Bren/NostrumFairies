@@ -23,21 +23,21 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CropsBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
-public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITickableTileEntity,  ILogisticsTaskListener, IFeySign {
+public class FarmingBlockTileEntity extends LogisticsTileEntity implements TickableBlockEntity,  ILogisticsTaskListener, IFeySign {
 
 	private static final Map<Integer, ItemStack> SeedMap = new HashMap<>(); // int id of blockstate to itemstack seed
 	
@@ -87,7 +87,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 		}
 		
 		if (!taskMap.containsKey(base)) {
-			LogisticsTaskHarvest task = new LogisticsTaskHarvest(this.getNetworkComponent(), "Farm Harvest Task", world, base);
+			LogisticsTaskHarvest task = new LogisticsTaskHarvest(this.getNetworkComponent(), "Farm Harvest Task", level, base);
 			this.taskMap.put(base, task);
 			network.getTaskRegistry().register(task, this);
 		}
@@ -100,7 +100,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 		}
 		
 		if (!taskMap.containsKey(base)) {
-			LogisticsTaskPlantItem task = new LogisticsTaskPlantItem(this.networkComponent, "Plant Sapling", this.getSeed(world, base), world, base);
+			LogisticsTaskPlantItem task = new LogisticsTaskPlantItem(this.networkComponent, "Plant Sapling", this.getSeed(level, base), level, base);
 			this.taskMap.put(base, task);
 			network.getTaskRegistry().register(task, this);
 		}
@@ -132,23 +132,23 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 		List<BlockPos> emptySpots = new LinkedList<>();
 		List<BlockPos> grownCrops = new LinkedList<>();
 		
-		BlockPos.Mutable pos = new BlockPos.Mutable();
-		BlockPos center = this.getPos();
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		BlockPos center = this.getBlockPos();
 		final int startY = (int) Math.max(-pos.getY(), Math.floor(-radius));
 		final int endY = (int) Math.min(256 - pos.getY(), Math.ceil(radius));
 		for (int x = (int) Math.floor(-radius); x <= Math.ceil(radius); x++)
 		for (int z = (int) Math.floor(-radius); z <= Math.ceil(radius); z++)
 		for (int y = startY; y < endY; y++) {
 			
-			pos.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);
-			if (!NostrumMagica.isBlockLoaded(world, pos)) {
+			pos.set(center.getX() + x, center.getY() + y, center.getZ() + z);
+			if (!NostrumMagica.isBlockLoaded(level, pos)) {
 				break; // skip this whole column
 			}
 			
-			if (FarmingBlock.isGrownCrop(world, pos)) {
-				grownCrops.add(pos.toImmutable());
-			} else if (FarmingBlock.isPlantableSpot(world, pos.down(), this.getSeed(world, pos))) {
-				emptySpots.add(pos.toImmutable());
+			if (FarmingBlock.isGrownCrop(level, pos)) {
+				grownCrops.add(pos.immutable());
+			} else if (FarmingBlock.isPlantableSpot(level, pos.below(), this.getSeed(level, pos))) {
+				emptySpots.add(pos.immutable());
 			}
 		}
 		
@@ -161,7 +161,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 				makeHarvestTask(base);
 				
 				// Also remember what state we saw here
-				rememberState(base, world.getBlockState(base));
+				rememberState(base, level.getBlockState(base));
 			}
 		}
 		
@@ -189,7 +189,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	
 	@Override
 	public void tick() {
-		if (this.world.isRemote) {
+		if (this.level.isClientSide) {
 			return;
 		}
 		
@@ -202,7 +202,7 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	protected static @Nonnull ItemStack ResolveSeed(@Nullable BlockState state) {
 		ItemStack seeds = ItemStack.EMPTY;
 		if (state != null) {
-			seeds = SeedMap.get(Block.getStateId(state));
+			seeds = SeedMap.get(Block.getId(state));
 			if (seeds != null && !seeds.isEmpty()) {
 				return seeds.copy();
 			}
@@ -211,24 +211,24 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 			}
 			
 			// Try and figure out what the seed would be
-			if (state.getBlock() instanceof CropsBlock) {
+			if (state.getBlock() instanceof CropBlock) {
 				try {
-					Method getSeed = ObfuscationReflectionHelper.findMethod(CropsBlock.class, "func_199772_f", IItemProvider.class); //getSeedItem
-					seeds = new ItemStack(((IItemProvider) getSeed.invoke((CropsBlock) state.getBlock())).asItem());
+					Method getSeed = ObfuscationReflectionHelper.findMethod(CropBlock.class, "getBaseSeedId", ItemLike.class); //getSeedItem
+					seeds = new ItemStack(((ItemLike) getSeed.invoke((CropBlock) state.getBlock())).asItem());
 				} catch (Exception e) {
 					seeds = ItemStack.EMPTY;
 				}
 			}
 			
 			// Cache this lookup
-			SeedMap.put(Block.getStateId(state), seeds.isEmpty() ? new ItemStack(Items.WHEAT_SEEDS) : seeds.copy());
+			SeedMap.put(Block.getId(state), seeds.isEmpty() ? new ItemStack(Items.WHEAT_SEEDS) : seeds.copy());
 		}
 		
 		return seeds;
 	}
 	
 	// TODO make configurable!
-	public @Nonnull ItemStack getSeed(World world, BlockPos pos) {
+	public @Nonnull ItemStack getSeed(Level world, BlockPos pos) {
 		@Nullable BlockState state = seenStates.get(pos);
 		
 		// Try and figure out what the seed would be
@@ -291,17 +291,17 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements ITick
 	
 	@Override
 	public Direction getSignFacing(IFeySign sign) {
-		BlockState state = world.getBlockState(pos);
-		return state.get(FarmingBlock.FACING);
+		BlockState state = level.getBlockState(worldPosition);
+		return state.getValue(FarmingBlock.FACING);
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT compound) {
-		super.read(state, compound);
+	public void load(BlockState state, CompoundTag compound) {
+		super.load(state, compound);
 	}
 	
 	@Override
-	public void remove() {
-		super.remove();
+	public void setRemoved() {
+		super.setRemoved();
 	}
 }

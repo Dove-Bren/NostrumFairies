@@ -20,24 +20,24 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.util.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class OutputPanelTileEntity extends LogisticsTileEntity implements ITickableTileEntity, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
+public class OutputPanelTileEntity extends LogisticsTileEntity implements TickableBlockEntity, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
 
 	private static final int SLOTS = 3;
 	private static final String NBT_TEMPLATES = "templates";
@@ -64,7 +64,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 
 	@Override
 	public void onDirty() {
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	@Override
@@ -101,7 +101,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 		
 		ItemStack temp = template.isEmpty() ? ItemStack.EMPTY : template.copy();
 		templates.set(index, temp);
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	public @Nonnull ItemStack getTemplate(int index) {
@@ -113,39 +113,39 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 	
 	@Override
-	public CompoundNBT write(CompoundNBT nbt) {
-		nbt = super.write(nbt);
+	public CompoundTag save(CompoundTag nbt) {
+		nbt = super.save(nbt);
 		
 		// Save templates
-		ListNBT templates = new ListNBT();
+		ListTag templates = new ListTag();
 		for (int i = 0; i < SLOTS; i++) {
 			ItemStack stack = this.getTemplate(i);
 			if (stack.isEmpty()) {
 				continue;
 			}
 			
-			CompoundNBT template = new CompoundNBT();
+			CompoundTag template = new CompoundTag();
 			
 			template.putInt(NBT_TEMPLATE_INDEX, i);
-			template.put(NBT_TEMPLATE_ITEM, stack.write(new CompoundNBT()));
+			template.put(NBT_TEMPLATE_ITEM, stack.save(new CompoundTag()));
 			
 			templates.add(template);
 		}
 		nbt.put(NBT_TEMPLATES, templates);
 		
-		nbt.put(NBT_LOGIC_COMP, this.logicComp.write(new CompoundNBT()));
+		nbt.put(NBT_LOGIC_COMP, this.logicComp.write(new CompoundTag()));
 		
 		return nbt;
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT nbt) {
+	public void load(BlockState state, CompoundTag nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
-		ListNBT list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
 		for (int i = 0; i < list.size(); i++) {
-			CompoundNBT template = list.getCompound(i);
+			CompoundTag template = list.getCompound(i);
 			int index = template.getInt(NBT_TEMPLATE_INDEX);
 			
 			if (index < 0 || index > SLOTS) {
@@ -153,18 +153,18 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 				continue;
 			}
 			
-			ItemStack stack = ItemStack.read(template.getCompound(NBT_TEMPLATE_ITEM));
+			ItemStack stack = ItemStack.of(template.getCompound(NBT_TEMPLATE_ITEM));
 			
 			templates.set(index, stack);
 		}
 		
-		CompoundNBT tag = nbt.getCompound(NBT_LOGIC_COMP);
+		CompoundTag tag = nbt.getCompound(NBT_LOGIC_COMP);
 		if (tag != null) {
 			this.logicComp.read(tag);
 		}
 		
 		// Do super afterwards so taht we have templates already
-		super.read(state, nbt);
+		super.load(state, nbt);
 	}
 	
 	protected LogisticsItemWithdrawRequester makeRequester(LogisticsNetwork network, LogisticsTileEntityComponent networkComponent) {
@@ -190,18 +190,18 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 		super.setNetworkComponent(component);
 		logicComp.setNetwork(component.getNetwork());
 		
-		if (world != null && !world.isRemote && requester == null) {
+		if (level != null && !level.isClientSide && requester == null) {
 			requester = makeRequester(this.networkComponent.getNetwork(), this.networkComponent);
 			requester.updateRequestedItems(getItemRequests());
 		}
 	}
 	
 	@Override
-	public void setWorldAndPos(World worldIn, BlockPos pos) {
-		super.setWorldAndPos(worldIn, pos);
+	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
+		super.setLevelAndPosition(worldIn, pos);
 		logicComp.setLocation(worldIn, pos);
 		
-		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
+		if (this.networkComponent != null && !worldIn.isClientSide && requester == null) {
 			requester = makeRequester(this.networkComponent.getNetwork(), this.networkComponent);
 			//requester.updateRequestedItems(getItemRequests());
 		}
@@ -209,7 +209,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	
 	@Override
 	public void onLeaveNetwork() {
-		if (!world.isRemote && requester != null) {
+		if (!level.isClientSide && requester != null) {
 			requester.clearRequests();
 			requester.setNetwork(null);
 		}
@@ -220,7 +220,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	
 	@Override
 	public void onJoinNetwork(LogisticsNetwork network) {
-		if (!world.isRemote && requester != null) {
+		if (!level.isClientSide && requester != null) {
 			requester.setNetwork(network);
 			requester.updateRequestedItems(getItemRequests());
 		}
@@ -231,8 +231,8 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	
 	private @Nullable IItemHandler getLinkedInventoryHandler() {
 		final Direction direction = getFacing();
-		final BlockPos linkPos = pos.offset(direction);
-		final TileEntity te = world.getTileEntity(linkPos);
+		final BlockPos linkPos = worldPosition.relative(direction);
+		final BlockEntity te = level.getBlockEntity(linkPos);
 		if (te != null) {
 			if (te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, direction.getOpposite()).isPresent()) {
 				@Nullable IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, direction.getOpposite()).orElse(null);
@@ -243,13 +243,13 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 		return null;
 	}
 	
-	private @Nullable IInventory getLinkedInventory() {
+	private @Nullable Container getLinkedInventory() {
 		final Direction direction = getFacing();
-		final BlockPos linkPos = pos.offset(direction);
-		final TileEntity te = world.getTileEntity(linkPos);
+		final BlockPos linkPos = worldPosition.relative(direction);
+		final BlockEntity te = level.getBlockEntity(linkPos);
 		if (te != null) {
-			if (te instanceof IInventory) {
-				return (IInventory) te;
+			if (te instanceof Container) {
+				return (Container) te;
 			}
 		}
 		
@@ -283,7 +283,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 				};
 			});
 		} else {
-			final @Nullable IInventory inv = getLinkedInventory();
+			final @Nullable Container inv = getLinkedInventory();
 			if (inv != null) {
 				return ItemDeepStack.toDeepList(linkedItemList, inv);
 			}
@@ -348,7 +348,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 		if (handler != null) {
 			remaining = Inventories.addItem(handler, remaining);
 		} else {
-			final @Nullable IInventory inv = getLinkedInventory();
+			final @Nullable Container inv = getLinkedInventory();
 			if (inv != null) {
 				remaining = Inventories.addItem(inv, remaining);
 			}
@@ -356,20 +356,20 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 		
 		// Any leftover?
 		if (!remaining.isEmpty()) {
-			ItemEntity item = new ItemEntity(this.world, this.pos.getX() + .5, this.pos.getY() + 1, this.pos.getZ() + .5, remaining);
-			world.addEntity(item);
+			ItemEntity item = new ItemEntity(this.level, this.worldPosition.getX() + .5, this.worldPosition.getY() + 1, this.worldPosition.getZ() + .5, remaining);
+			level.addFreshEntity(item);
 		}
 	}
 	
 	@Override
-	public void markDirty() {
-		super.markDirty();
+	public void setChanged() {
+		super.setChanged();
 		tickRequester();
 	}
 	
 	public Direction getFacing() {
-		if (world != null) {
-			BlockState state = world.getBlockState(pos);
+		if (level != null) {
+			BlockState state = level.getBlockState(worldPosition);
 			try {
 				return FairyBlocks.outputPanel.getFacing(state);
 			} catch (Exception e) {
@@ -381,7 +381,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 	
 	protected void tickRequester() {
-		if (world != null && !world.isRemote && requester != null) {
+		if (level != null && !level.isClientSide && requester != null) {
 			requester.updateRequestedItems(getItemRequests());
 		}
 	}
@@ -399,7 +399,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
@@ -411,37 +411,37 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements ITicka
 	}
 
 	@Override
-	public ItemStack getStackInSlot(int index) {
+	public ItemStack getItem(int index) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public ItemStack decrStackSize(int index, int count) {
+	public ItemStack removeItem(int index, int count) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public ItemStack removeStackFromSlot(int index) {
+	public ItemStack removeItemNoUpdate(int index) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void setInventorySlotContents(int index, ItemStack stack) {
+	public void setItem(int index, ItemStack stack) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public boolean isUsableByPlayer(PlayerEntity player) {
+	public boolean stillValid(Player player) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public void clear() {
+	public void clearContent() {
 		// TODO Auto-generated method stub
 		
 	}

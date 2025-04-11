@@ -6,7 +6,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
@@ -24,24 +24,24 @@ import com.smanzana.nostrummagica.util.ContainerUtil;
 import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.inventory.InventoryScreen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -77,7 +77,7 @@ public class HomeBlockGui {
 	private static final int GUI_DETAILS_WIDTH = 107;
 	private static final int GUI_DETAILS_HEIGHT = 80;
 
-	public static class HomeBlockContainer extends Container {
+	public static class HomeBlockContainer extends AbstractContainerMenu {
 		
 		public static final String ID = "home_block";
 		
@@ -87,7 +87,7 @@ public class HomeBlockGui {
 		private final List<SpecializationSlot> specializationSlots;
 		private final List<FeyStoneContainerSlot> upgradeSlots;
 		
-		public HomeBlockContainer(int windowId, PlayerInventory playerInv, HomeBlockTileEntity home) {
+		public HomeBlockContainer(int windowId, Inventory playerInv, HomeBlockTileEntity home) {
 			super(FairyContainers.HomeBlock, windowId);
 			this.home = home;
 						
@@ -103,7 +103,7 @@ public class HomeBlockGui {
 				this.addSlot(new Slot(playerInv, x, GUI_HOTBAR_INV_HOFFSET + x * 18, GUI_HOTBAR_INV_VOFFSET));
 			}
 			
-			homeIDStart = this.inventorySlots.size();
+			homeIDStart = this.slots.size();
 			upgradeSlots = new ArrayList<>(2);
 			
 			// Add upgrade slots, which are static
@@ -116,9 +116,9 @@ public class HomeBlockGui {
 				upgradeSlots.add(slot);
 			}
 			
-			residentSlots = new ArrayList<>(home.getSlotInventory().getSizeInventory() / 2);
+			residentSlots = new ArrayList<>(home.getSlotInventory().getContainerSize() / 2);
 			int i;
-			for (i = 0; i < home.getSlotInventory().getSizeInventory(); i++) {
+			for (i = 0; i < home.getSlotInventory().getContainerSize(); i++) {
 				if (!HomeBlockSlotInventory.isSoulSlot(i)) {
 					break;
 				}
@@ -130,8 +130,8 @@ public class HomeBlockGui {
 				residentSlots.add(slot);
 			}
 			
-			specializationSlots = new ArrayList<>(home.getSlotInventory().getSizeInventory() / 2);
-			for (; i < home.getSlotInventory().getSizeInventory(); i++) {
+			specializationSlots = new ArrayList<>(home.getSlotInventory().getContainerSize() / 2);
+			for (; i < home.getSlotInventory().getContainerSize(); i++) {
 				SpecializationSlot slot = new SpecializationSlot(home, i,
 						GUI_DETAILS_HOFFSET + (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH - 2)) / 2,
 						GUI_DETAILS_VOFFSET + GUI_DETAILS_HEIGHT - (GUI_INV_CELL_LENGTH * 2));
@@ -140,7 +140,7 @@ public class HomeBlockGui {
 			}
 		}
 		
-		public static HomeBlockContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+		public static HomeBlockContainer FromNetwork(int windowId, Inventory playerInv, FriendlyByteBuf buf) {
 			return new HomeBlockContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}
 		
@@ -153,13 +153,13 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player) {
-			return super.slotClick(slotId, dragType, clickTypeIn, player);
+		public ItemStack clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
+			return super.clicked(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
-		public ItemStack transferStackInSlot(PlayerEntity playerIn, int fromSlot) {
-			return super.transferStackInSlot(playerIn, fromSlot);
+		public ItemStack quickMoveStack(Player playerIn, int fromSlot) {
+			return super.quickMoveStack(playerIn, fromSlot);
 //			ItemStack prev = ItemStack.EMPTY;	
 //			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
 //			
@@ -190,13 +190,13 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		public boolean canInteractWith(PlayerEntity playerIn) {
+		public boolean stillValid(Player playerIn) {
 			return true;
 		}
 		
 		@Override
-		public boolean canDragIntoSlot(Slot slotIn) {
-			return slotIn.slotNumber < homeIDStart;
+		public boolean canDragTo(Slot slotIn) {
+			return slotIn.index < homeIDStart;
 		}
 		
 	}
@@ -210,12 +210,12 @@ public class HomeBlockGui {
 		protected FeyAwayRecord feyArray[];
 		private long feyArrayCacheTimer;
 		
-		public HomeBlockGuiContainer(HomeBlockContainer container, PlayerInventory playerInv, ITextComponent name) {
+		public HomeBlockGuiContainer(HomeBlockContainer container, Inventory playerInv, Component name) {
 			super(container, playerInv, name);
 			this.container = container;
 			
-			this.xSize = GUI_TEXT_WIDTH;
-			this.ySize = GUI_TEXT_HEIGHT;
+			this.imageWidth = GUI_TEXT_WIDTH;
+			this.imageHeight = GUI_TEXT_HEIGHT;
 			feyArray = null;
 		}
 		
@@ -236,7 +236,7 @@ public class HomeBlockGui {
 			}
 		}
 		
-		private void drawSummary(MatrixStack matrixStackIn, int x, int y) {
+		private void drawSummary(PoseStack matrixStackIn, int x, int y) {
 			/* Elven Residence - The beautiful rose
 			 * 0/1 Residents      Healthy Aether     5% Growth
 			 */
@@ -251,42 +251,42 @@ public class HomeBlockGui {
 			}
 			for (ResidentSlot slot : container.residentSlots) {
 				slot.isItemDisplay = false;
-				if (slot.getHasStack()) {
+				if (slot.hasItem()) {
 					maxcount++;
 				}
 				slot.isItemDisplay = true;
 			}
 			
-			matrixStackIn.push();
+			matrixStackIn.pushPose();
 			matrixStackIn.translate(x + 5, y + 2, 0);
 			
-			font.drawStringWithShadow(matrixStackIn, name, 0, 0, 0xFFFFFFFF);
+			font.drawShadow(matrixStackIn, name, 0, 0, 0xFFFFFFFF);
 			
-			matrixStackIn.push();
+			matrixStackIn.pushPose();
 			matrixStackIn.translate(0, 14, 0);
 			matrixStackIn.scale(scale, scale, scale);
-			font.drawString(matrixStackIn, String.format("%.0f%% Growth", (container.home.getGrowth() * 100)),
+			font.draw(matrixStackIn, String.format("%.0f%% Growth", (container.home.getGrowth() * 100)),
 					0, 0, 0xFFA0A0A0);
-			matrixStackIn.pop();
+			matrixStackIn.popPose();
 			
 			
-			matrixStackIn.push();
+			matrixStackIn.pushPose();
 			
 			matrixStackIn.translate(0, 26, 0);
 			matrixStackIn.scale(scale, scale, scale);
-			font.drawString(matrixStackIn, count + "/" + maxcount + " Residents",
+			font.draw(matrixStackIn, count + "/" + maxcount + " Residents",
 					0, 0, 0xFFA0A0A0);
 			
 			String str = getAetherDescription(container.home.getAetherLevel());
-			font.drawString(matrixStackIn, str,
-					215 - (font.getStringWidth(str)), 0, 0xFFA0A0A0);
-			matrixStackIn.pop();
+			font.draw(matrixStackIn, str,
+					215 - (font.width(str)), 0, 0xFFA0A0A0);
+			matrixStackIn.popPose();
 
-			matrixStackIn.pop();
+			matrixStackIn.popPose();
 		}
 		
-		private void drawListItem(MatrixStack matrixStackIn, int x, int y, boolean hasStone, boolean mouseOver, @Nullable FeyAwayRecord record) {
-			mc.getTextureManager().bindTexture(TEXT);
+		private void drawListItem(PoseStack matrixStackIn, int x, int y, boolean hasStone, boolean mouseOver, @Nullable FeyAwayRecord record) {
+			mc.getTextureManager().bind(TEXT);
 			blit(matrixStackIn, x, y, GUI_TEXT_LIST_ITEM_HOFFSET + (mouseOver ? GUI_LIST_ITEM_WIDTH : 0), GUI_TEXT_LIST_ITEM_vOFFSET,
 					GUI_LIST_ITEM_WIDTH, GUI_LIST_ITEM_HEIGHT);
 			
@@ -294,40 +294,40 @@ public class HomeBlockGui {
 				if (record == null) {
 					// Show a 'VACANT' notice lol
 					String str = "Vacant";
-					this.font.drawStringWithShadow(matrixStackIn, "Vacant",
-							x + (GUI_LIST_ITEM_WIDTH - font.getStringWidth(str)) / 2,
-							y + 1 + ((GUI_LIST_ITEM_HEIGHT - font.FONT_HEIGHT) / 2), 0xFFFFFFFF);
+					this.font.drawShadow(matrixStackIn, "Vacant",
+							x + (GUI_LIST_ITEM_WIDTH - font.width(str)) / 2,
+							y + 1 + ((GUI_LIST_ITEM_HEIGHT - font.lineHeight) / 2), 0xFFFFFFFF);
 				} else {
 					// display information about the fey for selection
 					String name = record.name;
-					if (font.getStringWidth(name) * .75f > GUI_LIST_ITEM_WIDTH - 4) {
+					if (font.width(name) * .75f > GUI_LIST_ITEM_WIDTH - 4) {
 						int len = 0;
 						int index = 0;
-						len += font.getStringWidth("..."); // offset to include ellipses
-						while ((len + font.getStringWidth("" + name.charAt(index))) * .75f < (GUI_LIST_ITEM_WIDTH - 4)) {
-							len += font.getStringWidth("" + name.charAt(index));
+						len += font.width("..."); // offset to include ellipses
+						while ((len + font.width("" + name.charAt(index))) * .75f < (GUI_LIST_ITEM_WIDTH - 4)) {
+							len += font.width("" + name.charAt(index));
 							index++;
 						}
 						name = name.substring(0, index) + "...";
 					}
 					
-					matrixStackIn.push();
-					matrixStackIn.translate(x + 2, y + 1 + ((GUI_LIST_ITEM_HEIGHT - font.FONT_HEIGHT) / 2) / .75f, 0);
+					matrixStackIn.pushPose();
+					matrixStackIn.translate(x + 2, y + 1 + ((GUI_LIST_ITEM_HEIGHT - font.lineHeight) / 2) / .75f, 0);
 					matrixStackIn.scale(.75f, .75f, .75f);
-					this.font.drawStringWithShadow(matrixStackIn, name, 0, 0, 0xFFFFFFFF);
-					matrixStackIn.pop();
+					this.font.drawShadow(matrixStackIn, name, 0, 0, 0xFFFFFFFF);
+					matrixStackIn.popPose();
 				}
 			}
 		}
 		
-		private void drawList(MatrixStack matrixStackIn, int x, int y, int mouseIndex) {
+		private void drawList(PoseStack matrixStackIn, int x, int y, int mouseIndex) {
 			for (int i = 0; i < container.home.getTotalSlots(); i++) {
 				@Nullable FeyAwayRecord fey = (i >= feyArray.length ? null : feyArray[i]);
 				drawListItem(matrixStackIn, x, y + (i * GUI_LIST_ITEM_HEIGHT), container.home.getSlotInventory().hasStone(i), mouseIndex == i, fey);
 			}
 		}
 		
-		private void drawDetails(MatrixStack matrixStackIn, int x, int y, @Nullable FeyAwayRecord record) {
+		private void drawDetails(PoseStack matrixStackIn, int x, int y, @Nullable FeyAwayRecord record) {
 			if (record == null) {
 				return;
 			}
@@ -349,48 +349,48 @@ public class HomeBlockGui {
 
 			// -> Name
 			String name = record.name;
-			if (font.getStringWidth(name) * nameScale > nameSpace) {
+			if (font.width(name) * nameScale > nameSpace) {
 				int len = 0;
 				int index = 0;
-				len += font.getStringWidth("..."); // offset to include ellipses
-				while ((len + font.getStringWidth("" + name.charAt(index))) * nameScale < nameSpace) {
-					len += font.getStringWidth("" + name.charAt(index));
+				len += font.width("..."); // offset to include ellipses
+				while ((len + font.width("" + name.charAt(index))) * nameScale < nameSpace) {
+					len += font.width("" + name.charAt(index));
 					index++;
 				}
 				name = name.substring(0, index) + "...";
 			}
 			
-			matrixStackIn.push();
-			matrixStackIn.translate(x + 2 + (nameSpace - (font.getStringWidth(name) * nameScale)) / 2, y + 5, 0);
+			matrixStackIn.pushPose();
+			matrixStackIn.translate(x + 2 + (nameSpace - (font.width(name) * nameScale)) / 2, y + 5, 0);
 			matrixStackIn.scale(nameScale, nameScale, nameScale);
-			this.font.drawStringWithShadow(matrixStackIn, name, 0, 0, 0xFFFFFFFF);
-			matrixStackIn.pop();
+			this.font.drawShadow(matrixStackIn, name, 0, 0, 0xFFFFFFFF);
+			matrixStackIn.popPose();
 			
 			if (record.cache != null) {
 				EntityFeyBase fey = record.cache;
 				// -> Title
 				name = fey.getSpecializationName();
-				matrixStackIn.push();
-				matrixStackIn.translate(x + 2 + (nameSpace - (font.getStringWidth(name) * nameScale)) / 2, y + 5 + 11, 0);
+				matrixStackIn.pushPose();
+				matrixStackIn.translate(x + 2 + (nameSpace - (font.width(name) * nameScale)) / 2, y + 5 + 11, 0);
 				matrixStackIn.scale(nameScale, nameScale, nameScale);
-				this.font.drawString(matrixStackIn, name, 0, 0, 0xFFF0A0FF);
-				matrixStackIn.pop();
+				this.font.draw(matrixStackIn, name, 0, 0, 0xFFF0A0FF);
+				matrixStackIn.popPose();
 				
 				// -> Status
-				name = I18n.format(fey.getMoodSummary());
-				matrixStackIn.push();
-				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
+				name = I18n.get(fey.getMoodSummary());
+				matrixStackIn.pushPose();
+				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.width(name) * nameScale)) / 2, y + 29, 0);
 				matrixStackIn.scale(nameScale, nameScale, nameScale);
-				this.font.drawString(matrixStackIn, name, 0, 0, 0xFFE0E0E0);
-				matrixStackIn.pop();
+				this.font.draw(matrixStackIn, name, 0, 0, 0xFFE0E0E0);
+				matrixStackIn.popPose();
 				
 				// -> Activity report
-				name = I18n.format(fey.getActivitySummary());
-				matrixStackIn.push();
-				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 37, 0);
+				name = I18n.get(fey.getActivitySummary());
+				matrixStackIn.pushPose();
+				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.width(name) * nameScale)) / 2, y + 37, 0);
 				matrixStackIn.scale(nameScale, nameScale, nameScale);
-				this.font.drawString(matrixStackIn, name, 0, 0, 0xFFE0E0E0);
-				matrixStackIn.pop();
+				this.font.draw(matrixStackIn, name, 0, 0, 0xFFE0E0E0);
+				matrixStackIn.popPose();
 				
 				// render preview
 				RenderFuncs.drawRect(matrixStackIn, x + GUI_DETAILS_WIDTH - (previewMargin + previewSize), y + previewMargin,
@@ -399,12 +399,12 @@ public class HomeBlockGui {
 				//RenderHelper.disableStandardItemLighting();
 				// in render terms, 24 is one block, and scale seems to be how big a block is. So figure out how many blocks
 				// the fey is, and then make that fit in 24 units.
-				float length = Math.max(fey.getHeight(), fey.getWidth());
+				float length = Math.max(fey.getBbHeight(), fey.getBbWidth());
 				int scale = (int) Math.floor((previewSize - 2) / (length));
 				{
 					RenderSystem.pushMatrix();
-					RenderSystem.multMatrix(matrixStackIn.getLast().getMatrix());
-					InventoryScreen.drawEntityOnScreen(x + GUI_DETAILS_WIDTH - ((previewSize / 2) + previewMargin),
+					RenderSystem.multMatrix(matrixStackIn.last().pose());
+					InventoryScreen.renderEntityInInventory(x + GUI_DETAILS_WIDTH - ((previewSize / 2) + previewMargin),
 						y + (previewMargin + previewSize),
 						scale, 0, 0, fey);
 					RenderSystem.popMatrix();
@@ -420,38 +420,38 @@ public class HomeBlockGui {
 						for (int i = 0; i < cells; i++) {
 							int cellX = x + offsetX + (i * GUI_INV_CELL_LENGTH);
 							int cellY = y + 62;
-							mc.getTextureManager().bindTexture(TEXT);
+							mc.getTextureManager().bind(TEXT);
 							RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, cellX, cellY,
 									GUI_TEXT_LIST_ITEM_HOFFSET, GUI_TEXT_LIST_ITEM_vOFFSET + GUI_LIST_ITEM_HEIGHT,
 									GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH, 256, 256);
-				            Minecraft.getInstance().getItemRenderer().renderItemAndEffectIntoGUI(this.mc.player, items.get(i), cellX + 1, cellY + 1);
-				            Minecraft.getInstance().getItemRenderer().renderItemOverlayIntoGUI(this.font, items.get(i), cellX + 1, cellY + 1, null);
+				            Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(this.mc.player, items.get(i), cellX + 1, cellY + 1);
+				            Minecraft.getInstance().getItemRenderer().renderGuiItemDecorations(this.font, items.get(i), cellX + 1, cellY + 1, null);
 						}
 					}
 				}
 			} else {
 				name = "Away";
-				matrixStackIn.push();
-				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.getStringWidth(name) * nameScale)) / 2, y + 29, 0);
+				matrixStackIn.pushPose();
+				matrixStackIn.translate(x + (GUI_DETAILS_WIDTH - (font.width(name) * nameScale)) / 2, y + 29, 0);
 				matrixStackIn.scale(nameScale, nameScale, nameScale);
-				this.font.drawString(matrixStackIn, name, 0, 0, 0xFFE0E0E0);
-				matrixStackIn.pop();
+				this.font.draw(matrixStackIn, name, 0, 0, 0xFFE0E0E0);
+				matrixStackIn.popPose();
 			}
 		}
 		
-		private void drawSlots(MatrixStack matrixStackIn) {
-			int horizontalMargin = (width - xSize) / 2;
-			int verticalMargin = (height - ySize) / 2;
-			matrixStackIn.push();
+		private void drawSlots(PoseStack matrixStackIn) {
+			int horizontalMargin = (width - imageWidth) / 2;
+			int verticalMargin = (height - imageHeight) / 2;
+			matrixStackIn.pushPose();
 			matrixStackIn.translate(horizontalMargin, verticalMargin, 0);
 			for (ResidentSlot slot : container.residentSlots) {
-				if (slot.isActive()) {
+				if (slot.isSlotActive()) {
 					float scale = (12f / 16f) ;
 					FeySoulIcon.draw(matrixStackIn, slot, scale);
 				}
 			}
 			for (SpecializationSlot slot : container.specializationSlots) {
-				if (slot.isActive()) {
+				if (slot.isSlotActive()) {
 					float scale = 1f;
 					FeySlotIcon.draw(matrixStackIn, slot, scale);
 				}
@@ -460,30 +460,30 @@ public class HomeBlockGui {
 				float scale = 1f;
 				FeySlotIcon.draw(matrixStackIn, slot, scale);
 			}
-			matrixStackIn.pop();
+			matrixStackIn.popPose();
 		}
 		
-		private void drawSummaryOverlay(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+		private void drawSummaryOverlay(PoseStack matrixStackIn, int mouseX, int mouseY) {
 			//26
 			//215 - string length x
 			
 			if (mouseY > (GUI_LIST_VOFFSET + -5 + -10) && mouseX > 115 && mouseX < (GUI_UPGRADE_HOFFSET - 5) && mouseY < (GUI_LIST_VOFFSET - 5)) {
-				this.renderTooltip(matrixStackIn, new StringTextComponent(
+				this.renderTooltip(matrixStackIn, new TextComponent(
 						container.home.getAether() + "/" + container.home.getAetherCapacity()
 						), mouseX, mouseY);
 			}
 		}
 		
 		@Override
-		protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
+		protected void renderBg(PoseStack matrixStackIn, float partialTicks, int mouseX, int mouseY) {
 			
-			int horizontalMargin = (width - xSize) / 2;
-			int verticalMargin = (height - ySize) / 2;
+			int horizontalMargin = (width - imageWidth) / 2;
+			int verticalMargin = (height - imageHeight) / 2;
 			int mouseIndex = getListIndexFromMouse(mouseX, mouseY);
 			
 			setIsItemRender(true);
 			
-			mc.getTextureManager().bindTexture(TEXT);
+			mc.getTextureManager().bind(TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			
@@ -495,13 +495,13 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		protected void drawGuiContainerForegroundLayer(MatrixStack matrixStackIn, int mouseX, int mouseY) {
+		protected void renderLabels(PoseStack matrixStackIn, int mouseX, int mouseY) {
 			//super.drawGuiContainerForegroundLayer(matrixStackIn, mouseX, mouseY);
 			
 			setIsItemRender(false);
 			
-			int horizontalMargin = (width - xSize) / 2;
-			int verticalMargin = (height - ySize) / 2;
+			int horizontalMargin = (width - imageWidth) / 2;
+			int verticalMargin = (height - imageHeight) / 2;
 			
 			if (mouseX >= horizontalMargin + GUI_INFO_HOFFSET && mouseX <= horizontalMargin + GUI_UPGRADE_HOFFSET
 					&& mouseY >= verticalMargin + GUI_INFO_VOFFSET && mouseY <= verticalMargin + GUI_LIST_VOFFSET) {
@@ -518,11 +518,11 @@ public class HomeBlockGui {
 					if (selection != -1) {
 						slot = container.specializationSlots.get(selection);
 						slot.isSelected = false;
-						slot.xPos = -1000;
+						slot.x = -1000;
 					}
 					slot = container.specializationSlots.get(index);
 					slot.isSelected = true;
-					slot.xPos = GUI_DETAILS_HOFFSET + (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH - 2)) / 2;
+					slot.x = GUI_DETAILS_HOFFSET + (GUI_DETAILS_WIDTH - (GUI_INV_CELL_LENGTH - 2)) / 2;
 					this.selection = index;
 					return true;
 				}
@@ -539,8 +539,8 @@ public class HomeBlockGui {
 		 * @return
 		 */
 		protected int getListIndexFromMouse(int mouseX, int mouseY) {
-			int horizontalMargin = (width - xSize) / 2;
-			int verticalMargin = (height - ySize) / 2;
+			int horizontalMargin = (width - imageWidth) / 2;
+			int verticalMargin = (height - imageHeight) / 2;
 			mouseX -= horizontalMargin;
 			mouseY -= verticalMargin;
 			if (mouseX > GUI_LIST_HOFFSET && mouseX < GUI_LIST_HOFFSET + GUI_LIST_ITEM_WIDTH
@@ -613,76 +613,76 @@ public class HomeBlockGui {
 			return true;
 		}
 		
-		public boolean isActive() {
+		public boolean isSlotActive() {
 			return isSlotValid(te, inventory, this.getSlotIndex());
 		}
 		
 		@Override
-		public boolean isItemValid(@Nonnull ItemStack stack) {
-			if (!inventory.isItemValidForSlot(this.getSlotIndex(), stack)) {
+		public boolean mayPlace(@Nonnull ItemStack stack) {
+			if (!inventory.canPlaceItem(this.getSlotIndex(), stack)) {
 				return false;
 			}
 			
-			if (!super.isItemValid(stack)) {
+			if (!super.mayPlace(stack)) {
 				return false;
 			}
 			
 			// accept it as long as this slot is active
-			return isActive();
+			return isSlotActive();
 		}
 		
 		@Override
 		@OnlyIn(Dist.CLIENT)
-		public boolean isEnabled() {
-			return isActive();
+		public boolean isActive() {
+			return isSlotActive();
 		}
 		
 		@Override
-		public boolean canTakeStack(PlayerEntity playerIn) {
+		public boolean mayPickup(Player playerIn) {
 			return false;
 		}
 		
 		@Override
-		public ItemStack getStack() {
+		public ItemStack getItem() {
 			if (isItemDisplay) {
 				return ItemStack.EMPTY;
 			}
 			
-			return super.getStack();
+			return super.getItem();
 		}
 		
 		@Override
-		public void putStack(@Nonnull ItemStack stack) {
+		public void set(@Nonnull ItemStack stack) {
 			EntityFeyBase spawned = null;
 			
-			if (!stack.isEmpty() && te.getWorld() != null && !te.getWorld().isRemote) {
+			if (!stack.isEmpty() && te.getLevel() != null && !te.getLevel().isClientSide) {
 				if (FeySoulStone.HasStoredFey(stack)) {
 					// They put in a soul stone and it has a fey in it. Automatically spawn them and add them
 					// to the entity list
-					World world = te.getWorld();
+					Level world = te.getLevel();
 					BlockPos spot = null;
-					BlockPos center = te.getPos();
+					BlockPos center = te.getBlockPos();
 					for (BlockPos pos : new BlockPos[] {center.north(), center.south(), center.west(), center.east()}) {
 						BlockState state = world.getBlockState(pos);
-						if (!state.getMaterial().blocksMovement()) {
+						if (!state.getMaterial().blocksMotion()) {
 							spot = pos;
 							break;
 						}
 					}
 					
 					if (spot == null) {
-						spot = center.offset(Direction.UP, 6);
+						spot = center.relative(Direction.UP, 6);
 					}
-					spawned = FeySoulStone.spawnStoredEntity(stack, te.getWorld(), spot.getX() + .5, spot.getY(), spot.getZ() + .5);
+					spawned = FeySoulStone.spawnStoredEntity(stack, te.getLevel(), spot.getX() + .5, spot.getY(), spot.getZ() + .5);
 					stack = FeySoulStone.clearEntity(stack);
 				}
 			}
 			
-			super.putStack(stack);
+			super.set(stack);
 			
 			if (spawned != null) {
 				//te.addResident(spawned);
-				spawned.setHome(te.getPos());
+				spawned.setHome(te.getBlockPos());
 			}
 		}
 	}
@@ -698,7 +698,7 @@ public class HomeBlockGui {
 			super(te.getSlotInventory(), slot, x, y, FeySlotType.SPECIALIZATION);
 			this.inventory = te.getSlotInventory();
 			this.te = te;
-			isSelected = (te.getWorld().isRemote() ? false : true);
+			isSelected = (te.getLevel().isClientSide() ? false : true);
 		}
 		
 		protected static boolean isSlotValid(boolean isSelected, HomeBlockTileEntity te, HomeBlockSlotInventory inventoryIn, int slot) {
@@ -706,41 +706,41 @@ public class HomeBlockGui {
 			return inventoryIn.hasStone(index) && isSelected;
 		}
 		
-		public boolean isActive() {
+		public boolean isSlotActive() {
 			return isSlotValid(isSelected, te, inventory, this.getSlotIndex());
 		}
 		
 		@Override
-		public boolean isItemValid(@Nonnull ItemStack stack) {
-			if (!inventory.isItemValidForSlot(this.getSlotIndex(), stack)) {
+		public boolean mayPlace(@Nonnull ItemStack stack) {
+			if (!inventory.canPlaceItem(this.getSlotIndex(), stack)) {
 				return false;
 			}
 			
-			if (!super.isItemValid(stack)) {
+			if (!super.mayPlace(stack)) {
 				return false;
 			}
 			
 			// accept it as long as this slot is active
-			return isActive();
+			return isSlotActive();
 		}
 		
 		@Override
 		@OnlyIn(Dist.CLIENT)
-		public boolean isEnabled() {
-			return isActive();
+		public boolean isActive() {
+			return isSlotActive();
 		}
 		
 		@Override
-		public boolean canTakeStack(PlayerEntity playerIn) {
+		public boolean mayPickup(Player playerIn) {
 			return true;
 		}
 		
 		@Override
-		public ItemStack getStack() {
+		public ItemStack getItem() {
 			if (!isSelected) {
 				return ItemStack.EMPTY;
 			}
-			return super.getStack();
+			return super.getItem();
 		}
 	}
 }

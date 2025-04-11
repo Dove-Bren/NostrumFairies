@@ -44,20 +44,20 @@ import com.smanzana.nostrummagica.spell.Spell;
 import com.smanzana.nostrummagica.util.DimensionUtils;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -186,8 +186,8 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	}
 
 	@Override
-	public CompoundNBT toNBT() {
-		CompoundNBT nbt = new CompoundNBT();
+	public CompoundTag toNBT() {
+		CompoundTag nbt = new CompoundTag();
 		
 		nbt.putBoolean(NBT_UNLOCKED, isUnlocked);
 		nbt.putBoolean(/*NBT_ENABLED*/"enabled", !isDisabled);
@@ -197,9 +197,9 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		writeFairies();
 		nbt.put(NBT_FAIRY_INVENTORY, fairyInventory.toNBT());
 		if (templateSelection.left != null) {
-			nbt.put(NBT_TEMPLATE_SELECTION + "_1", NBTUtil.writeBlockPos(templateSelection.left));
+			nbt.put(NBT_TEMPLATE_SELECTION + "_1", NbtUtils.writeBlockPos(templateSelection.left));
 			if (templateSelection.right != null) {
-				nbt.put(NBT_TEMPLATE_SELECTION + "_2", NBTUtil.writeBlockPos(templateSelection.right));
+				nbt.put(NBT_TEMPLATE_SELECTION + "_2", NbtUtils.writeBlockPos(templateSelection.right));
 			}
 		}
 		
@@ -207,7 +207,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	}
 
 	@Override
-	public void readNBT(CompoundNBT nbt) {
+	public void readNBT(CompoundTag nbt) {
 		clearFairies();
 		this.isUnlocked = nbt.getBoolean(NBT_UNLOCKED);
 		this.isDisabled = !nbt.getBoolean("enabled");
@@ -217,9 +217,9 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		this.fairyInventory.readNBT(nbt.getCompound(NBT_FAIRY_INVENTORY));
 		
 		if (nbt.contains(NBT_TEMPLATE_SELECTION + "_1")) {
-			templateSelection.left = NBTUtil.readBlockPos(nbt.getCompound(NBT_TEMPLATE_SELECTION + "_1"));
+			templateSelection.left = NbtUtils.readBlockPos(nbt.getCompound(NBT_TEMPLATE_SELECTION + "_1"));
 			if (nbt.contains(NBT_TEMPLATE_SELECTION + "_2")) {
-				templateSelection.right = NBTUtil.readBlockPos(nbt.getCompound(NBT_TEMPLATE_SELECTION + "_2"));
+				templateSelection.right = NbtUtils.readBlockPos(nbt.getCompound(NBT_TEMPLATE_SELECTION + "_2"));
 			} else {
 				templateSelection.right = null;
 			}
@@ -244,9 +244,9 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				this.depositRequester = new LogisticsItemDepositRequester(null, owner);
 				this.withdrawRequester = new LogisticsItemWithdrawRequester(null, true, owner);
 				
-				if (owner instanceof PlayerEntity) {
-					this.buildPlanner.setInventory(((PlayerEntity) owner).inventory);
-					this.buildPlanner.setWorld(owner.world);
+				if (owner instanceof Player) {
+					this.buildPlanner.setInventory(((Player) owner).inventory);
+					this.buildPlanner.setWorld(owner.level);
 				}
 			}
 		}
@@ -256,14 +256,14 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		Set<BlockPos> builds = new HashSet<>();
 		
 		if (owner != null && owner.isAlive()) {
-			BlockPos.Mutable cursor = new BlockPos.Mutable();
+			BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 			for (int x = -BUILD_SCAN_RADIUS; x <= BUILD_SCAN_RADIUS; x++)
 			for (int z = -BUILD_SCAN_RADIUS; z <= BUILD_SCAN_RADIUS; z++)
 			for (int y = -BUILD_SCAN_RADIUS; y <= BUILD_SCAN_RADIUS; y++) {
-				cursor.setPos(owner.getPosX() + x, owner.getPosY() + y, owner.getPosZ() + z);
-				BlockState state = owner.world.getBlockState(cursor);
+				cursor.set(owner.getX() + x, owner.getY() + y, owner.getZ() + z);
+				BlockState state = owner.level.getBlockState(cursor);
 				if (state != null && state.getBlock() instanceof TemplateBlock) {
-					builds.add(cursor.toImmutable());
+					builds.add(cursor.immutable());
 				}
 			}
 		}
@@ -295,9 +295,9 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			this.deactivationTicks--;
 		}
 		
-		if (deactivationTicks == 0 && owner instanceof PlayerEntity) {
-			PlayerEntity player = (PlayerEntity) owner;
-			if (player.openContainer instanceof FairyScreenGui.FairyScreenContainer
+		if (deactivationTicks == 0 && owner instanceof Player) {
+			Player player = (Player) owner;
+			if (player.containerMenu instanceof FairyScreenGui.FairyScreenContainer
 					|| player.isSpectator()) {
 				this.retractFairies();
 				deactivationTicks = Math.max(2, deactivationTicks);
@@ -342,15 +342,15 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						}
 						
 						// If player has items to deposit or request, AND there are networks available
-						if (owner instanceof PlayerEntity) {
+						if (owner instanceof Player) {
 							// If there's a configured anchor, use that network.
 							if (!fairyInventory.getLogisticsGem().isEmpty()) {
 								tickNetworks.clear();
 								BlockPos pos = PositionCrystal.getBlockPosition(fairyInventory.getLogisticsGem());
-								RegistryKey<World> dim = PositionCrystal.getDimension(fairyInventory.getLogisticsGem());
+								ResourceKey<Level> dim = PositionCrystal.getDimension(fairyInventory.getLogisticsGem());
 								
-								if (DimensionUtils.InDimension(owner, dim) && owner.getDistanceSq(Vector3d.copyCentered(pos)) < 1024) {
-									World world = NostrumFairies.getWorld(dim);
+								if (DimensionUtils.InDimension(owner, dim) && owner.distanceToSqr(Vec3.atCenterOf(pos)) < 1024) {
+									Level world = NostrumFairies.getWorld(dim);
 									LogisticsNetwork network = NostrumFairies.instance.getLogisticsRegistry().findNetwork(world, pos);
 									if (network != null) {
 										tickNetworks.add(network);
@@ -358,7 +358,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 								}
 							} else {
 								// Otherwise get all networks and use the closest
-								NostrumFairies.instance.getLogisticsRegistry().getLogisticsNetworksFor(owner.world, owner.getPosition().toImmutable(), tickNetworks);
+								NostrumFairies.instance.getLogisticsRegistry().getLogisticsNetworksFor(owner.level, owner.blockPosition().immutable(), tickNetworks);
 							}
 						}
 						
@@ -392,7 +392,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						if (network == null) {
 							if (pullItems != null || pushItems != null) {
 								// Find the network to use this tick
-								network = findUsefulNetwork(tickNetworks, pullItems, pushItems, owner.world, owner.getPosition());
+								network = findUsefulNetwork(tickNetworks, pullItems, pushItems, owner.level, owner.blockPosition());
 							}
 						}
 						
@@ -463,7 +463,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 							continue;
 						}
 						
-						deployFairy(i, type, gael, (ServerWorld) owner.world, owner.getPosX(), owner.getPosY(), owner.getPosZ());
+						deployFairy(i, type, gael, (ServerLevel) owner.level, owner.getX(), owner.getY(), owner.getZ());
 					}
 				}
 			}
@@ -496,7 +496,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						continue;
 					}
 					
-					FairyGael.regenFairy((ServerWorld) owner.world, gael, 1f);
+					FairyGael.regenFairy((ServerLevel) owner.level, gael, 1f);
 				}
 			}
 		}
@@ -504,7 +504,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	
 	@SubscribeEvent
 	public void onEntityTick(LivingUpdateEvent event) {
-		if (event.getEntity() == this.owner && !owner.world.isRemote) {
+		if (event.getEntity() == this.owner && !owner.level.isClientSide) {
 			this.tick();
 		}
 	}
@@ -525,7 +525,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		clearFairies();
 	}
 	
-	public void deployFairy(int index, FairyGaelType type, @Nonnull ItemStack gaelStack, ServerWorld world, double x, double y, double z) {
+	public void deployFairy(int index, FairyGaelType type, @Nonnull ItemStack gaelStack, ServerLevel world, double x, double y, double z) {
 		if (!gaelStack.isEmpty() && gaelStack.getItem() instanceof FairyGael) {
 			EntityPersonalFairy fairy = FairyGael.spawnStoredEntity(gaelStack, world, x, y, z);
 			if (fairy != null) {
@@ -570,7 +570,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				
 				FairyRecord record = new FairyRecord(fairy, index);
 				this.deployedFairies.get(type).add(record);
-				if (owner instanceof PlayerEntity) {
+				if (owner instanceof Player) {
 					NostrumFairiesSounds.APPEAR.play(null, world, x, y, z);
 				}
 			}
@@ -621,14 +621,14 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						//fairy.isDead = false;
 						FairyGael.setStoredEntity(gael, fairy);
 						FairyGael.crack(gael);
-						fairyInventory.markDirty();
+						fairyInventory.setChanged();
 						fairy.setHealth(health);
 						if (dead) {
 							fairy.remove();
 						}
 					} else {
 						FairyGael.setStoredEntity(gael, fairy);
-						fairyInventory.markDirty();
+						fairyInventory.setChanged();
 						fairy.remove();
 						//fairy.world.removeEntity(fairy);
 					}
@@ -717,7 +717,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	 */
 	protected static @Nullable LogisticsNetwork findUsefulNetwork(Collection<LogisticsNetwork> networks,
 			Collection<ItemStack> pulls, Collection<ItemStack> pushes,
-			World world, BlockPos pos) {
+			Level world, BlockPos pos) {
 		if (networks == null || networks.isEmpty()
 				|| ((pulls == null || pulls.isEmpty())
 				&& (pushes == null || pushes.isEmpty()))) {
@@ -755,11 +755,11 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	 * @return
 	 */
 	protected @Nullable NonNullList<ItemStack> generatePullRequests() {
-		if (!this.logisticsFairyUnlocked() || !(owner instanceof PlayerEntity)) { // player required for inventory
+		if (!this.logisticsFairyUnlocked() || !(owner instanceof Player)) { // player required for inventory
 			return null;
 		}
 		
-		PlayerInventory playerInv = ((PlayerEntity) owner).inventory;
+		Inventory playerInv = ((Player) owner).inventory;
 		
 		NonNullList<ItemStack> pullList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPullTemplateSize(); i++) {
@@ -855,11 +855,11 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	 * @return
 	 */
 	protected @Nullable NonNullList<ItemStack> generatePushRequests() {
-		if (!this.logisticsFairyUnlocked() || !(owner instanceof PlayerEntity)) { // player required for inventory
+		if (!this.logisticsFairyUnlocked() || !(owner instanceof Player)) { // player required for inventory
 			return null;
 		}
 		
-		PlayerInventory playerInv = ((PlayerEntity) owner).inventory;
+		Inventory playerInv = ((Player) owner).inventory;
 		
 		NonNullList<ItemStack> templateList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPushTemplateSize(); i++) {

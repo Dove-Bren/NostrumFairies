@@ -4,9 +4,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.BlockPos;
 
 public interface INostrumFeyCapability {
 
@@ -56,6 +56,6 @@ public interface INostrumFeyCapability {
 	
 	
 	// Serialization
-	public CompoundNBT toNBT();
-	public void readNBT(CompoundNBT nbt);
+	public CompoundTag toNBT();
+	public void readNBT(CompoundTag nbt);
 }

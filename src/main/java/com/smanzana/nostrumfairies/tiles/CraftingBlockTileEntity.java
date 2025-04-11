@@ -27,25 +27,25 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.util.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.ICraftingRecipe;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
-											implements ILogisticsTaskListener, ITickableTileEntity, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
+											implements ILogisticsTaskListener, TickableBlockEntity, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
 
 	private static final String NBT_TEMPLATES = "templates";
 	private static final String NBT_BUILD_POINTS = "build_points";
@@ -65,7 +65,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	// Transient validation vars
 	private boolean recipeDirty;
 	private boolean recipeValidCache;
-	private @Nullable ICraftingRecipe recipeCache;
+	private @Nullable CraftingRecipe recipeCache;
 	private boolean[] recipeIssuesCache;
 	private boolean[] recipeBonusesCache; // like issue cache but positive.
 	private float recipeBonusCache; // Total of all bonuses
@@ -77,7 +77,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	private boolean placed = false;
 	
-	public CraftingBlockTileEntity(TileEntityType<? extends CraftingBlockTileEntity> type) {
+	public CraftingBlockTileEntity(BlockEntityType<? extends CraftingBlockTileEntity> type) {
 		super(type);
 		this.TEMPLATE_SLOTS = getCraftGridDim() * getCraftGridDim();
 		templates = NonNullList.withSize(TEMPLATE_SLOTS, ItemStack.EMPTY);
@@ -104,7 +104,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 
 	@Override
 	public void onDirty() {
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	@Override
@@ -113,7 +113,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return getCraftGridDim() * getCraftGridDim() + 1 + 1 + 1; // creates an actual inventory in super class
 	}
 	
@@ -145,7 +145,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		
 		ItemStack temp = template.isEmpty() ? ItemStack.EMPTY : template.copy();
 		templates.set(index, temp);
-		this.markDirty();
+		this.setChanged();
 		this.ingredientsDirty = true;
 		this.recipeDirty = true;
 	}
@@ -167,15 +167,15 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	public @Nonnull ItemStack getOutputStack() {
-		return this.getStackInSlot(TEMPLATE_SLOTS);
+		return this.getItem(TEMPLATE_SLOTS);
 	}
 	
 	public @Nonnull ItemStack getUpgrade() {
-		return this.getStackInSlot(TEMPLATE_SLOTS + 2);
+		return this.getItem(TEMPLATE_SLOTS + 2);
 	}
 	
 	public @Nonnull ItemStack getCriteriaTemplate() {
-		return this.getStackInSlot(TEMPLATE_SLOTS + 1);
+		return this.getItem(TEMPLATE_SLOTS + 1);
 	}
 	
 	/**
@@ -186,7 +186,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	 * @param recipe
 	 * @return
 	 */
-	protected boolean canCraft(ICraftingRecipe recipe) {
+	protected boolean canCraft(CraftingRecipe recipe) {
 		return true;
 	}
 	
@@ -199,28 +199,28 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	protected abstract float getCraftBonus(ItemStack item);
 	
-	protected ICraftingRecipe findRecipe(World world) {
+	protected CraftingRecipe findRecipe(Level world) {
 		// Have to janki-fy the recipe manager, since the inventories it takes as input require a container to work
-		CraftingInventory inv = new CraftingInventory(new Container(null, 0) {
+		CraftingContainer inv = new CraftingContainer(new AbstractContainerMenu(null, 0) {
 
 			@Override
-			public boolean canInteractWith(PlayerEntity playerIn) {
+			public boolean stillValid(Player playerIn) {
 				return true;
 			}
 			
 			@Override
-			public void detectAndSendChanges() {
+			public void broadcastChanges() {
 				;
 			}
 		}, getCraftGridDim(), getCraftGridDim());
 		
 		for (int i = 0; i < TEMPLATE_SLOTS; i++) {
 			if (!templates.get(i).isEmpty()) {
-				inv.setInventorySlotContents(i, templates.get(i));
+				inv.setItem(i, templates.get(i));
 			}
 		}
 		
-		Optional<ICraftingRecipe> match = world.getRecipeManager().getRecipe(IRecipeType.CRAFTING, inv, world);
+		Optional<CraftingRecipe> match = world.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, inv, world);
 		if (match.isPresent() && canCraft(match.get())) {
 			return match.get();
 		}
@@ -234,7 +234,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	 */
 	public boolean validateRecipe() {
 		if (this.recipeDirty) {
-			this.recipeCache = findRecipe(world);
+			this.recipeCache = findRecipe(level);
 			
 			recipeValidCache = (recipeCache != null);
 			recipeBonusCache = 0f;
@@ -261,7 +261,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		return this.recipeValidCache;
 	}
 	
-	public @Nullable ICraftingRecipe getRecipe() {
+	public @Nullable CraftingRecipe getRecipe() {
 		if (!validateRecipe()) {
 			return null;
 		}
@@ -296,7 +296,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 					continue;
 				}
 				
-				ItemStack inSlot = this.getStackInSlot(i);
+				ItemStack inSlot = this.getItem(i);
 				if (inSlot.isEmpty()) {
 					ingredientsValidCache = false;
 					break;
@@ -321,8 +321,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public boolean isItemValidForSlot(int index, ItemStack stack) {
-		if (!super.isItemValidForSlot(index, stack)) {
+	public boolean canPlaceItem(int index, ItemStack stack) {
+		if (!super.canPlaceItem(index, stack)) {
 			return false;
 		}
 		
@@ -354,27 +354,27 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public CompoundNBT write(CompoundNBT nbt) {
-		nbt = super.write(nbt);
+	public CompoundTag save(CompoundTag nbt) {
+		nbt = super.save(nbt);
 		
 		// Save templates
-		ListNBT templates = new ListNBT();
+		ListTag templates = new ListTag();
 		for (int i = 0; i < TEMPLATE_SLOTS; i++) {
 			ItemStack stack = this.getTemplate(i);
 			if (stack.isEmpty()) {
 				continue;
 			}
 			
-			CompoundNBT template = new CompoundNBT();
+			CompoundTag template = new CompoundTag();
 			
 			template.putInt(NBT_TEMPLATE_INDEX, i);
-			template.put(NBT_TEMPLATE_ITEM, stack.write(new CompoundNBT()));
+			template.put(NBT_TEMPLATE_ITEM, stack.save(new CompoundTag()));
 			
 			templates.add(template);
 		}
 		nbt.put(NBT_TEMPLATES, templates);
 		
-		nbt.put(NBT_LOGIC_COMP, logicComp.write(new CompoundNBT()));
+		nbt.put(NBT_LOGIC_COMP, logicComp.write(new CompoundTag()));
 		
 		nbt.putFloat(NBT_BUILD_POINTS, buildPoints);
 		
@@ -382,13 +382,13 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT nbt) {
+	public void load(BlockState state, CompoundTag nbt) {
 		templates = NonNullList.withSize(TEMPLATE_SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
-		ListNBT list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
 		for (int i = 0; i < list.size(); i++) {
-			CompoundNBT template = list.getCompound(i);
+			CompoundTag template = list.getCompound(i);
 			int index = template.getInt(NBT_TEMPLATE_INDEX);
 			
 			if (index < 0 || index > TEMPLATE_SLOTS) {
@@ -396,12 +396,12 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 				continue;
 			}
 			
-			ItemStack stack = ItemStack.read(template.getCompound(NBT_TEMPLATE_ITEM));
+			ItemStack stack = ItemStack.of(template.getCompound(NBT_TEMPLATE_ITEM));
 			
 			templates.set(index, stack);
 		}
 		
-		CompoundNBT tag = nbt.getCompound(NBT_LOGIC_COMP);
+		CompoundTag tag = nbt.getCompound(NBT_LOGIC_COMP);
 		if (tag != null) {
 			this.logicComp.read(tag);
 		}
@@ -409,7 +409,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		this.buildPoints = nbt.getFloat(NBT_BUILD_POINTS);
 		
 		// Do super afterwards so taht we have templates already
-		super.read(state, nbt);
+		super.load(state, nbt);
 		
 		this.recipeDirty = true;
 		this.ingredientsDirty = true;
@@ -420,7 +420,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		super.setNetworkComponent(component);
 		logicComp.setNetwork(component.getNetwork());
 		
-		if (world != null && !world.isRemote && withdrawRequester == null) {
+		if (level != null && !level.isClientSide && withdrawRequester == null) {
 			withdrawRequester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent);
 			withdrawRequester.updateRequestedItems(getItemRequests());
 			
@@ -430,11 +430,11 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public void setWorldAndPos(World worldIn, BlockPos pos) {
-		super.setWorldAndPos(worldIn, pos);
+	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
+		super.setLevelAndPosition(worldIn, pos);
 		logicComp.setLocation(worldIn, pos);
 		
-		if (this.networkComponent != null && !worldIn.isRemote) {
+		if (this.networkComponent != null && !worldIn.isClientSide) {
 			if (withdrawRequester == null) {
 				withdrawRequester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent);
 				withdrawRequester.updateRequestedItems(getItemRequests());
@@ -449,7 +449,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	@Override
 	public void onLeaveNetwork() {
-		if (!world.isRemote && withdrawRequester != null) {
+		if (!level.isClientSide && withdrawRequester != null) {
 			withdrawRequester.clearRequests();
 			withdrawRequester.setNetwork(null);
 			depositRequester.clearRequests();
@@ -462,7 +462,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	@Override
 	public void onJoinNetwork(LogisticsNetwork network) {
-		if (!world.isRemote && withdrawRequester != null) {
+		if (!level.isClientSide && withdrawRequester != null) {
 			withdrawRequester.setNetwork(network);
 			withdrawRequester.updateRequestedItems(getItemRequests());
 			depositRequester.setNetwork(network);
@@ -482,7 +482,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 				continue;
 			}
 			
-			ItemStack inSlot = this.getStackInSlot(i);
+			ItemStack inSlot = this.getItem(i);
 			int desire = templates.get(i).getCount() - (inSlot.isEmpty() ? 0 : inSlot.getCount());
 			if (desire > 0) {
 				ItemStack req = templates.get(i).copy();
@@ -495,7 +495,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	private NonNullList<ItemStack> getPushRequests() {
-		return NonNullList.from(ItemStack.EMPTY, getOutputStack());
+		return NonNullList.of(ItemStack.EMPTY, getOutputStack());
 	}
 	
 	@Override
@@ -512,13 +512,13 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 				continue;
 			}
 			
-			if (!isItemValidForSlot(i, stack)) {
+			if (!canPlaceItem(i, stack)) {
 				// doesn't fit here anyways
 				continue;
 			}
 			
 			// if template count != stack count, try to add there
-			ItemStack inSlot = this.getStackInSlot(i);
+			ItemStack inSlot = this.getItem(i);
 			int desire = templates.get(i).getCount() - (inSlot.isEmpty() ? 0 : inSlot.getCount());
 			int amt = Math.min(stack.getCount(), desire);
 			if (inSlot.isEmpty()) {
@@ -537,20 +537,20 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		}
 		
 		if (anyChanges) {
-			this.markDirty();
+			this.setChanged();
 		}
 		
 		// Any leftover?
 		if (!stack.isEmpty()) {
-			ItemEntity ent = new ItemEntity(world, pos.getX() + .5, pos.getY() + 1.2, pos.getZ() + .5, stack);
-			world.addEntity(ent);
+			ItemEntity ent = new ItemEntity(level, worldPosition.getX() + .5, worldPosition.getY() + 1.2, worldPosition.getZ() + .5, stack);
+			level.addFreshEntity(ent);
 		}
 	}
 	
 	@Override
-	public void markDirty() {
-		super.markDirty();
-		if (world != null && !world.isRemote && withdrawRequester != null) {
+	public void setChanged() {
+		super.setChanged();
+		if (level != null && !level.isClientSide && withdrawRequester != null) {
 			withdrawRequester.updateRequestedItems(getItemRequests());
 			depositRequester.updateRequestedItems(getPushRequests());
 		}
@@ -644,7 +644,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	protected LogisticsTaskWorkBlock createTask() {
-		LogisticsTaskWorkBlock task = new LogisticsTaskWorkBlock(this.getNetworkComponent(), "Craft Task", world, pos.toImmutable()) {
+		LogisticsTaskWorkBlock task = new LogisticsTaskWorkBlock(this.getNetworkComponent(), "Craft Task", level, worldPosition.immutable()) {
 			@Override
 			protected void workBlock() {
 				if (this.getCurrentWorker() == null) {
@@ -677,8 +677,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	protected void checkTasks() {
-		if (this.world != null && !this.world.isRemote()) {
-			if (this.validateRecipe() && this.validateIngredients() && this.getNetwork() != null && this.world != null && logicComp.isActivated()) {
+		if (this.level != null && !this.level.isClientSide()) {
+			if (this.validateRecipe() && this.validateIngredients() && this.getNetwork() != null && this.level != null && logicComp.isActivated()) {
 				while (this.tasks.size() < getMaxWorkJobs()) {
 					createTask();
 				}
@@ -693,32 +693,32 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	protected void consumeIngredients() {
 		for (int i = 0; i < TEMPLATE_SLOTS; i++) {
-			this.decrStackSize(i, 1);
+			this.removeItem(i, 1);
 		}
 	}
 	
 	protected ItemStack generateOutput() {
 		// Have to janki-fy the recipe manager, since the inventories it takes as input require a container to work
-		CraftingInventory inv = new CraftingInventory(new Container(null, 0) {
+		CraftingContainer inv = new CraftingContainer(new AbstractContainerMenu(null, 0) {
 
 			@Override
-			public boolean canInteractWith(PlayerEntity playerIn) {
+			public boolean stillValid(Player playerIn) {
 				return true;
 			}
 			
 			@Override
-			public void detectAndSendChanges() {
+			public void broadcastChanges() {
 				;
 			}
 		}, getCraftGridDim(), getCraftGridDim());
 		
 		for (int i = 0; i < TEMPLATE_SLOTS; i++) {
 			if (!this.templates.get(i).isEmpty()) {
-				inv.setInventorySlotContents(i, templates.get(i));
+				inv.setItem(i, templates.get(i));
 			}
 		}
 		
-		return this.recipeCache.getCraftingResult(inv).copy();
+		return this.recipeCache.assemble(inv).copy();
 	}
 	
 	protected void produceCraft() {
@@ -733,14 +733,14 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		
 		ItemStack output = generateOutput();
 		if (this.getOutputStack().isEmpty()) {
-			this.setInventorySlotContents(TEMPLATE_SLOTS, output);
+			this.setItem(TEMPLATE_SLOTS, output);
 		} else {
-			ItemStack stack = this.getStackInSlot(TEMPLATE_SLOTS);
+			ItemStack stack = this.getItem(TEMPLATE_SLOTS);
 			stack.setCount(Math.min(stack.getCount() + output.getCount(), stack.getMaxStackSize()));
 		}
 	}
 	
-	protected float getBuildPointsFor(ICraftingRecipe recipe) {
+	protected float getBuildPointsFor(CraftingRecipe recipe) {
 		return 100f;
 	}
 	
@@ -767,7 +767,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 			return true;
 		}
 		
-		ItemStack output = this.recipeCache.getRecipeOutput();
+		ItemStack output = this.recipeCache.getResultItem();
 		if (!ItemStacks.stacksMatch(output, outputStack)) {
 			return false;
 		}
@@ -796,27 +796,27 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	public void notifyNeighborChanged() {
 		logicComp.onWorldUpdate();
-		if (!this.world.isRemote()) {
+		if (!this.level.isClientSide()) {
 			this.checkTasks();
 		}
 	}
 	
 	@Override
-	public void validate() {
-		super.validate();
+	public void clearRemoved() {
+		super.clearRemoved();
 	}
 	
 	@Override
 	public void tick() {
 		if (!placed) {
 			placed = true;
-			if (!world.isRemote) {
+			if (!level.isClientSide) {
 				// TODO used to update logic
 			}
 		}
 		
-		if (world.getGameTime() % 5 == 0) {
-			if (!world.isRemote) {
+		if (level.getGameTime() % 5 == 0) {
+			if (!level.isClientSide) {
 				this.checkTasks();
 			}
 		}

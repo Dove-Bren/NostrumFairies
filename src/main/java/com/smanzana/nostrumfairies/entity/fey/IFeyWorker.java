@@ -5,7 +5,7 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsWorker;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 public interface IFeyWorker extends ILogisticsWorker {
 

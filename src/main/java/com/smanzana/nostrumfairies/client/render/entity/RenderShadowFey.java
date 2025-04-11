@@ -1,16 +1,16 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrummagica.client.model.ModelRenderShiv;
 
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
 public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShiv<EntityShadowFey>> {
 	
@@ -19,20 +19,20 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShi
 	protected ModelElfArcher<EntityShadowFey> modelLeft;
 	protected ModelElfArcher<EntityShadowFey> modelRight;
 	
-	public RenderShadowFey(EntityRendererManager renderManagerIn, float shadowSizeIn) {
-		super(renderManagerIn, new ModelRenderShiv<>(RenderType::getEntityTranslucent), .01f);
-		this.modelLeft = new ModelElfArcher<>(true, RenderType::getEntityTranslucent);
-		this.modelRight = new ModelElfArcher<>(false, RenderType::getEntityTranslucent);
+	public RenderShadowFey(EntityRenderDispatcher renderManagerIn, float shadowSizeIn) {
+		super(renderManagerIn, new ModelRenderShiv<>(RenderType::entityTranslucent), .01f);
+		this.modelLeft = new ModelElfArcher<>(true, RenderType::entityTranslucent);
+		this.modelRight = new ModelElfArcher<>(false, RenderType::entityTranslucent);
 	}
 
-	public ResourceLocation getEntityTexture(EntityShadowFey entity) {
+	public ResourceLocation getTextureLocation(EntityShadowFey entity) {
 		return TEXT_SHADOW_FEY;
 	}
 	
 	@Override
-	protected void preRenderCallback(EntityShadowFey entityIn, MatrixStack matrixStackIn, float partialTickTime) {
+	protected void scale(EntityShadowFey entityIn, PoseStack matrixStackIn, float partialTickTime) {
 		// Model is 32/16ths of a block. Adjust to height.
-		final float scale = entityIn.getHeight() / (32f/16f);
+		final float scale = entityIn.getBbHeight() / (32f/16f);
 		final boolean morphing = entityIn.getMorphing();
 		final float scaleModX = morphing ? NostrumFairies.random.nextFloat() * .1f : 0;
 		final float scaleModY = morphing ? NostrumFairies.random.nextFloat() * .05f : 0;
@@ -41,7 +41,7 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShi
 	}
 	
 	@Override
-	public void render(EntityShadowFey entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
+	public void render(EntityShadowFey entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn) {
 		// Swap out model based on the elf
 		final ModelElfArcher<EntityShadowFey> modelToUse;
 		if (entityIn.isLeftHanded()) {
@@ -50,19 +50,19 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShi
 			modelToUse = this.modelRight;
 		}
 		
-		this.entityModel.setPayload((_matrixStackIn, _buffer, _packedLightIn, _packedOverlayIn, _red, _green, _blue, _alpha) -> {
-			modelToUse.render(_matrixStackIn, _buffer, _packedLightIn, _packedOverlayIn, _red, _green, _blue, _alpha * .7f);
+		this.model.setPayload((_matrixStackIn, _buffer, _packedLightIn, _packedOverlayIn, _red, _green, _blue, _alpha) -> {
+			modelToUse.renderToBuffer(_matrixStackIn, _buffer, _packedLightIn, _packedOverlayIn, _red, _green, _blue, _alpha * .7f);
 		});
 		
 		// Have to dupe this here to work on our real model
 		{
-			boolean shouldSit = entityIn.isPassenger() && (entityIn.getRidingEntity() != null && entityIn.getRidingEntity().shouldRiderSit());
+			boolean shouldSit = entityIn.isPassenger() && (entityIn.getVehicle() != null && entityIn.getVehicle().shouldRiderSit());
 			float limbSwingAmount = 0.0F;
 			float limbSwing = 0.0F;
 			if (!shouldSit && entityIn.isAlive()) {
-				limbSwingAmount = MathHelper.lerp(partialTicks, entityIn.prevLimbSwingAmount, entityIn.limbSwingAmount);
-				limbSwing = entityIn.limbSwing - entityIn.limbSwingAmount * (1.0F - partialTicks);
-				if (entityIn.isChild()) {
+				limbSwingAmount = Mth.lerp(partialTicks, entityIn.animationSpeedOld, entityIn.animationSpeed);
+				limbSwing = entityIn.animationPosition - entityIn.animationSpeed * (1.0F - partialTicks);
+				if (entityIn.isBaby()) {
 					limbSwing *= 3.0F;
 				}
 
@@ -71,15 +71,15 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShi
 				}
 			}
 			
-			modelToUse.setLivingAnimations(entityIn, limbSwing, limbSwingAmount, partialTicks);
-			modelToUse.setRotationAngles(entityIn, limbSwing, limbSwingAmount, this.handleRotationFloat(entityIn, partialTicks), entityIn.rotationYawHead, entityIn.rotationPitch);
+			modelToUse.prepareMobModel(entityIn, limbSwing, limbSwingAmount, partialTicks);
+			modelToUse.setupAnim(entityIn, limbSwing, limbSwingAmount, this.getBob(entityIn, partialTicks), entityIn.yHeadRot, entityIn.xRot);
 		}
 		
 		modelToUse.setWeaponSelection(entityIn);
 		
-		matrixStackIn.push();
+		matrixStackIn.pushPose();
 		super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
-		matrixStackIn.pop();
+		matrixStackIn.popPose();
 	}
 	
 }

@@ -11,19 +11,19 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.level.Level;
 
 /**
  * Stores a template
@@ -40,7 +40,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ITextComponent getHighlightTip(ItemStack item, ITextComponent displayName) {
+	public Component getHighlightTip(ItemStack item, Component displayName) {
 		return displayName;
 	}
 	
@@ -49,16 +49,16 @@ public class TemplateScroll extends Item implements ILoreTagged {
 			return null;
 		}
 		
-		CompoundNBT nbt = stack.getTag();
-		CompoundNBT blueprintTag = nbt.getCompound(NBT_TEMPLATE);
+		CompoundTag nbt = stack.getTag();
+		CompoundTag blueprintTag = nbt.getCompound(NBT_TEMPLATE);
 		return TemplateBlueprint.fromNBT(blueprintTag);
 	}
 	
-	public static ItemStack Capture(World world, BlockPos pos1, BlockPos pos2) {
+	public static ItemStack Capture(Level world, BlockPos pos1, BlockPos pos2) {
 		return Capture(world, pos1, pos2, null);
 	}
 	
-	public static ItemStack Capture(World world, BlockPos pos1, BlockPos pos2, @Nullable BlueprintLocation origin) {
+	public static ItemStack Capture(Level world, BlockPos pos1, BlockPos pos2, @Nullable BlueprintLocation origin) {
 		Blueprint blueprint = Blueprint.Capture(world, pos1, pos2, origin);
 		return Create(blueprint);
 	}
@@ -70,7 +70,7 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	public static ItemStack Create(TemplateBlueprint blueprint) {
 		ItemStack stack = new ItemStack(FairyItems.templateScroll);
 		SetTemplate(stack, blueprint);
-		stack.setDisplayName(new StringTextComponent("New Template"));
+		stack.setHoverName(new TextComponent("New Template"));
 		return stack;
 	}
 	
@@ -78,14 +78,14 @@ public class TemplateScroll extends Item implements ILoreTagged {
 		SetTemplate(stack, blueprint.toNBT());
 	}
 	
-	protected static void SetTemplate(ItemStack stack, CompoundNBT blueprintTag) {
+	protected static void SetTemplate(ItemStack stack, CompoundTag blueprintTag) {
 		if (stack.isEmpty() || !(stack.getItem() instanceof TemplateScroll)) {
 			return;
 		}
 		
-		CompoundNBT nbt = stack.getTag();
+		CompoundTag nbt = stack.getTag();
 		if (nbt == null) {
-			nbt = new CompoundNBT();
+			nbt = new CompoundTag();
 		}
 		
 		nbt.put(NBT_TEMPLATE, blueprintTag);
@@ -119,18 +119,18 @@ public class TemplateScroll extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResultType onItemUse(ItemUseContext context) {
-		return ActionResultType.PASS;
+	public InteractionResult useOn(UseOnContext context) {
+		return InteractionResult.PASS;
 	}
 	
 	@Override
-	public ActionResultType itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand) {
-		return super.itemInteractionForEntity(stack, playerIn, target, hand);
+	public InteractionResult interactLivingEntity(ItemStack stack, Player playerIn, LivingEntity target, InteractionHand hand) {
+		return super.interactLivingEntity(stack, playerIn, target, hand);
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-		super.addInformation(stack, worldIn, tooltip, flagIn);
+	public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 	}
 	
 }

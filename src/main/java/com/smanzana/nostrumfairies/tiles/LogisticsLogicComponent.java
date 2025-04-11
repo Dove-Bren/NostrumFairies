@@ -7,10 +7,10 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /**
  * Bundles up looking for certain logic network conditions. Intended to be embedded in TileEntities that use this sort of behavior.
@@ -54,7 +54,7 @@ public class LogisticsLogicComponent {
 	private @Nullable LogisticsNetwork network;
 	private final @Nullable ILogicListener listener; 
 	private final boolean logicOnly;
-	private @Nullable World world;
+	private @Nullable Level world;
 	private @Nullable BlockPos pos;
 	
 	private UUID logicCacheID;
@@ -125,7 +125,7 @@ public class LogisticsLogicComponent {
 			
 			if (!redstoneCacheValid) {
 				// Check the world
-				final boolean redstonePresent = world.isBlockPowered(pos);
+				final boolean redstonePresent = world.hasNeighborSignal(pos);
 				this.redstoneCacheValid = true;
 				this.logicValidCache = (redstonePresent == (mode == LogicMode.REDSTONE_HIGH));
 			}
@@ -149,7 +149,7 @@ public class LogisticsLogicComponent {
 		this.logicCacheID = null;
 	}
 	
-	public void setLocation(@Nullable World world, @Nullable BlockPos pos) {
+	public void setLocation(@Nullable Level world, @Nullable BlockPos pos) {
 		this.redstoneCacheValid = false;
 		this.world = world;
 		this.pos = pos;
@@ -206,7 +206,7 @@ public class LogisticsLogicComponent {
 		this.dirty();
 	}
 	
-	public CompoundNBT write(CompoundNBT nbt) {
+	public CompoundTag write(CompoundTag nbt) {
 		nbt.putString(NBT_LOGIC_MODE, mode.name());
 		nbt.putInt(NBT_LOGIC_COUNT, count);
 		nbt.putString(NBT_LOGIC_OP, op.name());
@@ -217,7 +217,7 @@ public class LogisticsLogicComponent {
 		return nbt;
 	}
 	
-	public void read(CompoundNBT nbt) {
+	public void read(CompoundTag nbt) {
 		try {
 			this.mode = LogicMode.valueOf(nbt.getString(NBT_LOGIC_MODE).toUpperCase());
 		} catch (Exception e) {
@@ -230,7 +230,7 @@ public class LogisticsLogicComponent {
 			this.op = LogicOp.EQUAL;
 		}
 		
-		this.template = ItemStack.read(nbt.getCompound(NBT_LOGIC_ITEM));
+		this.template = ItemStack.of(nbt.getCompound(NBT_LOGIC_ITEM));
 		this.count = nbt.getInt(NBT_LOGIC_COUNT);
 		
 		this.logicCacheID = null;

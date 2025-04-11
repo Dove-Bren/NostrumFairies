@@ -12,24 +12,24 @@ import com.smanzana.nostrumfairies.tiles.TemplateBlockTileEntity;
 import com.smanzana.nostrummagica.util.NonNullHashMap;
 import com.smanzana.nostrummagica.util.RayTrace;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.pathfinding.PathType;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.DrawHighlightEvent;
@@ -115,18 +115,18 @@ public class TemplateBlock extends Block {
 	public static final String ID = "template_block";
 	
 	public TemplateBlock() {
-		super(Block.Properties.create(Material.PLANTS)
-				.hardnessAndResistance(.2f)
-				.doesNotBlockMovement()
+		super(Block.Properties.of(Material.PLANT)
+				.strength(.2f)
+				.noCollission()
 				.noDrops()
-				.notSolid()
+				.noOcclusion()
 				);
 		
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	@Override
-	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+	public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
 		return new TemplateBlockTileEntity();
 	}
 	
@@ -155,38 +155,38 @@ public class TemplateBlock extends Block {
 //	}
 	
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		return VoxelShapes.fullCube();
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+		return Shapes.block();
 	}
 	
 	@Override
-	public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		return VoxelShapes.empty();
+	public VoxelShape getCollisionShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+		return Shapes.empty();
 	}
 	
 	@Override
-	public boolean propagatesSkylightDown(BlockState state, IBlockReader world, BlockPos pos) {
+	public boolean propagatesSkylightDown(BlockState state, BlockGetter world, BlockPos pos) {
 		return true;
 	}
 	
 	@Override
-	public int getOpacity(BlockState state, IBlockReader world, BlockPos pos) {
+	public int getLightBlock(BlockState state, BlockGetter world, BlockPos pos) {
 		return 2;
 	}
 	
 	@Override
-	public boolean allowsMovement(BlockState state, IBlockReader worldIn, BlockPos pos, PathType type) {
+	public boolean isPathfindable(BlockState state, BlockGetter worldIn, BlockPos pos, PathComputationType type) {
 		return true;
 	}
 	
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.INVISIBLE;
+	public RenderShape getRenderShape(BlockState state) {
+		return RenderShape.INVISIBLE;
 	}
 	
-	protected static @Nullable TemplateBlockTileEntity GetEntity(IBlockReader world, BlockPos pos) {
-		TileEntity te = world.getTileEntity(pos);
+	protected static @Nullable TemplateBlockTileEntity GetEntity(BlockGetter world, BlockPos pos) {
+		BlockEntity te = world.getBlockEntity(pos);
 		if (te != null && te instanceof TemplateBlockTileEntity) {
 			return (TemplateBlockTileEntity) te;
 		}
@@ -196,16 +196,16 @@ public class TemplateBlock extends Block {
 	@SubscribeEvent
 	@OnlyIn(Dist.CLIENT)
 	public void onBlockHighlight(DrawHighlightEvent.HighlightBlock event) {
-		if (event.getTarget().getType() == RayTraceResult.Type.BLOCK) {
-			Entity renderEnt = event.getInfo().getRenderViewEntity();
+		if (event.getTarget().getType() == HitResult.Type.BLOCK) {
+			Entity renderEnt = event.getInfo().getEntity();
 			BlockPos pos = RayTrace.blockPosFromResult(event.getTarget());
-			BlockState hit = renderEnt.world.getBlockState(pos);
-			if (hit != null && hit.getBlock() == this && renderEnt instanceof PlayerEntity) {
+			BlockState hit = renderEnt.level.getBlockState(pos);
+			if (hit != null && hit.getBlock() == this && renderEnt instanceof Player) {
 				// Get block from Tile Entity
-				TemplateBlockTileEntity ent = GetEntity(renderEnt.world, pos);
+				TemplateBlockTileEntity ent = GetEntity(renderEnt.level, pos);
 				BlockState blockState = ent.getTemplateState();
 				if (blockState == null) {
-					blockState = Blocks.STONE.getDefaultState();
+					blockState = Blocks.STONE.defaultBlockState();
 				}
 				
 				int unused;
@@ -217,11 +217,11 @@ public class TemplateBlock extends Block {
 		}
 	}
 	
-	public static void SetTemplate(World world, BlockPos pos, BlockState templatedState) {
+	public static void SetTemplate(Level world, BlockPos pos, BlockState templatedState) {
 		SetTemplate(world, pos, templatedState, false);
 	}
 	
-	public static void SetTemplate(World world, BlockPos pos, BlockState templatedState, boolean force) {
+	public static void SetTemplate(Level world, BlockPos pos, BlockState templatedState, boolean force) {
 		if (templatedState == null) {
 			NostrumFairies.logger.warn("Attempted to set null template at " + pos);
 			return;
@@ -235,14 +235,14 @@ public class TemplateBlock extends Block {
 			}
 		}
 		
-		world.setBlockState(pos, FairyBlocks.templateBlock.getDefaultState(), 3);
+		world.setBlock(pos, FairyBlocks.templateBlock.defaultBlockState(), 3);
 		if (world.captureBlockSnapshots) {
-			world.notifyBlockUpdate(pos, world.getBlockState(pos), FairyBlocks.templateBlock.getDefaultState(), 3);
+			world.sendBlockUpdated(pos, world.getBlockState(pos), FairyBlocks.templateBlock.defaultBlockState(), 3);
 		}
-		world.setTileEntity(pos, new TemplateBlockTileEntity(templatedState));
+		world.setBlockEntity(pos, new TemplateBlockTileEntity(templatedState));
 	}
 	
-	public static @Nullable BlockState GetTemplatedState(World world, BlockPos pos) {
+	public static @Nullable BlockState GetTemplatedState(Level world, BlockPos pos) {
 		TemplateBlockTileEntity ent = GetEntity(world, pos);
 		if (ent != null) {
 			return ent.getTemplateState();

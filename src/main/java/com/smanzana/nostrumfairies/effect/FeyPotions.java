@@ -7,11 +7,11 @@ import com.smanzana.nostrumfairies.items.FairyItems;
 import com.smanzana.nostrummagica.effect.NostrumPotions;
 import com.smanzana.nostrummagica.effect.NostrumPotions.PotionIngredient;
 
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.Potions;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import net.minecraftforge.event.RegistryEvent;
@@ -22,16 +22,16 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 @Mod.EventBusSubscriber(modid = NostrumFairies.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public enum FeyPotions {
 
-	FEY_VISIBILITY("fey-visibility", () -> FeyEffects.feyVisibility.getEffectName(), () -> new EffectInstance(FeyEffects.feyVisibility, 2 * 60)),
-	FEY_VISIBILITY_EXTENDED("extended_fey-visibility", () -> FeyEffects.feyVisibility.getEffectName(), () -> new EffectInstance(FeyEffects.feyVisibility, 2 * 8 * 60));
+	FEY_VISIBILITY("fey-visibility", () -> FeyEffects.feyVisibility.getEffectName(), () -> new MobEffectInstance(FeyEffects.feyVisibility, 2 * 60)),
+	FEY_VISIBILITY_EXTENDED("extended_fey-visibility", () -> FeyEffects.feyVisibility.getEffectName(), () -> new MobEffectInstance(FeyEffects.feyVisibility, 2 * 8 * 60));
 	
 	private final String registryName;
 	private final Supplier<String> effectNameSupp;
-	private final Supplier<EffectInstance> effectsSupp;
+	private final Supplier<MobEffectInstance> effectsSupp;
 	
 	private Potion type;
 	
-	private FeyPotions(String registryName, Supplier<String> effectName, Supplier<EffectInstance> effects) {
+	private FeyPotions(String registryName, Supplier<String> effectName, Supplier<MobEffectInstance> effects) {
 		// Note: using suppliers because effects won't be set up when enum is done.
 		this.registryName = registryName;
 		this.effectNameSupp = effectName;
@@ -62,11 +62,11 @@ public enum FeyPotions {
 		event.enqueueWork(() -> {
 		// Mana regen potion
 	    	BrewingRecipeRegistry.addRecipe(new PotionIngredient(Potions.THICK),
-	    			Ingredient.fromItems(FairyItems.feyTears),
+	    			Ingredient.of(FairyItems.feyTears),
 	    			NostrumPotions.MakePotion(FeyPotions.FEY_VISIBILITY.getType()));
 	    	
 	    	BrewingRecipeRegistry.addRecipe(new PotionIngredient(FeyPotions.FEY_VISIBILITY.getType()),
-	    			Ingredient.fromTag(Tags.Items.DUSTS_REDSTONE),
+	    			Ingredient.of(Tags.Items.DUSTS_REDSTONE),
 	    			NostrumPotions.MakePotion(FeyPotions.FEY_VISIBILITY_EXTENDED.getType()));
 		});
 	}

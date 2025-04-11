@@ -2,27 +2,27 @@ package com.smanzana.nostrumfairies.blocks;
 
 import java.util.Random;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.state.IntegerProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
 public class MagicLight extends Block {
 	
@@ -39,7 +39,7 @@ public class MagicLight extends Block {
 		}
 	}
 	
-	protected static VoxelShape LANTERN_AABB = Block.makeCuboidShape(16 * 0.375D, 8, 16 * 0.375D, 16 * 0.625D, 16, 16 * 0.625D);
+	protected static VoxelShape LANTERN_AABB = Block.box(16 * 0.375D, 8, 16 * 0.375D, 16 * 0.625D, 16, 16 * 0.625D);
 	
 	public static final IntegerProperty Age = IntegerProperty.create("age", 0, 4);
 	
@@ -51,25 +51,25 @@ public class MagicLight extends Block {
 	private final Brightness brightness;
 	
 	public MagicLight(Brightness brightness) {
-		super(Block.Properties.create(Material.IRON)
-				.hardnessAndResistance(0f, 100f)
-				.tickRandomly()
-				.setLightLevel((s) -> brightness.lightLevel)
+		super(Block.Properties.of(Material.METAL)
+				.strength(0f, 100f)
+				.randomTicks()
+				.lightLevel((s) -> brightness.lightLevel)
 				.noDrops()
-				.notSolid()
+				.noOcclusion()
 				);
 		this.brightness = brightness;
 	}
 	
 	@Override
-	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(Age);
 	}
 	
 	@Override
-	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		if (!Block.hasEnoughSolidSide(worldIn, pos.up(), Direction.DOWN)
-				|| worldIn.getBlockState(pos.up()).getMaterial() != Material.ROCK) {
+	public boolean canSurvive(BlockState stateIn, LevelReader worldIn, BlockPos pos) {
+		if (!Block.canSupportCenter(worldIn, pos.above(), Direction.DOWN)
+				|| worldIn.getBlockState(pos.above()).getMaterial() != Material.STONE) {
 			return false;
 		}
 		
@@ -78,38 +78,38 @@ public class MagicLight extends Block {
 	}
 	
 	@Override
-	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
-		if (facing == Direction.UP && !isValidPosition(stateIn, world, pos)) {
-			return Blocks.AIR.getDefaultState();
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor world, BlockPos pos, BlockPos facingPos) {
+		if (facing == Direction.UP && !canSurvive(stateIn, world, pos)) {
+			return Blocks.AIR.defaultBlockState();
 		}
 		return stateIn;
 	}
 	
 	@Override
-	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
-		return ActionResultType.PASS; // could do a cool ping animation or something
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult hit) {
+		return InteractionResult.PASS; // could do a cool ping animation or something
 	}
 	
 	@Override
-	public BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+	public RenderShape getRenderShape(BlockState state) {
+		return RenderShape.MODEL;
 	}
 	
 	@Override
-	public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		return VoxelShapes.empty();
+	public VoxelShape getCollisionShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+		return Shapes.empty();
 	}
 	
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		//LANTERN_AABB = new AxisAlignedBB(0.375D, 0.5D, 0.375D, 0.625D, 1D, 0.625D)
 		return LANTERN_AABB;
 	}
 	
 	@Override
-	public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
+	public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random) {
 		
-		if (!isValidPosition(state, worldIn, pos)) {
+		if (!canSurvive(state, worldIn, pos)) {
 			worldIn.removeBlock(pos, false);
 			return;
 		}
@@ -119,28 +119,28 @@ public class MagicLight extends Block {
 		}
 		
 		// Age
-		int age = state.get(Age) + 1;
+		int age = state.getValue(Age) + 1;
 		if (age > 4) {
 			switch (this.brightness) {
 			case BRIGHT:
-				worldIn.setBlockState(pos, FairyBlocks.magicLightMedium.getDefaultState());
+				worldIn.setBlockAndUpdate(pos, FairyBlocks.magicLightMedium.defaultBlockState());
 				break;
 			case MEDIUM:
-				worldIn.setBlockState(pos, FairyBlocks.magicLightDim.getDefaultState());
+				worldIn.setBlockAndUpdate(pos, FairyBlocks.magicLightDim.defaultBlockState());
 				break;
 			case DIM:
-				worldIn.setBlockState(pos, FairyBlocks.magicLightUnlit.getDefaultState());
+				worldIn.setBlockAndUpdate(pos, FairyBlocks.magicLightUnlit.defaultBlockState());
 				break;
 			case UNLIT:
 				break;
 			}
 			
 		} else {
-			worldIn.setBlockState(pos, this.getDefaultState().with(Age, age));
+			worldIn.setBlockAndUpdate(pos, this.defaultBlockState().setValue(Age, age));
 		}
 	}
 	
-	public void refresh(World worldIn, BlockPos pos) {
-		worldIn.setBlockState(pos, FairyBlocks.magicLightBright.getDefaultState());
+	public void refresh(Level worldIn, BlockPos pos) {
+		worldIn.setBlockAndUpdate(pos, FairyBlocks.magicLightBright.defaultBlockState());
 	}
 }

@@ -1,31 +1,31 @@
 package com.smanzana.nostrumfairies.client.gui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
 
-import net.minecraft.client.MainWindow;
+import com.mojang.blaze3d.platform.Window;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-public class OverlayRenderer extends AbstractGui {
+public class OverlayRenderer extends GuiComponent {
 
 	public OverlayRenderer() {
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
-	protected boolean shouldDisplayPreview(PlayerEntity player) {
-		for (ItemStack stack : player.getHeldEquipment()) {
+	protected boolean shouldDisplayPreview(Player player) {
+		for (ItemStack stack : player.getHandSlots()) {
 			if (stack.isEmpty() || !(stack.getItem() instanceof TemplateWand)) {
 				continue;
 			}
@@ -43,8 +43,8 @@ public class OverlayRenderer extends AbstractGui {
 	@SubscribeEvent
 	public void onRender(RenderWorldLastEvent event) {
 		final Minecraft mc = Minecraft.getInstance();
-		ClientPlayerEntity player = mc.player;
-		final MatrixStack matrixStackIn = event.getMatrixStack();
+		LocalPlayer player = mc.player;
+		final PoseStack matrixStackIn = event.getMatrixStack();
 		
 		// Hook into static TESR renderer
 		StaticTESRRenderer.instance.render(matrixStackIn, event.getProjectionMatrix(), mc, player, event.getPartialTicks());
@@ -53,13 +53,13 @@ public class OverlayRenderer extends AbstractGui {
 	@SubscribeEvent
 	public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
 		final Minecraft mc = Minecraft.getInstance();
-		ClientPlayerEntity player = mc.player;
-		final MatrixStack matrixStackIn = event.getMatrixStack();
+		LocalPlayer player = mc.player;
+		final PoseStack matrixStackIn = event.getMatrixStack();
 		
 		if (event.getType() == ElementType.CROSSHAIRS) {
 			if (shouldDisplayPreview(player)) {
 				String name = null;
-				for (ItemStack held : player.getHeldEquipment()) {
+				for (ItemStack held : player.getHandSlots()) {
 					if (held.isEmpty() || !(held.getItem() instanceof TemplateWand)) {
 						continue;
 					}
@@ -70,39 +70,39 @@ public class OverlayRenderer extends AbstractGui {
 					
 					ItemStack templateScroll = TemplateWand.GetSelectedTemplate(held);
 					if (!templateScroll.isEmpty()) {
-						name = templateScroll.getDisplayName().getString();
+						name = templateScroll.getHoverName().getString();
 						break;
 					}
 				}
 				
 				if (name != null) {
 					
-					matrixStackIn.push();
-					MainWindow res = event.getWindow();
+					matrixStackIn.pushPose();
+					Window res = event.getWindow();
 					matrixStackIn.translate(
-							((double) res.getScaledWidth() / 2),
-							((double) res.getScaledHeight() / 2) + 10,
+							((double) res.getGuiScaledWidth() / 2),
+							((double) res.getGuiScaledHeight() / 2) + 10,
 							0);
 					renderCurrentIndex(matrixStackIn, name);
-					matrixStackIn.pop();
+					matrixStackIn.popPose();
 				}
 			}
 		}
 	}
 	
-	private void renderCurrentIndex(MatrixStack matrixStackIn, String name) {
+	private void renderCurrentIndex(PoseStack matrixStackIn, String name) {
 		if (name == null) {
 			return;
 		}
 		
 		Minecraft mc = Minecraft.getInstance();
 		
-		GlStateManager.disableBlend();
-		matrixStackIn.push();
+		GlStateManager._disableBlend();
+		matrixStackIn.pushPose();
 		
-		drawCenteredString(matrixStackIn, mc.fontRenderer, name, 0, 0, 0xFFFFFFFF);
+		drawCenteredString(matrixStackIn, mc.font, name, 0, 0, 0xFFFFFFFF);
 		
-		matrixStackIn.pop();
-		GlStateManager.enableBlend();
+		matrixStackIn.popPose();
+		GlStateManager._enableBlend();
 	}
 }

@@ -18,15 +18,15 @@ import com.smanzana.autodungeons.world.blueprints.IBlueprintBlockPlacer;
 import com.smanzana.autodungeons.world.blueprints.IBlueprintScanner;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.Level;
 
 /**
  * Wraps up a base blueprint, adds an ID and some basic caching, and replaces spawning
@@ -58,7 +58,7 @@ public class TemplateBlueprint implements IBlueprintBlockPlacer, IBlueprint {
 	public synchronized boolean spawnBlock(BlueprintSpawnContext context, BlockPos pos, Direction direction, BlueprintBlock block) {
 		// Templating doesn't mess with clearing blocks
 		BlockState existingState = context.world.getBlockState(pos);
-		if (existingState != null && !existingState.getMaterial().isReplaceable() && !context.world.isAirBlock(pos)) {
+		if (existingState != null && !existingState.getMaterial().isReplaceable() && !context.world.isEmptyBlock(pos)) {
 			return true; // Skip!
 		}
 		
@@ -69,8 +69,8 @@ public class TemplateBlueprint implements IBlueprintBlockPlacer, IBlueprint {
 		
 		BlockState placeState = block.getSpawnState(direction);
 		if (placeState != null && !(placeState.getBlock() instanceof TemplateBlock)) {
-			TemplateBlock.SetTemplate(((IServerWorld) context.world).getWorld(), pos, placeState);
-			spawnedBlocks.add(pos.toImmutable());
+			TemplateBlock.SetTemplate(((ServerLevelAccessor) context.world).getLevel(), pos, placeState);
+			spawnedBlocks.add(pos.immutable());
 		} else {
 			; // Templating doesn't mess with air or template blocks
 		}
@@ -79,29 +79,29 @@ public class TemplateBlueprint implements IBlueprintBlockPlacer, IBlueprint {
 	}
 	
 	@Override
-	public void finalizeBlock(BlueprintSpawnContext context, BlockPos pos, BlockState placedState, @Nullable TileEntity te, Direction direction, BlueprintBlock block) {
+	public void finalizeBlock(BlueprintSpawnContext context, BlockPos pos, BlockState placedState, @Nullable BlockEntity te, Direction direction, BlueprintBlock block) {
 		;
 	}
 	
 	private List<BlockPos> spawnedBlocks = null;
 
-	public synchronized List<BlockPos> spawn(World world, BlockPos origin, Direction direction) {
+	public synchronized List<BlockPos> spawn(Level world, BlockPos origin, Direction direction) {
 		spawnedBlocks = new ArrayList<>();
 		blueprint.spawn(world, origin, direction, null, this);
 		return spawnedBlocks;
 	}
 	
-	public CompoundNBT toNBT() {
-		CompoundNBT nbt = new CompoundNBT();
+	public CompoundTag toNBT() {
+		CompoundTag nbt = new CompoundTag();
 		
-		nbt.putUniqueId(NBT_ID, id);
+		nbt.putUUID(NBT_ID, id);
 		nbt.put(NBT_BLUEPRINT, blueprint.toNBT());
 		
 		return nbt;
 	}
 	
-	public static final TemplateBlueprint fromNBT(CompoundNBT nbt) {
-		UUID id = nbt.getUniqueId(NBT_ID);
+	public static final TemplateBlueprint fromNBT(CompoundTag nbt) {
+		UUID id = nbt.getUUID(NBT_ID);
 		TemplateBlueprint blueprint = GetRegisteredBlueprint(id);
 		if (blueprint != null) {
 			return blueprint; // Whoo! Cached!
@@ -143,7 +143,7 @@ public class TemplateBlueprint implements IBlueprintBlockPlacer, IBlueprint {
 	}
 
 	@Override
-	public void spawn(IWorld world, BlockPos pos, Direction facing, MutableBoundingBox bounds, IBlueprintBlockPlacer placer) {
+	public void spawn(LevelAccessor world, BlockPos pos, Direction facing, BoundingBox bounds, IBlueprintBlockPlacer placer) {
 		blueprint.spawn(world, pos, facing, bounds, placer);
 	}
 }

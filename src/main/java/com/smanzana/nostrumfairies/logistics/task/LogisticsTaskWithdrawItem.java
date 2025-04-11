@@ -22,13 +22,13 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.core.BlockPos;
 
 public class LogisticsTaskWithdrawItem extends LogisticsTaskBase implements ILogisticsItemTask {
 	
@@ -318,8 +318,8 @@ public class LogisticsTaskWithdrawItem extends LogisticsTaskBase implements ILog
 				// So composites will blindly believe that the component that the tasks its merged out of has enough and make
 				// a task to go there.
 				if (this.mergedTasks == null) {
-					Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.world : component.getWorld(),
-							component == null ? entity.getPosition() : component.getPosition(),
+					Map<ILogisticsComponent, List<ItemDeepStack>> items = network.getNetworkItems(component == null ? entity.level : component.getWorld(),
+							component == null ? entity.blockPosition() : component.getPosition(),
 							250.0, ItemCacheType.NET);
 					ItemDeepStack match = null;
 					ILogisticsComponent comp = null;
@@ -494,13 +494,13 @@ public class LogisticsTaskWithdrawItem extends LogisticsTaskBase implements ILog
 			if (entity == null) {
 				component.addItem(stack.copy());
 			} else {
-				if (entity instanceof PlayerEntity) {
-					PlayerEntity player = (PlayerEntity) entity;
-					player.inventory.addItemStackToInventory(stack.copy());
-					player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, .75f, 2f);
+				if (entity instanceof Player) {
+					Player player = (Player) entity;
+					player.getInventory().add(stack.copy());
+					player.level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, .75f, 2f);
 				} else {
-					ItemEntity item = new ItemEntity(entity.world, entity.getPosX(), entity.getPosY() + .5, entity.getPosZ(), stack);
-					entity.world.addEntity(item);
+					ItemEntity item = new ItemEntity(entity.level, entity.getX(), entity.getY() + .5, entity.getZ(), stack);
+					entity.level.addFreshEntity(item);
 				}
 			}
 			worker.removeItem(stack);

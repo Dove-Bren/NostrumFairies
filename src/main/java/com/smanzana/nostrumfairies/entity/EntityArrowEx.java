@@ -4,13 +4,13 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.ArrowEntity;
-import net.minecraft.network.IPacket;
-import net.minecraft.util.EntityPredicates;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.world.entity.EntitySelector;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.network.NetworkHooks;
 
 /**
@@ -18,12 +18,12 @@ import net.minecraftforge.fml.network.NetworkHooks;
  * @author Skyler
  *
  */
-public class EntityArrowEx extends ArrowEntity {
+public class EntityArrowEx extends Arrow {
 	
-	private static final Predicate<Entity> ARROW_TARGETS_VANILLA = EntityPredicates.NOT_SPECTATING.and(EntityPredicates.IS_ALIVE).and(new Predicate<Entity>() {
+	private static final Predicate<Entity> ARROW_TARGETS_VANILLA = EntitySelector.NO_SPECTATORS.and(EntitySelector.ENTITY_STILL_ALIVE).and(new Predicate<Entity>() {
 		@Override
 		public boolean test(@Nullable Entity p_apply_1_) {
-			return p_apply_1_.canBeCollidedWith();
+			return p_apply_1_.isPickable();
 		}
 	});
 	
@@ -31,26 +31,26 @@ public class EntityArrowEx extends ArrowEntity {
 	
 	protected Predicate<? super Entity> filter;
 	
-	public EntityArrowEx(EntityType<? extends EntityArrowEx> type, World worldIn) {
+	public EntityArrowEx(EntityType<? extends EntityArrowEx> type, Level worldIn) {
 		super(type, worldIn);
 		filter = ARROW_TARGETS_VANILLA;
 	}
 	
-	public EntityArrowEx(World worldIn) {
+	public EntityArrowEx(Level worldIn) {
 		this(FairyEntities.ArrowEx, worldIn);
 	}
 
-	public EntityArrowEx(World worldIn, double x, double y, double z) {
+	public EntityArrowEx(Level worldIn, double x, double y, double z) {
 		this(worldIn);
-		this.setPosition(x, y , z);
+		this.setPos(x, y , z);
 	}
 
-	public EntityArrowEx(World worldIn, LivingEntity shooter) {
+	public EntityArrowEx(Level worldIn, LivingEntity shooter) {
 		this(worldIn);
-		this.setShooter(shooter);
+		this.setOwner(shooter);
 		
 		// This is baked in to parent versions that we can't call
-		this.setPosition(shooter.getPosX(), shooter.getPosY() + (double)shooter.getEyeHeight() - 0.10000000149011612D, shooter.getPosZ());
+		this.setPos(shooter.getX(), shooter.getY() + (double)shooter.getEyeHeight() - 0.10000000149011612D, shooter.getZ());
 	}
 	
 	public void setFilter(Predicate<Entity> filter) {
@@ -66,12 +66,12 @@ public class EntityArrowEx extends ArrowEntity {
 //	}
 	
 	@Override
-	protected boolean func_230298_a_(Entity ent) { // CanHit
-		return super.func_230298_a_(ent) && this.filter.test(ent);
+	protected boolean canHitEntity(Entity ent) { // CanHit
+		return super.canHitEntity(ent) && this.filter.test(ent);
 	}
 	
 	@Override
-	public IPacket<?> createSpawnPacket() {
+	public Packet<?> getAddEntityPacket() {
 		// Have to override and use forge to use with non-living Entity types even though parent defines
 		return NetworkHooks.getEntitySpawningPacket(this);
 	}

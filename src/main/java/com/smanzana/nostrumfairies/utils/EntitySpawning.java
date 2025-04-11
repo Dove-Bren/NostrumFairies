@@ -4,11 +4,11 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrummagica.NostrumMagica;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 
 public class EntitySpawning {
 
@@ -19,12 +19,12 @@ public class EntitySpawning {
 	 * @param pos
 	 * @return
 	 */
-	public static @Nullable Entity readEntity(World world, CompoundNBT tag, Vector3d pos) {
+	public static @Nullable Entity readEntity(Level world, CompoundTag tag, Vec3 pos) {
 		Entity ent;
 		try {
-			ent = EntityType.loadEntityUnchecked(tag, world).orElse(null);
+			ent = EntityType.create(tag, world).orElse(null);
 			if (ent != null) {
-				ent.setPosition(pos.x, pos.y, pos.z);
+				ent.setPos(pos.x, pos.y, pos.z);
 			}
 		} catch (Exception e) {
 			NostrumMagica.logger.error("Failed to spawn pet from snapshot: " + e.getMessage());

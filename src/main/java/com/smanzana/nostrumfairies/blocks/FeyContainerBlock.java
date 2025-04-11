@@ -2,12 +2,12 @@ package com.smanzana.nostrumfairies.blocks;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 
 public abstract class FeyContainerBlock extends FeyBlockBase {
 
@@ -21,13 +21,13 @@ public abstract class FeyContainerBlock extends FeyBlockBase {
 	}
 	
 	@Override
-	public abstract @Nullable TileEntity createTileEntity(BlockState state, IBlockReader world);
+	public abstract @Nullable BlockEntity createTileEntity(BlockState state, BlockGetter world);
 	
 	@SuppressWarnings("deprecation")
 	@Override
-	public boolean eventReceived(BlockState state, World worldIn, BlockPos pos, int id, int param) {
-		super.eventReceived(state, worldIn, pos, id, param);
-		TileEntity tileentity = worldIn.getTileEntity(pos);
-		return tileentity == null ? false : tileentity.receiveClientEvent(id, param);
+	public boolean triggerEvent(BlockState state, Level worldIn, BlockPos pos, int id, int param) {
+		super.triggerEvent(state, worldIn, pos, id, param);
+		BlockEntity tileentity = worldIn.getBlockEntity(pos);
+		return tileentity == null ? false : tileentity.triggerEvent(id, param);
 	}
 }

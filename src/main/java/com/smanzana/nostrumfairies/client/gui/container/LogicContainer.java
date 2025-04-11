@@ -6,17 +6,17 @@ import com.smanzana.nostrummagica.client.gui.container.AutoContainer;
 import com.smanzana.nostrummagica.client.gui.container.AutoGuiContainer;
 import com.smanzana.nostrummagica.util.ContainerUtil.IAutoContainerInventory;
 
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 public abstract class LogicContainer extends AutoContainer {
 	
-	public LogicContainer(ContainerType<? extends LogicContainer> type, int windowId, @Nullable IAutoContainerInventory inventory) {
+	public LogicContainer(MenuType<? extends LogicContainer> type, int windowId, @Nullable IAutoContainerInventory inventory) {
 		super(type, windowId, inventory);
 	}
 
@@ -28,12 +28,12 @@ public abstract class LogicContainer extends AutoContainer {
 	@OnlyIn(Dist.CLIENT)
 	public static abstract class LogicGuiContainer<T extends LogicContainer> extends AutoGuiContainer<T> {
 
-		public LogicGuiContainer(T inventorySlotsIn, PlayerInventory playerInv, ITextComponent name) {
+		public LogicGuiContainer(T inventorySlotsIn, Inventory playerInv, Component name) {
 			super(inventorySlotsIn, playerInv, name);
 		}
 	
 		@Override
-		public <W extends Widget> W addButton(W button) {
+		public <W extends AbstractWidget> W addButton(W button) {
 			return super.addButton(button);
 		}
 	}

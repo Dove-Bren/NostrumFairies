@@ -1,7 +1,7 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfBuilder;
 
 public class ModelBuildingDwarf extends ModelDwarf<EntityDwarfBuilder> {
@@ -20,8 +20,8 @@ public class ModelBuildingDwarf extends ModelDwarf<EntityDwarfBuilder> {
 		final int textH = 64;
 		
 		hammer = new OffsetModelRenderer(this);
-		hammer.setTextureSize(textW, textH);
-		hammer.setRotationPoint(-0.5F, 0.0F, -0.5F);
+		hammer.setTexSize(textW, textH);
+		hammer.setPos(-0.5F, 0.0F, -0.5F);
 		
 		// TODO need to shift x and z by -.5?
 		hammer.offsetY = (9f / 16f); // height of arm, - a bit
@@ -30,15 +30,15 @@ public class ModelBuildingDwarf extends ModelDwarf<EntityDwarfBuilder> {
 		hammer.addBox("", 3.0F, -19.0F, -3.0F, 1, 5, 7, 0f, 88, 25);
 		hammer.addBox("", -1.0F, -15.0F, 0.0F, 1, 15, 1, 0f, 84, 15);
 
-		hammer.rotateAngleZ = (float) (.5 * Math.PI) - .2f;
-		hammer.rotateAngleX = (float) (.5 * Math.PI);
+		hammer.zRot = (float) (.5 * Math.PI) - .2f;
+		hammer.xRot = (float) (.5 * Math.PI);
 		
 		return hammer;
 	}
 	
 	@Override
-	public void render(MatrixStack matrixStackIn, IVertexBuilder buffer, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-		super.render(matrixStackIn, buffer, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+	public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer buffer, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+		super.renderToBuffer(matrixStackIn, buffer, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 	}
 	
 	@Override

@@ -7,11 +7,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -27,7 +27,7 @@ public class CompositePath extends Path {
 	private int cachedCurrPathIndex;
 	
 	public CompositePath(List<Path> paths) {
-		super(new ArrayList<>(), paths.get(paths.size() - 1).getTarget(), paths.get(paths.size() - 1).reachesTarget());
+		super(new ArrayList<>(), paths.get(paths.size() - 1).getTarget(), paths.get(paths.size() - 1).canReach());
 		this.paths = fixPaths(paths);
 		compoundPathIndex = 0;
 		
@@ -69,11 +69,11 @@ public class CompositePath extends Path {
 		int pathIndex = 0;
 		while (pathIndex < paths.size()) {
 			Path path = paths.get(pathIndex);
-			if (path.getCurrentPathLength() > compoundIndex) {
+			if (path.getNodeCount() > compoundIndex) {
 				return new PathAndIndex(path, compoundIndex, pathIndex);
 			}
 			pathIndex++;
-			compoundIndex -= path.getCurrentPathLength();
+			compoundIndex -= path.getNodeCount();
 		}
 		
 		return null;
@@ -83,7 +83,7 @@ public class CompositePath extends Path {
 		int totalLength = 0;
 		
 		for (Path path : paths) {
-			totalLength += path.getCurrentPathLength();
+			totalLength += path.getNodeCount();
 		}
 		
 		return totalLength;
@@ -98,7 +98,7 @@ public class CompositePath extends Path {
 		// We trim off the start, so we have to reconstruct it
 		refreshCache(false);
 		if (cachedCurrPathIndex - 1 >= 0) {
-			PathPoint point = paths.get(cachedCurrPathIndex-1).getPathPointFromIndex(0);
+			Node point = paths.get(cachedCurrPathIndex-1).getNode(0);
 			return new BlockPos(point.x, point.y, point.z);
 		}
 		
@@ -108,7 +108,7 @@ public class CompositePath extends Path {
 	public BlockPos getSegmentEnd() {
 		Path segment = getCurrentPath();
 		if (segment != null) {
-			PathPoint point = segment.getFinalPathPoint();
+			Node point = segment.getEndNode();
 			return new BlockPos(point.x, point.y, point.z);
 		}
 		
@@ -118,10 +118,10 @@ public class CompositePath extends Path {
 	/**
 	 * Directs this path to the next point in its array
 	 */
-	public void incrementPathIndex() {
+	public void advance() {
 		final Path curr = getCurrentPath();
 		if (curr != null) {
-			curr.incrementPathIndex();
+			curr.advance();
 			compoundPathIndex++;
 		}
 	}
@@ -129,7 +129,7 @@ public class CompositePath extends Path {
 	/**
 	 * Returns true if this path has reached the end
 	 */
-	public boolean isFinished() {
+	public boolean isDone() {
 		refreshCache(false);
 		return cachedCurrPath == null;
 	}
@@ -137,49 +137,49 @@ public class CompositePath extends Path {
 	/**
 	 * returns the last PathPoint of the Array
 	 */
-	public PathPoint getFinalPathPoint() {
-		return this.paths.size() > 0 ? paths.get(paths.size() - 1).getFinalPathPoint() : null;
+	public Node getEndNode() {
+		return this.paths.size() > 0 ? paths.get(paths.size() - 1).getEndNode() : null;
 	}
 
 	/**
 	 * return the PathPoint located at the specified PathIndex, usually the current one
 	 */
-	public PathPoint getPathPointFromIndex(int index) {
+	public Node getNode(int index) {
 		if (index == cachedCurrIndex) {
-			return cachedCurrPath.getPathPointFromIndex(cachedCurrPath.getCurrentPathIndex());
+			return cachedCurrPath.getNode(cachedCurrPath.getNextNodeIndex());
 		}
 		
 		PathAndIndex adjusted = calcPathForIndex(paths, index);
-		return adjusted.path.getPathPointFromIndex(adjusted.index);
+		return adjusted.path.getNode(adjusted.index);
 	}
 
-	public void setPoint(int index, PathPoint point) {
+	public void replaceNode(int index, Node point) {
 		if (index == cachedCurrIndex) {
-			cachedCurrPath.setPoint(cachedCurrPath.getCurrentPathIndex(), point);
+			cachedCurrPath.replaceNode(cachedCurrPath.getNextNodeIndex(), point);
 		}
 		
 		PathAndIndex adjusted = calcPathForIndex(paths, index);
-		adjusted.path.setPoint(adjusted.index, point);
+		adjusted.path.replaceNode(adjusted.index, point);
 	}
 
-	public int getCurrentPathLength() {
+	public int getNodeCount() {
 		return this.cachedTotalLength;
 	}
 
-	public void setCurrentPathLength(int length) {
+	public void truncateNodes(int length) {
 		throw new RuntimeException("Can't change path length of compositep path");
 	}
 
-	public int getCurrentPathIndex() {
+	public int getNextNodeIndex() {
 		return this.compoundPathIndex;
 	}
 
-	public void setCurrentPathIndex(int currentPathIndexIn) {
+	public void setNextNodeIndex(int currentPathIndexIn) {
 		if (currentPathIndexIn != this.compoundPathIndex) {
 			if (currentPathIndexIn > this.compoundPathIndex) {
 				// Jumping forward
 				for (int i = currentPathIndexIn - this.compoundPathIndex; i > 0; i--) {
-					this.incrementPathIndex();
+					this.advance();
 				}
 				this.compoundPathIndex = currentPathIndexIn;
 				return;
@@ -192,14 +192,14 @@ public class CompositePath extends Path {
 			for (Path p : this.paths) {
 				if (indicies == 0) {
 					// This is a path after
-					p.setCurrentPathIndex(0);
-				} else if (p.getCurrentPathLength() > indicies) {
+					p.setNextNodeIndex(0);
+				} else if (p.getNodeCount() > indicies) {
 					// This is the path where we are actually at
-					p.setCurrentPathIndex(indicies);
+					p.setNextNodeIndex(indicies);
 					indicies = 0;
 				} else {
-					p.setCurrentPathIndex(p.getCurrentPathLength());
-					indicies -= p.getCurrentPathLength();
+					p.setNextNodeIndex(p.getNodeCount());
+					indicies -= p.getNodeCount();
 				}
 			}
 			
@@ -210,31 +210,31 @@ public class CompositePath extends Path {
 	/**
 	 * Gets the vector of the PathPoint associated with the given index.
 	 */
-	public Vector3d getVectorFromIndex(Entity entityIn, int index) {
+	public Vec3 getEntityPosAtNode(Entity entityIn, int index) {
 		if (index == cachedCurrIndex) {
-			return cachedCurrPath.getVectorFromIndex(entityIn, cachedCurrPath.getCurrentPathIndex());
+			return cachedCurrPath.getEntityPosAtNode(entityIn, cachedCurrPath.getNextNodeIndex());
 		}
 		
 		PathAndIndex adjusted = calcPathForIndex(paths, index);
-		return adjusted.path.getVectorFromIndex(entityIn, adjusted.index);
+		return adjusted.path.getEntityPosAtNode(entityIn, adjusted.index);
 	}
 
 	/**
 	 * returns the current PathEntity target node as Vector3d
 	 */
-	public Vector3d getPosition(Entity entityIn) {
-		return this.getVectorFromIndex(entityIn, this.compoundPathIndex);
+	public Vec3 getNextEntityPos(Entity entityIn) {
+		return this.getEntityPosAtNode(entityIn, this.compoundPathIndex);
 	}
 
-	public Vector3d getCurrentPos() {
-		PathPoint pathpoint = this.getPathPointFromIndex(compoundPathIndex);
-		return new Vector3d((double)pathpoint.x, (double)pathpoint.y, (double)pathpoint.z);
+	public Vec3 getCurrentPos() {
+		Node pathpoint = this.getNode(compoundPathIndex);
+		return new Vec3((double)pathpoint.x, (double)pathpoint.y, (double)pathpoint.z);
 	}
 
 	/**
 	 * Returns true if the EntityPath are the same. Non instance related equals.
 	 */
-	public boolean isSamePath(Path pathentityIn) {
+	public boolean sameAs(Path pathentityIn) {
 		if (pathentityIn == null || !(pathentityIn instanceof CompositePath)) {
 			return false;
 		}
@@ -245,7 +245,7 @@ public class CompositePath extends Path {
 		}
 		
 		for (int i = 0; i < paths.size(); i++) {
-			if (!paths.get(i).isSamePath(other.paths.get(i))) {
+			if (!paths.get(i).sameAs(other.paths.get(i))) {
 				return false;
 			}
 		}
@@ -255,14 +255,14 @@ public class CompositePath extends Path {
 
 	@OnlyIn(Dist.CLIENT)
 	@Override
-	public PathPoint[] getOpenSet() {
+	public Node[] getOpenSet() {
 		refreshCache(false);
 		return this.cachedCurrPath.getOpenSet();
 	}
 
 	@OnlyIn(Dist.CLIENT)
 	@Override
-	public PathPoint[] getClosedSet() {
+	public Node[] getClosedSet() {
 		refreshCache(false);
 		return this.cachedCurrPath.getClosedSet();
 	}

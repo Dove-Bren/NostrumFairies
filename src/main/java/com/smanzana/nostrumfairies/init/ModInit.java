@@ -51,11 +51,11 @@ import com.smanzana.nostrummagica.ritual.RitualRegistry;
 import com.smanzana.nostrummagica.ritual.outcome.OutcomeSpawnItem;
 import com.smanzana.nostrummagica.spell.EMagicElement;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.tags.ItemTags;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.Tags;
@@ -346,8 +346,8 @@ public class ModInit {
 				FeyResource.create(FeyResourceType.ESSENCE, 1),
 				EMagicElement.ICE,
 				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.BLACK_PEARL, ReagentType.MANI_DUST, ReagentType.SPIDER_SILK},
-				Ingredient.fromTag(NostrumTags.Items.CrystalSmall),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyCorruptedEssence), Ingredient.fromItems(Items.WATER_BUCKET), Ingredient.fromItems(FairyItems.feyCorruptedEssence), Ingredient.fromItems(FairyItems.feyCorruptedEssence)},
+				Ingredient.of(NostrumTags.Items.CrystalSmall),
+				new Ingredient[] {Ingredient.of(FairyItems.feyCorruptedEssence), Ingredient.of(Items.WATER_BUCKET), Ingredient.of(FairyItems.feyCorruptedEssence), Ingredient.of(FairyItems.feyCorruptedEssence)},
 				new ResearchRequirement("purify_essence"),
 				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.ESSENCE, 3)))
 			);
@@ -357,8 +357,8 @@ public class ModInit {
 				FeyResource.create(FeyResourceType.BELL, 1),
 				EMagicElement.WIND,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANI_DUST, ReagentType.SPIDER_SILK},
-				Ingredient.fromTag(Tags.Items.INGOTS_GOLD),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyEssence), Ingredient.fromTag(NostrumTags.Items.CrystalMedium), Ingredient.fromTag(Tags.Items.INGOTS_GOLD), Ingredient.fromItems(FairyItems.feyEssence)},
+				Ingredient.of(Tags.Items.INGOTS_GOLD),
+				new Ingredient[] {Ingredient.of(FairyItems.feyEssence), Ingredient.of(NostrumTags.Items.CrystalMedium), Ingredient.of(Tags.Items.INGOTS_GOLD), Ingredient.of(FairyItems.feyEssence)},
 				new ResearchRequirement("fey_bell"),
 				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.BELL, 1)))
 			);
@@ -368,8 +368,8 @@ public class ModInit {
 				FeyResource.create(FeyResourceType.FLOWER, 1),
 				EMagicElement.EARTH,
 				new ReagentType[] {ReagentType.MANI_DUST, ReagentType.MANDRAKE_ROOT, ReagentType.SKY_ASH, ReagentType.SKY_ASH},
-				Ingredient.fromItems(Blocks.TALL_GRASS),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyTears), Ingredient.fromItems(Items.MELON), Ingredient.fromItems(FairyItems.feyEssence), Ingredient.fromItems(FairyItems.feyTears)},
+				Ingredient.of(Blocks.TALL_GRASS),
+				new Ingredient[] {Ingredient.of(FairyItems.feyTears), Ingredient.of(Items.MELON), Ingredient.of(FairyItems.feyEssence), Ingredient.of(FairyItems.feyTears)},
 				new ResearchRequirement("fey_flower"),
 				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.FLOWER, 4)))
 			);
@@ -379,8 +379,8 @@ public class ModInit {
 				FeySoulStone.create(SoulStoneType.GEM),
 				EMagicElement.ICE,
 				new ReagentType[] {ReagentType.MANDRAKE_ROOT, ReagentType.BLACK_PEARL, ReagentType.BLACK_PEARL, ReagentType.SKY_ASH},
-				Ingredient.fromTag(NostrumTags.Items.CrystalMedium),
-				new Ingredient[] {Ingredient.fromTag(Tags.Items.INGOTS_GOLD), Ingredient.fromItems(FairyItems.feyTears), Ingredient.fromItems(FairyBlocks.feyBush), Ingredient.fromItems(FairyItems.feyCorruptedEssence)},
+				Ingredient.of(NostrumTags.Items.CrystalMedium),
+				new Ingredient[] {Ingredient.of(Tags.Items.INGOTS_GOLD), Ingredient.of(FairyItems.feyTears), Ingredient.of(FairyBlocks.feyBush), Ingredient.of(FairyItems.feyCorruptedEssence)},
 				new ResearchRequirement("fey_souls"),
 				new OutcomeSpawnItem(FeySoulStone.create(SoulStoneType.GEM)))
 			);
@@ -390,8 +390,8 @@ public class ModInit {
 				FeySoulStone.create(SoulStoneType.GAEL),
 				EMagicElement.ICE,
 				new ReagentType[] {ReagentType.MANDRAKE_ROOT, ReagentType.BLACK_PEARL, ReagentType.BLACK_PEARL, ReagentType.SKY_ASH},
-				Ingredient.fromTag(NostrumTags.Items.CrystalMedium),
-				new Ingredient[] {Ingredient.fromTag(Tags.Items.DUSTS_GLOWSTONE), Ingredient.fromItems(FairyItems.feyTears), Ingredient.fromItems(FairyBlocks.feyBush), Ingredient.fromItems(FairyItems.feyCorruptedEssence)},
+				Ingredient.of(NostrumTags.Items.CrystalMedium),
+				new Ingredient[] {Ingredient.of(Tags.Items.DUSTS_GLOWSTONE), Ingredient.of(FairyItems.feyTears), Ingredient.of(FairyBlocks.feyBush), Ingredient.of(FairyItems.feyCorruptedEssence)},
 				new ResearchRequirement("fey_souls"),
 				new OutcomeSpawnItem(FeySoulStone.create(SoulStoneType.GAEL)))
 			);
@@ -401,8 +401,8 @@ public class ModInit {
 				FairyInstrument.create(InstrumentType.FLUTE),
 				EMagicElement.WIND,
 				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SKY_ASH},
-				Ingredient.fromTag(ItemTags.LOGS),
-				new Ingredient[] {Ingredient.fromTag(NostrumTags.Items.CrystalSmall), Ingredient.fromItems(FairyItems.feyEssence), Ingredient.fromItems(Items.SUGAR_CANE), Ingredient.fromTag(NostrumTags.Items.CrystalSmall)},
+				Ingredient.of(ItemTags.LOGS),
+				new Ingredient[] {Ingredient.of(NostrumTags.Items.CrystalSmall), Ingredient.of(FairyItems.feyEssence), Ingredient.of(Items.SUGAR_CANE), Ingredient.of(NostrumTags.Items.CrystalSmall)},
 				new ResearchRequirement("fairy_instruments"),
 				new OutcomeSpawnItem(FairyInstrument.create(InstrumentType.FLUTE)))
 			);
@@ -412,8 +412,8 @@ public class ModInit {
 				FairyInstrument.create(InstrumentType.HARP),
 				EMagicElement.WIND,
 				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SKY_ASH},
-				Ingredient.fromTag(Tags.Items.INGOTS_IRON),
-				new Ingredient[] {Ingredient.fromTag(NostrumTags.Items.CrystalSmall), Ingredient.fromItems(FairyItems.feyEssence), Ingredient.fromTag(Tags.Items.INGOTS_GOLD), Ingredient.fromTag(NostrumTags.Items.CrystalSmall)},
+				Ingredient.of(Tags.Items.INGOTS_IRON),
+				new Ingredient[] {Ingredient.of(NostrumTags.Items.CrystalSmall), Ingredient.of(FairyItems.feyEssence), Ingredient.of(Tags.Items.INGOTS_GOLD), Ingredient.of(NostrumTags.Items.CrystalSmall)},
 				new ResearchRequirement("fairy_instruments"),
 				new OutcomeSpawnItem(FairyInstrument.create(InstrumentType.HARP)))
 			);
@@ -423,8 +423,8 @@ public class ModInit {
 				FairyInstrument.create(InstrumentType.OCARINA),
 				EMagicElement.WIND,
 				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SKY_ASH},
-				Ingredient.fromItems(Blocks.SMOOTH_STONE),
-				new Ingredient[] {Ingredient.fromTag(NostrumTags.Items.CrystalSmall), Ingredient.fromItems(FairyItems.feyEssence), Ingredient.fromItems(Items.SUGAR_CANE), Ingredient.fromTag(NostrumTags.Items.CrystalSmall)},
+				Ingredient.of(Blocks.SMOOTH_STONE),
+				new Ingredient[] {Ingredient.of(NostrumTags.Items.CrystalSmall), Ingredient.of(FairyItems.feyEssence), Ingredient.of(Items.SUGAR_CANE), Ingredient.of(NostrumTags.Items.CrystalSmall)},
 				new ResearchRequirement("fairy_instruments"),
 				new OutcomeSpawnItem(FairyInstrument.create(InstrumentType.OCARINA)))
 			);
@@ -434,8 +434,8 @@ public class ModInit {
 				FairyGael.create(FairyGaelType.ATTACK, null),
 				EMagicElement.LIGHTNING,
 				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.GINSENG, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT},
-				Ingredient.fromStacks(FeySoulStone.createFake(ResidentType.FAIRY)),
-				new Ingredient[] {Ingredient.fromTag(NostrumTags.Items.CrystalSmall), Ingredient.fromItems(NostrumItems.thanoPendant), Ingredient.fromTag(Tags.Items.GLASS), Ingredient.fromTag(NostrumTags.Items.ReagentSkyAsh)},
+				Ingredient.of(FeySoulStone.createFake(ResidentType.FAIRY)),
+				new Ingredient[] {Ingredient.of(NostrumTags.Items.CrystalSmall), Ingredient.of(NostrumItems.thanoPendant), Ingredient.of(Tags.Items.GLASS), Ingredient.of(NostrumTags.Items.ReagentSkyAsh)},
 				new ResearchRequirement("fairy_gael_aggressive"),
 				new OutcomeConstructGael(FairyGaelType.ATTACK))
 			);
@@ -445,8 +445,8 @@ public class ModInit {
 				FairyGael.create(FairyGaelType.LOGISTICS, null),
 				EMagicElement.LIGHTNING,
 				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.GINSENG, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT},
-				Ingredient.fromStacks(FeySoulStone.createFake(ResidentType.FAIRY)),
-				new Ingredient[] {Ingredient.fromTag(NostrumTags.Items.CrystalSmall), Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(Tags.Items.GLASS), Ingredient.fromTag(NostrumTags.Items.ReagentSkyAsh)},
+				Ingredient.of(FeySoulStone.createFake(ResidentType.FAIRY)),
+				new Ingredient[] {Ingredient.of(NostrumTags.Items.CrystalSmall), Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Tags.Items.GLASS), Ingredient.of(NostrumTags.Items.ReagentSkyAsh)},
 				new ResearchRequirement("fairy_gael_logistics"),
 				new OutcomeConstructGael(FairyGaelType.LOGISTICS))
 			);
@@ -456,8 +456,8 @@ public class ModInit {
 				FairyGael.create(FairyGaelType.BUILD, null),
 				EMagicElement.LIGHTNING,
 				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.GINSENG, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT},
-				Ingredient.fromStacks(FeySoulStone.createFake(ResidentType.FAIRY)),
-				new Ingredient[] {Ingredient.fromTag(NostrumTags.Items.CrystalSmall), Ingredient.fromItems(Items.ANVIL, Items.CHIPPED_ANVIL, Items.DAMAGED_ANVIL), Ingredient.fromTag(Tags.Items.GLASS), Ingredient.fromTag(NostrumTags.Items.ReagentSkyAsh)},
+				Ingredient.of(FeySoulStone.createFake(ResidentType.FAIRY)),
+				new Ingredient[] {Ingredient.of(NostrumTags.Items.CrystalSmall), Ingredient.of(Items.ANVIL, Items.CHIPPED_ANVIL, Items.DAMAGED_ANVIL), Ingredient.of(Tags.Items.GLASS), Ingredient.of(NostrumTags.Items.ReagentSkyAsh)},
 				new ResearchRequirement("fairy_gael_construction"),
 				new OutcomeConstructGael(FairyGaelType.BUILD))
 			);
@@ -467,8 +467,8 @@ public class ModInit {
 				FeyResource.create(FeyResourceType.LOGIC_TOKEN, 4),
 				EMagicElement.FIRE,
 				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.MANDRAKE_ROOT},
-				Ingredient.fromItems(FairyItems.feyGolemToken),
-				new Ingredient[] {Ingredient.fromTag(NostrumTags.Items.MagicToken), Ingredient.fromItems(Items.REDSTONE), Ingredient.fromTag(NostrumTags.Items.CrystalSmall), Ingredient.fromTag(NostrumTags.Items.MagicToken)},
+				Ingredient.of(FairyItems.feyGolemToken),
+				new Ingredient[] {Ingredient.of(NostrumTags.Items.MagicToken), Ingredient.of(Items.REDSTONE), Ingredient.of(NostrumTags.Items.CrystalSmall), Ingredient.of(NostrumTags.Items.MagicToken)},
 				new ResearchRequirement("logistics"),
 				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.LOGIC_TOKEN, 4)))
 			);
@@ -478,8 +478,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.gnomeHome),
 				null,
 				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.GINSENG},
-				Ingredient.fromStacks(FeySoulStone.createFake(ResidentType.GNOME)),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(NostrumTags.Items.CrystalLarge), Ingredient.fromItems(Items.CLAY_BALL), Ingredient.fromItems(FairyItems.feyLogicToken)},
+				Ingredient.of(FeySoulStone.createFake(ResidentType.GNOME)),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(NostrumTags.Items.CrystalLarge), Ingredient.of(Items.CLAY_BALL), Ingredient.of(FairyItems.feyLogicToken)},
 				new ResearchRequirement("gnomes"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.gnomeHome), FeySoulStone.create(SoulStoneType.GEM)))
 			);
@@ -489,8 +489,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.elfHome),
 				null,
 				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.GINSENG},
-				Ingredient.fromStacks(FeySoulStone.createFake(ResidentType.ELF)),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(NostrumTags.Items.CrystalLarge), Ingredient.fromTag(ItemTags.SAPLINGS), Ingredient.fromItems(FairyItems.feyLogicToken)},
+				Ingredient.of(FeySoulStone.createFake(ResidentType.ELF)),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(NostrumTags.Items.CrystalLarge), Ingredient.of(ItemTags.SAPLINGS), Ingredient.of(FairyItems.feyLogicToken)},
 				new ResearchRequirement("elves"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.elfHome), FeySoulStone.create(SoulStoneType.GEM)))
 			);
@@ -500,8 +500,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.dwarfHome),
 				null,
 				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.GINSENG},
-				Ingredient.fromStacks(FeySoulStone.createFake(ResidentType.DWARF)),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(NostrumTags.Items.CrystalLarge), Ingredient.fromTag(Tags.Items.STONE), Ingredient.fromItems(FairyItems.feyLogicToken)},
+				Ingredient.of(FeySoulStone.createFake(ResidentType.DWARF)),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(NostrumTags.Items.CrystalLarge), Ingredient.of(Tags.Items.STONE), Ingredient.of(FairyItems.feyLogicToken)},
 				new ResearchRequirement("dwarves"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.dwarfHome), FeySoulStone.create(SoulStoneType.GEM)))
 			);
@@ -511,8 +511,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.fairyHome),
 				null,
 				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.GINSENG},
-				Ingredient.fromStacks(FeySoulStone.createFake(ResidentType.FAIRY)),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(NostrumTags.Items.CrystalLarge), Ingredient.fromItems(Items.GLASS_BOTTLE), Ingredient.fromItems(FairyItems.feyLogicToken)},
+				Ingredient.of(FeySoulStone.createFake(ResidentType.FAIRY)),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(NostrumTags.Items.CrystalLarge), Ingredient.of(Items.GLASS_BOTTLE), Ingredient.of(FairyItems.feyLogicToken)},
 				new ResearchRequirement("fairies"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.fairyHome), FeySoulStone.create(SoulStoneType.GAEL)))
 			);
@@ -522,8 +522,8 @@ public class ModInit {
 				FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.EMERALD, 1),
 				null,
 				new ReagentType[] {ReagentType.MANI_DUST, ReagentType.BLACK_PEARL, ReagentType.GRAVE_DUST, ReagentType.MANDRAKE_ROOT},
-				Ingredient.fromStacks(FeySoulStone.createFake(ResidentType.ELF)),
-				new Ingredient[] {Ingredient.fromTag(NostrumTags.Items.EnderBristle), Ingredient.fromTag(NostrumTags.Items.CrystalMedium), Ingredient.fromItems(Blocks.VINE), Ingredient.fromItems(FairyItems.feyLogicToken)},
+				Ingredient.of(FeySoulStone.createFake(ResidentType.ELF)),
+				new Ingredient[] {Ingredient.of(NostrumTags.Items.EnderBristle), Ingredient.of(NostrumTags.Items.CrystalMedium), Ingredient.of(Blocks.VINE), Ingredient.of(FairyItems.feyLogicToken)},
 				new ResearchRequirement("elves"),
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.EMERALD, 1), FeySoulStone.create(SoulStoneType.GEM)))
 			);
@@ -533,8 +533,8 @@ public class ModInit {
 				FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.GARNET, 1),
 				null,
 				new ReagentType[] {ReagentType.MANI_DUST, ReagentType.BLACK_PEARL, ReagentType.GRAVE_DUST, ReagentType.MANDRAKE_ROOT},
-				Ingredient.fromStacks(FeySoulStone.createFake(ResidentType.GNOME)),
-				new Ingredient[] {Ingredient.fromTag(NostrumTags.Items.WispPebble), Ingredient.fromTag(NostrumTags.Items.CrystalMedium), Ingredient.fromItems(Items.FLINT), Ingredient.fromItems(FairyItems.feyLogicToken)},
+				Ingredient.of(FeySoulStone.createFake(ResidentType.GNOME)),
+				new Ingredient[] {Ingredient.of(NostrumTags.Items.WispPebble), Ingredient.of(NostrumTags.Items.CrystalMedium), Ingredient.of(Items.FLINT), Ingredient.of(FairyItems.feyLogicToken)},
 				new ResearchRequirement("gnomes"),
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.GARNET, 1), FeySoulStone.create(SoulStoneType.GEM)))
 			);
@@ -544,8 +544,8 @@ public class ModInit {
 				FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.AQUAMARINE, 1),
 				null,
 				new ReagentType[] {ReagentType.MANI_DUST, ReagentType.BLACK_PEARL, ReagentType.GRAVE_DUST, ReagentType.MANDRAKE_ROOT},
-				Ingredient.fromStacks(FeySoulStone.createFake(ResidentType.DWARF)),
-				new Ingredient[] {Ingredient.fromTag(NostrumTags.Items.SpriteCore), Ingredient.fromTag(NostrumTags.Items.CrystalMedium), Ingredient.fromTag(Tags.Items.OBSIDIAN), Ingredient.fromItems(FairyItems.feyLogicToken)},
+				Ingredient.of(FeySoulStone.createFake(ResidentType.DWARF)),
+				new Ingredient[] {Ingredient.of(NostrumTags.Items.SpriteCore), Ingredient.of(NostrumTags.Items.CrystalMedium), Ingredient.of(Tags.Items.OBSIDIAN), Ingredient.of(FairyItems.feyLogicToken)},
 				new ResearchRequirement("dwarves"),
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.SPECIALIZATION, FeyStoneMaterial.AQUAMARINE, 1), FeySoulStone.create(SoulStoneType.GEM)))
 			);
@@ -555,8 +555,8 @@ public class ModInit {
 				FeyStone.create(FeySlotType.UPGRADE, FeyStoneMaterial.RUBY, 1),
 				null,
 				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.MANI_DUST, ReagentType.GRAVE_DUST, ReagentType.CRYSTABLOOM},
-				Ingredient.fromTag(NostrumTags.Items.CrystalSmall),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyEssence), Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromItems(ginsengFlower), Ingredient.fromItems(FairyItems.feyFlower)},
+				Ingredient.of(NostrumTags.Items.CrystalSmall),
+				new Ingredient[] {Ingredient.of(FairyItems.feyEssence), Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(ginsengFlower), Ingredient.of(FairyItems.feyFlower)},
 				new ResearchRequirement("logistics"),
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.UPGRADE, FeyStoneMaterial.RUBY, 1)))
 			);
@@ -566,8 +566,8 @@ public class ModInit {
 				FeyStone.create(FeySlotType.DOWNGRADE, FeyStoneMaterial.RUBY, 1),
 				null,
 				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.MANI_DUST, ReagentType.GRAVE_DUST, ReagentType.CRYSTABLOOM},
-				Ingredient.fromTag(NostrumTags.Items.CrystalSmall),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyEssence), Ingredient.fromItems(FairyItems.feyGolemToken), Ingredient.fromItems(ginsengFlower), Ingredient.fromItems(FairyItems.feyTears)},
+				Ingredient.of(NostrumTags.Items.CrystalSmall),
+				new Ingredient[] {Ingredient.of(FairyItems.feyEssence), Ingredient.of(FairyItems.feyGolemToken), Ingredient.of(ginsengFlower), Ingredient.of(FairyItems.feyTears)},
 				new ResearchRequirement("logistics"),
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.DOWNGRADE, FeyStoneMaterial.RUBY, 1)))
 			);
@@ -577,8 +577,8 @@ public class ModInit {
 				FeyStone.create(FeySlotType.UPGRADE, FeyStoneMaterial.SAPPHIRE, 1),
 				null,
 				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.MANI_DUST, ReagentType.GRAVE_DUST, ReagentType.CRYSTABLOOM},
-				Ingredient.fromTag(NostrumTags.Items.CrystalSmall),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyEssence), Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromItems(mandrakeFlower), Ingredient.fromTag(NostrumTags.Items.WispPebble)},
+				Ingredient.of(NostrumTags.Items.CrystalSmall),
+				new Ingredient[] {Ingredient.of(FairyItems.feyEssence), Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(mandrakeFlower), Ingredient.of(NostrumTags.Items.WispPebble)},
 				new ResearchRequirement("logistics"),
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.UPGRADE, FeyStoneMaterial.SAPPHIRE, 1)))
 			);
@@ -588,8 +588,8 @@ public class ModInit {
 				FeyStone.create(FeySlotType.DOWNGRADE, FeyStoneMaterial.SAPPHIRE, 1),
 				null,
 				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.MANI_DUST, ReagentType.GRAVE_DUST, ReagentType.CRYSTABLOOM},
-				Ingredient.fromTag(NostrumTags.Items.CrystalSmall),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyEssence), Ingredient.fromItems(FairyItems.feyGolemToken), Ingredient.fromItems(mandrakeFlower), Ingredient.fromTag(NostrumTags.Items.SpriteCore)},
+				Ingredient.of(NostrumTags.Items.CrystalSmall),
+				new Ingredient[] {Ingredient.of(FairyItems.feyEssence), Ingredient.of(FairyItems.feyGolemToken), Ingredient.of(mandrakeFlower), Ingredient.of(NostrumTags.Items.SpriteCore)},
 				new ResearchRequirement("logistics"),
 				new OutcomeSpawnItem(FeyStone.create(FeySlotType.DOWNGRADE, FeyStoneMaterial.SAPPHIRE, 1)))
 			);
@@ -599,8 +599,8 @@ public class ModInit {
 				new ItemStack(FairyItems.templateWand),
 				null,
 				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.SKY_ASH, ReagentType.BLACK_PEARL, ReagentType.CRYSTABLOOM},
-				Ingredient.fromItems(NostrumItems.mageStaff),
-				new Ingredient[] {Ingredient.fromItems(NostrumBlocks.mimicFacade), Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(NostrumTags.Items.EnderBristle), Ingredient.fromItems(NostrumBlocks.mimicFacade)},
+				Ingredient.of(NostrumItems.mageStaff),
+				new Ingredient[] {Ingredient.of(NostrumBlocks.mimicFacade), Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(NostrumTags.Items.EnderBristle), Ingredient.of(NostrumBlocks.mimicFacade)},
 				new ResearchRequirement("logistics_construction"),
 				new OutcomeSpawnItem(new ItemStack(FairyItems.templateWand)))
 			);
@@ -610,8 +610,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.storageChest),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
-				Ingredient.fromTag(Tags.Items.CHESTS),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromTag(Tags.Items.DYES_BLUE), Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.EMPTY},
+				Ingredient.of(Tags.Items.CHESTS),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(Tags.Items.DYES_BLUE), Ingredient.of(FairyItems.feyLogicToken), Ingredient.EMPTY},
 				new ResearchRequirement("logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.storageChest)))
 			);
@@ -621,8 +621,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.bufferChest),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
-				Ingredient.fromTag(Tags.Items.CHESTS),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromTag(Tags.Items.DYES_YELLOW), Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.EMPTY},
+				Ingredient.of(Tags.Items.CHESTS),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(Tags.Items.DYES_YELLOW), Ingredient.of(FairyItems.feyLogicToken), Ingredient.EMPTY},
 				new ResearchRequirement("adv_logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.bufferChest)))
 			);
@@ -632,8 +632,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.outputChest),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
-				Ingredient.fromTag(Tags.Items.CHESTS),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromTag(Tags.Items.DYES_RED), Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.EMPTY},
+				Ingredient.of(Tags.Items.CHESTS),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(Tags.Items.DYES_RED), Ingredient.of(FairyItems.feyLogicToken), Ingredient.EMPTY},
 				new ResearchRequirement("adv_logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.outputChest)))
 			);
@@ -643,8 +643,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.inputChest),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
-				Ingredient.fromTag(Tags.Items.CHESTS),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromTag(Tags.Items.DYES_GREEN), Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.EMPTY},
+				Ingredient.of(Tags.Items.CHESTS),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(Tags.Items.DYES_GREEN), Ingredient.of(FairyItems.feyLogicToken), Ingredient.EMPTY},
 				new ResearchRequirement("adv_logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.inputChest)))
 			);
@@ -654,8 +654,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.outputPanel),
 				null,
 				new ReagentType[] {ReagentType.GINSENG, ReagentType.SKY_ASH, ReagentType.BLACK_PEARL, ReagentType.MANI_DUST},
-				Ingredient.fromItems(FairyBlocks.outputChest),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.EMPTY, Ingredient.EMPTY},
+				Ingredient.of(FairyBlocks.outputChest),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(FairyItems.feyLogicToken), Ingredient.EMPTY, Ingredient.EMPTY},
 				new ResearchRequirement("adv_logistics_items"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.outputPanel, 4)))
 			);
@@ -665,8 +665,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.logisticsPylon),
 				null,
 				new ReagentType[] {ReagentType.BLACK_PEARL, ReagentType.CRYSTABLOOM, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
-				Ingredient.fromTag(Tags.Items.GEMS_EMERALD),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(Tags.Items.STONE), Ingredient.EMPTY},
+				Ingredient.of(Tags.Items.GEMS_EMERALD),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Tags.Items.STONE), Ingredient.EMPTY},
 				new ResearchRequirement("logistics_relays"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.logisticsPylon, 2)))
 			);
@@ -676,8 +676,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.storageMonitor),
 				null,
 				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.GINSENG, ReagentType.MANDRAKE_ROOT, ReagentType.SPIDER_SILK},
-				Ingredient.fromItems(NostrumBlocks.mirrorBlock),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(Tags.Items.CHESTS), Ingredient.EMPTY},
+				Ingredient.of(NostrumBlocks.mirrorBlock),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Tags.Items.CHESTS), Ingredient.EMPTY},
 				new ResearchRequirement("logistics_sensors"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.storageMonitor)))
 			);
@@ -687,8 +687,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.logisticsSensor),
 				null,
 				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.BLACK_PEARL, ReagentType.MANDRAKE_ROOT, ReagentType.GINSENG},
-				Ingredient.fromItems(FairyBlocks.storageMonitor),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromTag(Tags.Items.STORAGE_BLOCKS_REDSTONE), Ingredient.fromItems(Items.REDSTONE), Ingredient.EMPTY},
+				Ingredient.of(FairyBlocks.storageMonitor),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(Tags.Items.STORAGE_BLOCKS_REDSTONE), Ingredient.of(Items.REDSTONE), Ingredient.EMPTY},
 				new ResearchRequirement("logistics_sensors"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.logisticsSensor)))
 			);
@@ -698,8 +698,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.farmingBlock),
 				null,
 				new ReagentType[] {ReagentType.GRAVE_DUST, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SPIDER_SILK},
-				Ingredient.fromTag(ItemTags.SIGNS),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromItems(Items.WATER_BUCKET), Ingredient.fromItems(Items.DIAMOND_HOE), Ingredient.fromTag(Tags.Items.INGOTS_GOLD)},
+				Ingredient.of(ItemTags.SIGNS),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Items.WATER_BUCKET), Ingredient.of(Items.DIAMOND_HOE), Ingredient.of(Tags.Items.INGOTS_GOLD)},
 				new ResearchRequirement("gnomes"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.farmingBlock)))
 			);
@@ -709,8 +709,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.gatheringBlock),
 				null,
 				new ReagentType[] {ReagentType.GRAVE_DUST, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SPIDER_SILK},
-				Ingredient.fromTag(ItemTags.SIGNS),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromItems(Items.LEATHER), Ingredient.fromItems(NostrumItems.reagentBag), Ingredient.fromTag(Tags.Items.INGOTS_GOLD)},
+				Ingredient.of(ItemTags.SIGNS),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Items.LEATHER), Ingredient.of(NostrumItems.reagentBag), Ingredient.of(Tags.Items.INGOTS_GOLD)},
 				new ResearchRequirement("gathering_blocks"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.gatheringBlock)))
 			);
@@ -720,8 +720,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.woodcuttingBlock),
 				null,
 				new ReagentType[] {ReagentType.GRAVE_DUST, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SPIDER_SILK},
-				Ingredient.fromTag(ItemTags.SIGNS),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(ItemTags.LEAVES), Ingredient.fromItems(Items.DIAMOND_AXE), Ingredient.fromTag(Tags.Items.INGOTS_GOLD)},
+				Ingredient.of(ItemTags.SIGNS),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(ItemTags.LEAVES), Ingredient.of(Items.DIAMOND_AXE), Ingredient.of(Tags.Items.INGOTS_GOLD)},
 				new ResearchRequirement("elves"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.woodcuttingBlock)))
 			);
@@ -731,8 +731,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.miningBlock),
 				null,
 				new ReagentType[] {ReagentType.GRAVE_DUST, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SPIDER_SILK},
-				Ingredient.fromTag(ItemTags.SIGNS),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(Tags.Items.OBSIDIAN), Ingredient.fromItems(Items.DIAMOND_PICKAXE), Ingredient.fromTag(Tags.Items.INGOTS_GOLD)},
+				Ingredient.of(ItemTags.SIGNS),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Tags.Items.OBSIDIAN), Ingredient.of(Items.DIAMOND_PICKAXE), Ingredient.of(Tags.Items.INGOTS_GOLD)},
 				new ResearchRequirement("dwarves"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.miningBlock)))
 			);
@@ -742,8 +742,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.buildingBlock),
 				null,
 				new ReagentType[] {ReagentType.GRAVE_DUST, ReagentType.GINSENG, ReagentType.SPIDER_SILK, ReagentType.SPIDER_SILK},
-				Ingredient.fromTag(ItemTags.SIGNS),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(Tags.Items.CHESTS), Ingredient.fromItems(Blocks.BRICKS), Ingredient.fromTag(Tags.Items.INGOTS_GOLD)},
+				Ingredient.of(ItemTags.SIGNS),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Tags.Items.CHESTS), Ingredient.of(Blocks.BRICKS), Ingredient.of(Tags.Items.INGOTS_GOLD)},
 				new ResearchRequirement("building_blocks"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.buildingBlock)))
 			);
@@ -753,8 +753,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.gnomeCraftingBlock),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.SKY_ASH, ReagentType.BLACK_PEARL},
-				Ingredient.fromItems(Blocks.CRAFTING_TABLE),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromItems(Blocks.CRAFTING_TABLE), Ingredient.fromItems(Blocks.STONE), Ingredient.fromTag(Tags.Items.INGOTS_GOLD)},
+				Ingredient.of(Blocks.CRAFTING_TABLE),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Blocks.CRAFTING_TABLE), Ingredient.of(Blocks.STONE), Ingredient.of(Tags.Items.INGOTS_GOLD)},
 				new ResearchRequirement("gnome_crafting"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.gnomeCraftingBlock)))
 			);
@@ -764,8 +764,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.elfCraftingBlock),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.SKY_ASH, ReagentType.BLACK_PEARL},
-				Ingredient.fromTag(ItemTags.LOGS),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromItems(Blocks.CRAFTING_TABLE), Ingredient.fromItems(Blocks.STONE), Ingredient.fromTag(Tags.Items.INGOTS_GOLD)},
+				Ingredient.of(ItemTags.LOGS),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Blocks.CRAFTING_TABLE), Ingredient.of(Blocks.STONE), Ingredient.of(Tags.Items.INGOTS_GOLD)},
 				new ResearchRequirement("elf_crafting"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.elfCraftingBlock)))
 			);
@@ -775,8 +775,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.dwarfCraftingBlock),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.SKY_ASH, ReagentType.BLACK_PEARL},
-				Ingredient.fromItems(Items.ANVIL, Items.CHIPPED_ANVIL, Items.DAMAGED_ANVIL),
-				new Ingredient[] {Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromItems(Blocks.CRAFTING_TABLE), Ingredient.fromItems(Blocks.STONE), Ingredient.fromTag(Tags.Items.INGOTS_GOLD)},
+				Ingredient.of(Items.ANVIL, Items.CHIPPED_ANVIL, Items.DAMAGED_ANVIL),
+				new Ingredient[] {Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Blocks.CRAFTING_TABLE), Ingredient.of(Blocks.STONE), Ingredient.of(Tags.Items.INGOTS_GOLD)},
 				new ResearchRequirement("dwarf_crafting"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.dwarfCraftingBlock)))
 			);
@@ -786,8 +786,8 @@ public class ModInit {
 				new ItemStack(FairyItems.soulJar),
 				null,
 				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.GINSENG, ReagentType.SKY_ASH},
-				Ingredient.fromItems(FairyItems.soulGem),
-				new Ingredient[] {Ingredient.fromItems(Items.GHAST_TEAR), Ingredient.EMPTY, Ingredient.EMPTY, Ingredient.fromTag(Tags.Items.ENDER_PEARLS)},
+				Ingredient.of(FairyItems.soulGem),
+				new Ingredient[] {Ingredient.of(Items.GHAST_TEAR), Ingredient.EMPTY, Ingredient.EMPTY, Ingredient.of(Tags.Items.ENDER_PEARLS)},
 				new ResearchRequirement("soul_jars"),
 				new OutcomeSpawnItem(new ItemStack(FairyItems.soulJar)))
 			);
@@ -797,8 +797,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.reinforcedIronChest),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
-				Ingredient.fromItems(FairyBlocks.storageChest),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromTag(Tags.Items.CHESTS), Ingredient.fromTag(Tags.Items.STORAGE_BLOCKS_IRON), Ingredient.EMPTY},
+				Ingredient.of(FairyBlocks.storageChest),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(Tags.Items.CHESTS), Ingredient.of(Tags.Items.STORAGE_BLOCKS_IRON), Ingredient.EMPTY},
 				new ResearchRequirement("adv_logistics_storage"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.reinforcedIronChest)))
 			);
@@ -809,8 +809,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.reinforcedIronChest),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
-				Ingredient.fromTag(Tags.Items.STORAGE_BLOCKS_IRON),
-				new Ingredient[] {Ingredient.fromTag(Tags.Items.CHESTS), Ingredient.fromTag(Tags.Items.GEMS_LAPIS), Ingredient.fromItems(FairyItems.feyLogicToken), Ingredient.fromTag(Tags.Items.CHESTS)},
+				Ingredient.of(Tags.Items.STORAGE_BLOCKS_IRON),
+				new Ingredient[] {Ingredient.of(Tags.Items.CHESTS), Ingredient.of(Tags.Items.GEMS_LAPIS), Ingredient.of(FairyItems.feyLogicToken), Ingredient.of(Tags.Items.CHESTS)},
 				new ResearchRequirement("adv_logistics_storage"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.reinforcedIronChest)))
 			);
@@ -820,8 +820,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.reinforcedGoldChest),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
-				Ingredient.fromItems(FairyBlocks.reinforcedIronChest),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromTag(Tags.Items.CHESTS), Ingredient.fromTag(Tags.Items.STORAGE_BLOCKS_GOLD), Ingredient.EMPTY},
+				Ingredient.of(FairyBlocks.reinforcedIronChest),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(Tags.Items.CHESTS), Ingredient.of(Tags.Items.STORAGE_BLOCKS_GOLD), Ingredient.EMPTY},
 				new ResearchRequirement("adv_logistics_storage"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.reinforcedGoldChest)))
 			);
@@ -831,8 +831,8 @@ public class ModInit {
 				new ItemStack(FairyBlocks.reinforcedDiamondChest),
 				null,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANDRAKE_ROOT, ReagentType.MANI_DUST},
-				Ingredient.fromItems(FairyBlocks.reinforcedGoldChest),
-				new Ingredient[] {Ingredient.EMPTY, Ingredient.fromTag(Tags.Items.CHESTS), Ingredient.fromTag(Tags.Items.STORAGE_BLOCKS_DIAMOND), Ingredient.EMPTY},
+				Ingredient.of(FairyBlocks.reinforcedGoldChest),
+				new Ingredient[] {Ingredient.EMPTY, Ingredient.of(Tags.Items.CHESTS), Ingredient.of(Tags.Items.STORAGE_BLOCKS_DIAMOND), Ingredient.EMPTY},
 				new ResearchRequirement("adv_logistics_storage"),
 				new OutcomeSpawnItem(new ItemStack(FairyBlocks.reinforcedDiamondChest)))
 			);

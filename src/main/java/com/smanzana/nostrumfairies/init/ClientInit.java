@@ -55,13 +55,13 @@ import com.smanzana.nostrumfairies.tiles.ReinforcedDiamondChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedGoldChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedIronChestTileEntity;
 
-import net.minecraft.client.gui.ScreenManager;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.RenderTypeLookup;
-import net.minecraft.client.renderer.entity.TippedArrowRenderer;
-import net.minecraft.client.renderer.texture.AtlasTexture;
-import net.minecraft.item.ItemModelsProperties;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.entity.TippableArrowRenderer;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
@@ -105,18 +105,18 @@ public class ClientInit {
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.ReinforcedGoldChestTileEntityType, (manager) -> new TileEntityLogisticsRenderer<ReinforcedGoldChestTileEntity>(manager) {});
 		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.ReinforcedDiamondChestTileEntityType, (manager) -> new TileEntityLogisticsRenderer<ReinforcedDiamondChestTileEntity>(manager) {});
 		
-		ScreenManager.registerFactory(FairyContainers.BufferChest, BufferChestGui.BufferChestGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.BuildingBlock, BuildingBlockGui.BuildingBlockGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.CraftingStation, CraftingStationGui.CraftingStationGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.CraftingStationSmall, CraftingStationSmallGui.CraftingStationSmallGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.FairyScreen, FairyScreenGui.FairyScreenGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.HomeBlock, HomeBlockGui.HomeBlockGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.InputChest, InputChestGui.InputChestGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.LogisticsSensor, LogisticsSensorGui.LogisticsSensorGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.OutputChest, OutputChestGui.OutputChestGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.OutputPanel, OutputPanelGui.OutputPanelGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.StorageChest, StorageChestGui.StorageChestGuiContainer::new);
-		ScreenManager.registerFactory(FairyContainers.TemplateWand, TemplateWandGui.TemplateWandGuiContainer::new);
+		MenuScreens.register(FairyContainers.BufferChest, BufferChestGui.BufferChestGuiContainer::new);
+		MenuScreens.register(FairyContainers.BuildingBlock, BuildingBlockGui.BuildingBlockGuiContainer::new);
+		MenuScreens.register(FairyContainers.CraftingStation, CraftingStationGui.CraftingStationGuiContainer::new);
+		MenuScreens.register(FairyContainers.CraftingStationSmall, CraftingStationSmallGui.CraftingStationSmallGuiContainer::new);
+		MenuScreens.register(FairyContainers.FairyScreen, FairyScreenGui.FairyScreenGuiContainer::new);
+		MenuScreens.register(FairyContainers.HomeBlock, HomeBlockGui.HomeBlockGuiContainer::new);
+		MenuScreens.register(FairyContainers.InputChest, InputChestGui.InputChestGuiContainer::new);
+		MenuScreens.register(FairyContainers.LogisticsSensor, LogisticsSensorGui.LogisticsSensorGuiContainer::new);
+		MenuScreens.register(FairyContainers.OutputChest, OutputChestGui.OutputChestGuiContainer::new);
+		MenuScreens.register(FairyContainers.OutputPanel, OutputPanelGui.OutputPanelGuiContainer::new);
+		MenuScreens.register(FairyContainers.StorageChest, StorageChestGui.StorageChestGuiContainer::new);
+		MenuScreens.register(FairyContainers.TemplateWand, TemplateWandGui.TemplateWandGuiContainer::new);
 		
 		registerBlockRenderLayer();
 		registerEntityRenderers();
@@ -130,44 +130,44 @@ public class ClientInit {
 	}
 	
 	private static final void registerItemModelProperties() {
-		ItemModelsProperties.registerProperty(FairyItems.soulGem, new ResourceLocation("filled"), FeySoulStone::ModelFilled);
-		ItemModelsProperties.registerProperty(FairyItems.soulGem, new ResourceLocation("type_idx"), FeySoulStone::ModelType);
-		ItemModelsProperties.registerProperty(FairyItems.soulGael, new ResourceLocation("filled"), FeySoulStone::ModelFilled);
-		ItemModelsProperties.registerProperty(FairyItems.soulGael, new ResourceLocation("type_idx"), FeySoulStone::ModelType);
-		ItemModelsProperties.registerProperty(FairyItems.soulJar, new ResourceLocation("filled"), SoulJar::ModelFilled);
-		ItemModelsProperties.registerProperty(FairyItems.templateWand, new ResourceLocation("mode"), TemplateWand::ModelMode);
+		ItemProperties.register(FairyItems.soulGem, new ResourceLocation("filled"), FeySoulStone::ModelFilled);
+		ItemProperties.register(FairyItems.soulGem, new ResourceLocation("type_idx"), FeySoulStone::ModelType);
+		ItemProperties.register(FairyItems.soulGael, new ResourceLocation("filled"), FeySoulStone::ModelFilled);
+		ItemProperties.register(FairyItems.soulGael, new ResourceLocation("type_idx"), FeySoulStone::ModelType);
+		ItemProperties.register(FairyItems.soulJar, new ResourceLocation("filled"), SoulJar::ModelFilled);
+		ItemProperties.register(FairyItems.templateWand, new ResourceLocation("mode"), TemplateWand::ModelMode);
 	}
 	
 	private static final void registerBlockRenderLayer() {
-		RenderTypeLookup.setRenderLayer(FairyBlocks.bufferChest, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.buildingBlock, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.dwarfCraftingBlock, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.elfCraftingBlock, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.gnomeCraftingBlock, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.farmingBlock, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.feyBush, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.dwarfHome, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.elfHome, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.fairyHome, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.gnomeHome, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.gatheringBlock, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.inputChest, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.logisticsPylon, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.logisticsSensor, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.magicLightUnlit, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.magicLightDim, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.magicLightMedium, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.magicLightBright, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.miningBlock, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.outputChest, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.outputPanel, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.storageChest, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.reinforcedIronChest, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.reinforcedGoldChest, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.reinforcedDiamondChest, RenderType.getSolid());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.storageMonitor, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(FairyBlocks.templateBlock, (l) -> true);
-		RenderTypeLookup.setRenderLayer(FairyBlocks.woodcuttingBlock, RenderType.getCutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.bufferChest, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.buildingBlock, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.dwarfCraftingBlock, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.elfCraftingBlock, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.gnomeCraftingBlock, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.farmingBlock, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.feyBush, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.dwarfHome, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.elfHome, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.fairyHome, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.gnomeHome, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.gatheringBlock, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.inputChest, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.logisticsPylon, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.logisticsSensor, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.magicLightUnlit, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.magicLightDim, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.magicLightMedium, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.magicLightBright, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.miningBlock, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.outputChest, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.outputPanel, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.storageChest, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.reinforcedIronChest, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.reinforcedGoldChest, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.reinforcedDiamondChest, RenderType.solid());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.storageMonitor, RenderType.cutout());
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.templateBlock, (l) -> true);
+		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.woodcuttingBlock, RenderType.cutout());
 	}
 	
 	private static final void registerEntityRenderers() {
@@ -184,7 +184,7 @@ public class ClientInit {
 		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.DwarfBuilder, (manager) -> new RenderDwarfBuilder(manager, 1.0f));
 		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.GnomeCrafter, (manager) -> new RenderGnome(manager, 1.0f));
 		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.GnomeCollector, (manager) -> new RenderGnome(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.ArrowEx, (manager) -> new TippedArrowRenderer(manager));
+		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.ArrowEx, (manager) -> new TippableArrowRenderer(manager));
 	}
 	
 	@SubscribeEvent
@@ -197,7 +197,7 @@ public class ClientInit {
 	public static void stitchEventPre(TextureStitchEvent.Pre event) {
 		// Note: called multiple times for different texture atlases.
 		// Using what Botania does
-		if(event.getMap().getTextureLocation() != AtlasTexture.LOCATION_BLOCKS_TEXTURE) {
+		if(event.getMap().location() != TextureAtlas.LOCATION_BLOCKS) {
 			return;
 		}
 		

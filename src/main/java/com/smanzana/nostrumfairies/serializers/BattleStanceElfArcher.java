@@ -1,36 +1,36 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.IDataSerializer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializer;
 
 public enum BattleStanceElfArcher {
 	RANGED,
 	MELEE;
 	
-	public final static class BattleStanceSerializer implements IDataSerializer<BattleStanceElfArcher> {
+	public final static class BattleStanceSerializer implements EntityDataSerializer<BattleStanceElfArcher> {
 		
 		private BattleStanceSerializer() {
 			;
 		}
 		
 		@Override
-		public void write(PacketBuffer buf, BattleStanceElfArcher value) {
-			buf.writeEnumValue(value);
+		public void write(FriendlyByteBuf buf, BattleStanceElfArcher value) {
+			buf.writeEnum(value);
 		}
 
 		@Override
-		public BattleStanceElfArcher read(PacketBuffer buf) {
-			return buf.readEnumValue(BattleStanceElfArcher.class);
+		public BattleStanceElfArcher read(FriendlyByteBuf buf) {
+			return buf.readEnum(BattleStanceElfArcher.class);
 		}
 
 		@Override
-		public DataParameter<BattleStanceElfArcher> createKey(int id) {
-			return new DataParameter<>(id, this);
+		public EntityDataAccessor<BattleStanceElfArcher> createAccessor(int id) {
+			return new EntityDataAccessor<>(id, this);
 		}
 
 		@Override
-		public BattleStanceElfArcher copyValue(BattleStanceElfArcher value) {
+		public BattleStanceElfArcher copy(BattleStanceElfArcher value) {
 			return value;
 		}
 	}

@@ -5,11 +5,11 @@ import java.util.List;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
-import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public abstract class ReinforcedChestTileEntity extends LogisticsChestTileEntity {
 
-	public ReinforcedChestTileEntity(TileEntityType<? extends ReinforcedChestTileEntity> type) {
+	public ReinforcedChestTileEntity(BlockEntityType<? extends ReinforcedChestTileEntity> type) {
 		super(type);
 	}
 	

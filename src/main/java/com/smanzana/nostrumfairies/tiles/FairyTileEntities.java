@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.tiles;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 
-import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -36,58 +36,58 @@ public class FairyTileEntities {
 	private static final String ID_TemplateBlockTileEntity = "template_block";
 	private static final String ID_WoodcuttingBlockTileEntity = "woodcutting_block";
 	
-	@ObjectHolder(ID_BufferChestTileEntity) public static TileEntityType<BufferChestTileEntity> BufferChestTileEntityType;
-	@ObjectHolder(ID_BuildingBlockTileEntity) public static TileEntityType<BuildingBlockTileEntity> BuildingBlockTileEntityType;
-	@ObjectHolder(ID_CraftingBlockDwarfTileEntity) public static TileEntityType<CraftingBlockDwarfTileEntity> CraftingBlockDwarfTileEntityType;
-	@ObjectHolder(ID_CraftingBlockElfTileEntity) public static TileEntityType<CraftingBlockElfTileEntity> CraftingBlockElfTileEntityType;
-	@ObjectHolder(ID_CraftingBlockGnomeTileEntity) public static TileEntityType<CraftingBlockGnomeTileEntity> CraftingBlockGnomeTileEntityType;
-	@ObjectHolder(ID_FarmingBlockTileEntity) public static TileEntityType<FarmingBlockTileEntity> FarmingBlockTileEntityType;
-	@ObjectHolder(ID_GatheringBlockTileEntity) public static TileEntityType<GatheringBlockTileEntity> GatheringBlockTileEntityType;
-	@ObjectHolder(ID_HomeBlockTileEntity) public static TileEntityType<HomeBlockTileEntity> HomeBlockTileEntityType;
-	@ObjectHolder(ID_InputChestTileEntity) public static TileEntityType<InputChestTileEntity> InputChestTileEntityType;
-	@ObjectHolder(ID_LogisticsSensorTileEntity) public static TileEntityType<LogisticsSensorTileEntity> LogisticsSensorTileEntityType;
-	@ObjectHolder(ID_MiningBlockTileEntity) public static TileEntityType<MiningBlockTileEntity> MiningBlockTileEntityType;
-	@ObjectHolder(ID_OutputChestTileEntity) public static TileEntityType<OutputChestTileEntity> OutputChestTileEntityType;
-	@ObjectHolder(ID_OutputPanelTileEntity) public static TileEntityType<OutputPanelTileEntity> OutputPanelTileEntityType;
-	@ObjectHolder(ID_PylonTileEntity) public static TileEntityType<PylonTileEntity> PylonTileEntityType;
-	@ObjectHolder(ID_ReinforcedDiamondChestTileEntity) public static TileEntityType<ReinforcedDiamondChestTileEntity> ReinforcedDiamondChestTileEntityType;
-	@ObjectHolder(ID_ReinforcedGoldChestTileEntity) public static TileEntityType<ReinforcedGoldChestTileEntity> ReinforcedGoldChestTileEntityType;
-	@ObjectHolder(ID_ReinforcedIronChestTileEntity) public static TileEntityType<ReinforcedIronChestTileEntity> ReinforcedIronChestTileEntityType;
-	@ObjectHolder(ID_StorageChestTileEntity) public static TileEntityType<StorageChestTileEntity> StorageChestTileEntityType;
-	@ObjectHolder(ID_StorageMonitorTileEntity) public static TileEntityType<StorageMonitorTileEntity> StorageMonitorTileEntityType;
-	@ObjectHolder(ID_TemplateBlockTileEntity) public static TileEntityType<TemplateBlockTileEntity> TemplateBlockTileEntityType;
-	@ObjectHolder(ID_WoodcuttingBlockTileEntity) public static TileEntityType<WoodcuttingBlockTileEntity> WoodcuttingBlockTileEntityType;
+	@ObjectHolder(ID_BufferChestTileEntity) public static BlockEntityType<BufferChestTileEntity> BufferChestTileEntityType;
+	@ObjectHolder(ID_BuildingBlockTileEntity) public static BlockEntityType<BuildingBlockTileEntity> BuildingBlockTileEntityType;
+	@ObjectHolder(ID_CraftingBlockDwarfTileEntity) public static BlockEntityType<CraftingBlockDwarfTileEntity> CraftingBlockDwarfTileEntityType;
+	@ObjectHolder(ID_CraftingBlockElfTileEntity) public static BlockEntityType<CraftingBlockElfTileEntity> CraftingBlockElfTileEntityType;
+	@ObjectHolder(ID_CraftingBlockGnomeTileEntity) public static BlockEntityType<CraftingBlockGnomeTileEntity> CraftingBlockGnomeTileEntityType;
+	@ObjectHolder(ID_FarmingBlockTileEntity) public static BlockEntityType<FarmingBlockTileEntity> FarmingBlockTileEntityType;
+	@ObjectHolder(ID_GatheringBlockTileEntity) public static BlockEntityType<GatheringBlockTileEntity> GatheringBlockTileEntityType;
+	@ObjectHolder(ID_HomeBlockTileEntity) public static BlockEntityType<HomeBlockTileEntity> HomeBlockTileEntityType;
+	@ObjectHolder(ID_InputChestTileEntity) public static BlockEntityType<InputChestTileEntity> InputChestTileEntityType;
+	@ObjectHolder(ID_LogisticsSensorTileEntity) public static BlockEntityType<LogisticsSensorTileEntity> LogisticsSensorTileEntityType;
+	@ObjectHolder(ID_MiningBlockTileEntity) public static BlockEntityType<MiningBlockTileEntity> MiningBlockTileEntityType;
+	@ObjectHolder(ID_OutputChestTileEntity) public static BlockEntityType<OutputChestTileEntity> OutputChestTileEntityType;
+	@ObjectHolder(ID_OutputPanelTileEntity) public static BlockEntityType<OutputPanelTileEntity> OutputPanelTileEntityType;
+	@ObjectHolder(ID_PylonTileEntity) public static BlockEntityType<PylonTileEntity> PylonTileEntityType;
+	@ObjectHolder(ID_ReinforcedDiamondChestTileEntity) public static BlockEntityType<ReinforcedDiamondChestTileEntity> ReinforcedDiamondChestTileEntityType;
+	@ObjectHolder(ID_ReinforcedGoldChestTileEntity) public static BlockEntityType<ReinforcedGoldChestTileEntity> ReinforcedGoldChestTileEntityType;
+	@ObjectHolder(ID_ReinforcedIronChestTileEntity) public static BlockEntityType<ReinforcedIronChestTileEntity> ReinforcedIronChestTileEntityType;
+	@ObjectHolder(ID_StorageChestTileEntity) public static BlockEntityType<StorageChestTileEntity> StorageChestTileEntityType;
+	@ObjectHolder(ID_StorageMonitorTileEntity) public static BlockEntityType<StorageMonitorTileEntity> StorageMonitorTileEntityType;
+	@ObjectHolder(ID_TemplateBlockTileEntity) public static BlockEntityType<TemplateBlockTileEntity> TemplateBlockTileEntityType;
+	@ObjectHolder(ID_WoodcuttingBlockTileEntity) public static BlockEntityType<WoodcuttingBlockTileEntity> WoodcuttingBlockTileEntityType;
 	
 	
-	private static void register(IForgeRegistry<TileEntityType<?>> registry, TileEntityType<?> type, String ID) {
+	private static void register(IForgeRegistry<BlockEntityType<?>> registry, BlockEntityType<?> type, String ID) {
 		registry.register(type.setRegistryName(ID));
 	}
 	
 	@SubscribeEvent
-	public static void registerTileEntities(RegistryEvent.Register<TileEntityType<?>> event) {
-		final IForgeRegistry<TileEntityType<?>> registry = event.getRegistry();
+	public static void registerTileEntities(RegistryEvent.Register<BlockEntityType<?>> event) {
+		final IForgeRegistry<BlockEntityType<?>> registry = event.getRegistry();
 		
-		register(registry, TileEntityType.Builder.create(BufferChestTileEntity::new, FairyBlocks.bufferChest).build(null), ID_BufferChestTileEntity);
-		register(registry, TileEntityType.Builder.create(BuildingBlockTileEntity::new, FairyBlocks.buildingBlock).build(null), ID_BuildingBlockTileEntity);
-		register(registry, TileEntityType.Builder.create(CraftingBlockDwarfTileEntity::new, FairyBlocks.dwarfCraftingBlock).build(null), ID_CraftingBlockDwarfTileEntity);
-		register(registry, TileEntityType.Builder.create(CraftingBlockElfTileEntity::new, FairyBlocks.elfCraftingBlock).build(null), ID_CraftingBlockElfTileEntity);
-		register(registry, TileEntityType.Builder.create(CraftingBlockGnomeTileEntity::new, FairyBlocks.gnomeCraftingBlock).build(null), ID_CraftingBlockGnomeTileEntity);
-		register(registry, TileEntityType.Builder.create(FarmingBlockTileEntity::new, FairyBlocks.farmingBlock).build(null), ID_FarmingBlockTileEntity);
-		register(registry, TileEntityType.Builder.create(GatheringBlockTileEntity::new, FairyBlocks.gatheringBlock).build(null), ID_GatheringBlockTileEntity);
-		register(registry, TileEntityType.Builder.create(HomeBlockTileEntity::new, FairyBlocks.dwarfHome, FairyBlocks.elfHome, FairyBlocks.fairyHome, FairyBlocks.gnomeHome).build(null), ID_HomeBlockTileEntity);
-		register(registry, TileEntityType.Builder.create(InputChestTileEntity::new, FairyBlocks.inputChest).build(null), ID_InputChestTileEntity);
-		register(registry, TileEntityType.Builder.create(LogisticsSensorTileEntity::new, FairyBlocks.logisticsSensor).build(null), ID_LogisticsSensorTileEntity);
-		register(registry, TileEntityType.Builder.create(MiningBlockTileEntity::new, FairyBlocks.miningBlock).build(null), ID_MiningBlockTileEntity);
-		register(registry, TileEntityType.Builder.create(OutputChestTileEntity::new, FairyBlocks.outputChest).build(null), ID_OutputChestTileEntity);
-		register(registry, TileEntityType.Builder.create(OutputPanelTileEntity::new, FairyBlocks.outputPanel).build(null), ID_OutputPanelTileEntity);
-		register(registry, TileEntityType.Builder.create(PylonTileEntity::new, FairyBlocks.logisticsPylon).build(null), ID_PylonTileEntity);
-		register(registry, TileEntityType.Builder.create(ReinforcedDiamondChestTileEntity::new, FairyBlocks.reinforcedDiamondChest).build(null), ID_ReinforcedDiamondChestTileEntity);
-		register(registry, TileEntityType.Builder.create(ReinforcedGoldChestTileEntity::new, FairyBlocks.reinforcedGoldChest).build(null), ID_ReinforcedGoldChestTileEntity);
-		register(registry, TileEntityType.Builder.create(ReinforcedIronChestTileEntity::new, FairyBlocks.reinforcedIronChest).build(null), ID_ReinforcedIronChestTileEntity);
-		register(registry, TileEntityType.Builder.create(StorageChestTileEntity::new, FairyBlocks.storageChest).build(null), ID_StorageChestTileEntity);
-		register(registry, TileEntityType.Builder.create(StorageMonitorTileEntity::new, FairyBlocks.storageMonitor).build(null), ID_StorageMonitorTileEntity);
-		register(registry, TileEntityType.Builder.create(TemplateBlockTileEntity::new, FairyBlocks.templateBlock).build(null), ID_TemplateBlockTileEntity);
-		register(registry, TileEntityType.Builder.create(WoodcuttingBlockTileEntity::new, FairyBlocks.woodcuttingBlock).build(null), ID_WoodcuttingBlockTileEntity);
+		register(registry, BlockEntityType.Builder.of(BufferChestTileEntity::new, FairyBlocks.bufferChest).build(null), ID_BufferChestTileEntity);
+		register(registry, BlockEntityType.Builder.of(BuildingBlockTileEntity::new, FairyBlocks.buildingBlock).build(null), ID_BuildingBlockTileEntity);
+		register(registry, BlockEntityType.Builder.of(CraftingBlockDwarfTileEntity::new, FairyBlocks.dwarfCraftingBlock).build(null), ID_CraftingBlockDwarfTileEntity);
+		register(registry, BlockEntityType.Builder.of(CraftingBlockElfTileEntity::new, FairyBlocks.elfCraftingBlock).build(null), ID_CraftingBlockElfTileEntity);
+		register(registry, BlockEntityType.Builder.of(CraftingBlockGnomeTileEntity::new, FairyBlocks.gnomeCraftingBlock).build(null), ID_CraftingBlockGnomeTileEntity);
+		register(registry, BlockEntityType.Builder.of(FarmingBlockTileEntity::new, FairyBlocks.farmingBlock).build(null), ID_FarmingBlockTileEntity);
+		register(registry, BlockEntityType.Builder.of(GatheringBlockTileEntity::new, FairyBlocks.gatheringBlock).build(null), ID_GatheringBlockTileEntity);
+		register(registry, BlockEntityType.Builder.of(HomeBlockTileEntity::new, FairyBlocks.dwarfHome, FairyBlocks.elfHome, FairyBlocks.fairyHome, FairyBlocks.gnomeHome).build(null), ID_HomeBlockTileEntity);
+		register(registry, BlockEntityType.Builder.of(InputChestTileEntity::new, FairyBlocks.inputChest).build(null), ID_InputChestTileEntity);
+		register(registry, BlockEntityType.Builder.of(LogisticsSensorTileEntity::new, FairyBlocks.logisticsSensor).build(null), ID_LogisticsSensorTileEntity);
+		register(registry, BlockEntityType.Builder.of(MiningBlockTileEntity::new, FairyBlocks.miningBlock).build(null), ID_MiningBlockTileEntity);
+		register(registry, BlockEntityType.Builder.of(OutputChestTileEntity::new, FairyBlocks.outputChest).build(null), ID_OutputChestTileEntity);
+		register(registry, BlockEntityType.Builder.of(OutputPanelTileEntity::new, FairyBlocks.outputPanel).build(null), ID_OutputPanelTileEntity);
+		register(registry, BlockEntityType.Builder.of(PylonTileEntity::new, FairyBlocks.logisticsPylon).build(null), ID_PylonTileEntity);
+		register(registry, BlockEntityType.Builder.of(ReinforcedDiamondChestTileEntity::new, FairyBlocks.reinforcedDiamondChest).build(null), ID_ReinforcedDiamondChestTileEntity);
+		register(registry, BlockEntityType.Builder.of(ReinforcedGoldChestTileEntity::new, FairyBlocks.reinforcedGoldChest).build(null), ID_ReinforcedGoldChestTileEntity);
+		register(registry, BlockEntityType.Builder.of(ReinforcedIronChestTileEntity::new, FairyBlocks.reinforcedIronChest).build(null), ID_ReinforcedIronChestTileEntity);
+		register(registry, BlockEntityType.Builder.of(StorageChestTileEntity::new, FairyBlocks.storageChest).build(null), ID_StorageChestTileEntity);
+		register(registry, BlockEntityType.Builder.of(StorageMonitorTileEntity::new, FairyBlocks.storageMonitor).build(null), ID_StorageMonitorTileEntity);
+		register(registry, BlockEntityType.Builder.of(TemplateBlockTileEntity::new, FairyBlocks.templateBlock).build(null), ID_TemplateBlockTileEntity);
+		register(registry, BlockEntityType.Builder.of(WoodcuttingBlockTileEntity::new, FairyBlocks.woodcuttingBlock).build(null), ID_WoodcuttingBlockTileEntity);
 	}
 	
 }

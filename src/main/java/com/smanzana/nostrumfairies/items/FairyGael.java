@@ -17,26 +17,26 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -100,9 +100,9 @@ public class FairyGael extends Item implements ILoreTagged {
 	}
 	
 	public void setCracked(ItemStack stack, boolean cracked) {
-		CompoundNBT tag = stack.getTag();
+		CompoundTag tag = stack.getTag();
 		if (tag == null) {
-			tag = new CompoundNBT();
+			tag = new CompoundTag();
 		}
 		
 		tag.putBoolean(NBT_CRACKED, cracked);
@@ -138,7 +138,7 @@ public class FairyGael extends Item implements ILoreTagged {
 		return stack;
 	}
 	
-	public static void initGael(ItemStack stack, @Nonnull ServerWorld world) {
+	public static void initGael(ItemStack stack, @Nonnull ServerLevel world) {
 		// For some easy creative intergration
 		if (!stack.hasTag()) {
 			FairyGaelType type = getTypeOf(stack);
@@ -156,20 +156,20 @@ public class FairyGael extends Item implements ILoreTagged {
 				break;
 			}
 			
-			fairy.onInitialSpawn(world, world.getDifficultyForLocation(new BlockPos(0, 10, 0)), SpawnReason.MOB_SUMMONED, (ILivingEntityData) null, null);
+			fairy.finalizeSpawn(world, world.getCurrentDifficultyAt(new BlockPos(0, 10, 0)), MobSpawnType.MOB_SUMMONED, (SpawnGroupData) null, null);
 			setStoredEntity(stack, fairy);
 		}
 	}
 	
-	public static @Nullable EntityPersonalFairy spawnStoredEntity(ItemStack stack, ServerWorld world, double x, double y, double z) {
+	public static @Nullable EntityPersonalFairy spawnStoredEntity(ItemStack stack, ServerLevel world, double x, double y, double z) {
 		EntityPersonalFairy fey = null;
 		
 		initGael(stack, world);
 		
-		CompoundNBT nbt = stack.getTag();
-		Entity entity = EntitySpawning.readEntity(world, nbt.getCompound("data"), new Vector3d(x, y, z));
+		CompoundTag nbt = stack.getTag();
+		Entity entity = EntitySpawning.readEntity(world, nbt.getCompound("data"), new Vec3(x, y, z));
 		if (entity != null) {
-			world.addEntity(entity);
+			world.addFreshEntity(entity);
 			
 			if (entity instanceof EntityFairy && !(entity instanceof EntityPersonalFairy)) {
 				// Upgrade!
@@ -186,7 +186,7 @@ public class FairyGael extends Item implements ILoreTagged {
 				fey.setEnergy(fey.getMaxEnergy() * energyPerc);
 			} else {
 				// WAnt to error, but this will probably spam
-				entity.remove();
+				entity.discard();
 				//world.removeEntity(entity);
 			}
 		}
@@ -195,7 +195,7 @@ public class FairyGael extends Item implements ILoreTagged {
 	
 	public static void setStoredEntity(ItemStack stack, EntityPersonalFairy fey) {
 		if (fey != null) {
-			CompoundNBT tag = new CompoundNBT();
+			CompoundTag tag = new CompoundTag();
 			tag.putString("name", fey.getName().getString());
 			tag.putDouble("healthD", (double) fey.getHealth() / Math.max(1, (double) fey.getMaxHealth()));
 			tag.putDouble("energyD", (double) fey.getEnergy() / Math.max(1, (double) fey.getMaxEnergy()));
@@ -235,14 +235,14 @@ public class FairyGael extends Item implements ILoreTagged {
 	 * @param gael
 	 * @param potency Relative efficiency. 1f is standard.
 	 */
-	public static void regenFairy(ServerWorld world, ItemStack gael, float potency) {
+	public static void regenFairy(ServerLevel world, ItemStack gael, float potency) {
 		if (gael.isEmpty() || ((FairyGael) gael.getItem()).isCracked(gael)) {
 			return;
 		}
 		
 		double energy = getStoredEnergy(gael) + (NostrumFairies.random.nextDouble() * .00085 * potency);
 		double health = getStoredHealth(gael) + (NostrumFairies.random.nextDouble() * .0002 * potency);
-		CompoundNBT tag = gael.getTag();
+		CompoundTag tag = gael.getTag();
 		if (tag == null) {
 			initGael(gael, world);
 			tag = gael.getTag();
@@ -264,7 +264,7 @@ public class FairyGael extends Item implements ILoreTagged {
 			return ItemStack.EMPTY;
 		}
 		ItemStack gael = new ItemStack(getItem(type));
-		CompoundNBT tag = new CompoundNBT();
+		CompoundTag tag = new CompoundTag();
 		tag.put("data", FeySoulStone.getStoredEntityTag(soulStone));
 		tag.putString("name", FeySoulStone.getStoredEntityName(soulStone));
 		gael.setTag(tag);
@@ -298,27 +298,27 @@ public class FairyGael extends Item implements ILoreTagged {
 	}
 	
 	@Override
-	public ActionResultType onItemUse(ItemUseContext context) { 
-		return ActionResultType.PASS;
+	public InteractionResult useOn(UseOnContext context) { 
+		return InteractionResult.PASS;
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand hand) {
-		return ActionResult.resultPass(playerIn.getHeldItem(hand));
+	public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand hand) {
+		return InteractionResultHolder.pass(playerIn.getItemInHand(hand));
 	}
 	
 	@OnlyIn(Dist.CLIENT)
 	@Override
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+	public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
 		if (isCracked(stack)) {
-			tooltip.add(new TranslationTextComponent("info.fairy_gael.cracked").mergeStyle(TextFormatting.DARK_RED));
+			tooltip.add(new TranslatableComponent("info.fairy_gael.cracked").withStyle(ChatFormatting.DARK_RED));
 		}
 		if (stack.hasTag()) {
 			String name = getStoredName(stack);
 			if (name == null || name.isEmpty()) {
 				name = "An unknown entity";
 			}
-			tooltip.add(new StringTextComponent(name).mergeStyle(TextFormatting.AQUA));
+			tooltip.add(new TextComponent(name).withStyle(ChatFormatting.AQUA));
 		}
 	}
 	

@@ -8,10 +8,10 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 /**
  * Client has changed mode or index and is sending such to the server
@@ -24,11 +24,11 @@ public class TemplateWandUpdate {
 		
 		ctx.get().enqueueWork(() -> {
 			try {
-				final ServerPlayerEntity player = ctx.get().getSender();
-				@Nonnull ItemStack wand = player.getHeldItemMainhand();
+				final ServerPlayer player = ctx.get().getSender();
+				@Nonnull ItemStack wand = player.getMainHandItem();
 				if (wand.isEmpty() || !(wand.getItem() instanceof TemplateWand) || 
 						(message.type == WandUpdateType.SCROLL && TemplateWand.GetWandMode(wand) != WandMode.SPAWN)) {
-					wand = player.getHeldItemOffhand();
+					wand = player.getOffhandItem();
 				}
 				
 				if (!wand.isEmpty() && wand.getItem() instanceof TemplateWand &&
@@ -60,15 +60,15 @@ public class TemplateWandUpdate {
 		this.val = val;
 	}
 	
-	public static TemplateWandUpdate decode(PacketBuffer buf) {
+	public static TemplateWandUpdate decode(FriendlyByteBuf buf) {
 		return new TemplateWandUpdate(
-				buf.readEnumValue(WandUpdateType.class),
+				buf.readEnum(WandUpdateType.class),
 				buf.readBoolean()
 				);
 	}
 
-	public static void encode(TemplateWandUpdate msg, PacketBuffer buf) {
-		buf.writeEnumValue(msg.type);
+	public static void encode(TemplateWandUpdate msg, FriendlyByteBuf buf) {
+		buf.writeEnum(msg.type);
 		buf.writeBoolean(msg.val);
 	}
 

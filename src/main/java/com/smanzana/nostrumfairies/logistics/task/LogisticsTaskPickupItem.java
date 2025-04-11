@@ -13,11 +13,11 @@ import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.IncomingItemRecord;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.BlockPos;
 
 /*
  * Pick up an item and then deposit it somewhere in the network
@@ -179,7 +179,7 @@ public class LogisticsTaskPickupItem extends LogisticsTaskBase {
 			LogisticsNetwork network = fairy.getLogisticsNetwork();
 			if (network != null) {
 				// Find a place where we can drop off the item after we pick it up.
-				dropoffComponent = network.getStorageForItem(item.world, item.getPosition(), item.getItem());
+				dropoffComponent = network.getStorageForItem(item.level, item.blockPosition(), item.getItem());
 				
 				if (dropoffComponent != null) {
 					deliverTask = LogisticsSubTask.Move(dropoffComponent.getPosition());
@@ -253,7 +253,7 @@ public class LogisticsTaskPickupItem extends LogisticsTaskBase {
 			ItemStack stack = giveItem.splitStack((int) Math.min(giveItem.getTemplate().getMaxStackSize(), giveItem.getCount()));
 			fairy.addItem(stack);
 		}
-		item.remove();
+		item.discard();
 	}
 	
 	private void giveItems() {
@@ -309,6 +309,6 @@ public class LogisticsTaskPickupItem extends LogisticsTaskBase {
 	
 	@Override
 	public BlockPos getStartPosition() {
-		return item == null ? null : item.getPosition();
+		return item == null ? null : item.blockPosition();
 	}
 }

@@ -5,10 +5,10 @@ import java.util.List;
 
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public interface ILogisticsComponent {
 
@@ -47,7 +47,7 @@ public interface ILogisticsComponent {
 	 * Return which dimension this component is in
 	 * @return
 	 */
-	public World getWorld();
+	public Level getWorld();
 	
 	/**
 	 * Return any items this component makes available to the network
@@ -78,7 +78,7 @@ public interface ILogisticsComponent {
 	 * for linking) should be included.
 	 * @return
 	 */
-	public CompoundNBT toNBT();
+	public CompoundTag toNBT();
 	
 	public String getSerializationTag();
 	

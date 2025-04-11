@@ -8,10 +8,10 @@ import com.smanzana.nostrumfairies.tiles.CraftingBlockTileEntity;
 import com.smanzana.nostrummagica.util.ContainerUtil;
 import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
 
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -30,11 +30,11 @@ public class CraftingStationSmallGui {
 		
 		public static final String ID = "crafting_station_small";
 		
-		public CraftingStationSmallContainer(int windowId, PlayerInventory playerInv, CraftingBlockTileEntity station) {
+		public CraftingStationSmallContainer(int windowId, Inventory playerInv, CraftingBlockTileEntity station) {
 			super(FairyContainers.CraftingStationSmall, windowId, playerInv, station);
 		}
 		
-		public static CraftingStationSmallContainer FromNetwork(int windowId, PlayerInventory playerInv, PacketBuffer buf) {
+		public static CraftingStationSmallContainer FromNetwork(int windowId, Inventory playerInv, FriendlyByteBuf buf) {
 			return new CraftingStationSmallContainer(windowId, playerInv, ContainerUtil.GetPackedTE(buf));
 		}
 		
@@ -58,7 +58,7 @@ public class CraftingStationSmallGui {
 	@OnlyIn(Dist.CLIENT)
 	public static class CraftingStationSmallGuiContainer extends CraftingStationGuiContainer {
 
-		public CraftingStationSmallGuiContainer(CraftingStationContainer container, PlayerInventory playerInv, ITextComponent name) {
+		public CraftingStationSmallGuiContainer(CraftingStationContainer container, Inventory playerInv, Component name) {
 			super(container, playerInv, name);
 		}
 		

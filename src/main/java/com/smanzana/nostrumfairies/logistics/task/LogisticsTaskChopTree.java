@@ -13,10 +13,10 @@ import com.smanzana.nostrumfairies.entity.fey.IItemCarrierFey;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /*
  * Go to and then chop down a tree. Does not pick up the items.
@@ -31,7 +31,7 @@ public class LogisticsTaskChopTree extends LogisticsTaskBase {
 	}
 	
 	private String displayName;
-	private World world;
+	private Level world;
 	private BlockPos trunk;
 	private BlockPos chopAt;
 	private ILogisticsComponent owningComponent;
@@ -46,7 +46,7 @@ public class LogisticsTaskChopTree extends LogisticsTaskBase {
 	private long lastTreeCheck;
 	private boolean lastTreeResult;
 
-	public LogisticsTaskChopTree(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos, BlockPos chopAt) {
+	public LogisticsTaskChopTree(ILogisticsComponent owningComponent, String displayName, Level world, BlockPos pos, BlockPos chopAt) {
 		this.displayName = displayName;
 		this.world = world;
 		this.trunk = pos;
@@ -55,7 +55,7 @@ public class LogisticsTaskChopTree extends LogisticsTaskBase {
 		phase = Phase.IDLE;
 	}
 	
-	public LogisticsTaskChopTree(ILogisticsComponent owningComponent, String displayName, World world, BlockPos pos) {
+	public LogisticsTaskChopTree(ILogisticsComponent owningComponent, String displayName, Level world, BlockPos pos) {
 		this(owningComponent, displayName, world, pos, pos);
 	}
 	
@@ -141,7 +141,7 @@ public class LogisticsTaskChopTree extends LogisticsTaskBase {
 		return chopAt;
 	}
 	
-	public World getWorld() {
+	public Level getWorld() {
 		return world;
 	}
 	
@@ -210,7 +210,7 @@ public class LogisticsTaskChopTree extends LogisticsTaskBase {
 	
 	private int getTreeHeight() {
 		int count = 0;
-		BlockPos.Mutable pos = new BlockPos.Mutable().setPos(trunk);
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos().set(trunk);
 		
 		while (WoodcuttingBlock.isTrunkMaterial(world, pos)) {
 			count++;
@@ -245,7 +245,7 @@ public class LogisticsTaskChopTree extends LogisticsTaskBase {
 			breakTreeInternal(visitted, pos.south().east());
 			breakTreeInternal(visitted, pos.south().west());
 			
-			BlockPos up = pos.up();
+			BlockPos up = pos.above();
 			
 			breakTreeInternal(visitted, up);
 			

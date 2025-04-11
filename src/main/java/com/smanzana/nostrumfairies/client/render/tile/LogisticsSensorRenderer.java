@@ -2,11 +2,11 @@ package com.smanzana.nostrumfairies.client.render.tile;
 
 import com.smanzana.nostrumfairies.tiles.LogisticsSensorTileEntity;
 
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 
 public class LogisticsSensorRenderer extends TileEntityLogisticsRenderer<LogisticsSensorTileEntity> {
 
-	public LogisticsSensorRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
+	public LogisticsSensorRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
 		super(rendererDispatcherIn);
 	}
 	

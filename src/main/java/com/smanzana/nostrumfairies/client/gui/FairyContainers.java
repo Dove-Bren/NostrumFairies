@@ -14,7 +14,7 @@ import com.smanzana.nostrumfairies.client.gui.container.OutputPanelGui;
 import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.TemplateWandGui;
 
-import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -26,23 +26,23 @@ import net.minecraftforge.registries.ObjectHolder;
 @ObjectHolder(NostrumFairies.MODID)
 public class FairyContainers {
 
-	@ObjectHolder(BufferChestGui.BufferChestContainer.ID) public static ContainerType<BufferChestGui.BufferChestContainer> BufferChest;
-	@ObjectHolder(BuildingBlockGui.BuildingBlockContainer.ID) public static ContainerType<BuildingBlockGui.BuildingBlockContainer> BuildingBlock;
-	@ObjectHolder(CraftingStationGui.CraftingStationContainer.ID) public static ContainerType<CraftingStationGui.CraftingStationContainer> CraftingStation;
-	@ObjectHolder(CraftingStationSmallGui.CraftingStationSmallContainer.ID) public static ContainerType<CraftingStationSmallGui.CraftingStationSmallContainer> CraftingStationSmall;
-	@ObjectHolder(FairyScreenGui.FairyScreenContainer.ID) public static ContainerType<FairyScreenGui.FairyScreenContainer> FairyScreen;
-	@ObjectHolder(HomeBlockGui.HomeBlockContainer.ID) public static ContainerType<HomeBlockGui.HomeBlockContainer> HomeBlock;
-	@ObjectHolder(InputChestGui.InputChestContainer.ID) public static ContainerType<InputChestGui.InputChestContainer> InputChest;
-	@ObjectHolder(LogisticsSensorGui.LogisticsSensorContainer.ID) public static ContainerType<LogisticsSensorGui.LogisticsSensorContainer> LogisticsSensor;
-	@ObjectHolder(OutputChestGui.OutputChestContainer.ID) public static ContainerType<OutputChestGui.OutputChestContainer> OutputChest;
-	@ObjectHolder(OutputPanelGui.OutputPanelContainer.ID) public static ContainerType<OutputPanelGui.OutputPanelContainer> OutputPanel;
-	@ObjectHolder(StorageChestGui.StorageChestContainer.ID) public static ContainerType<StorageChestGui.StorageChestContainer> StorageChest;
-	@ObjectHolder(TemplateWandGui.TemplateWandContainer.ID) public static ContainerType<TemplateWandGui.TemplateWandContainer> TemplateWand;
+	@ObjectHolder(BufferChestGui.BufferChestContainer.ID) public static MenuType<BufferChestGui.BufferChestContainer> BufferChest;
+	@ObjectHolder(BuildingBlockGui.BuildingBlockContainer.ID) public static MenuType<BuildingBlockGui.BuildingBlockContainer> BuildingBlock;
+	@ObjectHolder(CraftingStationGui.CraftingStationContainer.ID) public static MenuType<CraftingStationGui.CraftingStationContainer> CraftingStation;
+	@ObjectHolder(CraftingStationSmallGui.CraftingStationSmallContainer.ID) public static MenuType<CraftingStationSmallGui.CraftingStationSmallContainer> CraftingStationSmall;
+	@ObjectHolder(FairyScreenGui.FairyScreenContainer.ID) public static MenuType<FairyScreenGui.FairyScreenContainer> FairyScreen;
+	@ObjectHolder(HomeBlockGui.HomeBlockContainer.ID) public static MenuType<HomeBlockGui.HomeBlockContainer> HomeBlock;
+	@ObjectHolder(InputChestGui.InputChestContainer.ID) public static MenuType<InputChestGui.InputChestContainer> InputChest;
+	@ObjectHolder(LogisticsSensorGui.LogisticsSensorContainer.ID) public static MenuType<LogisticsSensorGui.LogisticsSensorContainer> LogisticsSensor;
+	@ObjectHolder(OutputChestGui.OutputChestContainer.ID) public static MenuType<OutputChestGui.OutputChestContainer> OutputChest;
+	@ObjectHolder(OutputPanelGui.OutputPanelContainer.ID) public static MenuType<OutputPanelGui.OutputPanelContainer> OutputPanel;
+	@ObjectHolder(StorageChestGui.StorageChestContainer.ID) public static MenuType<StorageChestGui.StorageChestContainer> StorageChest;
+	@ObjectHolder(TemplateWandGui.TemplateWandContainer.ID) public static MenuType<TemplateWandGui.TemplateWandContainer> TemplateWand;
 	
 	
 	@SubscribeEvent
-	public static void registerContainers(final RegistryEvent.Register<ContainerType<?>> event) {
-		final IForgeRegistry<ContainerType<?>> registry = event.getRegistry();
+	public static void registerContainers(final RegistryEvent.Register<MenuType<?>> event) {
+		final IForgeRegistry<MenuType<?>> registry = event.getRegistry();
 		
 		registry.register(IForgeContainerType.create(BufferChestGui.BufferChestContainer::FromNetwork).setRegistryName(BufferChestGui.BufferChestContainer.ID));
 		registry.register(IForgeContainerType.create(BuildingBlockGui.BuildingBlockContainer::FromNetwork).setRegistryName(BuildingBlockGui.BuildingBlockContainer.ID));

@@ -6,19 +6,19 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class EntityGnomeCrafter extends EntityGnome {
 	
 	public static final String ID = "gnome_crafter";
 	
-	public EntityGnomeCrafter(EntityType<? extends EntityGnomeCrafter> type, World world) {
+	public EntityGnomeCrafter(EntityType<? extends EntityGnomeCrafter> type, Level world) {
 		super(type, world);
 		this.workDistanceSq = 24 * 24;
 	}
@@ -28,7 +28,7 @@ public class EntityGnomeCrafter extends EntityGnome {
 		if (task instanceof LogisticsTaskWorkBlock) {
 			LogisticsTaskWorkBlock work = (LogisticsTaskWorkBlock) task;
 			
-			if (work.getWorld() != this.world) {
+			if (work.getWorld() != this.level) {
 				return false;
 			}
 			
@@ -38,7 +38,7 @@ public class EntityGnomeCrafter extends EntityGnome {
 				return false;
 			}
 			
-			BlockState block = world.getBlockState(target);
+			BlockState block = level.getBlockState(target);
 			if (block == null || !(block.getBlock() instanceof CraftingBlockGnome)) {
 				return false;
 			}
@@ -53,17 +53,17 @@ public class EntityGnomeCrafter extends EntityGnome {
 			if (this.getDistanceSq(target) < .2) {
 				return true;
 			}
-			Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			Path currentPath = navigation.getPath();
+			boolean success = navigation.moveTo(target.getX(), target.getY(), target.getZ(), 1.0);
 			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
+				success = Paths.IsComplete(navigation.getPath(), target, 2);
 			}
 			if (currentPath == null) {
 				if (!success) {
-					navigator.setPath(currentPath, 1.0);
+					navigation.moveTo(currentPath, 1.0);
 				}
 			} else {
-				navigator.setPath(currentPath, 1.0);
+				navigation.moveTo(currentPath, 1.0);
 			}
 			if (success) {
 				return true;
@@ -77,10 +77,10 @@ public class EntityGnomeCrafter extends EntityGnome {
 		return false;
 	}
 	
-	public static final AttributeModifierMap.MutableAttribute BuildCrafterAttributes() {
+	public static final AttributeSupplier.Builder BuildCrafterAttributes() {
 		return EntityGnome.BuildAttributes()
-				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .20)
-				.createMutableAttribute(Attributes.MAX_HEALTH, 4.0)
+				.add(Attributes.MOVEMENT_SPEED, .20)
+				.add(Attributes.MAX_HEALTH, 4.0)
 			;
 	}
 	

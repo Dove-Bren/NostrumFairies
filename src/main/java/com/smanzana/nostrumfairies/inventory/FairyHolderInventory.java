@@ -12,27 +12,27 @@ import com.smanzana.nostrummagica.item.SpellScroll;
 import com.smanzana.nostrummagica.util.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.util.TextUtils;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.BaseComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
-public class FairyHolderInventory implements IInventory, IAutoContainerInventory {
+public class FairyHolderInventory implements Container, IAutoContainerInventory {
 	
 	public static enum FairyCastTarget {
 		SELF,
 		TARGET,
 		OWNER;
 		
-		private List<ITextComponent> desc = null;
-		private TextComponent transName = null;
+		private List<Component> desc = null;
+		private BaseComponent transName = null;
 		
 		private FairyCastTarget() {
 			
@@ -42,18 +42,18 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 			return name().toLowerCase();
 		}
 		
-		public TextComponent getName() {
+		public BaseComponent getName() {
 			if (this.transName == null) {
-				this.transName = new TranslationTextComponent("fairytarget." + getUnlocName() + ".name");
+				this.transName = new TranslatableComponent("fairytarget." + getUnlocName() + ".name");
 			}
 			return transName;
 		}
 		
-		public List<ITextComponent> getDescription() {
+		public List<Component> getDescription() {
 			if (this.desc == null) {
-				this.desc = TextUtils.GetTranslatedList("fairytarget." + getUnlocName() + ".desc", "" + TextFormatting.DARK_GREEN + TextFormatting.BOLD, TextFormatting.RESET);
+				this.desc = TextUtils.GetTranslatedList("fairytarget." + getUnlocName() + ".desc", "" + ChatFormatting.DARK_GREEN + ChatFormatting.BOLD, ChatFormatting.RESET);
 				
-				desc.set(0, getName().mergeStyle(TextFormatting.BLUE, TextFormatting.BOLD));
+				desc.set(0, getName().withStyle(ChatFormatting.BLUE, ChatFormatting.BOLD));
 			}
 			return desc;
 		}
@@ -63,8 +63,8 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 		MELEE,
 		RANGE;
 		
-		private List<ITextComponent> desc = null;
-		private TextComponent transName = null;
+		private List<Component> desc = null;
+		private BaseComponent transName = null;
 		
 		private FairyPlacementTarget() {
 			
@@ -74,17 +74,17 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 			return name().toLowerCase();
 		}
 		
-		public TextComponent getName() {
+		public BaseComponent getName() {
 			if (this.transName == null) {
-				this.transName = new TranslationTextComponent("fairyplacement." + getUnlocName() + ".name");
+				this.transName = new TranslatableComponent("fairyplacement." + getUnlocName() + ".name");
 			}
 			return transName;
 		}
 		
-		public List<ITextComponent> getDescription() {
+		public List<Component> getDescription() {
 			if (this.desc == null) {
-				this.desc = TextUtils.GetTranslatedList("fairyplacement." + getUnlocName() + ".desc", "" + TextFormatting.DARK_GREEN + TextFormatting.BOLD, TextFormatting.RESET);
-				desc.add(0, getName().mergeStyle(TextFormatting.BLACK, TextFormatting.BOLD));
+				this.desc = TextUtils.GetTranslatedList("fairyplacement." + getUnlocName() + ".desc", "" + ChatFormatting.DARK_GREEN + ChatFormatting.BOLD, ChatFormatting.RESET);
+				desc.add(0, getName().withStyle(ChatFormatting.BLACK, ChatFormatting.BOLD));
 			}
 			return desc;
 		}
@@ -111,10 +111,10 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 	private ItemStack gemSlot = ItemStack.EMPTY;
 	
 	private boolean dirty;
-	private CompoundNBT nbtCache;
+	private CompoundTag nbtCache;
 	
 	public FairyHolderInventory() {
-		clear(); // initializes stuff lol
+		clearContent(); // initializes stuff lol
 	}
 	
 	public static boolean slotIsGael(int slot) {
@@ -257,14 +257,14 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 	public void setFairyCastTarget(int slot, FairyCastTarget target) {
 		if (slot >= 0 && slot < INV_SIZE_SCROLL && target != null) {
 			targetSlots[slot] = target;
-			this.markDirty();
+			this.setChanged();
 		}
 	}
 	
 	public void setFairyPlacementTarget(int slot, FairyPlacementTarget target) {
 		if (slot >= 0 && slot < INV_SIZE_SCROLL && target != null) {
 			placementSlots[slot] = target;
-			this.markDirty();
+			this.setChanged();
 		}
 	}
 	
@@ -278,7 +278,7 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 		}
 		
 		this.logisticsTemplates.set(slot, template);
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	public void setPushTemplate(int slot, @Nonnull ItemStack template) {
@@ -291,7 +291,7 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 		}
 		
 		this.logisticsTemplates.set(INV_SIZE_TEMPLATES / 2 + slot, template);
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	public void setGaelByType(FairyGaelType type, int slot, @Nonnull ItemStack gael) {
@@ -312,11 +312,11 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 			break;
 		}
 		
-		this.setInventorySlotContents(slot+offset, gael);
+		this.setItem(slot+offset, gael);
 	}
 	
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return INV_SIZE;
 	}
 	
@@ -341,7 +341,7 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 	}
 
 	@Override
-	public @Nonnull ItemStack getStackInSlot(int index) {
+	public @Nonnull ItemStack getItem(int index) {
 		if (index < 0 || index >= INV_SIZE) {
 			return ItemStack.EMPTY;
 		}
@@ -370,97 +370,97 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 	}
 
 	@Override
-	public ItemStack decrStackSize(int index, int count) {
-		ItemStack inSlot = getStackInSlot(index);
+	public ItemStack removeItem(int index, int count) {
+		ItemStack inSlot = getItem(index);
 		ItemStack removed = ItemStack.EMPTY;
 		if (!inSlot.isEmpty()) {
 			removed = inSlot.split(count);
 			if (inSlot.isEmpty()) {
-				setInventorySlotContents(index, ItemStack.EMPTY);
+				setItem(index, ItemStack.EMPTY);
 			}
 			
-			this.markDirty();
+			this.setChanged();
 		}
 		
 		return removed;
 	}
 
 	@Override
-	public ItemStack removeStackFromSlot(int index) {
-		ItemStack inSlot = getStackInSlot(index);
+	public ItemStack removeItemNoUpdate(int index) {
+		ItemStack inSlot = getItem(index);
 		if (!inSlot.isEmpty()) {
-			this.setInventorySlotContents(index, ItemStack.EMPTY);
-			this.markDirty();
+			this.setItem(index, ItemStack.EMPTY);
+			this.setChanged();
 		}
 		return inSlot;
 	}
 
 	@Override
-	public void setInventorySlotContents(int index, ItemStack stack) {
+	public void setItem(int index, ItemStack stack) {
 		if (index < 0 || index >= INV_SIZE) {
 			return;
 		}
 		
 		if (index < INV_SIZE_GAEL) {
 			gaelSlots.set(index, stack);
-			this.markDirty();
+			this.setChanged();
 			return;
 		}
 		index -= INV_SIZE_GAEL;
 		
 		if (index < INV_SIZE_SCROLL) {
 			scrollSlots.set(index, stack);
-			this.markDirty();
+			this.setChanged();
 			return;
 		}
 		index -= INV_SIZE_SCROLL;
 		
 		if (index < INV_SIZE_FETCH) {
 			fetchSlots.set(index, stack);
-			this.markDirty();
+			this.setChanged();
 			return;
 		}
 		index -= INV_SIZE_FETCH;
 		
 		if (index < INV_SIZE_TEMPLATES) {
 			logisticsTemplates.set(index, stack);
-			this.markDirty();
+			this.setChanged();
 			return;
 		}
 		index -= INV_SIZE_TEMPLATES;
 		
 		gemSlot = stack;
-		this.markDirty();
+		this.setChanged();
 		return;
 	}
 
 	@Override
-	public int getInventoryStackLimit() {
+	public int getMaxStackSize() {
 		return 1;
 	}
 
 	@Override
-	public void markDirty() {
+	public void setChanged() {
 		this.dirty = true;
 	}
 
 	@Override
-	public boolean isUsableByPlayer(PlayerEntity player) {
+	public boolean stillValid(Player player) {
 		return true;
 	}
 
 	@Override
-	public void openInventory(PlayerEntity player) {
+	public void startOpen(Player player) {
 		;
 	}
 
 	@Override
-	public void closeInventory(PlayerEntity player) {
+	public void stopOpen(Player player) {
 		;
 	}
 
 	@Override
-	public boolean isItemValidForSlot(int index, ItemStack stack) {
+	public boolean canPlaceItem(int index, ItemStack stack) {
 		if (index < 0 || index > INV_SIZE) {
 			return false;
 		}
@@ -539,7 +539,7 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 	}
 
 	@Override
-	public void clear() {
+	public void clearContent() {
 		gaelSlots = NonNullList.withSize(INV_SIZE_GAEL, ItemStack.EMPTY);
 		scrollSlots = NonNullList.withSize(INV_SIZE_SCROLL, ItemStack.EMPTY);
 		targetSlots = new FairyCastTarget[INV_SIZE_SCROLL];
@@ -552,29 +552,29 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 			placementSlots[i] = FairyPlacementTarget.MELEE;
 		}
 		
-		this.markDirty();
+		this.setChanged();
 	}
 	
-	public CompoundNBT toNBT() {
+	public CompoundTag toNBT() {
 		if (this.dirty || this.nbtCache == null) {
-			this.nbtCache = new CompoundNBT();
+			this.nbtCache = new CompoundTag();
 			
-			ListNBT list = new ListNBT();
+			ListTag list = new ListTag();
 			for (int i = 0; i < INV_SIZE; i++) {
-				ItemStack inSlot = getStackInSlot(i);
-				CompoundNBT tag = new CompoundNBT();
+				ItemStack inSlot = getItem(i);
+				CompoundTag tag = new CompoundTag();
 				if (!inSlot.isEmpty()) {
-					inSlot.write(tag);
+					inSlot.save(tag);
 				}
 				list.add(tag);
 			}
 			nbtCache.put("contents", list);
 			
-			list = new ListNBT();
+			list = new ListTag();
 			for (int i = 0; i < INV_SIZE_SCROLL; i++) {
 				FairyCastTarget target = targetSlots[i];
 				FairyPlacementTarget placement = placementSlots[i];
-				CompoundNBT tag = new CompoundNBT();
+				CompoundTag tag = new CompoundTag();
 				tag.putString("target", target.name());
 				tag.putString("placement", placement.name());
 				list.add(tag);
@@ -609,28 +609,28 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 		return nbtCache;
 	}
 	
-	public void readNBT(CompoundNBT nbt) {
+	public void readNBT(CompoundTag nbt) {
 		this.dirty = false;
 		this.nbtCache = nbt.copy();
 		
-		this.clear();
-		ListNBT list = nbt.getList("contents", NBT.TAG_COMPOUND);
+		this.clearContent();
+		ListTag list = nbt.getList("contents", Tag.TAG_COMPOUND);
 		for (int i = 0; i < INV_SIZE && i < list.size(); i++) {
-			CompoundNBT tag = list.getCompound(i);
-			@Nonnull ItemStack stack = ItemStack.read(tag);
-			this.setInventorySlotContents(i, stack); // May be empty :)
+			CompoundTag tag = list.getCompound(i);
+			@Nonnull ItemStack stack = ItemStack.of(tag);
+			this.setItem(i, stack); // May be empty :)
 		}
 		
-		list = nbt.getList("targets", NBT.TAG_COMPOUND);
+		list = nbt.getList("targets", Tag.TAG_COMPOUND);
 		for (int i = 0; i < INV_SIZE_SCROLL && i < list.size(); i++) {
-			CompoundNBT tag = list.getCompound(i);
+			CompoundTag tag = list.getCompound(i);
 			try {
 				targetSlots[i] = FairyCastTarget.valueOf(tag.getString("target"));
 				placementSlots[i] = FairyPlacementTarget.valueOf(tag.getString("placement"));
 			} catch (Exception e) {
 				NostrumFairies.logger.warn("Failed to read in fairy target configuration for slot " + i);
 				// clear() set up good defaults, but default may be different from NBT, so mark dirty
-				this.markDirty();
+				this.setChanged();
 			}
 		}
 		
@@ -645,7 +645,7 @@ public class FairyHolderInventory implements IInventory, IAutoContainerInventory
 	@Override
 	public boolean isEmpty() {
 		for (int i = 0; i < INV_SIZE; i++) {
-			if (!this.getStackInSlot(i).isEmpty()) {
+			if (!this.getItem(i).isEmpty()) {
 				return false;
 			}
 		}

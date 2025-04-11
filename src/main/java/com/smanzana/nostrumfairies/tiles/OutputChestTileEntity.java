@@ -15,13 +15,13 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.util.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class OutputChestTileEntity extends LogisticsChestTileEntity implements ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
@@ -50,7 +50,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 
 	@Override
 	public void onDirty() {
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	@Override
@@ -59,7 +59,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return SLOTS;
 	}
 	
@@ -92,7 +92,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 		
 		ItemStack temp = template.isEmpty() ? ItemStack.EMPTY : template.copy();
 		templates.set(index, temp);
-		this.markDirty();
+		this.setChanged();
 	}
 	
 	public @Nonnull ItemStack getTemplate(int index) {
@@ -104,8 +104,8 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public boolean isItemValidForSlot(int index, ItemStack stack) {
-		if (!super.isItemValidForSlot(index, stack)) {
+	public boolean canPlaceItem(int index, ItemStack stack) {
+		if (!super.canPlaceItem(index, stack)) {
 			return false;
 		}
 		
@@ -118,38 +118,38 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public CompoundNBT write(CompoundNBT nbt) {
-		nbt = super.write(nbt);
+	public CompoundTag save(CompoundTag nbt) {
+		nbt = super.save(nbt);
 		
 		// Save templates
-		ListNBT templates = new ListNBT();
+		ListTag templates = new ListTag();
 		for (int i = 0; i < SLOTS; i++) {
 			ItemStack stack = this.getTemplate(i);
 			if (stack.isEmpty()) {
 				continue;
 			}
 			
-			CompoundNBT template = new CompoundNBT();
+			CompoundTag template = new CompoundTag();
 			
 			template.putInt(NBT_TEMPLATE_INDEX, i);
-			template.put(NBT_TEMPLATE_ITEM, stack.write(new CompoundNBT()));
+			template.put(NBT_TEMPLATE_ITEM, stack.save(new CompoundTag()));
 			
 			templates.add(template);
 		}
 		nbt.put(NBT_TEMPLATES, templates);
-		nbt.put(NBT_LOGIC_COMP, this.logicComp.write(new CompoundNBT()));
+		nbt.put(NBT_LOGIC_COMP, this.logicComp.write(new CompoundTag()));
 		
 		return nbt;
 	}
 	
 	@Override
-	public void read(BlockState state, CompoundNBT nbt) {
+	public void load(BlockState state, CompoundTag nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
-		ListNBT list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
 		for (int i = 0; i < list.size(); i++) {
-			CompoundNBT template = list.getCompound(i);
+			CompoundTag template = list.getCompound(i);
 			int index = template.getInt(NBT_TEMPLATE_INDEX);
 			
 			if (index < 0 || index > SLOTS) {
@@ -157,18 +157,18 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 				continue;
 			}
 			
-			ItemStack stack = ItemStack.read(template.getCompound(NBT_TEMPLATE_ITEM));
+			ItemStack stack = ItemStack.of(template.getCompound(NBT_TEMPLATE_ITEM));
 			
 			templates.set(index, stack);
 		}
 		
-		CompoundNBT tag = nbt.getCompound(NBT_LOGIC_COMP);
+		CompoundTag tag = nbt.getCompound(NBT_LOGIC_COMP);
 		if (tag != null) {
 			this.logicComp.read(tag);
 		}
 		
 		// Do super afterwards so taht we have templates already
-		super.read(state, nbt);
+		super.load(state, nbt);
 	}
 	
 	@Override
@@ -176,18 +176,18 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 		super.setNetworkComponent(component);
 		logicComp.setNetwork(component.getNetwork());
 		
-		if (world != null && !world.isRemote && requester == null) {
+		if (level != null && !level.isClientSide && requester == null) {
 			requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent); // TODO make using buffer chests configurable!
 			requester.updateRequestedItems(getItemRequests());
 		}
 	}
 	
 	@Override
-	public void setWorldAndPos(World worldIn, BlockPos pos) {
-		super.setWorldAndPos(worldIn, pos);
+	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
+		super.setLevelAndPosition(worldIn, pos);
 		logicComp.setLocation(worldIn, pos);
 		
-		if (this.networkComponent != null && !worldIn.isRemote && requester == null) {
+		if (this.networkComponent != null && !worldIn.isClientSide && requester == null) {
 			requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent);
 			requester.updateRequestedItems(getItemRequests());
 		}
@@ -195,7 +195,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	
 	@Override
 	public void onLeaveNetwork() {
-		if (!world.isRemote && requester != null) {
+		if (!level.isClientSide && requester != null) {
 			requester.clearRequests();
 			requester.setNetwork(null);
 		}
@@ -206,7 +206,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	
 	@Override
 	public void onJoinNetwork(LogisticsNetwork network) {
-		if (!world.isRemote && requester != null) {
+		if (!level.isClientSide && requester != null) {
 			requester.setNetwork(network);
 			requester.updateRequestedItems(getItemRequests());
 		}
@@ -228,7 +228,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 				continue;
 			}
 			
-			ItemStack inSlot = this.getStackInSlot(i);
+			ItemStack inSlot = this.getItem(i);
 			int desire = templates.get(i).getCount() - (inSlot.isEmpty() ? 0 : inSlot.getCount());
 			if (desire > 0) {
 				ItemStack req = templates.get(i).copy();
@@ -256,13 +256,13 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 				continue;
 			}
 			
-			if (!isItemValidForSlot(i, stack)) {
+			if (!canPlaceItem(i, stack)) {
 				// doesn't fit here anyways
 				continue;
 			}
 			
 			// if template count != stack count, try to add there
-			ItemStack inSlot = this.getStackInSlot(i);
+			ItemStack inSlot = this.getItem(i);
 			int desire = templates.get(i).getCount() - (inSlot.isEmpty() ? 0 : inSlot.getCount());
 			int amt = Math.min(stack.getCount(), desire);
 			if (inSlot.isEmpty()) {
@@ -281,7 +281,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 		}
 		
 		if (anyChanges) {
-			this.markDirty();
+			this.setChanged();
 		}
 		
 		// Any leftover?
@@ -291,9 +291,9 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public void markDirty() {
-		super.markDirty();
-		if (world != null && !world.isRemote && requester != null) {
+	public void setChanged() {
+		super.setChanged();
+		if (level != null && !level.isClientSide && requester != null) {
 			requester.updateRequestedItems(getItemRequests());
 		}
 	}

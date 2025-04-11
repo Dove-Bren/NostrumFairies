@@ -11,12 +11,12 @@ import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicMode;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.LogicOp;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 /**
  * Client has made an action in a crafting station
@@ -33,10 +33,10 @@ public class LogicPanelActionMessage {
 	}
 
 	public static void handle(LogicPanelActionMessage message, Supplier<NetworkEvent.Context> ctx) {
-		final World world = ctx.get().getSender().world;
+		final Level world = ctx.get().getSender().level;
 		
 		// Implemented ILogisticsLogicProvider on your tile entity if it has a logic component that uses the logic panel gui
-		ILogisticsLogicProvider te = (ILogisticsLogicProvider) world.getTileEntity(message.pos);
+		ILogisticsLogicProvider te = (ILogisticsLogicProvider) world.getBlockEntity(message.pos);
 		
 		ctx.get().enqueueWork(() -> {
 			try {
@@ -53,7 +53,7 @@ public class LogicPanelActionMessage {
 				
 				// Cause an update to be sent back
 				BlockState state = world.getBlockState(message.pos);
-				world.notifyBlockUpdate(message.pos, state, state, 2);
+				world.sendBlockUpdated(message.pos, state, state, 2);
 
 			} catch (Exception e) {
 				NostrumFairies.logger.error(e);
@@ -88,46 +88,46 @@ public class LogicPanelActionMessage {
 	}
 	
 	public LogicPanelActionMessage(ILogisticsLogicProvider ent, @Nonnull ItemStack template) {
-		this(Action.TEMPLATE, ent.getPos(), null, null, null, template);
+		this(Action.TEMPLATE, ent.getBlockPos(), null, null, null, template);
 	}
 	
 	public LogicPanelActionMessage(ILogisticsLogicProvider ent, LogicOp op) {
-		this(Action.OP, ent.getPos(), op, null, null, null);
+		this(Action.OP, ent.getBlockPos(), op, null, null, null);
 	}
 	
 	public LogicPanelActionMessage(ILogisticsLogicProvider ent, int val) {
-		this(Action.COUNT, ent.getPos(), null, null, val, null);
+		this(Action.COUNT, ent.getBlockPos(), null, null, val, null);
 	}
 
 	public LogicPanelActionMessage(ILogisticsLogicProvider ent, LogicMode mode) {
-		this(Action.MODE, ent.getPos(), null, mode, null, null);
+		this(Action.MODE, ent.getBlockPos(), null, mode, null, null);
 	}
 	
-	public static LogicPanelActionMessage decode(PacketBuffer buf) {
-		final Action action = buf.readEnumValue(Action.class);
+	public static LogicPanelActionMessage decode(FriendlyByteBuf buf) {
+		final Action action = buf.readEnum(Action.class);
 		final BlockPos pos = buf.readBlockPos();
-		final @Nullable LogicOp opVal = buf.readBoolean() ? buf.readEnumValue(LogicOp.class) : null;
-		final @Nullable LogicMode modeVal = buf.readBoolean() ? buf.readEnumValue(LogicMode.class) : null;
+		final @Nullable LogicOp opVal = buf.readBoolean() ? buf.readEnum(LogicOp.class) : null;
+		final @Nullable LogicMode modeVal = buf.readBoolean() ? buf.readEnum(LogicMode.class) : null;
 		final @Nullable Integer intVal = buf.readBoolean() ? buf.readVarInt() : null;
-		final @Nullable ItemStack itemVal = buf.readBoolean() ? buf.readItemStack() : null;
+		final @Nullable ItemStack itemVal = buf.readBoolean() ? buf.readItem() : null;
 		
 		return new LogicPanelActionMessage(action, pos, opVal, modeVal, intVal, itemVal);
 	}
 
-	public static void encode(LogicPanelActionMessage msg, PacketBuffer buf) {
-		buf.writeEnumValue(msg.action);
+	public static void encode(LogicPanelActionMessage msg, FriendlyByteBuf buf) {
+		buf.writeEnum(msg.action);
 		buf.writeBlockPos(msg.pos);
 		
 		if (msg.opVal != null) {
 			buf.writeBoolean(true);
-			buf.writeEnumValue(msg.opVal);
+			buf.writeEnum(msg.opVal);
 		} else {
 			buf.writeBoolean(false);
 		}
 		
 		if (msg.modeVal != null) {
 			buf.writeBoolean(true);
-			buf.writeEnumValue(msg.modeVal);
+			buf.writeEnum(msg.modeVal);
 		} else {
 			buf.writeBoolean(false);
 		}
@@ -141,7 +141,7 @@ public class LogicPanelActionMessage {
 		
 		if (msg.itemVal != null) {
 			buf.writeBoolean(true);
-			buf.writeItemStack(msg.itemVal);
+			buf.writeItem(msg.itemVal);
 		} else {
 			buf.writeBoolean(false);
 		}

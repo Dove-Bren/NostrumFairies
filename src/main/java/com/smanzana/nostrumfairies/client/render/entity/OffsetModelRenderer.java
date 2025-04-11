@@ -1,10 +1,10 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.client.renderer.model.Model;
-import net.minecraft.client.renderer.model.ModelRenderer;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
 
 /**
  * ModelRenderer that adds back the ability to set offsets to ease in porting.
@@ -15,7 +15,7 @@ import net.minecraft.client.renderer.model.ModelRenderer;
  * @author Skyler
  *
  */
-public class OffsetModelRenderer extends ModelRenderer {
+public class OffsetModelRenderer extends ModelPart {
 	
 	public float offsetX;
 	public float offsetY;
@@ -27,17 +27,17 @@ public class OffsetModelRenderer extends ModelRenderer {
 	
 	public OffsetModelRenderer(Model base, int textOffX, int textOffY) {
 		this(base);
-		this.setTextureOffset(textOffX, textOffY);
+		this.texOffs(textOffX, textOffY);
 	}
 	
 	@Override
-	public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+	public void render(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
 		
 		// Not sure order. May have to translate after rotating...
-		matrixStackIn.push();
+		matrixStackIn.pushPose();
 		matrixStackIn.translate(offsetX, offsetY, offsetZ);
 		super.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-		matrixStackIn.pop();
+		matrixStackIn.popPose();
 		
 //		if (this.showModel) {
 //			if (!this.cubeList.isEmpty() || !this.childModels.isEmpty()) {

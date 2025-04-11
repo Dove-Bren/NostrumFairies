@@ -8,8 +8,8 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 /**
  * Client has requested an update about the logistics network.
@@ -52,16 +52,16 @@ public class LogisticsUpdateRequest {
 		this.id = id;
 	}
 	
-	public static LogisticsUpdateRequest decode(PacketBuffer buf) {
+	public static LogisticsUpdateRequest decode(FriendlyByteBuf buf) {
 		return new LogisticsUpdateRequest(
-				buf.readBoolean() ? buf.readUniqueId() : null
+				buf.readBoolean() ? buf.readUUID() : null
 				);
 	}
 
-	public static void encode(LogisticsUpdateRequest msg, PacketBuffer buf) {
+	public static void encode(LogisticsUpdateRequest msg, FriendlyByteBuf buf) {
 		if (msg.id != null) {
 			buf.writeBoolean(true);
-			buf.writeUniqueId(msg.id);
+			buf.writeUUID(msg.id);
 		} else {
 			buf.writeBoolean(false);
 		}

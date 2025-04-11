@@ -1,37 +1,37 @@
 package com.smanzana.nostrumfairies.serializers;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.IDataSerializer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializer;
 
 public enum ArmPoseGnome {
 	IDLE,
 	WORKING,
 	CARRYING;
 	
-	public final static class PoseSerializer implements IDataSerializer<ArmPoseGnome> {
+	public final static class PoseSerializer implements EntityDataSerializer<ArmPoseGnome> {
 		
 		private PoseSerializer() {
 			;
 		}
 		
 		@Override
-		public void write(PacketBuffer buf, ArmPoseGnome value) {
-			buf.writeEnumValue(value);
+		public void write(FriendlyByteBuf buf, ArmPoseGnome value) {
+			buf.writeEnum(value);
 		}
 
 		@Override
-		public ArmPoseGnome read(PacketBuffer buf) {
-			return buf.readEnumValue(ArmPoseGnome.class);
+		public ArmPoseGnome read(FriendlyByteBuf buf) {
+			return buf.readEnum(ArmPoseGnome.class);
 		}
 
 		@Override
-		public DataParameter<ArmPoseGnome> createKey(int id) {
-			return new DataParameter<>(id, this);
+		public EntityDataAccessor<ArmPoseGnome> createAccessor(int id) {
+			return new EntityDataAccessor<>(id, this);
 		}
 
 		@Override
-		public ArmPoseGnome copyValue(ArmPoseGnome value) {
+		public ArmPoseGnome copy(ArmPoseGnome value) {
 			return value;
 		}
 	}

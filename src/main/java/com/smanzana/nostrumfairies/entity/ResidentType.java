@@ -1,8 +1,8 @@
 package com.smanzana.nostrumfairies.entity;
 
-import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.StringRepresentable;
 
-public enum ResidentType implements IStringSerializable {
+public enum ResidentType implements StringRepresentable {
 
 	FAIRY,
 	ELF,
@@ -10,13 +10,13 @@ public enum ResidentType implements IStringSerializable {
 	GNOME;
 
 	@Override
-	public String getString() {
+	public String getSerializedName() {
 		return this.name().toLowerCase();
 	}
 	
 	@Override
 	public String toString() {
-		return this.getString();
+		return this.getSerializedName();
 	}
 	
 }

@@ -1,7 +1,7 @@
 package com.smanzana.nostrumfairies.entity;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.damagesource.DamageSource;
 
 /**
  * A generic listener that wants updates about all the changes an entity experiences

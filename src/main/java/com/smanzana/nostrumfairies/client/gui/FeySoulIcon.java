@@ -3,14 +3,14 @@ package com.smanzana.nostrumfairies.client.gui;
 import java.util.EnumMap;
 import java.util.Map;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.container.FeySoulContainerSlot;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -30,21 +30,21 @@ public final class FeySoulIcon {
 		}
 	}
 	
-	public static void draw(MatrixStack matrixStackIn, int offsetX, int offsetY, float scale, SoulStoneType slot) {
+	public static void draw(PoseStack matrixStackIn, int offsetX, int offsetY, float scale, SoulStoneType slot) {
 		init();
 
-        Minecraft.getInstance().getTextureManager().bindTexture(TEXTS.get(slot));
+        Minecraft.getInstance().getTextureManager().bind(TEXTS.get(slot));
 		
-        matrixStackIn.push();
+        matrixStackIn.pushPose();
 		matrixStackIn.translate(offsetX, offsetY, 0);
 		matrixStackIn.scale(scale, scale, scale);
         RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, 0, 0, 0, 0, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
-        matrixStackIn.pop();
+        matrixStackIn.popPose();
 	}
 	
-	public static void draw(MatrixStack matrixStackIn, FeySoulContainerSlot slot, float scale) {
+	public static void draw(PoseStack matrixStackIn, FeySoulContainerSlot slot, float scale) {
 		// offset to center based on scale, since slots always have a hover of 16x16
 		int offset = (int) (16 * (1f - scale) * .5);
-		draw(matrixStackIn, slot.xPos + offset, slot.yPos + offset, scale, slot.getType());
+		draw(matrixStackIn, slot.x + offset, slot.y + offset, scale, slot.getType());
 	}
 }

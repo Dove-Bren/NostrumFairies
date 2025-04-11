@@ -8,9 +8,9 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 /**
  * Server is sending the most recent version of the fey capability to a client-side player
@@ -28,23 +28,23 @@ public class CapabilitySyncMessage {
 		ctx.get().setPacketHandled(true);
 	}
 
-	private final @Nonnull CompoundNBT capData;
+	private final @Nonnull CompoundTag capData;
 	
-	public CapabilitySyncMessage(@Nonnull CompoundNBT attrData) {
+	public CapabilitySyncMessage(@Nonnull CompoundTag attrData) {
 		this.capData = attrData;
 	}
 	
 	public CapabilitySyncMessage(@Nullable INostrumFeyCapability attr) {
-		this(attr == null ? new CompoundNBT() : attr.toNBT());
+		this(attr == null ? new CompoundTag() : attr.toNBT());
 	}
 	
-	public static CapabilitySyncMessage decode(PacketBuffer buf) {
-		@Nonnull CompoundNBT data = buf.readCompoundTag(); 
+	public static CapabilitySyncMessage decode(FriendlyByteBuf buf) {
+		@Nonnull CompoundTag data = buf.readNbt(); 
 		return new CapabilitySyncMessage(data);
 	}
 	
-	public static void encode(CapabilitySyncMessage msg, PacketBuffer buf) {
-		buf.writeCompoundTag(msg.capData);
+	public static void encode(CapabilitySyncMessage msg, FriendlyByteBuf buf) {
+		buf.writeNbt(msg.capData);
 	}
 
 }

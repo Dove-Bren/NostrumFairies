@@ -6,21 +6,21 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.utils.Paths;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class EntityDwarfCrafter extends EntityDwarf {
 	
 	public static final String ID = "dwarf_crafter";
 
-	public EntityDwarfCrafter(EntityType<? extends EntityDwarfCrafter> type, World world) {
+	public EntityDwarfCrafter(EntityType<? extends EntityDwarfCrafter> type, Level world) {
 		super(type, world);
 	}
 	
@@ -30,7 +30,7 @@ public class EntityDwarfCrafter extends EntityDwarf {
 			// TODO require a specialization
 			LogisticsTaskWorkBlock work = (LogisticsTaskWorkBlock) task;
 			
-			if (work.getWorld() != this.world) {
+			if (work.getWorld() != this.level) {
 				return false;
 			}
 			
@@ -41,7 +41,7 @@ public class EntityDwarfCrafter extends EntityDwarf {
 			}
 			
 			// Dwarves only want to work at ones from dwarf blocks
-			BlockState block = world.getBlockState(target);
+			BlockState block = level.getBlockState(target);
 			if (block == null || !(block.getBlock() instanceof CraftingBlockDwarf)) {
 				return false;
 			}
@@ -56,17 +56,17 @@ public class EntityDwarfCrafter extends EntityDwarf {
 			if (this.getDistanceSq(target) < .2) {
 				return true;
 			}
-			Path currentPath = navigator.getPath();
-			boolean success = navigator.tryMoveToXYZ(target.getX(), target.getY(), target.getZ(), 1.0);
+			Path currentPath = navigation.getPath();
+			boolean success = navigation.moveTo(target.getX(), target.getY(), target.getZ(), 1.0);
 			if (success) {
-				success = Paths.IsComplete(navigator.getPath(), target, 2);
+				success = Paths.IsComplete(navigation.getPath(), target, 2);
 			}
 			if (currentPath == null) {
 				if (!success) {
-					navigator.setPath(currentPath, 1.0);
+					navigation.moveTo(currentPath, 1.0);
 				}
 			} else {
-				navigator.setPath(currentPath, 1.0);
+				navigation.moveTo(currentPath, 1.0);
 			}
 			if (success) {
 				return true;
@@ -84,11 +84,11 @@ public class EntityDwarfCrafter extends EntityDwarf {
 		super.registerGoals();
 	}
 
-	public static final AttributeModifierMap.MutableAttribute BuildCrafterAttributes() {
+	public static final AttributeSupplier.Builder BuildCrafterAttributes() {
 		return EntityDwarf.BuildAttributes()
-				.createMutableAttribute(Attributes.MOVEMENT_SPEED, .18)
-				.createMutableAttribute(Attributes.MAX_HEALTH, 18)
-				.createMutableAttribute(Attributes.ARMOR, 4)
+				.add(Attributes.MOVEMENT_SPEED, .18)
+				.add(Attributes.MAX_HEALTH, 18)
+				.add(Attributes.ARMOR, 4)
 			;
 	}
 	
@@ -119,6 +119,6 @@ public class EntityDwarfCrafter extends EntityDwarf {
 	
 	@Override
 	protected void playWorkSound() {
-		world.playSound(getPosX(), getPosY(), getPosZ(), SoundEvents.BLOCK_ANVIL_PLACE, SoundCategory.NEUTRAL, .8f, 1.6f, false);
+		level.playLocalSound(getX(), getY(), getZ(), SoundEvents.ANVIL_PLACE, SoundSource.NEUTRAL, .8f, 1.6f, false);
 	}
 }

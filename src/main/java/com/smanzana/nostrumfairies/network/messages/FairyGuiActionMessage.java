@@ -7,8 +7,8 @@ import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 /**
  * Client has made a client-side action in the fairy gui
@@ -27,8 +27,8 @@ public class FairyGuiActionMessage {
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(ctx.get().getSender());
 			FairyHolderInventory inv = (attr == null ? null : attr.getFairyInventory());
 			
-			if (inv != null && ctx.get().getSender().openContainer instanceof FairyScreenGui.FairyScreenContainer) {
-				FairyScreenGui.FairyScreenContainer container = (FairyScreenGui.FairyScreenContainer) ctx.get().getSender().openContainer;
+			if (inv != null && ctx.get().getSender().containerMenu instanceof FairyScreenGui.FairyScreenContainer) {
+				FairyScreenGui.FairyScreenContainer container = (FairyScreenGui.FairyScreenContainer) ctx.get().getSender().containerMenu;
 				container.handleAction(message.action, message.slot, message.selection);
 			} else {
 				NostrumFairies.logger.error("Got a Fairy screen gui action but no inventory present or gui isn't open");
@@ -48,15 +48,15 @@ public class FairyGuiActionMessage {
 		this.selection = selection;
 	}
 	
-	public static FairyGuiActionMessage decode(PacketBuffer buf) {
-		GuiAction action = buf.readEnumValue(GuiAction.class);
+	public static FairyGuiActionMessage decode(FriendlyByteBuf buf) {
+		GuiAction action = buf.readEnum(GuiAction.class);
 		int slot = buf.readVarInt();
 		int selection = buf.readVarInt();
 		return new FairyGuiActionMessage(action, slot, selection);
 	}
 
-	public static void encode(FairyGuiActionMessage msg, PacketBuffer buf) {
-		buf.writeEnumValue(msg.action);
+	public static void encode(FairyGuiActionMessage msg, FriendlyByteBuf buf) {
+		buf.writeEnum(msg.action);
 		buf.writeVarInt(msg.slot);
 		buf.writeVarInt(msg.selection);
 	}

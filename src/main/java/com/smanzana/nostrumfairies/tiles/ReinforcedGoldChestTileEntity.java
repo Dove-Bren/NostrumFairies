@@ -9,7 +9,7 @@ public class ReinforcedGoldChestTileEntity extends ReinforcedChestTileEntity {
 	}
 	
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return INV_SIZE;
 	}
 	

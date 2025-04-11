@@ -7,29 +7,29 @@ import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
 import com.smanzana.nostrumfairies.tiles.LogisticsSensorTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ToolType;
 
 public class LogisticsSensorBlock extends FeyContainerBlock
@@ -38,41 +38,41 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 	public static final String ID = "logistics_sensor";
 	
 	public LogisticsSensorBlock() {
-		super(Block.Properties.create(Material.WOOD)
-				.hardnessAndResistance(2.0f, 1.0f)
+		super(Block.Properties.of(Material.WOOD)
+				.strength(2.0f, 1.0f)
 				.sound(SoundType.WOOD)
 				.harvestTool(ToolType.AXE)
-				.notSolid()
+				.noOcclusion()
 				);
 	}
 	
 	@Override
-	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(ACTIVE);
 	}
 	
 	public boolean getActive(BlockState state) {
-		return state.get(ACTIVE);
+		return state.getValue(ACTIVE);
 	}
 	
 	public BlockState getStateWithActive(boolean active) {
-		return getDefaultState().with(ACTIVE, active);
+		return defaultBlockState().setValue(ACTIVE, active);
 	}
 	
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
-		return this.getDefaultState()
-				.with(ACTIVE, false);
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
+		return this.defaultBlockState()
+				.setValue(ACTIVE, false);
 	}
 	
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		return VoxelShapes.fullCube();
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+		return Shapes.block();
 	}
 	
 	@Override
-	public boolean isValidPosition(BlockState stateIn, IWorldReader worldIn, BlockPos pos) {
-		if (!Block.hasEnoughSolidSide(worldIn, pos.down(), Direction.UP)) {
+	public boolean canSurvive(BlockState stateIn, LevelReader worldIn, BlockPos pos) {
+		if (!Block.canSupportCenter(worldIn, pos.below(), Direction.UP)) {
 			return false;
 		}
 		
@@ -81,19 +81,19 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 	}
 	
 	@Override
-	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld world, BlockPos pos, BlockPos facingPos) {
-		if (facing == Direction.DOWN && !isValidPosition(stateIn, world, pos)) {
-			return Blocks.AIR.getDefaultState();
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor world, BlockPos pos, BlockPos facingPos) {
+		if (facing == Direction.DOWN && !canSurvive(stateIn, world, pos)) {
+			return Blocks.AIR.defaultBlockState();
 		}
 		return stateIn;
 	}
 	
 	@Override
-	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult hit) {
 		
 		// Kick off a request to refresh info.
-		if (worldIn.isRemote) {
-			TileEntity te = worldIn.getTileEntity(pos);
+		if (worldIn.isClientSide) {
+			BlockEntity te = worldIn.getBlockEntity(pos);
 			if (te != null && te instanceof LogisticsSensorTileEntity) {
 				LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) te;
 				LogisticsNetwork network = sensor.getNetwork();
@@ -105,30 +105,30 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 		
 		
 		// Don't wait, though, and show the UI
-		LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) worldIn.getTileEntity(pos);
+		LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) worldIn.getBlockEntity(pos);
 		NostrumMagica.instance.proxy.openContainer(playerIn, LogisticsSensorGui.LogisticsSensorContainer.Make(sensor));
 		
-		return ActionResultType.SUCCESS;
+		return InteractionResult.SUCCESS;
 	}
 	
 	@Override
-	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+	public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
 		return new LogisticsSensorTileEntity();
 	}
 	
 	@Override
-	public BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+	public RenderShape getRenderShape(BlockState state) {
+		return RenderShape.MODEL;
 	}
 	
 	@Override
-	public void breakBlock(World world, BlockPos pos, BlockState state) {
+	public void breakBlock(Level world, BlockPos pos, BlockState state) {
 		destroy(world, pos, state);
 		super.breakBlock(world, pos, state);
 	}
 	
-	private void destroy(World world, BlockPos pos, BlockState state) {
-		TileEntity ent = world.getTileEntity(pos);
+	private void destroy(Level world, BlockPos pos, BlockState state) {
+		BlockEntity ent = world.getBlockEntity(pos);
 		if (ent == null || !(ent instanceof LogisticsSensorTileEntity))
 			return;
 		
@@ -138,24 +138,24 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 		
 		if (activated) {
 			for (Direction side : Direction.values()) {
-				world.notifyNeighborsOfStateChange(pos.offset(side), this);
+				world.updateNeighborsAt(pos.relative(side), this);
 			}
 		}
 	}
 	
 	@Override
-	public boolean canConnectRedstone(BlockState state, IBlockReader world, BlockPos pos, Direction side) {
+	public boolean canConnectRedstone(BlockState state, BlockGetter world, BlockPos pos, Direction side) {
 		return true;
 	}
 	
 	@Override
-	public boolean canProvidePower(BlockState state) {
+	public boolean isSignalSource(BlockState state) {
 		return true;
 	}
 	
 	@Override
-	public int getWeakPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side) {
-		if (blockState.get(ACTIVE)) {
+	public int getSignal(BlockState blockState, BlockGetter blockAccess, BlockPos pos, Direction side) {
+		if (blockState.getValue(ACTIVE)) {
 			return 15;
 		}
 		
