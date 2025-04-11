@@ -31,9 +31,23 @@ import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.util.DimensionUtils;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -44,29 +58,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.util.Constants.NBT;
 
 public abstract class EntityFeyBase extends AbstractGolem implements IFeyWorker, ILoreTagged {
 
@@ -960,7 +960,7 @@ public abstract class EntityFeyBase extends AbstractGolem implements IFeyWorker,
 			this.changeStatus(FairyGeneralStatus.WANDERING);
 		}
 		
-		if (compound.contains(NBT_NAME, NBT.TAG_STRING)) {
+		if (compound.contains(NBT_NAME, Tag.TAG_STRING)) {
 			entityData.set(NAME, compound.getString(NBT_NAME));
 		} // else default is a random one
 		
@@ -971,13 +971,13 @@ public abstract class EntityFeyBase extends AbstractGolem implements IFeyWorker,
 	}
 	
 	@Override
-	public void remove() {
+	public void remove(Entity.RemovalReason reason) {
 		forfitTask();
 		HomeBlockTileEntity ent = getHomeEnt();
 		if (ent != null) {
 			ent.removeResident(this);
 		}
-		super.remove();
+		super.remove(reason);
 	}
 	
 	@Override
@@ -1010,7 +1010,7 @@ public abstract class EntityFeyBase extends AbstractGolem implements IFeyWorker,
 
 		if (flag) {
 			if (i > 0 && entityIn instanceof LivingEntity) {
-				((LivingEntity)entityIn).knockback((float)i * 0.5F, (double)Mth.sin(this.yRot * 0.017453292F), (double)(-Mth.cos(this.yRot * 0.017453292F)));
+				((LivingEntity)entityIn).knockback((float)i * 0.5F, (double)Mth.sin(this.getYRot() * 0.017453292F), (double)(-Mth.cos(this.getYRot() * 0.017453292F)));
 				this.setDeltaMovement(this.getDeltaMovement().multiply(0.6, 1, 0.6));
 			}
 
@@ -1180,7 +1180,7 @@ public abstract class EntityFeyBase extends AbstractGolem implements IFeyWorker,
 	
 	protected void copyFrom(EntityFeyBase other) {
 		this.setUUID(other.getUUID());
-		this.absMoveTo(other.getX(), other.getY(), other.getZ(), other.yRot, other.xRot);
+		this.absMoveTo(other.getX(), other.getY(), other.getZ(), other.getYRot(), other.getXRot());
 		this.setHappiness(other.getHappiness());
 		this.entityData.set(NAME, other.getName().getString());
 		HomeBlockTileEntity ent = other.getHomeEnt();

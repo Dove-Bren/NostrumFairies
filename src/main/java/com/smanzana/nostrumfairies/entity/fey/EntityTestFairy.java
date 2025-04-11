@@ -24,24 +24,24 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.util.Mth;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.world.level.pathfinder.Path;
-import net.minecraft.core.NonNullList;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	
@@ -459,7 +459,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 			        double d2 = pos.getZ() - this.getZ();
 					float desiredYaw = (float)(Mth.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 					
-					this.yRot = desiredYaw;
+					this.setYRot(desiredYaw);
 					
 					task.markSubtaskComplete();
 					if (task.getActiveSubtask() != sub) {
@@ -608,7 +608,7 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	public void readAdditionalSaveData(CompoundTag compound) {
 		super.readAdditionalSaveData(compound);
 		
-		loadInventoryFromNBT(compound.getList(NBT_ITEMS, NBT.TAG_COMPOUND));
+		loadInventoryFromNBT(compound.getList(NBT_ITEMS, Tag.TAG_COMPOUND));
 	}
 
 	@Override

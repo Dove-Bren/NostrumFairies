@@ -22,9 +22,15 @@ import com.smanzana.nostrummagica.spell.component.SpellEffectPart;
 import com.smanzana.nostrummagica.spell.component.SpellShapePart;
 import com.smanzana.nostrummagica.spell.component.shapes.NostrumSpellShapes;
 
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -35,15 +41,8 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EntitySelector;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 
 public class EntityElfArcher extends EntityElf {
@@ -220,7 +219,7 @@ public class EntityElfArcher extends EntityElf {
 		
 		// Note this means we'll stop doing a logistics ATTACK task to do this. Perhaps I should make a 'logistics target' task here
 		// which you can slot with higher priority so that the following stuff only happens when no task is present?
-		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<Monster>(this, Monster.class, 5, true, true, this::canSee));
+		this.targetSelector.addGoal(priority++, new NearestAttackableTargetGoal<Monster>(this, Monster.class, 5, true, true, this::hasLineOfSight));
 	}
 
 	public static final AttributeSupplier.Builder BuildArcherAttributes() {
@@ -286,7 +285,7 @@ public class EntityElfArcher extends EntityElf {
 		double d0 = target.getX() - this.getX();
 		double d1 = target.getBoundingBox().minY + (double)(target.getBbHeight() / 3.0F) - entitytippedarrow.getY();
 		double d2 = target.getZ() - this.getZ();
-		double d3 = (double)Mth.sqrt(d0 * d0 + d2 * d2);
+		double d3 = Math.sqrt(d0 * d0 + d2 * d2);
 		entitytippedarrow.shoot(d0, d1 + d3 * 0.20000000298023224D, d2, 1.6F, .5f);
 		int i = EnchantmentHelper.getEnchantmentLevel(Enchantments.POWER_ARROWS, this);
 		int j = EnchantmentHelper.getEnchantmentLevel(Enchantments.PUNCH_ARROWS, this);

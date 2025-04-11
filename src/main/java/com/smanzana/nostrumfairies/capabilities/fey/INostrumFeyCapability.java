@@ -4,11 +4,11 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraftforge.common.util.INBTSerializable;
 
-public interface INostrumFeyCapability {
+public interface INostrumFeyCapability extends INBTSerializable<CompoundTag> {
 
 	// Unlock
 	public boolean isUnlocked();
@@ -52,10 +52,4 @@ public interface INostrumFeyCapability {
 	
 	// Operation
 	public void tick();
-	public void provideEntity(LivingEntity owner);
-	
-	
-	// Serialization
-	public CompoundTag toNBT();
-	public void readNBT(CompoundTag nbt);
 }

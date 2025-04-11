@@ -34,39 +34,39 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.SpawnGroupData;
-import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
-import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.world.level.pathfinder.Path;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.Level;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Mth;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	
@@ -633,7 +633,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 			        double d2 = pos.getZ() - this.getZ();
 					float desiredYaw = (float)(Mth.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 					
-					this.yRot = desiredYaw;
+					this.setYRot(desiredYaw);
 				}
 //				// this is where we'd play some animation?
 //				if (this.onGround) {
@@ -796,7 +796,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	public void readAdditionalSaveData(CompoundTag compound) {
 		super.readAdditionalSaveData(compound);
 		
-		loadInventoryFromNBT(compound.getList(NBT_ITEMS, NBT.TAG_COMPOUND));
+		loadInventoryFromNBT(compound.getList(NBT_ITEMS, Tag.TAG_COMPOUND));
 	}
 
 	@Override
@@ -1053,7 +1053,7 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			((ServerLevel) level).despawn(this);
+			((ServerLevel) level).removeEntity(this);
 			level.addFreshEntity(replacement);
 		}
 		

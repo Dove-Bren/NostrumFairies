@@ -25,7 +25,17 @@ import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -33,20 +43,10 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.world.level.pathfinder.Path;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.core.NonNullList;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	
@@ -393,7 +393,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 				float desiredYaw = (float)(Mth.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
 				
 				this.setPose(ArmPoseGnome.WORKING);
-				this.yRot = desiredYaw;
+				this.setYRot(desiredYaw);
 				if (this.swinging) {
 					// On the client, spawn some particles if we're using our wand
 					// lel what if we sweat? xD
@@ -517,7 +517,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	public void readAdditionalSaveData(CompoundTag compound) {
 		super.readAdditionalSaveData(compound);
 		
-		if (compound.contains(NBT_ITEM, NBT.TAG_COMPOUND)) {
+		if (compound.contains(NBT_ITEM, Tag.TAG_COMPOUND)) {
 			entityData.set(DATA_HELD_ITEM, ItemStack.of(compound.getCompound(NBT_ITEM)));
 		}
 	}
@@ -684,7 +684,7 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
 			//this.remove();
-			((ServerLevel) level).despawn(this);
+			((ServerLevel) level).removeEntity(this);
 			level.addFreshEntity(replacement);
 		}
 		

@@ -614,7 +614,7 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, RangedA
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
 			//this.remove();
-			((ServerLevel) level).despawn(this);
+			((ServerLevel) level).removeEntity(this);
 			level.addFreshEntity(replacement);
 		}
 		

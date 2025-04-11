@@ -22,7 +22,7 @@ public class CapabilitySyncMessage {
 	public static void handle(CapabilitySyncMessage message, Supplier<NetworkEvent.Context> ctx) {
 		ctx.get().enqueueWork(() -> {
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(NostrumFairies.proxy.getPlayer());
-			attr.readNBT(message.capData);
+			attr.deserializeNBT(message.capData);
 		});
 		
 		ctx.get().setPacketHandled(true);
@@ -35,7 +35,7 @@ public class CapabilitySyncMessage {
 	}
 	
 	public CapabilitySyncMessage(@Nullable INostrumFeyCapability attr) {
-		this(attr == null ? new CompoundTag() : attr.toNBT());
+		this(attr == null ? new CompoundTag() : attr.serializeNBT());
 	}
 	
 	public static CapabilitySyncMessage decode(FriendlyByteBuf buf) {

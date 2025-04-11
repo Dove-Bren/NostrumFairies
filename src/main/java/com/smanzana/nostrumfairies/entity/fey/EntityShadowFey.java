@@ -26,48 +26,47 @@ import com.smanzana.nostrummagica.spell.component.SpellEffectPart;
 import com.smanzana.nostrummagica.spell.component.SpellShapePart;
 import com.smanzana.nostrummagica.spell.component.shapes.NostrumSpellShapes;
 
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.SpawnGroupData;
-import net.minecraft.world.entity.monster.RangedAttackMob;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
-import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
-import net.minecraft.world.entity.monster.Enemy;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySelector;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.RangedAttackMob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
 
 public class EntityShadowFey extends Monster implements RangedAttackMob {
 	
@@ -279,7 +278,7 @@ public class EntityShadowFey extends Monster implements RangedAttackMob {
 		double d0 = target.getX() - this.getX();
 		double d1 = target.getBoundingBox().minY + (double)(target.getBbHeight() / 3.0F) - entitytippedarrow.getY();
 		double d2 = target.getZ() - this.getZ();
-		double d3 = (double)Mth.sqrt(d0 * d0 + d2 * d2);
+		double d3 = Math.sqrt(d0 * d0 + d2 * d2);
 		entitytippedarrow.shoot(d0, d1 + d3 * 0.20000000298023224D, d2, 1.6F, .5f);
 		int i = EnchantmentHelper.getEnchantmentLevel(Enchantments.POWER_ARROWS, this);
 		int j = EnchantmentHelper.getEnchantmentLevel(Enchantments.PUNCH_ARROWS, this);
@@ -408,7 +407,7 @@ public class EntityShadowFey extends Monster implements RangedAttackMob {
 		fey.copyPosition(this);
 		fey.finalizeSpawn((ServerLevelAccessor) level, level.getCurrentDifficultyAt(fey.blockPosition()), MobSpawnType.CONVERSION, (SpawnGroupData)null, null);
 		
-		this.remove();
+		this.discard();
 		level.addFreshEntity(fey);
 		fey.setCursed(true);
 		
@@ -475,7 +474,7 @@ public class EntityShadowFey extends Monster implements RangedAttackMob {
 	public boolean checkSpawnRules(LevelAccessor worldIn, MobSpawnType spawnReasonIn) {
 		// Shadow fey amass ar mies in the twilight forest. So let's make sure to only spawn them when other things can spawn.
 		if ((spawnReasonIn == MobSpawnType.NATURAL || spawnReasonIn == MobSpawnType.CHUNK_GENERATION)
-				&& this.level.getBiome(this.blockPosition()).getMobSettings().getMobs(MobCategory.MONSTER).size() <= 2) {
+				&& this.level.getBiome(this.blockPosition()).getMobSettings().getMobs(MobCategory.MONSTER).unwrap().size() <= 2) {
 			return false;
 		}
 		

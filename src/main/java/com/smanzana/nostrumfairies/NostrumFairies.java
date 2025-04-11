@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.smanzana.nostrumfairies.capabilities.AttributeProvider;
+import com.smanzana.nostrumfairies.capabilities.CapabilityHandler;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.IFeyWorker;
@@ -139,7 +139,7 @@ public class NostrumFairies {
     	if (e == null)
     		return null;
     	
-    	return e.getCapability(AttributeProvider.CAPABILITY, null).orElse(null);
+    	return e.getCapability(CapabilityHandler.CAPABILITY_FEY, null).orElse(null);
     }
     
     static boolean LogisticsLogging = false;

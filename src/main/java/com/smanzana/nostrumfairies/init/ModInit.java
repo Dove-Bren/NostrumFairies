@@ -6,11 +6,7 @@ import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.blocks.TemplateBlock;
 import com.smanzana.nostrumfairies.capabilities.CapabilityHandler;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
-import com.smanzana.nostrumfairies.capabilities.fey.NostrumFeyCapability;
-import com.smanzana.nostrumfairies.capabilities.fey.NostrumFeyCapabilityStorage;
 import com.smanzana.nostrumfairies.capabilities.templates.ITemplateViewerCapability;
-import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapability;
-import com.smanzana.nostrumfairies.capabilities.templates.TemplateViewerCapabilityStorage;
 import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
@@ -51,15 +47,15 @@ import com.smanzana.nostrummagica.ritual.RitualRegistry;
 import com.smanzana.nostrummagica.ritual.outcome.OutcomeSpawnItem;
 import com.smanzana.nostrummagica.spell.EMagicElement;
 
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.tags.ItemTags;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.Tags;
-import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -114,10 +110,6 @@ public class ModInit {
 	}
 	
 	private static final void init() {
-		CapabilityManager.INSTANCE.register(INostrumFeyCapability.class, new NostrumFeyCapabilityStorage(), NostrumFeyCapability::new);
-		CapabilityManager.INSTANCE.register(ITemplateViewerCapability.class, new TemplateViewerCapabilityStorage(), TemplateViewerCapability::new);
-		capabilityHandler = new CapabilityHandler();
-		
 		registerLore();
 		
     	FairyGael.registerRecipes();
@@ -851,4 +843,11 @@ public class ModInit {
     	registry.register(new DataSerializerEntry(ItemArraySerializer.instance()).setRegistryName("nostrum.serial.itemarray"));
     	registry.register(new DataSerializerEntry(FairyJob.instance()).setRegistryName("nostrum.serial.fairy_job"));
     }
+    
+    @SubscribeEvent
+	public static final void registerCapabilities(RegisterCapabilitiesEvent event) {
+		event.register(INostrumFeyCapability.class);
+		event.register(ITemplateViewerCapability.class);
+		capabilityHandler = new CapabilityHandler();
+	}
 }

@@ -22,7 +22,15 @@ import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -31,17 +39,9 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.core.NonNullList;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -565,7 +565,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	@Override
-	public boolean causeFallDamage(float distance, float damageMultiplier) {
+	public boolean causeFallDamage(float distance, float damageMultiplier, DamageSource source) {
 		return false;
 	}
 	
@@ -616,7 +616,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 				double d2 = this.getWantedZ() - this.parentEntity.getZ();
 				double d3 = d0 * d0 + d1 * d1 + d2 * d2;
 
-				d3 = (double)Mth.sqrt(d3);
+				d3 = Math.sqrt(d3);
 				
 				if (Math.abs(d3) < .25) {
 					lastDist = 0.0D;
@@ -643,7 +643,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 					lastDist = d3;
 					
 					float f9 = (float)(Mth.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
-					this.parentEntity.yRot = this.rotlerp(this.parentEntity.yRot, f9, 90.0F);
+					this.parentEntity.setYRot(this.rotlerp(this.parentEntity.getYRot(), f9, 90.0F));
 				}
 			} else if (this.operation == MoveControl.Operation.STRAFE) {
 				this.parentEntity.setXxa(strafeRight);
@@ -758,7 +758,7 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 			this.setHome(null);
 		}
 		replacement.copyFrom(this);
-		this.remove();
+		this.discard();
 		level.addFreshEntity(replacement);
 		
 		return replacement;

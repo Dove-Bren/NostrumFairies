@@ -119,7 +119,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	private LogisticsItemDepositRequester depositRequester;
 	private LogisticsItemWithdrawRequester withdrawRequester;
 	
-	public NostrumFeyCapability() {
+	public NostrumFeyCapability(Player player) {
 		this.fairyInventory = new FairyHolderInventory();
 		this.templateSelection = new MutablePair<>();
 		this.deployedFairies = new EnumMap<>(FairyGaelType.class);
@@ -134,6 +134,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		this.isUnlocked = false;
 		this.fairyXP = 0;
 		this.fairyLevel = 1;
+		this.provideEntity(player);
 	}
 	
 	@Override
@@ -186,7 +187,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	}
 
 	@Override
-	public CompoundTag toNBT() {
+	public CompoundTag serializeNBT() {
 		CompoundTag nbt = new CompoundTag();
 		
 		nbt.putBoolean(NBT_UNLOCKED, isUnlocked);
@@ -207,7 +208,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	}
 
 	@Override
-	public void readNBT(CompoundTag nbt) {
+	public void deserializeNBT(CompoundTag nbt) {
 		clearFairies();
 		this.isUnlocked = nbt.getBoolean(NBT_UNLOCKED);
 		this.isDisabled = !nbt.getBoolean("enabled");
@@ -228,8 +229,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		}
 	}
 
-	@Override
-	public void provideEntity(LivingEntity owner) {
+	protected void provideEntity(LivingEntity owner) {
 		if (owner != this.owner) {
 			if (this.owner == null) {
 				MinecraftForge.EVENT_BUS.register(this);
@@ -245,7 +245,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 				this.withdrawRequester = new LogisticsItemWithdrawRequester(null, true, owner);
 				
 				if (owner instanceof Player) {
-					this.buildPlanner.setInventory(((Player) owner).inventory);
+					this.buildPlanner.setInventory(((Player) owner).getInventory());
 					this.buildPlanner.setWorld(owner.level);
 				}
 			}
@@ -513,7 +513,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 		for (FairyGaelType type : FairyGaelType.values()) { 
 			for (FairyRecord record : this.deployedFairies.get(type)) {
 				//record.fairy.world.removeEntity(record.fairy);
-				record.fairy.remove();
+				record.fairy.discard();
 			}
 			this.deployedFairies.get(type).clear();
 		}
@@ -624,12 +624,12 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 						fairyInventory.setChanged();
 						fairy.setHealth(health);
 						if (dead) {
-							fairy.remove();
+							fairy.discard();
 						}
 					} else {
 						FairyGael.setStoredEntity(gael, fairy);
 						fairyInventory.setChanged();
-						fairy.remove();
+						fairy.discard();
 						//fairy.world.removeEntity(fairy);
 					}
 				}
@@ -759,7 +759,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			return null;
 		}
 		
-		Inventory playerInv = ((Player) owner).inventory;
+		Inventory playerInv = ((Player) owner).getInventory();
 		
 		NonNullList<ItemStack> pullList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPullTemplateSize(); i++) {
@@ -859,7 +859,7 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			return null;
 		}
 		
-		Inventory playerInv = ((Player) owner).inventory;
+		Inventory playerInv = ((Player) owner).getInventory();
 		
 		NonNullList<ItemStack> templateList = NonNullList.create();
 		for (int i = 0; i < fairyInventory.getPushTemplateSize(); i++) {

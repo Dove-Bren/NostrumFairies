@@ -383,7 +383,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 					ItemStack stack = TemplateBlock.GetRequiredItem(TemplateBlock.GetTemplatedState(level, currentBuild));
 					if (owner instanceof Player) {
 						Player player = (Player) owner;
-						if (Inventories.remove(player.inventory, stack).isEmpty()) {
+						if (Inventories.remove(player.getInventory(), stack).isEmpty()) {
 							; // Fall through to be added to inventory
 						} else {
 							// Owner didn't have item after all!
@@ -469,7 +469,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 				this.getMoveControl().setWantedPosition(owner.getX(), owner.getY(), owner.getZ(), 1);
 			} else {
 				if (owner instanceof Player) {
-					if (((Player) owner).inventory.add(heldItem.copy())) {
+					if (((Player) owner).getInventory().add(heldItem.copy())) {
 						this.removeItem(heldItem);
 						heldItem = ItemStack.EMPTY;
 					}
@@ -873,7 +873,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		if (this.getOwner() != null) {
 			this.changeStatus(FairyGeneralStatus.IDLE);
 		} else if (this.tickCount > 20) {
-			this.remove();
+			this.discard();
 			//TODO cleanup
 //			System.out.println("REMOVING CAUSE OWNERLESS (" + this.getOwnerId() + ")");
 //			if (this.ownerCache != null) {
