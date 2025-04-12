@@ -2,8 +2,8 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
@@ -15,17 +15,16 @@ import com.smanzana.nostrummagica.util.ContainerUtil;
 import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -194,7 +193,7 @@ public class CraftingStationGui {
 					// Trying to take one of our items.
 					// We only allow that with the output slot
 					if (slot == outputSlot) {
-						if (playerIn.inventory.add(cur)) {
+						if (playerIn.getInventory().add(cur)) {
 							slot.set(ItemStack.EMPTY);
 							slot.onTake(playerIn, cur);
 						} else {
@@ -216,12 +215,12 @@ public class CraftingStationGui {
 		}
 		
 		@Override
-		public ItemStack clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
+		public void clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
 			if (panel.handleSlotClick(slotId, dragType, clickTypeIn, player)) {
-				return ItemStack.EMPTY;
+				return;
 			}
 			
-			if (player.inventory.getCarried().isEmpty()) {
+			if (getCarried().isEmpty()) {
 				// empty hand.
 				if (clickTypeIn == ClickType.PICKUP) {
 					// Input slot?
@@ -231,7 +230,7 @@ public class CraftingStationGui {
 						// Only care of it's a right-click.
 						if (dragType == 1) {
 							station.setTemplate(slotId - stationInputIDStart, ItemStack.EMPTY);
-							return ItemStack.EMPTY;
+							return;
 						}
 					}
 				}
@@ -241,14 +240,14 @@ public class CraftingStationGui {
 					// Input slot?
 					if (slotId >= stationInputIDStart && slotId < stationInputIDEnd
 							&& station.getTemplate(slotId - stationInputIDStart).isEmpty()) {
-						ItemStack template = player.inventory.getCarried().copy();
+						ItemStack template = getCarried().copy();
 						template.setCount(1);
 						station.setTemplate(slotId - stationInputIDStart, template);
-						return ItemStack.EMPTY;
+						return;
 					}
 				}
 			}
-			return super.clicked(slotId, dragType, clickTypeIn, player);
+			super.clicked(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
@@ -273,7 +272,7 @@ public class CraftingStationGui {
 			this.imageWidth = GUI_TEXT_MAIN_WIDTH + GUI_TEXT_SIDE_WIDTH;
 			this.imageHeight = GUI_TEXT_MAIN_HEIGHT;
 			
-			this.addButton(panelGui);
+			this.addRenderableWidget(panelGui);
 		}
 		
 		@Override
@@ -287,7 +286,7 @@ public class CraftingStationGui {
 		}
 		
 		private void drawProgress(PoseStack matrixStackIn, float progress) {
-			mc.getTextureManager().bind(getBackgroundTexture());
+			RenderSystem.setShaderTexture(0, getBackgroundTexture());
 			
 			int width = (int) ((float) GUI_PROGRESS_ICON_WIDTH * progress);
 			
@@ -303,7 +302,7 @@ public class CraftingStationGui {
 			float perc = (float) ((double) (System.currentTimeMillis() % period) / (double) period);
 			perc = (float) (.5 * (1 + Math.sin(perc * Math.PI * 2)));
 			float alpha = .2f + .3f * perc;
-			mc.getTextureManager().bind(TEXT);
+			RenderSystem.setShaderTexture(0, TEXT);
 			
 			RenderSystem.enableBlend();
 			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, -1, -1,
@@ -320,7 +319,7 @@ public class CraftingStationGui {
 			float perc = (float) ((double) (System.currentTimeMillis() % period) / (double) period);
 			perc = (float) (.5 * (1 + Math.sin(perc * Math.PI * 2)));
 			float alpha = .2f + .3f * perc;
-			mc.getTextureManager().bind(TEXT);
+			RenderSystem.setShaderTexture(0, TEXT);
 			
 			RenderSystem.enableBlend();
 			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, -1 + ((GUI_INV_CELL_LENGTH * 3) / 4), -1 + ((GUI_INV_CELL_LENGTH * 3) / 4),
@@ -336,10 +335,11 @@ public class CraftingStationGui {
 			if (!template.isEmpty()) {
 				matrixStackIn.pushPose();
 				{
-					RenderSystem.pushMatrix();
-					RenderSystem.multMatrix(matrixStackIn.last().pose());
-					Minecraft.getInstance().getItemRenderer().renderGuiItem(template, 0, 0);
-					RenderSystem.popMatrix();
+//					RenderSystem.pushMatrix();
+//					RenderSystem.multMatrix(matrixStackIn.last().pose());
+//					Minecraft.getInstance().getItemRenderer().renderGuiItem(template, 0, 0);
+//					RenderSystem.popMatrix();
+					RenderFuncs.RenderGUIItem(template, matrixStackIn);
 				}
 				matrixStackIn.translate(0, 0, 110);
 				//GlStateManager.enableAlphaTest();
@@ -356,10 +356,11 @@ public class CraftingStationGui {
 				ItemStack outcome = recipe.getResultItem();
 				matrixStackIn.pushPose();
 				{
-					RenderSystem.pushMatrix();
-					RenderSystem.multMatrix(matrixStackIn.last().pose());
-					Minecraft.getInstance().getItemRenderer().renderGuiItem(outcome, 0, 0);
-					RenderSystem.popMatrix();
+//					RenderSystem.pushMatrix();
+//					RenderSystem.multMatrix(matrixStackIn.last().pose());
+//					Minecraft.getInstance().getItemRenderer().renderGuiItem(outcome, 0, 0);
+//					RenderSystem.popMatrix();
+					RenderFuncs.RenderGUIItem(outcome, matrixStackIn);
 				}
 				matrixStackIn.translate(0, 0, 110);
 				//GlStateManager.enableAlphaTest();
@@ -376,7 +377,7 @@ public class CraftingStationGui {
 			int horizontalMargin = this.leftPos + GUI_TEXT_SIDE_WIDTH;
 			int verticalMargin = this.topPos;
 			
-			mc.getTextureManager().bind(getBackgroundTexture());
+			RenderSystem.setShaderTexture(0, getBackgroundTexture());
 			
 			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_MAIN_WIDTH, GUI_TEXT_MAIN_HEIGHT, 256, 256);
 			

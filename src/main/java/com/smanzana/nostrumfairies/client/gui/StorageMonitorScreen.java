@@ -5,10 +5,10 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
 import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork.ItemCacheType;
@@ -21,9 +21,9 @@ import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 public class StorageMonitorScreen extends Screen {
 	
@@ -98,7 +98,7 @@ public class StorageMonitorScreen extends Screen {
 	}
 	
 	private void drawMenuItem(PoseStack matrixStackIn, int x, int y, ItemStack request, boolean mouseOver) {
-		Minecraft.getInstance().getTextureManager().bind(TEXT);
+		RenderSystem.setShaderTexture(0, TEXT);
 		//RenderSystem.disableLighting();
 
 		final float value = (mouseOver ? .8f : 1f);
@@ -123,7 +123,7 @@ public class StorageMonitorScreen extends Screen {
 	}
 	
 	private void drawCell(PoseStack matrixStackIn, int x, int y, @Nullable ItemDeepStack stack, boolean mouseOver) {
-		Minecraft.getInstance().getTextureManager().bind(TEXT);
+		RenderSystem.setShaderTexture(0, TEXT);
 		//RenderSystem.disableLighting();
 		blit(matrixStackIn, x, y, GUI_TEXT_CELL_HOFFSET, 0, GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH);
 		if (stack != null) {
@@ -162,7 +162,7 @@ public class StorageMonitorScreen extends Screen {
 	}
 	
 	private void drawSlider(PoseStack matrixStackIn, int x, int y, boolean mouseOver) {
-		Minecraft.getInstance().getTextureManager().bind(TEXT);
+		RenderSystem.setShaderTexture(0, TEXT);
 		blit(matrixStackIn, x, y, GUI_TEXT_SLIDER_HOFFSET, mouseOver ? GUI_INV_SLIDER_HEIGHT : 0, GUI_INV_SLIDER_WIDTH, GUI_INV_SLIDER_HEIGHT);
 	}
 	
@@ -229,7 +229,7 @@ public class StorageMonitorScreen extends Screen {
 		matrixStackIn.pushPose();
 		matrixStackIn.translate(0, 0, 1000);
 		//RenderSystem.disableLighting();
-		Minecraft.getInstance().getTextureManager().bind(TEXT);
+		RenderSystem.setShaderTexture(0, TEXT);
 		blit(matrixStackIn, leftOffset, topOffset, 0, 0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT);
 		int sliderX = leftOffset + GUI_INV_SLIDER_HOFFSET;
 		int sliderY = topOffset + GUI_INV_SLIDER_VOFFSET + (int) Math.ceil(GUI_INV_SLIDER_TOTAL_HEIGHT * scroll);

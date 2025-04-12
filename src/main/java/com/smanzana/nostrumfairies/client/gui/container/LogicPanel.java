@@ -4,8 +4,8 @@ import java.io.IOException;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.container.LogicContainer.LogicGuiContainer;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
@@ -19,16 +19,17 @@ import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -104,7 +105,7 @@ public class LogicPanel {
 	 */
 	public boolean handleSlotClick(int slotId, int dragType, ClickType clickTypeIn, Player player) {
 		if (slotId == templateSlot.index) {
-			if (player.inventory.getCarried().isEmpty()) {
+			if (parent.getCarried().isEmpty()) {
 				// empty hand. Right-click?
 				if (dragType == 1 && clickTypeIn == ClickType.PICKUP) {
 					setTemplate(ItemStack.EMPTY);
@@ -113,7 +114,7 @@ public class LogicPanel {
 				// Item in hand. Clicking empty templatable slot?
 				if (clickTypeIn == ClickType.PICKUP) {
 					if (!templateSlot.hasItem()) {
-						ItemStack template = player.inventory.getCarried().copy();
+						ItemStack template = parent.getCarried().copy();
 						template.setCount(1);
 						setTemplate(template);
 					}
@@ -239,7 +240,7 @@ public class LogicPanel {
 			});
 			
 			
-			parent.addButton(criteriaField);
+			parent.addRenderableWidget(criteriaField);
 		}
 		
 		public void init(Minecraft mc, int guiLeft, int guiTop) {
@@ -250,13 +251,13 @@ public class LogicPanel {
 			opButton = new OpButton(left + (panel.width - PANEL_BUTTON_WIDTH) / 2 - 1,
 					top + (panel.upperSpace + GUI_INV_CELL_LENGTH + panel.margin),
 					this);
-			parent.addButton(opButton);
+			parent.addRenderableWidget(opButton);
 			
 			if (!panel.comp.isLogicOnly()) {
 				modeButton = new ModeButton(left + (panel.width - PANEL_BUTTON_WIDTH) / 2 - 1,
 						top + (panel.margin) + 5,
 						this);
-				parent.addButton(modeButton);
+				parent.addRenderableWidget(modeButton);
 			}
 			
 			final int barWidth = Math.min(panel.width - 12, 100);
@@ -268,7 +269,7 @@ public class LogicPanel {
 			criteriaField.setHeight(barHeight);
 			criteriaField.setX(barHOffset);
 			criteriaField.y = barVOffset;
-			parent.addButton(criteriaField);
+			parent.addRenderableWidget(criteriaField);
 			
 			final boolean logicMode = (panel.comp.getLogicMode() == LogicMode.LOGIC);
 			opButton.visible = logicMode;
@@ -282,7 +283,7 @@ public class LogicPanel {
 			//final boolean logicMode = (panel.comp.getLogicMode() == LogicMode.LOGIC);
 			
 			if (this.drawBackground) {
-				mc.getTextureManager().bind(TEXT);
+				RenderSystem.setShaderTexture(0, TEXT);
 				RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, left, top, 0, 0,
 						GUI_PANEL_TEXT_WIDTH, GUI_PANEL_TEXT_HEIGHT, panel.width, panel.height, 256, 256,
 						colorRed, colorGreen, colorBlue, colorAlpha);
@@ -297,7 +298,7 @@ public class LogicPanel {
 		}
 		
 		private void drawSlot(PoseStack matrixStackIn, Minecraft mc) {
-			mc.getTextureManager().bind(TEXT);
+			RenderSystem.setShaderTexture(0, TEXT);
 			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, 0, 0, GUI_SLOT_TEXT_HOFFSET, GUI_SLOT_TEXT_VOFFSET, PANEL_SLOT_WIDTH, PANEL_SLOT_HEIGHT, PANEL_SLOT_WIDTH, PANEL_SLOT_HEIGHT, 256, 256,
 					colorRed, colorGreen, colorBlue, colorAlpha);
 		}
@@ -340,7 +341,7 @@ public class LogicPanel {
 			
 			}
 			
-			mc.getTextureManager().bind(TEXT);
+			RenderSystem.setShaderTexture(0, TEXT);
 			RenderSystem.enableBlend();
 			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, 1, 1,
 					textX, GUI_MODE_ICON_TEXT_VOFFSET,
@@ -421,7 +422,7 @@ public class LogicPanel {
 					textX += PANEL_BUTTON_WIDTH;
 				}
 				
-				mc.getTextureManager().bind(TEXT);
+				RenderSystem.setShaderTexture(0, TEXT);
 				RenderSystem.enableBlend();
 				matrixStackIn.pushPose();
 				matrixStackIn.translate(x, y, 0);
@@ -482,7 +483,7 @@ public class LogicPanel {
 					textX += PANEL_BUTTON_WIDTH;
 				}
 				
-				mc.getTextureManager().bind(TEXT);
+				RenderSystem.setShaderTexture(0, TEXT);
 				RenderSystem.enableBlend();
 				matrixStackIn.pushPose();
 				matrixStackIn.translate(x, y, 0);
@@ -508,6 +509,11 @@ public class LogicPanel {
 				pressed = true;
 				super.onClick(mouseX, mouseY);
 			}
+			
+		}
+
+		@Override
+		public void updateNarration(NarrationElementOutput p_169152_) {
 			
 		}
 		

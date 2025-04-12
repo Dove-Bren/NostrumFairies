@@ -1,27 +1,33 @@
 package com.smanzana.nostrumfairies.client.gui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrumfairies.items.TemplateWand;
 import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
 
-import com.mojang.blaze3d.platform.Window;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.client.gui.ForgeIngameGui;
+import net.minecraftforge.client.gui.IIngameOverlay;
+import net.minecraftforge.client.gui.OverlayRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class OverlayRenderer extends GuiComponent {
+	
+	protected IIngameOverlay templateNameOverlay;
 
 	public OverlayRenderer() {
 		MinecraftForge.EVENT_BUS.register(this);
+	}
+	
+	public void registerLayers() {
+		templateNameOverlay = OverlayRegistry.registerOverlayAbove(ForgeIngameGui.CROSSHAIR_ELEMENT, "NostrumFairies::templateNameOverlay", this::renderTemplateNameOverlay);
 	}
 	
 	protected boolean shouldDisplayPreview(Player player) {
@@ -50,42 +56,37 @@ public class OverlayRenderer extends GuiComponent {
 		StaticTESRRenderer.instance.render(matrixStackIn, event.getProjectionMatrix(), mc, player, event.getPartialTicks());
 	}
 	
-	@SubscribeEvent
-	public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
+	private void renderTemplateNameOverlay(ForgeIngameGui gui, PoseStack matrixStackIn, float partialTicks, int width, int height) {
 		final Minecraft mc = Minecraft.getInstance();
 		LocalPlayer player = mc.player;
-		final PoseStack matrixStackIn = event.getMatrixStack();
 		
-		if (event.getType() == ElementType.CROSSHAIRS) {
-			if (shouldDisplayPreview(player)) {
-				String name = null;
-				for (ItemStack held : player.getHandSlots()) {
-					if (held.isEmpty() || !(held.getItem() instanceof TemplateWand)) {
-						continue;
-					}
-					
-					if (TemplateWand.GetWandMode(held) != WandMode.SPAWN) {
-						continue;
-					}
-					
-					ItemStack templateScroll = TemplateWand.GetSelectedTemplate(held);
-					if (!templateScroll.isEmpty()) {
-						name = templateScroll.getHoverName().getString();
-						break;
-					}
+		if (shouldDisplayPreview(player)) {
+			String name = null;
+			for (ItemStack held : player.getHandSlots()) {
+				if (held.isEmpty() || !(held.getItem() instanceof TemplateWand)) {
+					continue;
 				}
 				
-				if (name != null) {
-					
-					matrixStackIn.pushPose();
-					Window res = event.getWindow();
-					matrixStackIn.translate(
-							((double) res.getGuiScaledWidth() / 2),
-							((double) res.getGuiScaledHeight() / 2) + 10,
-							0);
-					renderCurrentIndex(matrixStackIn, name);
-					matrixStackIn.popPose();
+				if (TemplateWand.GetWandMode(held) != WandMode.SPAWN) {
+					continue;
 				}
+				
+				ItemStack templateScroll = TemplateWand.GetSelectedTemplate(held);
+				if (!templateScroll.isEmpty()) {
+					name = templateScroll.getHoverName().getString();
+					break;
+				}
+			}
+			
+			if (name != null) {
+				
+				matrixStackIn.pushPose();
+				matrixStackIn.translate(
+						((double) width / 2),
+						((double) height / 2) + 10,
+						0);
+				renderCurrentIndex(matrixStackIn, name);
+				matrixStackIn.popPose();
 			}
 		}
 	}

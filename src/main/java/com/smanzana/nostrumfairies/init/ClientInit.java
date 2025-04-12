@@ -104,6 +104,7 @@ public class ClientInit {
 		proxy.initKeybinds();
 		
 		overlayRenderer = new OverlayRenderer();
+		overlayRenderer.registerLayers();
 	}
 	
 	private static final void registerItemModelProperties() {

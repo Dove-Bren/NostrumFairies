@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
@@ -14,16 +15,16 @@ import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.util.Inventories;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -110,7 +111,7 @@ public class TemplateWandGui {
 				ItemStack stack = slot.getItem();
 				if (inv == wandInv) {
 					// shift-click in bag
-					if (playerIn.inventory.add(stack.copy())) {
+					if (playerIn.getInventory().add(stack.copy())) {
 						slot.set(ItemStack.EMPTY);
 					}
 				} else {
@@ -163,26 +164,19 @@ public class TemplateWandGui {
 		}
 		
 		@Override
-		public ItemStack clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
+		public void clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
 			if (slotId == wandPos) {
-				return ItemStack.EMPTY;
+				return;
 			}
 			
-			ItemStack itemstack = ItemStack.EMPTY;
-			Inventory inventoryplayer = player.inventory;
-
 			if (clickTypeIn == ClickType.PICKUP && (dragType == 0 || dragType == 1)
-					&& slotId >= 0 && !inventoryplayer.getCarried().isEmpty()) {
+					&& slotId >= 0 && !getCarried().isEmpty()) {
 
 				Slot slot7 = (Slot)this.slots.get(slotId);
 
 				if (slot7 != null) {
 					ItemStack itemstack9 = slot7.getItem();
-					ItemStack itemstack12 = inventoryplayer.getCarried();
-
-					if (!itemstack9.isEmpty()) {
-						itemstack = itemstack9.copy();
-					}
+					ItemStack itemstack12 = getCarried();
 
 					if (itemstack9.isEmpty()) {
 						if (!itemstack12.isEmpty() && slot7.mayPlace(itemstack12)) {
@@ -195,23 +189,23 @@ public class TemplateWandGui {
 							slot7.set(itemstack12.split(l2));
 
 							if (itemstack12.isEmpty()) {
-								inventoryplayer.setCarried(ItemStack.EMPTY);
+								setCarried(ItemStack.EMPTY);
 							}
 						}
 					} else if (slot7.mayPickup(player)) {
 						if (itemstack12.isEmpty()) {
 							if (!itemstack9.isEmpty()) {
 								int k2 = dragType == 0 ? itemstack9.getCount() : (itemstack9.getCount() + 1) / 2;
-								inventoryplayer.setCarried(slot7.remove(k2));
+								setCarried(slot7.remove(k2));
 
 								if (itemstack9.isEmpty()) {
 									slot7.set(ItemStack.EMPTY);
 								}
 
-								slot7.onTake(player, inventoryplayer.getCarried());
+								slot7.onTake(player, getCarried());
 							} else {
 								slot7.set(ItemStack.EMPTY);
-								inventoryplayer.setCarried(ItemStack.EMPTY);
+								setCarried(ItemStack.EMPTY);
 							}
 						} else if (slot7.mayPlace(itemstack12)) {
 							if (itemstack9.getItem() == itemstack12.getItem() && ItemStack.tagMatches(itemstack9, itemstack12)) {
@@ -228,13 +222,13 @@ public class TemplateWandGui {
 								itemstack12.split(j2);
 
 								if (itemstack12.isEmpty()) {
-									inventoryplayer.setCarried(ItemStack.EMPTY);
+									setCarried(ItemStack.EMPTY);
 								}
 
 								itemstack9.grow(j2);
 							} else if (itemstack12.getCount() <= slot7.getMaxStackSize(itemstack12)) {
 								slot7.set(itemstack12);
-								inventoryplayer.setCarried(itemstack9);
+								setCarried(itemstack9);
 							}
 						} else if (itemstack9.getItem() == itemstack12.getItem() && itemstack12.getMaxStackSize() > 1 && ItemStack.tagMatches(itemstack9, itemstack12)) {
 							int i2 = itemstack9.getCount();
@@ -247,7 +241,7 @@ public class TemplateWandGui {
 									slot7.set(ItemStack.EMPTY);
 								}
 
-								slot7.onTake(player, inventoryplayer.getCarried());
+								slot7.onTake(player, getCarried());
 							}
 						}
 					}
@@ -256,9 +250,8 @@ public class TemplateWandGui {
 				}
 	            
 				this.broadcastChanges();
-				return itemstack;
 			} else {
-				return super.clicked(slotId, dragType, clickTypeIn, player);
+				super.clicked(slotId, dragType, clickTypeIn, player);
 			}
 	        
 		}
@@ -293,7 +286,7 @@ public class TemplateWandGui {
 			int horizontalMargin = (width - imageWidth) / 2;
 			int verticalMargin = (height - imageHeight) / 2;
 			
-			mc.getTextureManager().bind(TEXT);
+			RenderSystem.setShaderTexture(0, TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_WIDTH, GUI_HEIGHT, 256, 256);
 		}

@@ -2,8 +2,8 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
@@ -22,21 +22,20 @@ import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.util.Inventories;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.client.gui.GuiUtils;
 
 public class FairyScreenGui {
 	
@@ -319,7 +318,7 @@ public class FairyScreenGui {
 				
 				if (slot.container == this.inv) {
 					// Trying to take one of our items
-					if (playerIn.inventory.add(cur)) {
+					if (playerIn.getInventory().add(cur)) {
 						slot.set(ItemStack.EMPTY);
 						slot.onTake(playerIn, cur);
 					} else {
@@ -344,11 +343,11 @@ public class FairyScreenGui {
 			return false;
 		}
 		
-		public ItemStack clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
+		public void clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
 			Slot slot = (slotId > 0 && slotId < this.slots.size() ? this.slots.get(slotId) : null);
 			if (slot != null) {
 				if (slot instanceof HideableSlot && ((HideableSlot) slot).hidden) {
-					return ItemStack.EMPTY;
+					return;
 				}
 				
 				int slotIdx = -1;
@@ -376,7 +375,7 @@ public class FairyScreenGui {
 				
 				if (slotIdx != -1) {
 					// template slot
-					if (player.inventory.getCarried().isEmpty()) {
+					if (getCarried().isEmpty()) {
 						// empty hand
 						if (clickTypeIn == ClickType.PICKUP) {
 							// Right-click?
@@ -410,7 +409,7 @@ public class FairyScreenGui {
 						// Item in hand. Clicking empty output slot?
 						if (clickTypeIn == ClickType.PICKUP) {
 							// Overwrite template
-							ItemStack template = player.inventory.getCarried().copy();
+							ItemStack template = getCarried().copy();
 							if (dragType == 1) { // right click
 								template.setCount(1);
 							}
@@ -422,10 +421,10 @@ public class FairyScreenGui {
 						}
 					}
 					
-					return ItemStack.EMPTY;
+					return;
 				}
 			}
-			return super.clicked(slotId, dragType, clickTypeIn, player);
+			super.clicked(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
@@ -521,13 +520,13 @@ public class FairyScreenGui {
 						verticalMargin + SIDEBAR_ATTACK_VOFFSET + SIDEBAR_ATTACK_TARGET_BUTTON_VOFFSET,
 						i,
 						this);
-				this.addButton(targetButtons[i]);
+				this.addRenderableWidget(targetButtons[i]);
 				placementButtons[i] = new PlacementButton(
 						horizontalMargin + SIDEBAR_ATTACK_HOFFSET + SIDEBAR_ATTACK_PLACEMENT_BUTTON_HOFFSET,
 						verticalMargin + SIDEBAR_ATTACK_VOFFSET + SIDEBAR_ATTACK_PLACEMENT_BUTTON_VOFFSET,
 						i,
 						this);
-				this.addButton(placementButtons[i]);
+				this.addRenderableWidget(placementButtons[i]);
 			}
 			
 			for (TargetButton butt : targetButtons) {
@@ -852,7 +851,7 @@ public class FairyScreenGui {
 			final int horizontalMargin = (width - imageWidth) / 2;
 			final int verticalMargin = (height - imageHeight) / 2;
 			
-			mc.getTextureManager().bind(TEXT);
+			RenderSystem.setShaderTexture(0, TEXT);
 			RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, GUI_WIDTH, GUI_HEIGHT, 256, 256);
 			
 			drawLevelDisplay(matrixStackIn, partialTicks);
@@ -898,7 +897,7 @@ public class FairyScreenGui {
 			
 			if (selectedGroup != -1) {
 				float bright = 1f;
-				mc.getTextureManager().bind(TEXT);
+				RenderSystem.setShaderTexture(0, TEXT);
 				
 				int x = -5;
 				int y = -5;
@@ -948,7 +947,7 @@ public class FairyScreenGui {
 			}
 			
 			// Let buttons draw foregrounds
-			for (AbstractWidget button : this.buttons) {
+			for (Widget button : this.renderables) {
 				if (button instanceof TargetButton) {
 					((TargetButton) button).drawButtonForegroundLayer(matrixStackIn, mouseX - this.leftPos, mouseY - this.topPos);
 				} else if (button instanceof PlacementButton) {
@@ -979,9 +978,9 @@ public class FairyScreenGui {
 							} else {
 								// they're picking it up or plopping it down
 								if (slot.getSlotIndex() == this.selectedSlot) {
-									if (NostrumFairies.proxy.getPlayer().inventory.getCarried().isEmpty()) {
+									if (container.getCarried().isEmpty()) {
 										this.selectedEmpty = true;
-									} else if (slot.mayPlace(NostrumFairies.proxy.getPlayer().inventory.getCarried())) {
+									} else if (slot.mayPlace(container.getCarried())) {
 										this.selectedEmpty = false;
 									}
 									// else unaffected
@@ -1008,6 +1007,7 @@ public class FairyScreenGui {
 		private final class TargetButton extends Button {
 
 			private final int slot;
+			private final FairyScreenGuiContainer parent;
 			
 			public TargetButton(int x, int y, int slot, FairyScreenGuiContainer gui) {
 				super(x, y, ICON_SLOTHELPER_WIDTH, ICON_SLOTHELPER_HEIGHT, TextComponent.EMPTY, (b) -> {
@@ -1016,6 +1016,7 @@ public class FairyScreenGui {
 							GuiAction.CHANGE_TARGET, slot, current.ordinal() + 1));
 				});
 				this.slot = slot;
+				this.parent = gui;
 			}
 			
 			@Override
@@ -1036,7 +1037,7 @@ public class FairyScreenGui {
 						alpha = 1f;
 					}
 					RenderSystem.enableBlend();
-					mc.getTextureManager().bind(TEXT);
+					RenderSystem.setShaderTexture(0, TEXT);
 					RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, this.x, this.y,
 							ICON_SLOTHELPER_TEXT_HOFFSET, ICON_SLOTHELPER_TEXT_VOFFSET,
 							ICON_SLOTHELPER_TEXT_WIDTH, ICON_SLOTHELPER_TEXT_HEIGHT,
@@ -1072,9 +1073,7 @@ public class FairyScreenGui {
 				if (this.isHovered) {
 					final FairyCastTarget target = container.inv.getFairyCastTarget(this.slot);
 					
-					GuiUtils.drawHoveringText(matrixStackIn, target.getDescription(), mouseX, mouseY,
-							FairyScreenGuiContainer.this.width, FairyScreenGuiContainer.this.height, 200,
-							FairyScreenGuiContainer.this.font);
+					parent.renderComponentTooltip(matrixStackIn, target.getDescription(), mouseX, mouseY);
 				}
 			}
 			
@@ -1108,7 +1107,7 @@ public class FairyScreenGui {
 						red = green = blue = alpha = 1f;
 					}
 					RenderSystem.enableBlend();
-					mc.getTextureManager().bind(TEXT);
+					RenderSystem.setShaderTexture(0, TEXT);
 					RenderFuncs.drawScaledCustomSizeModalRectImmediate(matrixStackIn, this.x, this.y,
 							ICON_SLOTHELPER_TEXT_HOFFSET, ICON_SLOTHELPER_TEXT_VOFFSET,
 							ICON_SLOTHELPER_TEXT_WIDTH, ICON_SLOTHELPER_TEXT_HEIGHT,
@@ -1143,9 +1142,7 @@ public class FairyScreenGui {
 				if (this.isHovered) {
 					final FairyPlacementTarget placement = container.inv.getFairyPlacementTarget(this.slot);
 					
-					GuiUtils.drawHoveringText(matrixStackIn, placement.getDescription(), mouseX, mouseY,
-							FairyScreenGuiContainer.this.width, FairyScreenGuiContainer.this.height, 200,
-							FairyScreenGuiContainer.this.font);
+					FairyScreenGuiContainer.this.renderComponentTooltip(matrixStackIn, placement.getDescription(), mouseX, mouseY);
 				}
 			}
 			

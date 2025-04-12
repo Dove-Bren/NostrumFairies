@@ -2,8 +2,8 @@ package com.smanzana.nostrumfairies.client.gui.container;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.tiles.BufferChestTileEntity;
@@ -13,16 +13,15 @@ import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.util.Inventories;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -66,7 +65,7 @@ public class BufferChestGui {
 			
 			chestIDStart = this.slots.size();
 			for (int i = 0; i < chest.getContainerSize(); i++) {
-				final int index = i;
+				final int slotIndex = i;
 				this.addSlot(new Slot(chest, i, GUI_TOP_INV_HOFFSET + i * 18, GUI_TOP_INV_VOFFSET) {
 					@Override
 					public boolean mayPlace(@Nonnull ItemStack stack) {
@@ -75,7 +74,7 @@ public class BufferChestGui {
 					
 					@Override
 					public int getMaxStackSize() {
-						ItemStack template = chest.getTemplate(index);
+						ItemStack template = chest.getTemplate(slotIndex);
 						if (template.isEmpty()) {
 							return super.getMaxStackSize();
 						} else {
@@ -85,9 +84,9 @@ public class BufferChestGui {
 					
 					@Override
 					public void set(@Nonnull ItemStack stack) {
-//						ItemStack template = chest.getTemplate(index);
+//						ItemStack template = chest.getTemplate(slotIndex);
 //						if (template.isEmpty()) {
-//							chest.setTemplate(index, stack);
+//							chest.setTemplate(slotIndex, stack);
 //						} else {
 							super.set(stack);
 //						}
@@ -119,7 +118,7 @@ public class BufferChestGui {
 				
 				if (slot.container == this.chest) {
 					// Trying to take one of our items
-					if (playerIn.inventory.add(cur)) {
+					if (playerIn.getInventory().add(cur)) {
 						slot.set(ItemStack.EMPTY);
 						slot.onTake(playerIn, cur);
 					} else {
@@ -145,28 +144,28 @@ public class BufferChestGui {
 		}
 		
 		@Override
-		public ItemStack clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
-			if (player.inventory.getCarried().isEmpty()) {
+		public void clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
+			if (getCarried().isEmpty()) {
 				// empty hand. Right-click?
 				if (slotId >= chestIDStart && dragType == 1 && clickTypeIn == ClickType.PICKUP && chest.getItem(slotId - chestIDStart).isEmpty()) {
 					chest.setTemplate(slotId - chestIDStart, ItemStack.EMPTY);
-					return ItemStack.EMPTY;
+					return;
 				}
 			} else {
 				// Item in hand. Clicking empty output slot?
 				if (slotId >= chestIDStart && clickTypeIn == ClickType.PICKUP && chest.getTemplate(slotId - chestIDStart).isEmpty()) {
-					ItemStack template = player.inventory.getCarried();
+					ItemStack template = getCarried();
 					if (dragType == 1) { // right click
 						template = template.copy();
 						template.setCount(1);
 					}
 					chest.setTemplate(slotId - chestIDStart, template);
-					return ItemStack.EMPTY;
+					return;
 				}
 //				System.out.println("Clicktype: " + clickTypeIn);
 //				System.out.println("dragType: " + dragType);
 			}
-			return super.clicked(slotId, dragType, clickTypeIn, player);
+			super.clicked(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
@@ -196,7 +195,7 @@ public class BufferChestGui {
 		
 		private void drawStatus(PoseStack matrixStackIn, float partialTicks, boolean available) {
 			float alpha = (float) (.5f + (.25f * Math.sin(Math.PI * (double)(System.currentTimeMillis() % 1000) / 1000.0)));
-			mc.getTextureManager().bind(TEXT);
+			RenderSystem.setShaderTexture(0, TEXT);
 			
 			final int text_hoffset = (available ? GUI_TEXT_WORKING_ICON_HOFFSET : GUI_TEXT_MISSING_ICON_HOFFSET);
 			final int text_voffset = 0;
@@ -209,10 +208,11 @@ public class BufferChestGui {
 			if (!template.isEmpty()) {
 				matrixStackIn.pushPose();
 				{
-					RenderSystem.pushMatrix();
-					RenderSystem.multMatrix(matrixStackIn.last().pose());
-					Minecraft.getInstance().getItemRenderer().renderGuiItem(template, 0, 0);
-					RenderSystem.popMatrix();
+//					RenderSystem.pushMatrix();
+//					RenderSystem.multMatrix(matrixStackIn.last().pose());
+//					Minecraft.getInstance().getItemRenderer().renderGuiItem(template, 0, 0);
+//					RenderSystem.popMatrix();
+					RenderFuncs.RenderGUIItem(template, matrixStackIn);
 				}
 				matrixStackIn.translate(0, 0, 110);
 				if (template.getCount() > 1) {
@@ -239,7 +239,7 @@ public class BufferChestGui {
 			int horizontalMargin = (width - imageWidth) / 2;
 			int verticalMargin = (height - imageHeight) / 2;
 			
-			mc.getTextureManager().bind(TEXT);
+			RenderSystem.setShaderTexture(0, TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			

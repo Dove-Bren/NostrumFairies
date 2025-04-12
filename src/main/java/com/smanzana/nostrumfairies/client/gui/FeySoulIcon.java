@@ -3,13 +3,13 @@ package com.smanzana.nostrumfairies.client.gui;
 import java.util.EnumMap;
 import java.util.Map;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.container.FeySoulContainerSlot;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -33,7 +33,7 @@ public final class FeySoulIcon {
 	public static void draw(PoseStack matrixStackIn, int offsetX, int offsetY, float scale, SoulStoneType slot) {
 		init();
 
-        Minecraft.getInstance().getTextureManager().bind(TEXTS.get(slot));
+        RenderSystem.setShaderTexture(0, TEXTS.get(slot));
 		
         matrixStackIn.pushPose();
 		matrixStackIn.translate(offsetX, offsetY, 0);

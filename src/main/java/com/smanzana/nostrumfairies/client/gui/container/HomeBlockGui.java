@@ -6,8 +6,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.gui.FairyContainers;
 import com.smanzana.nostrumfairies.client.gui.FeySlotIcon;
@@ -24,24 +24,24 @@ import com.smanzana.nostrummagica.util.ContainerUtil;
 import com.smanzana.nostrummagica.util.ContainerUtil.IPackedContainerProvider;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -153,8 +153,8 @@ public class HomeBlockGui {
 		}
 		
 		@Override
-		public ItemStack clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
-			return super.clicked(slotId, dragType, clickTypeIn, player);
+		public void clicked(int slotId, int dragType, ClickType clickTypeIn, Player player) {
+			super.clicked(slotId, dragType, clickTypeIn, player);
 		}
 		
 		@Override
@@ -286,7 +286,7 @@ public class HomeBlockGui {
 		}
 		
 		private void drawListItem(PoseStack matrixStackIn, int x, int y, boolean hasStone, boolean mouseOver, @Nullable FeyAwayRecord record) {
-			mc.getTextureManager().bind(TEXT);
+			RenderSystem.setShaderTexture(0, TEXT);
 			blit(matrixStackIn, x, y, GUI_TEXT_LIST_ITEM_HOFFSET + (mouseOver ? GUI_LIST_ITEM_WIDTH : 0), GUI_TEXT_LIST_ITEM_vOFFSET,
 					GUI_LIST_ITEM_WIDTH, GUI_LIST_ITEM_HEIGHT);
 			
@@ -402,12 +402,14 @@ public class HomeBlockGui {
 				float length = Math.max(fey.getBbHeight(), fey.getBbWidth());
 				int scale = (int) Math.floor((previewSize - 2) / (length));
 				{
-					RenderSystem.pushMatrix();
-					RenderSystem.multMatrix(matrixStackIn.last().pose());
+					RenderSystem.backupProjectionMatrix();
+					RenderSystem.getProjectionMatrix().multiply(matrixStackIn.last().pose());
+					RenderSystem.applyModelViewMatrix();
 					InventoryScreen.renderEntityInInventory(x + GUI_DETAILS_WIDTH - ((previewSize / 2) + previewMargin),
 						y + (previewMargin + previewSize),
 						scale, 0, 0, fey);
-					RenderSystem.popMatrix();
+					RenderSystem.restoreProjectionMatrix();
+					RenderSystem.applyModelViewMatrix();
 				}
 				
 				// Render inventory
@@ -420,11 +422,11 @@ public class HomeBlockGui {
 						for (int i = 0; i < cells; i++) {
 							int cellX = x + offsetX + (i * GUI_INV_CELL_LENGTH);
 							int cellY = y + 62;
-							mc.getTextureManager().bind(TEXT);
+							RenderSystem.setShaderTexture(0, TEXT);
 							RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, cellX, cellY,
 									GUI_TEXT_LIST_ITEM_HOFFSET, GUI_TEXT_LIST_ITEM_vOFFSET + GUI_LIST_ITEM_HEIGHT,
 									GUI_INV_CELL_LENGTH, GUI_INV_CELL_LENGTH, 256, 256);
-				            Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(this.mc.player, items.get(i), cellX + 1, cellY + 1);
+				            Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(this.mc.player, items.get(i), cellX + 1, cellY + 1, 0);
 				            Minecraft.getInstance().getItemRenderer().renderGuiItemDecorations(this.font, items.get(i), cellX + 1, cellY + 1, null);
 						}
 					}
@@ -483,7 +485,7 @@ public class HomeBlockGui {
 			
 			setIsItemRender(true);
 			
-			mc.getTextureManager().bind(TEXT);
+			RenderSystem.setShaderTexture(0, TEXT);
 			
 			RenderFuncs.drawModalRectWithCustomSizedTextureImmediate(matrixStackIn, horizontalMargin, verticalMargin, 0,0, GUI_TEXT_WIDTH, GUI_TEXT_HEIGHT, 256, 256);
 			
