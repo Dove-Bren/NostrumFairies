@@ -6,12 +6,12 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.client.render.stesr.StaticTESRRenderer;
 import com.smanzana.nostrummagica.tile.MimicBlockTileEntity;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	
@@ -19,13 +19,13 @@ public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	
 	private BlockState state;
 	
-	public TemplateBlockTileEntity() {
-		this(null);
+	public TemplateBlockTileEntity(BlockPos pos, BlockState state) {
+		this(pos, state, null);
 	}
 	
-	public TemplateBlockTileEntity(BlockState state) {
-		super(FairyTileEntities.TemplateBlockTileEntityType);
-		setBlockState(state);
+	public TemplateBlockTileEntity(BlockPos pos, BlockState state, BlockState mimicState) {
+		super(FairyTileEntities.TemplateBlockTileEntityType, pos, state);
+		setBlockState(mimicState);
 	}
 	
 //	@Override
@@ -45,8 +45,8 @@ public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	}
 	
 	@Override
-	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-		super.setLevelAndPosition(worldIn, pos);
+	public void setLevel(Level worldIn) {
+		super.setLevel(worldIn);
 	}
 	
 	@Override
@@ -73,8 +73,8 @@ public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	}
 
 	@Override
-	public void load(BlockState state, CompoundTag compound) {
-		super.load(state, compound);
+	public void load(CompoundTag compound) {
+		super.load(compound);
 		
 		if (this.state != null) {
 			this.setBlockState(null);

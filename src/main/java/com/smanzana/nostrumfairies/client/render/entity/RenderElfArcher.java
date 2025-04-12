@@ -5,7 +5,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
 
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
@@ -16,7 +16,7 @@ public class RenderElfArcher extends MobRenderer<EntityElfArcher, ModelElfArcher
 	protected ModelElfArcher<EntityElfArcher> modelLeft;
 	protected ModelElfArcher<EntityElfArcher> modelRight;
 	
-	public RenderElfArcher(EntityRenderDispatcher renderManagerIn, float shadowSizeIn) {
+	public RenderElfArcher(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
 		super(renderManagerIn, new ModelElfArcher<>(true), .25f);
 		this.modelLeft = new ModelElfArcher<>(true);
 		this.modelRight = new ModelElfArcher<>(false);

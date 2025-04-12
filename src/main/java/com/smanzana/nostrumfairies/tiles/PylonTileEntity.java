@@ -4,10 +4,13 @@ import java.util.List;
 
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+
 public class PylonTileEntity extends LogisticsTileEntity {
 
-	public PylonTileEntity() {
-		super(FairyTileEntities.PylonTileEntityType);
+	public PylonTileEntity(BlockPos pos, BlockState state) {
+		super(FairyTileEntities.PylonTileEntityType, pos, state);
 	}
 	
 	@Override

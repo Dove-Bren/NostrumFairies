@@ -44,25 +44,25 @@ import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
+import com.smanzana.nostrummagica.tile.TickableBlockEntity;
 import com.smanzana.nostrummagica.util.Entities;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.nbt.Tag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.common.util.Constants.NBT;
 
 public class HomeBlockTileEntity extends LogisticsTileEntity implements TickableBlockEntity, IAetherHandlerProvider, IAetherComponentListener {
 	
@@ -296,14 +296,14 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements Tickable
 	private boolean aetherDirtyFlag;
 	private List<BlockPos> boostBlockSpots; // TODO make sparkles every once in a while?
 	
-	public HomeBlockTileEntity(ResidentType type) {
-		this();
+	public HomeBlockTileEntity(BlockPos pos, BlockState state, ResidentType type) {
+		this(pos, state);
 		this.type = type;
 		this.slotInv = new HomeBlockSlotInventory(this, FeyHomeBlock.GetSpecMaterials(type));
 	}
 	
-	public HomeBlockTileEntity() {
-		super(FairyTileEntities.HomeBlockTileEntityType);
+	public HomeBlockTileEntity(BlockPos pos, BlockState state) {
+		super(FairyTileEntities.HomeBlockTileEntityType, pos, state);
 		//this.feyList = new HashSet<>();
 		this.slots = DEFAULT_SLOTS;
 		this.slotInv = new HomeBlockSlotInventory(this, FeyHomeBlock.GetSpecMaterials(ResidentType.FAIRY));
@@ -741,13 +741,13 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements Tickable
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag nbt) {
-		super.load(state, nbt);
+	public void load(CompoundTag nbt) {
+		super.load(nbt);
 		
 		String type = nbt.getString(NBT_TYPE);
 		this.type = ResidentType.valueOf(ResidentType.class, type.toUpperCase());
 		this.name = nbt.getString(NBT_NAME);
-		if (nbt.contains(NBT_SLOT_COUNT, NBT.TAG_INT)) {
+		if (nbt.contains(NBT_SLOT_COUNT, Tag.TAG_INT)) {
 			this.slots = Math.max(1, Math.min(MAX_NATURAL_SLOTS, nbt.getInt(NBT_SLOT_COUNT)));
 		} else {
 			this.slots = DEFAULT_SLOTS; 
@@ -758,7 +758,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements Tickable
 		this.upgradeInv = HomeBlockUpgradeInventory.fromNBT(this, nbt.getCompound(NBT_UPGRADES));
 		
 		feyCacheMap.clear();
-		ListTag list = nbt.getList(NBT_FEY, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_FEY, Tag.TAG_COMPOUND);
 		for (int i = 0; i < getEffectiveSlots(); i++) {
 			CompoundTag tag = list.getCompound(i);
 			UUID id = null;

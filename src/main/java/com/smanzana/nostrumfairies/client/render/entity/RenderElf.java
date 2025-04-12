@@ -5,7 +5,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
@@ -16,7 +16,7 @@ public class RenderElf<T extends EntityElf> extends MobRenderer<T, ModelElf<T>> 
 	protected ModelElf<T> modelLeft;
 	protected ModelElf<T> modelRight;
 	
-	public RenderElf(EntityRenderDispatcher renderManagerIn, float shadowSizeIn) {
+	public RenderElf(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
 		super(renderManagerIn, new ModelElf<>(true), .25f);
 		this.modelLeft = new ModelElf<>(true);
 		this.modelRight = new ModelElf<>(false);

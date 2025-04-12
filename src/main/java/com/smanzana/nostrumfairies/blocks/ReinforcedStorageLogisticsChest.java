@@ -5,17 +5,15 @@ import com.smanzana.nostrumfairies.tiles.ReinforcedDiamondChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedGoldChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedIronChestTileEntity;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.material.Material;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.ToolType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
 
 public class ReinforcedStorageLogisticsChest extends FeyContainerBlock {
 	
@@ -36,7 +34,6 @@ public class ReinforcedStorageLogisticsChest extends FeyContainerBlock {
 		super(Block.Properties.of(Material.WOOD)
 				.strength(3.0f, 1.0f)
 				.sound(SoundType.WOOD)
-				.harvestTool(ToolType.AXE)
 				);
 		this.type = type;
 	}
@@ -53,17 +50,17 @@ public class ReinforcedStorageLogisticsChest extends FeyContainerBlock {
 		
 		return null;
 	}
-
+	
 	@Override
-	public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
+	public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
 		switch (this.type) {
 		case IRON:
 		default:
-			return new ReinforcedIronChestTileEntity();
+			return new ReinforcedIronChestTileEntity(pos, state);
 		case GOLD:
-			return new ReinforcedGoldChestTileEntity();
+			return new ReinforcedGoldChestTileEntity(pos, state);
 		case DIAMOND:
-			return new ReinforcedDiamondChestTileEntity();
+			return new ReinforcedDiamondChestTileEntity(pos, state);
 		}
 	}
 	

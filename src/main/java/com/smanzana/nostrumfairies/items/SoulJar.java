@@ -37,7 +37,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public class SoulJar extends Item implements ILoreTagged {
 	
-	public static final float ModelFilled(ItemStack stack, @Nullable Level worldIn, @Nullable LivingEntity entityIn) {
+	public static final float ModelFilled(ItemStack stack, @Nullable Level worldIn, @Nullable LivingEntity entityIn, int entID) {
 		return isFilled(stack) ? 1f : 0f;
 	}
 

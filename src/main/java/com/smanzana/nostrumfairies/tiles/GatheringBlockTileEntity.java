@@ -16,16 +16,16 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPickupItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.tile.TickableBlockEntity;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.item.ItemExpireEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
@@ -43,12 +43,12 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements Tic
 	private AABB boxCache;
 	private double radiusCache;
 	
-	public GatheringBlockTileEntity() {
-		this(10);
+	public GatheringBlockTileEntity(BlockPos pos, BlockState state) {
+		this(pos, state, 10);
 	}
 	
-	public GatheringBlockTileEntity(double blockRadius) {
-		super(FairyTileEntities.GatheringBlockTileEntityType);
+	public GatheringBlockTileEntity(BlockPos pos, BlockState state, double blockRadius) {
+		super(FairyTileEntities.GatheringBlockTileEntityType, pos, state);
 		taskMap = new HashMap<>();
 		this.radius = blockRadius;
 	}
@@ -177,8 +177,8 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements Tic
 	}
 	
 	@Override
-	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-		super.setLevelAndPosition(worldIn, pos);
+	public void setLevel(Level worldIn) {
+		super.setLevel(worldIn);
 		if (!worldIn.isClientSide) {
 			MinecraftForge.EVENT_BUS.register(this);
 		}
@@ -216,8 +216,8 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements Tic
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag compound) {
-		super.load(state, compound);
+	public void load(CompoundTag compound) {
+		super.load(compound);
 	}
 	
 	@Override

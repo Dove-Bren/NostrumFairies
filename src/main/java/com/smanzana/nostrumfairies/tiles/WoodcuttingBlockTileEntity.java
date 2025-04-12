@@ -20,17 +20,17 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskChopTree;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
+import com.smanzana.nostrummagica.tile.TickableBlockEntity;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements TickableBlockEntity,  ILogisticsTaskListener, IFeySign {
 	
@@ -40,12 +40,12 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements T
 	private Map<BlockPos, ILogisticsTask> taskMap;
 	private double radius;
 	
-	public WoodcuttingBlockTileEntity() {
-		this(16);
+	public WoodcuttingBlockTileEntity(BlockPos pos, BlockState state) {
+		this(pos, state, 16);
 	}
 	
-	public WoodcuttingBlockTileEntity(double blockRadius) {
-		super(FairyTileEntities.WoodcuttingBlockTileEntityType);
+	public WoodcuttingBlockTileEntity(BlockPos pos, BlockState state, double blockRadius) {
+		super(FairyTileEntities.WoodcuttingBlockTileEntityType, pos, state);
 		taskMap = new HashMap<>();
 		this.radius = blockRadius;
 	}
@@ -289,8 +289,8 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements T
 //		}
 	
 	@Override
-	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-		super.setLevelAndPosition(worldIn, pos);
+	public void setLevel(Level worldIn) {
+		super.setLevel(worldIn);
 //			if (!worldIn.isRemote) {
 //				MinecraftForge.TERRAIN_GEN_BUS.register(this);
 //			}
@@ -346,8 +346,8 @@ public class WoodcuttingBlockTileEntity extends LogisticsTileEntity implements T
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag compound) {
-		super.load(state, compound);
+	public void load(CompoundTag compound) {
+		super.load(compound);
 	}
 	
 	@Override

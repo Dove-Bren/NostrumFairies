@@ -1,6 +1,7 @@
 package com.smanzana.nostrumfairies.client.render.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.render.entity.ModelGnomeHat.Type;
 import com.smanzana.nostrumfairies.client.render.entity.layer.LayerGnomeHat;
@@ -9,19 +10,18 @@ import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
-import com.mojang.math.Vector3f;
+import net.minecraft.world.item.ItemStack;
 
 public class RenderGnome extends MobRenderer<EntityGnome, ModelGnome> {
 	
 	private static ResourceLocation TEXT_GNOME_1 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/gnome_1.png");
 	private static ResourceLocation TEXT_GNOME_2 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/gnome_2.png");
 	
-	public RenderGnome(EntityRenderDispatcher renderManagerIn, float shadowSizeIn) {
+	public RenderGnome(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
 		super(renderManagerIn, new ModelGnome(), .25f);
 		this.addLayer(new LayerGnomeHat(this, Type.ERECT));
 		this.addLayer(new LayerGnomeHat(this, Type.PLAIN));

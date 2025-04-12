@@ -22,20 +22,20 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskHarvest;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlantItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
+import com.smanzana.nostrummagica.tile.TickableBlockEntity;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 
 public class FarmingBlockTileEntity extends LogisticsTileEntity implements TickableBlockEntity,  ILogisticsTaskListener, IFeySign {
 
@@ -46,12 +46,12 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements Ticka
 	private final Map<BlockPos, BlockState> seenStates;
 	private double radius;
 	
-	public FarmingBlockTileEntity() {
-		this(7);
+	public FarmingBlockTileEntity(BlockPos pos, BlockState state) {
+		this(pos, state, 7);
 	}
 	
-	public FarmingBlockTileEntity(double blockRadius) {
-		super(FairyTileEntities.FarmingBlockTileEntityType);
+	public FarmingBlockTileEntity(BlockPos pos, BlockState state, double blockRadius) {
+		super(FairyTileEntities.FarmingBlockTileEntityType, pos, state);
 		taskMap = new HashMap<>();
 		seenStates = new HashMap<>();
 		this.radius = blockRadius;
@@ -296,8 +296,8 @@ public class FarmingBlockTileEntity extends LogisticsTileEntity implements Ticka
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag compound) {
-		super.load(state, compound);
+	public void load(CompoundTag compound) {
+		super.load(compound);
 	}
 	
 	@Override

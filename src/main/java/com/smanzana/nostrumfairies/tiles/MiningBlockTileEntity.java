@@ -24,25 +24,25 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskMineBlock;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskPlaceBlock;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.tile.TickableBlockEntity;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.TorchBlock;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
-import net.minecraft.core.Direction;
-import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.TorchBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -70,12 +70,12 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements Tickab
 		protected Set<BlockPos> oreLocations;
 		protected Set<BlockPos> repairLocations;
 		
-		public MiningBlockTileEntity() {
-			this(32);
+		public MiningBlockTileEntity(BlockPos pos, BlockState state) {
+			this(pos, state, 32);
 		}
 		
-		public MiningBlockTileEntity(int blockRadius) {
-			super(FairyTileEntities.MiningBlockTileEntityType);
+		public MiningBlockTileEntity(BlockPos pos, BlockState state, int blockRadius) {
+			super(FairyTileEntities.MiningBlockTileEntityType, pos, state);
 			this.radius = blockRadius;
 			taskMap = new HashMap<>();
 			oreLocations = new HashSet<>();
@@ -986,8 +986,8 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements Tickab
 		}
 		
 		@Override
-		public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-			super.setLevelAndPosition(worldIn, pos);
+		public void setLevel(Level worldIn) {
+			super.setLevel(worldIn);
 			if (!worldIn.isClientSide) {
 				MinecraftForge.EVENT_BUS.register(this);
 			}
@@ -996,6 +996,7 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements Tickab
 				refreshRequester();
 			}
 			
+			final BlockPos pos = this.getBlockPos();
 			chunkXOffset = -((pos.getX() - radius) & 0xF); // lowest 16 values
 			chunkZOffset = -((pos.getZ() - radius) & 0xF);
 		}
@@ -1047,30 +1048,30 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements Tickab
 		}
 		
 		@Override
-		public void load(BlockState state, CompoundTag nbt) {
-			super.load(state, nbt);
+		public void load(CompoundTag nbt) {
+			super.load(nbt);
 			
 			this.oreLocations.clear();
 			this.repairLocations.clear();
 			if (level != null && level.isClientSide) {
-				ListTag list = nbt.getList(NBT_ORES, NBT.TAG_COMPOUND);
+				ListTag list = nbt.getList(NBT_ORES, Tag.TAG_COMPOUND);
 				for (int i = 0; i < list.size(); i++) {
 					BlockPos pos = NbtUtils.readBlockPos(list.getCompound(i));
 					oreLocations.add(pos);
 				}
-				list = nbt.getList(NBT_REPAIRS, NBT.TAG_COMPOUND);
+				list = nbt.getList(NBT_REPAIRS, Tag.TAG_COMPOUND);
 				for (int i = 0; i < list.size(); i++) {
 					BlockPos pos = NbtUtils.readBlockPos(list.getCompound(i));
 					repairLocations.add(pos);
 				}
 				this.taskMap.clear();
-				list = nbt.getList("paths", NBT.TAG_COMPOUND);
+				list = nbt.getList("paths", Tag.TAG_COMPOUND);
 				for (int i = 0; i < list.size(); i++) {
 					BlockPos pos = NbtUtils.readBlockPos(list.getCompound(i));
 					taskMap.put(pos, null);
 				}
 			} else {
-				ListTag list = nbt.getList(NBT_BEACONS, NBT.TAG_COMPOUND);
+				ListTag list = nbt.getList(NBT_BEACONS, Tag.TAG_COMPOUND);
 				for (int i = 0; i < list.size(); i++) {
 					BlockPos pos = NbtUtils.readBlockPos(list.getCompound(i));
 					beacons.add(pos);

@@ -10,22 +10,22 @@ import com.smanzana.nostrumfairies.effect.FeyEffects;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.tiles.LogisticsTileEntity;
+import com.smanzana.nostrummagica.client.render.tile.BlockEntityRendererBase;
 import com.smanzana.nostrummagica.util.Curves;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity> extends BlockEntityRenderer<T> {
+public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity> extends BlockEntityRendererBase<T> {
 
-	public TileEntityLogisticsRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
+	public TileEntityLogisticsRenderer(BlockEntityRendererProvider.Context rendererDispatcherIn) {
 		super(rendererDispatcherIn);
 	}
 	

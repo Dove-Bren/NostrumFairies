@@ -3,17 +3,17 @@ package com.smanzana.nostrumfairies.client.render.entity;
 import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
-import com.mojang.math.Vector3f;
+import net.minecraft.world.item.ItemStack;
 
 public class RenderFairy extends MobRenderer<EntityFairy, ModelFairy> {
 	
@@ -24,7 +24,7 @@ public class RenderFairy extends MobRenderer<EntityFairy, ModelFairy> {
 //			"textures/entity/fairy_wing.png"
 //			);
 	
-	public RenderFairy(EntityRenderDispatcher renderManagerIn, float shadowSizeIn) {
+	public RenderFairy(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
 		super(renderManagerIn, new ModelFairy(), .05f);
 	}
 

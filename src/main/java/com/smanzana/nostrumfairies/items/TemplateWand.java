@@ -68,7 +68,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 		SPAWN
 	}
 	
-	public static final float ModelMode(ItemStack stack, @Nullable Level worldIn, @Nullable LivingEntity entityIn) {
+	public static final float ModelMode(ItemStack stack, @Nullable Level worldIn, @Nullable LivingEntity entityIn, int entID) {
 		final WandMode mode = GetWandMode(stack);
 		float val = 0.0F;
 		if (mode != null) {

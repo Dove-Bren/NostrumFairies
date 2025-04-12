@@ -5,12 +5,15 @@ import java.util.List;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+
 public class StorageChestTileEntity extends LogisticsChestTileEntity {
 
 	private static final int SLOTS = 27;
 	
-	public StorageChestTileEntity() {
-		super(FairyTileEntities.StorageChestTileEntityType);
+	public StorageChestTileEntity(BlockPos pos, BlockState state) {
+		super(FairyTileEntities.StorageChestTileEntityType, pos, state);
 	}
 	
 	@Override

@@ -1,14 +1,14 @@
 package com.smanzana.nostrumfairies.client.render.tile;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import com.smanzana.nostrumfairies.tiles.BuildingBlockTileEntity;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
-import com.mojang.math.Vector3f;
+import net.minecraft.world.item.ItemStack;
 
 public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEntity> {
 
@@ -24,7 +24,7 @@ public class BuildingBlockRenderer extends FeySignRenderer<BuildingBlockTileEnti
 			new Vector3f(.5f + THICCNESS,					HEIGHT - .2f, .5f - ICON_INNEROFFSETX2 - (ICON_SIZE / 2)), // E
 	};
 	
-	public BuildingBlockRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
+	public BuildingBlockRenderer(BlockEntityRendererProvider.Context rendererDispatcherIn) {
 		super(rendererDispatcherIn);
 		// TODO Auto-generated constructor stub
 	}

@@ -7,7 +7,7 @@ import com.smanzana.nostrummagica.client.model.ModelRenderShiv;
 
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -19,7 +19,7 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShi
 	protected ModelElfArcher<EntityShadowFey> modelLeft;
 	protected ModelElfArcher<EntityShadowFey> modelRight;
 	
-	public RenderShadowFey(EntityRenderDispatcher renderManagerIn, float shadowSizeIn) {
+	public RenderShadowFey(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
 		super(renderManagerIn, new ModelRenderShiv<>(RenderType::entityTranslucent), .01f);
 		this.modelLeft = new ModelElfArcher<>(true, RenderType::entityTranslucent);
 		this.modelRight = new ModelElfArcher<>(false, RenderType::entityTranslucent);

@@ -7,9 +7,9 @@ import javax.annotation.Nullable;
 
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /**

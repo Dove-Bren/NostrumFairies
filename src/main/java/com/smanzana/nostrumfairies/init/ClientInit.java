@@ -56,18 +56,17 @@ import com.smanzana.nostrumfairies.tiles.ReinforcedGoldChestTileEntity;
 import com.smanzana.nostrumfairies.tiles.ReinforcedIronChestTileEntity;
 
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.TippableArrowRenderer;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
@@ -84,27 +83,6 @@ public class ClientInit {
 
 	@SubscribeEvent
 	public static void clientSetup(FMLClientSetupEvent event) {
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.StorageMonitorTileEntityType, (manager) -> new StorageMonitorRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.StorageChestTileEntityType, (manager) -> new StorageChestRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.BufferChestTileEntityType, (manager) -> new BufferChestRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.OutputChestTileEntityType, (manager) -> new OutputChestRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.InputChestTileEntityType, (manager) -> new InputChestRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.GatheringBlockTileEntityType, (manager) -> new GatheringBlockRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.FarmingBlockTileEntityType, (manager) -> new FarmingBlockRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.PylonTileEntityType, (manager) -> new PylonRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.WoodcuttingBlockTileEntityType, (manager) -> new WoodcuttingBlockRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.MiningBlockTileEntityType, (manager) -> new MiningBlockRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.BuildingBlockTileEntityType, (manager) -> new BuildingBlockRenderer(manager));
-		StaticTESRRenderer.instance.registerRender(FairyTileEntities.TemplateBlockTileEntityType, (manager) -> new TemplateBlockRenderer(manager));
-		//ClientRegistry.bindTileEntityRenderer(FairyTileEntities.TemplateBlockTileEntityType, (manager) -> new TemplateBlockRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.CraftingBlockDwarfTileEntityType, (manager) -> new CraftingBlockDwarfRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.CraftingBlockElfTileEntityType, (manager) -> new CraftingBlockElfRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.CraftingBlockGnomeTileEntityType, (manager) -> new CraftingBlockGnomeRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.LogisticsSensorTileEntityType, (manager) -> new LogisticsSensorRenderer(manager));
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.ReinforcedIronChestTileEntityType, (manager) -> new TileEntityLogisticsRenderer<ReinforcedIronChestTileEntity>(manager) {});
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.ReinforcedGoldChestTileEntityType, (manager) -> new TileEntityLogisticsRenderer<ReinforcedGoldChestTileEntity>(manager) {});
-		ClientRegistry.bindTileEntityRenderer(FairyTileEntities.ReinforcedDiamondChestTileEntityType, (manager) -> new TileEntityLogisticsRenderer<ReinforcedDiamondChestTileEntity>(manager) {});
-		
 		MenuScreens.register(FairyContainers.BufferChest, BufferChestGui.BufferChestGuiContainer::new);
 		MenuScreens.register(FairyContainers.BuildingBlock, BuildingBlockGui.BuildingBlockGuiContainer::new);
 		MenuScreens.register(FairyContainers.CraftingStation, CraftingStationGui.CraftingStationGuiContainer::new);
@@ -119,7 +97,6 @@ public class ClientInit {
 		MenuScreens.register(FairyContainers.TemplateWand, TemplateWandGui.TemplateWandGuiContainer::new);
 		
 		registerBlockRenderLayer();
-		registerEntityRenderers();
 		
 		event.enqueueWork(ClientInit::registerItemModelProperties);
 
@@ -170,21 +147,46 @@ public class ClientInit {
 		ItemBlockRenderTypes.setRenderLayer(FairyBlocks.woodcuttingBlock, RenderType.cutout());
 	}
 	
-	private static final void registerEntityRenderers() {
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.TestFairy, (manager) -> new RenderTestFairy(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.Fairy, (manager) -> new RenderFairy(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.PersonalFairy, (manager) -> new RenderFairy(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.Dwarf, (manager) -> new RenderDwarf<>(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.Elf, (manager) -> new RenderElf<>(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.Gnome, (manager) -> new RenderGnome(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.ElfArcher, (manager) -> new RenderElfArcher(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.ShadowFey, (manager) -> new RenderShadowFey(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.ElfCrafter, (manager) -> new RenderElfCrafter(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.DwarfCrafter, (manager) -> new RenderDwarfCrafter(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.DwarfBuilder, (manager) -> new RenderDwarfBuilder(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.GnomeCrafter, (manager) -> new RenderGnome(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.GnomeCollector, (manager) -> new RenderGnome(manager, 1.0f));
-		RenderingRegistry.registerEntityRenderingHandler(FairyEntities.ArrowEx, (manager) -> new TippableArrowRenderer(manager));
+	@SubscribeEvent
+	public static final void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+		event.registerEntityRenderer(FairyEntities.TestFairy, (manager) -> new RenderTestFairy(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.Fairy, (manager) -> new RenderFairy(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.PersonalFairy, (manager) -> new RenderFairy(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.Dwarf, (manager) -> new RenderDwarf<>(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.Elf, (manager) -> new RenderElf<>(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.Gnome, (manager) -> new RenderGnome(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.ElfArcher, (manager) -> new RenderElfArcher(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.ShadowFey, (manager) -> new RenderShadowFey(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.ElfCrafter, (manager) -> new RenderElfCrafter(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.DwarfCrafter, (manager) -> new RenderDwarfCrafter(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.DwarfBuilder, (manager) -> new RenderDwarfBuilder(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.GnomeCrafter, (manager) -> new RenderGnome(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.GnomeCollector, (manager) -> new RenderGnome(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.ArrowEx, (manager) -> new TippableArrowRenderer(manager));
+	}
+	
+	@SubscribeEvent
+	public static final void registerTileEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+		event.registerBlockEntityRenderer(FairyTileEntities.StorageMonitorTileEntityType, StorageMonitorRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.StorageChestTileEntityType, StorageChestRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.BufferChestTileEntityType, BufferChestRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.OutputChestTileEntityType, OutputChestRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.InputChestTileEntityType, InputChestRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.GatheringBlockTileEntityType, GatheringBlockRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.FarmingBlockTileEntityType, FarmingBlockRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.PylonTileEntityType, PylonRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.WoodcuttingBlockTileEntityType, WoodcuttingBlockRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.MiningBlockTileEntityType, MiningBlockRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.BuildingBlockTileEntityType, BuildingBlockRenderer::new);
+		StaticTESRRenderer.instance.registerRender(FairyTileEntities.TemplateBlockTileEntityType, TemplateBlockRenderer::new);
+		//event.registerBlockEntityRenderer(FairyTileEntities.TemplateBlockTileEntityType, TemplateBlockRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.CraftingBlockDwarfTileEntityType, CraftingBlockDwarfRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.CraftingBlockElfTileEntityType, CraftingBlockElfRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.CraftingBlockGnomeTileEntityType, CraftingBlockGnomeRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.LogisticsSensorTileEntityType, LogisticsSensorRenderer::new);
+		event.registerBlockEntityRenderer(FairyTileEntities.ReinforcedIronChestTileEntityType, (manager) -> new TileEntityLogisticsRenderer<ReinforcedIronChestTileEntity>(manager) {});
+		event.registerBlockEntityRenderer(FairyTileEntities.ReinforcedGoldChestTileEntityType, (manager) -> new TileEntityLogisticsRenderer<ReinforcedGoldChestTileEntity>(manager) {});
+		event.registerBlockEntityRenderer(FairyTileEntities.ReinforcedDiamondChestTileEntityType, (manager) -> new TileEntityLogisticsRenderer<ReinforcedDiamondChestTileEntity>(manager) {});
 	}
 	
 	@SubscribeEvent

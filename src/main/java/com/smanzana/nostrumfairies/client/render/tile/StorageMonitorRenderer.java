@@ -2,11 +2,11 @@ package com.smanzana.nostrumfairies.client.render.tile;
 
 import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 
 public class StorageMonitorRenderer extends TileEntityLogisticsRenderer<StorageMonitorTileEntity> {
 
-	public StorageMonitorRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
+	public StorageMonitorRenderer(BlockEntityRendererProvider.Context rendererDispatcherIn) {
 		super(rendererDispatcherIn);
 	}
 	

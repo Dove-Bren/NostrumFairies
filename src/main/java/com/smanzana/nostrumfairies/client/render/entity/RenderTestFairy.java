@@ -5,13 +5,13 @@ import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 import com.smanzana.nostrummagica.NostrumMagica;
 
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 public class RenderTestFairy extends MobRenderer<EntityTestFairy, ModelTestFairy> {
 
-	public RenderTestFairy(EntityRenderDispatcher renderManagerIn, float shadowSizeIn) {
+	public RenderTestFairy(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
 		super(renderManagerIn, new ModelTestFairy(), shadowSizeIn);
 	}
 

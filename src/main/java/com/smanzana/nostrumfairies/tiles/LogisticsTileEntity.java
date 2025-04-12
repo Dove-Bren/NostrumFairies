@@ -15,20 +15,20 @@ import com.smanzana.nostrumfairies.logistics.LogisticsComponentRegistry.ILogisti
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class LogisticsTileEntity extends BlockEntity {
 
@@ -37,8 +37,8 @@ public abstract class LogisticsTileEntity extends BlockEntity {
 	protected static final List<ItemStack> emptyList = new ArrayList<>(1);
 	protected LogisticsTileEntityComponent networkComponent;
 	
-	public LogisticsTileEntity(BlockEntityType<? extends LogisticsTileEntity> type) {
-		super(type);
+	public LogisticsTileEntity(BlockEntityType<? extends LogisticsTileEntity> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
 	}
 	
 	@Override
@@ -54,7 +54,7 @@ public abstract class LogisticsTileEntity extends BlockEntity {
 	@Override
 	public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
 		super.onDataPacket(net, pkt);
-		handleUpdateTag(this.getBlockState(), pkt.getTag());
+		handleUpdateTag(pkt.getTag());
 	}
 	
 	@Override
@@ -71,8 +71,8 @@ public abstract class LogisticsTileEntity extends BlockEntity {
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag nbt) {
-		super.load(state, nbt);
+	public void load(CompoundTag nbt) {
+		super.load(nbt);
 		// Load in network UUID, so clients can hook things back up to fake network devices
 		if (nbt.hasUUID(NBT_NETWORK_COMP_UUID)) {
 //			UUID oldID = networkID;
@@ -117,8 +117,8 @@ public abstract class LogisticsTileEntity extends BlockEntity {
 	}
 	
     @Override
-    public void clearCache() {
-    	super.clearCache();
+    public void onLoad() {
+    	super.onLoad();
     	if (/*!world.isRemote && */ this.networkComponent == null) {
     		setNetworkComponent(makeNetworkComponent());
     		if (!level.isClientSide) {
@@ -128,8 +128,8 @@ public abstract class LogisticsTileEntity extends BlockEntity {
 	}
 
     @Override
-    public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-    	super.setLevelAndPosition(worldIn, pos);
+    public void setLevel(Level worldIn) {
+    	super.setLevel(worldIn);
     }
 
     @Override

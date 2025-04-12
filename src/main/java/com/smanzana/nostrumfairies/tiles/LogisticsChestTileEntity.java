@@ -10,15 +10,16 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.core.NonNullList;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class LogisticsChestTileEntity extends LogisticsTileEntity implements Container {
 
@@ -26,8 +27,8 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	
 	private NonNullList<ItemStack> slots;
 	
-	public LogisticsChestTileEntity(BlockEntityType<? extends LogisticsChestTileEntity> type) {
-		super(type);
+	public LogisticsChestTileEntity(BlockEntityType<? extends LogisticsChestTileEntity> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
 		slots = NonNullList.withSize(getContainerSize(), ItemStack.EMPTY);
 	}
 	
@@ -163,8 +164,8 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag nbt) {
-		if (nbt == null || !nbt.contains(NBT_INV, NBT.TAG_COMPOUND))
+	public void load(CompoundTag nbt) {
+		if (nbt == null || !nbt.contains(NBT_INV, Tag.TAG_COMPOUND))
 			return;
 		
 		this.clearContent();
@@ -182,7 +183,7 @@ public abstract class LogisticsChestTileEntity extends LogisticsTileEntity imple
 			this.setItem(id, stack);
 		}
 
-		super.load(state, nbt);
+		super.load(nbt);
 	}
 	
 	@Override

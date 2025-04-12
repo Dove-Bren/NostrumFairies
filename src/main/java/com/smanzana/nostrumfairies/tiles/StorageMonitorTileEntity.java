@@ -11,15 +11,15 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.core.NonNullList;
-import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILogisticsTaskListener {
 
@@ -28,8 +28,8 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	private LogisticsItemWithdrawRequester requester;
 	private NonNullList<ItemStack> requests;
 
-	public StorageMonitorTileEntity() {
-		super(FairyTileEntities.StorageMonitorTileEntityType);
+	public StorageMonitorTileEntity(BlockPos pos, BlockState state) {
+		super(FairyTileEntities.StorageMonitorTileEntityType, pos, state);
 		requests = NonNullList.create();
 	}
 	
@@ -72,8 +72,8 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-		super.setLevelAndPosition(worldIn, pos);
+	public void setLevel(Level worldIn) {
+		super.setLevel(worldIn);
 		
 		if (this.networkComponent != null && !worldIn.isClientSide && requester == null) {
 			makeRequester();
@@ -188,11 +188,11 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag nbt) {
-		super.load(state, nbt);
+	public void load(CompoundTag nbt) {
+		super.load(nbt);
 		
 		requests.clear();
-		ListTag list = nbt.getList(NBT_REQUESTS, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_REQUESTS, Tag.TAG_COMPOUND);
 		if (list != null && list.size() > 0) {
 			for (int i = 0; i < list.size(); i++) {
 				CompoundTag tag = list.getCompound(i);

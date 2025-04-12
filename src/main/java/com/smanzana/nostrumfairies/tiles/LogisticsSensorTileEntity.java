@@ -3,13 +3,13 @@ package com.smanzana.nostrumfairies.tiles;
 import com.smanzana.nostrumfairies.blocks.FairyBlocks;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
+import com.smanzana.nostrummagica.tile.TickableBlockEntity;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
-import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class LogisticsSensorTileEntity extends LogisticsTileEntity implements TickableBlockEntity, ILogicListener, ILogisticsLogicProvider {
 	
@@ -21,8 +21,8 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements Ti
 	
 	private boolean placed = false;
 	
-	public LogisticsSensorTileEntity() {
-		super(FairyTileEntities.LogisticsSensorTileEntityType);
+	public LogisticsSensorTileEntity(BlockPos pos, BlockState state) {
+		super(FairyTileEntities.LogisticsSensorTileEntityType, pos, state);
 		logicComp = new LogisticsLogicComponent(true, this);
 	}
 	
@@ -38,8 +38,8 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements Ti
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag nbt) {
-		super.load(state, nbt);
+	public void load(CompoundTag nbt) {
+		super.load(nbt);
 		
 		CompoundTag sub = nbt.getCompound(NBT_LOGIC_COMP);
 		if (sub != null) {
@@ -54,10 +54,10 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements Ti
 	}
 	
 	@Override
-	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-		super.setLevelAndPosition(worldIn, pos);
+	public void setLevel(Level worldIn) {
+		super.setLevel(worldIn);
 		
-		logicComp.setLocation(worldIn, pos);
+		logicComp.setLocation(worldIn, this.getBlockPos());
 	}
 	
 	@Override

@@ -24,25 +24,25 @@ import com.smanzana.nostrumfairies.logistics.task.ILogisticsTaskListener;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWorkBlock;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.tile.TickableBlockEntity;
 import com.smanzana.nostrummagica.util.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.core.NonNullList;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 											implements ILogisticsTaskListener, TickableBlockEntity, ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
@@ -77,8 +77,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	
 	private boolean placed = false;
 	
-	public CraftingBlockTileEntity(BlockEntityType<? extends CraftingBlockTileEntity> type) {
-		super(type);
+	public CraftingBlockTileEntity(BlockEntityType<? extends CraftingBlockTileEntity> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
 		this.TEMPLATE_SLOTS = getCraftGridDim() * getCraftGridDim();
 		templates = NonNullList.withSize(TEMPLATE_SLOTS, ItemStack.EMPTY);
 		recipeDirty = true;
@@ -382,11 +382,11 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag nbt) {
+	public void load(CompoundTag nbt) {
 		templates = NonNullList.withSize(TEMPLATE_SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
-		ListTag list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_TEMPLATES, Tag.TAG_COMPOUND);
 		for (int i = 0; i < list.size(); i++) {
 			CompoundTag template = list.getCompound(i);
 			int index = template.getInt(NBT_TEMPLATE_INDEX);
@@ -409,7 +409,7 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		this.buildPoints = nbt.getFloat(NBT_BUILD_POINTS);
 		
 		// Do super afterwards so taht we have templates already
-		super.load(state, nbt);
+		super.load(nbt);
 		
 		this.recipeDirty = true;
 		this.ingredientsDirty = true;
@@ -430,9 +430,9 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-		super.setLevelAndPosition(worldIn, pos);
-		logicComp.setLocation(worldIn, pos);
+	public void setLevel(Level worldIn) {
+		super.setLevel(worldIn);
+		logicComp.setLocation(worldIn, this.getBlockPos());
 		
 		if (this.networkComponent != null && !worldIn.isClientSide) {
 			if (withdrawRequester == null) {

@@ -11,14 +11,14 @@ import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawReq
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.core.NonNullList;
-import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class BufferChestTileEntity extends LogisticsChestTileEntity {
 
@@ -30,8 +30,8 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	private NonNullList<ItemStack> templates;
 	private LogisticsItemWithdrawRequester requester;
 	
-	public BufferChestTileEntity() {
-		super(FairyTileEntities.BufferChestTileEntityType);
+	public BufferChestTileEntity(BlockPos pos, BlockState state) {
+		super(FairyTileEntities.BufferChestTileEntityType, pos, state);
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 	}
 	
@@ -112,11 +112,11 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag nbt) {
+	public void load(CompoundTag nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
-		ListTag list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_TEMPLATES, Tag.TAG_COMPOUND);
 		for (int i = 0; i < list.size(); i++) {
 			CompoundTag template = list.getCompound(i);
 			int index = template.getInt(NBT_TEMPLATE_INDEX);
@@ -132,7 +132,7 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 		}
 		
 		// Do super afterwards so taht we ahve templates already
-		super.load(state, nbt);
+		super.load(nbt);
 	}
 	
 	@Override
@@ -146,8 +146,8 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-		super.setLevelAndPosition(worldIn, pos);
+	public void setLevel(Level worldIn) {
+		super.setLevel(worldIn);
 		
 		if (this.networkComponent != null && !worldIn.isClientSide && requester == null) {
 			requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), false, this.networkComponent);

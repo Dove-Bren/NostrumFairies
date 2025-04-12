@@ -23,16 +23,16 @@ import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskBuildBlock;
 import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
+import com.smanzana.nostrummagica.tile.TickableBlockEntity;
 
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -47,12 +47,12 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements Tick
 	private ItemStack slot = ItemStack.EMPTY;
 	private int scanCounter;
 	
-	public BuildingBlockTileEntity() {
-		this(16);
+	public BuildingBlockTileEntity(BlockPos pos, BlockState state) {
+		this(16, pos, state);
 	}
 	
-	public BuildingBlockTileEntity(double blockRadius) {
-		super(FairyTileEntities.BuildingBlockTileEntityType);
+	public BuildingBlockTileEntity(double blockRadius, BlockPos pos, BlockState state) {
+		super(FairyTileEntities.BuildingBlockTileEntityType, pos, state);
 		taskMap = new HashMap<>();
 		this.radius = blockRadius;
 		
@@ -271,8 +271,8 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements Tick
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag nbt) {
-		super.load(state, nbt);
+	public void load(CompoundTag nbt) {
+		super.load(nbt);
 		
 		this.slot = ItemStack.of(nbt.getCompound(NBT_SLOT));
 	}

@@ -17,23 +17,23 @@ import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawReq
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskWithdrawItem;
 import com.smanzana.nostrumfairies.tiles.LogisticsLogicComponent.ILogicListener;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
+import com.smanzana.nostrummagica.tile.TickableBlockEntity;
 import com.smanzana.nostrummagica.util.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.Container;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
@@ -50,8 +50,8 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements Tickab
 	private int ticksExisted; // Not persisted
 	private final LogisticsLogicComponent logicComp;
 	
-	public OutputPanelTileEntity() {
-		super(FairyTileEntities.OutputPanelTileEntityType);
+	public OutputPanelTileEntity(BlockPos pos, BlockState state) {
+		super(FairyTileEntities.OutputPanelTileEntityType, pos, state);
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		logicComp = new LogisticsLogicComponent(false, this);
 	}
@@ -139,11 +139,11 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements Tickab
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag nbt) {
+	public void load(CompoundTag nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
-		ListTag list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_TEMPLATES, Tag.TAG_COMPOUND);
 		for (int i = 0; i < list.size(); i++) {
 			CompoundTag template = list.getCompound(i);
 			int index = template.getInt(NBT_TEMPLATE_INDEX);
@@ -164,7 +164,7 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements Tickab
 		}
 		
 		// Do super afterwards so taht we have templates already
-		super.load(state, nbt);
+		super.load(nbt);
 	}
 	
 	protected LogisticsItemWithdrawRequester makeRequester(LogisticsNetwork network, LogisticsTileEntityComponent networkComponent) {
@@ -197,9 +197,9 @@ public class OutputPanelTileEntity extends LogisticsTileEntity implements Tickab
 	}
 	
 	@Override
-	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-		super.setLevelAndPosition(worldIn, pos);
-		logicComp.setLocation(worldIn, pos);
+	public void setLevel(Level worldIn) {
+		super.setLevel(worldIn);
+		logicComp.setLocation(worldIn, this.getBlockPos());
 		
 		if (this.networkComponent != null && !worldIn.isClientSide && requester == null) {
 			requester = makeRequester(this.networkComponent.getNetwork(), this.networkComponent);

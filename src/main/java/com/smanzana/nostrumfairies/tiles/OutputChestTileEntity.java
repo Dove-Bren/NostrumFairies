@@ -15,14 +15,14 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.util.ContainerUtil.IAutoContainerInventory;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.core.NonNullList;
-import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class OutputChestTileEntity extends LogisticsChestTileEntity implements ILogisticsLogicProvider, ILogicListener, IAutoContainerInventory {
 
@@ -36,8 +36,8 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	private LogisticsItemWithdrawRequester requester;
 	private final LogisticsLogicComponent logicComp;
 	
-	public OutputChestTileEntity() {
-		super(FairyTileEntities.OutputChestTileEntityType);
+	public OutputChestTileEntity(BlockPos pos, BlockState state) {
+		super(FairyTileEntities.OutputChestTileEntityType, pos, state);
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		logicComp = new LogisticsLogicComponent(false, this);
 	}
@@ -143,11 +143,11 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public void load(BlockState state, CompoundTag nbt) {
+	public void load(CompoundTag nbt) {
 		templates = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
 		
 		// Reload templates
-		ListTag list = nbt.getList(NBT_TEMPLATES, NBT.TAG_COMPOUND);
+		ListTag list = nbt.getList(NBT_TEMPLATES, Tag.TAG_COMPOUND);
 		for (int i = 0; i < list.size(); i++) {
 			CompoundTag template = list.getCompound(i);
 			int index = template.getInt(NBT_TEMPLATE_INDEX);
@@ -168,7 +168,7 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 		}
 		
 		// Do super afterwards so taht we have templates already
-		super.load(state, nbt);
+		super.load(nbt);
 	}
 	
 	@Override
@@ -183,9 +183,9 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-		super.setLevelAndPosition(worldIn, pos);
-		logicComp.setLocation(worldIn, pos);
+	public void setLevel(Level worldIn) {
+		super.setLevel(worldIn);
+		logicComp.setLocation(worldIn, this.getBlockPos());
 		
 		if (this.networkComponent != null && !worldIn.isClientSide && requester == null) {
 			requester = new LogisticsItemWithdrawRequester(this.networkComponent.getNetwork(), true, this.networkComponent);

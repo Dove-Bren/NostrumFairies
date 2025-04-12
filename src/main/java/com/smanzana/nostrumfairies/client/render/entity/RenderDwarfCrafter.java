@@ -7,7 +7,7 @@ import com.smanzana.nostrumfairies.client.render.entity.layer.LayerDwarfBeard;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfCrafter;
 
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
@@ -18,7 +18,7 @@ public class RenderDwarfCrafter extends MobRenderer<EntityDwarfCrafter, ModelCra
 	protected ModelCraftingDwarf modelLeft;
 	protected ModelCraftingDwarf modelRight;
 	
-	public RenderDwarfCrafter(EntityRenderDispatcher renderManagerIn, float shadowSizeIn) {
+	public RenderDwarfCrafter(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
 		super(renderManagerIn, new ModelCraftingDwarf(true), .25f);
 		this.modelLeft = new ModelCraftingDwarf(true);
 		this.modelRight = new ModelCraftingDwarf(false);

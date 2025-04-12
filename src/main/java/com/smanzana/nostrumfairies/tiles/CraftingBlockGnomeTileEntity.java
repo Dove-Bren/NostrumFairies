@@ -2,13 +2,15 @@ package com.smanzana.nostrumfairies.tiles;
 
 import com.smanzana.nostrumfairies.NostrumFairies;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class CraftingBlockGnomeTileEntity extends CraftingBlockTileEntity {
 
-	public CraftingBlockGnomeTileEntity() {
-		super(FairyTileEntities.CraftingBlockGnomeTileEntityType);
+	public CraftingBlockGnomeTileEntity(BlockPos pos, BlockState state) {
+		super(FairyTileEntities.CraftingBlockGnomeTileEntityType, pos, state);
 	}
 
 	@Override

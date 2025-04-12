@@ -9,9 +9,10 @@ import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositRequ
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class InputChestTileEntity extends LogisticsChestTileEntity {
 
@@ -19,8 +20,8 @@ public class InputChestTileEntity extends LogisticsChestTileEntity {
 	
 	private LogisticsItemDepositRequester requester;
 	
-	public InputChestTileEntity() {
-		super(FairyTileEntities.InputChestTileEntityType);
+	public InputChestTileEntity(BlockPos pos, BlockState state) {
+		super(FairyTileEntities.InputChestTileEntityType, pos, state);
 	}
 	
 	@Override
@@ -60,8 +61,8 @@ public class InputChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public void setLevelAndPosition(Level worldIn, BlockPos pos) {
-		super.setLevelAndPosition(worldIn, pos);
+	public void setLevel(Level worldIn) {
+		super.setLevel(worldIn);
 		
 		if (this.networkComponent != null && !worldIn.isClientSide && requester == null) {
 			requester = new LogisticsItemDepositRequester(this.networkComponent.getNetwork(), this.networkComponent);
