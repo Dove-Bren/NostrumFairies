@@ -5,6 +5,7 @@ import javax.annotation.Nonnull;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.model.FairiesModelLayers;
 import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 import com.smanzana.nostrummagica.util.RenderFuncs;
 
@@ -25,7 +26,7 @@ public class RenderFairy extends MobRenderer<EntityFairy, ModelFairy> {
 //			);
 	
 	public RenderFairy(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
-		super(renderManagerIn, new ModelFairy(), .05f);
+		super(renderManagerIn, new ModelFairy(renderManagerIn.bakeLayer(FairiesModelLayers.Fairy)), .05f);
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.world.level.block.state.BlockState;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.level.Level;
 
 /**
@@ -49,5 +50,7 @@ public interface StaticTESR<T extends BlockEntity> {
 	 * @return
 	 */
 	public VertexFormat getRenderFormat(T tileEntity);
+
+	public RenderType getRenderType(T tileEntity);
 	
 }

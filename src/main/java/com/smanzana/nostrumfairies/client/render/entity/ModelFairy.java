@@ -6,48 +6,65 @@ import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
 
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 
 public class ModelFairy extends EntityModel<EntityFairy> {
-
-	private ModelPart body;
-	private ModelPart wingLeft;
-	private ModelPart wingLeftBack;
-	private ModelPart wingRight;
-	private ModelPart wingRightBack;
 	
-	public ModelFairy() {
-		// 16x16x16 is one block.
-		// Y starts at offset 24 and grows down
+	public static LayerDefinition createLayer() {
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition root = mesh.getRoot();
 		
-		body = new ModelPart(this, 0, 0);
-		body.setTexSize(64, 64);
-		body.setPos(0, 24 - 16, 0);
-		body.addBox(-8,0,-8, 16, 16, 16);
+		PartDefinition body =
+		root.addOrReplaceChild("body",
+				CubeListBuilder.create().addBox(-8,0,-8, 16, 16, 16),
+				PartPose.offset(0, 24 - 16, 0)
+		);
+		//body.setPos(0, 24 - 16, 0);
 		
-		wingLeft = new ModelPart(this, 0, 0); 
-		wingLeft.addBox(0, -2f, -4, 14, 4, 8);
-		wingLeft.setPos(6.5f, 5f, -2f);
+		body.addOrReplaceChild("wingLeft",
+				CubeListBuilder.create().addBox(0, -2f, -4, 14, 4, 8),
+				PartPose.offset(6.5f, 5f, -2f)
+		);
+		//wingLeft.setPos(6.5f, 5f, -2f);
 		
-		body.addChild(wingLeft);
+		body.addOrReplaceChild("wingRight",
+				CubeListBuilder.create().addBox(-14, -2, -4, 14, 4, 8),
+				PartPose.offset(-6.5f, 5f, -2f)
+		);
+		//wingRight.setPos(-6.5f, 5f, -2f);
 		
-		wingRight = new ModelPart(this, 0, 0); 
-		wingRight.addBox(-14, -2, -4, 14, 4, 8);
-		wingRight.setPos(-6.5f, 5f, -2f);
+		body.addOrReplaceChild("wingLeftBack",
+				CubeListBuilder.create().addBox(0, -2f, -4, 14, 4, 8),
+				PartPose.offset(6.5f, 11f, 2f)
+		);
+		//wingLeftBack.setPos(6.5f, 11f, 2f);
 		
-		body.addChild(wingRight);
+		body.addOrReplaceChild("wingRightBack",
+				CubeListBuilder.create().addBox(-14, -2f, -4, 14, 4, 8),
+				PartPose.offset(-6.5f, 11f, 2f)
+		);
+		//wingRightBack.setPos(-6.5f, 11f, 2f);
 		
-		wingLeftBack = new ModelPart(this, 0, 0); 
-		wingLeftBack.addBox(0, -2f, -4, 14, 4, 8);
-		wingLeftBack.setPos(6.5f, 11f, 2f);
+		return LayerDefinition.create(mesh, 64, 64);
+	}
+
+	private final ModelPart body;
+	private final ModelPart wingLeft;
+	private final ModelPart wingLeftBack;
+	private final ModelPart wingRight;
+	private final ModelPart wingRightBack;
+	
+	public ModelFairy(ModelPart root) {
+		this.body = root.getChild("body");
 		
-		body.addChild(wingLeftBack);
-		
-		
-		wingRightBack = new ModelPart(this, 0, 0); 
-		wingRightBack.addBox(-14, -2f, -4, 14, 4, 8);
-		wingRightBack.setPos(-6.5f, 11f, 2f);
-		
-		body.addChild(wingRightBack);
+		this.wingLeft = body.getChild("wingLeft");
+		this.wingLeftBack = body.getChild("wingLeftBack");
+		this.wingRight = body.getChild("wingRight");
+		this.wingRightBack = body.getChild("wingRightBack");
 	}
 	
 	@Override

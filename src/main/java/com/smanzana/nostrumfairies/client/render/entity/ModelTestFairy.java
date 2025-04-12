@@ -7,17 +7,18 @@ import com.smanzana.nostrumfairies.entity.fey.EntityTestFairy;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 
+@Deprecated
 public class ModelTestFairy extends EntityModel<EntityTestFairy> {
 
 	private ModelPart main;
 	
 	public ModelTestFairy() {
-		main = new ModelPart(this, 0, 0);
-		
-		main.setTexSize(32, 32);
-		//main.setRotationPoint(0, 20, 0);
-//		main.addBox(-10, 12, -10, 20, 20, 20);
-		main.addBox(-5,14,-5,10,10,10);
+//		main = new ModelPart(this, 0, 0);
+//		
+//		main.setTexSize(32, 32);
+//		//main.setRotationPoint(0, 20, 0);
+////		main.addBox(-10, 12, -10, 20, 20, 20);
+//		main.addBox(-5,14,-5,10,10,10);
 	}
 	
 	@Override

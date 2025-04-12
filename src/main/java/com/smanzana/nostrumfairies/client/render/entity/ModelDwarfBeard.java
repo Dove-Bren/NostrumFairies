@@ -6,38 +6,42 @@ import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
 
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 
 public class ModelDwarfBeard<T extends EntityDwarf> extends EntityModel<T> {
 	
-	public static enum Type {
-		FULL,
-		LONG,
+	public static LayerDefinition createFullLayer() {
+		MeshDefinition mesh = ModelDwarf.createMesh();
+		PartDefinition root = mesh.getRoot();
+		
+		root.addOrReplaceChild("base",
+				CubeListBuilder.create().addBox(-5, -2, -5, 10, 4, 6).addBox(-5, 2, -5, 10, 4, 6),
+				PartPose.ZERO
+		);
+		
+		return LayerDefinition.create(mesh, 32, 32);
 	}
 	
-	protected final Type type;
-
+	public static LayerDefinition createLongLayer() {
+		MeshDefinition mesh = ModelDwarf.createMesh();
+		PartDefinition root = mesh.getRoot();
+		
+		root.addOrReplaceChild("base",
+				CubeListBuilder.create().texOffs(0, 10).addBox(-3, -1, -6, 6, 3, 2).texOffs(16, 10).addBox(-2, 2, -6, 4, 4, 2),
+				PartPose.ZERO
+		);
+		
+		return LayerDefinition.create(mesh, 32, 32);
+	}
+	
 	private ModelPart base;
 	
-	public ModelDwarfBeard(Type type) {
-		// 16x16x16 is one block.
-		// Y starts at offset 24 and grows down
-		
-		this.type = type;
-		switch (type) {
-		case FULL:
-			base = new ModelPart(this, 0, 0);
-			base.setTexSize(32, 32);
-			base.addBox(-5, -2, -5, 10, 4, 6);
-			base.addBox(-5, 2, -5, 10, 4, 6);
-			break;
-		case LONG:
-			base = new ModelPart(this, 0, 10);
-			base.setTexSize(32, 32);
-			base.addBox(-3, -1, -6, 6, 3, 2);
-			base.texOffs(16,  10);
-			base.addBox(-2, 2, -6, 4, 4, 2);
-			break;
-		}
+	public ModelDwarfBeard(ModelPart root) {
+		this.base = root.getChild("base");
 	}
 	
 	@Override

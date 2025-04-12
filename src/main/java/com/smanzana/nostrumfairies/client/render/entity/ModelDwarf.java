@@ -7,130 +7,107 @@ import com.smanzana.nostrumfairies.serializers.ArmPoseDwarf;
 
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.util.Mth;
 
-public class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
-
-	private OffsetModelRenderer body;
-	private OffsetModelRenderer head;
-	private OffsetModelRenderer legLeft;
-	private OffsetModelRenderer legRight;
-	private OffsetModelRenderer armLeft;
-	private OffsetModelRenderer armRight;
+public abstract class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 	
-	private OffsetModelRenderer heldMain;
-	private OffsetModelRenderer heldOff;
+	protected static LayerDefinition createLayer() {
+		return LayerDefinition.create(createMesh(), 128, 64);
+	}
+	
+	protected static MeshDefinition createMesh() {
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition root = mesh.getRoot();
+		
+		PartDefinition body =
+		root.addOrReplaceChild("body",
+				CubeListBuilder.create().texOffs(0, 0).addBox(-7, -9, -4, 14, 18, 8),
+				PartPose.offset(0, 11, 0)
+		);
+		
+		body.addOrReplaceChild("head",
+				CubeListBuilder.create().texOffs(44, 0).addBox(-4, -8, -4, 8, 8, 8)
+					.texOffs(44, 16).addBox(4, -6, -1, 1, 2, 1)
+					.texOffs(44, 16).addBox(-5, -6, -1, 1, 2, 1),
+				PartPose.offset(0, -9f/16f, 0)
+		);
+		//head.offsetY = (-9f / 16f);
+		
+		body.addOrReplaceChild("legLeft",
+				CubeListBuilder.create().texOffs(0, 41).addBox(-2.5f, 0, -3, 5, 8, 6),
+				PartPose.offset((3f / 16f), (5f / 16f), 0)
+		);
+		//legLeft.offsetY = (5f / 16f);
+		//legLeft.offsetX = (3f / 16f);
+		
+		body.addOrReplaceChild("legRight",
+				CubeListBuilder.create().texOffs(0, 41).addBox(-2.5f, 0, -3, 5, 8, 6, true),
+				PartPose.offset((-3f / 16f), (5f / 16f), 0)
+		);
+//		legRight.offsetY = (5f / 16f);
+//		legRight.offsetX = (-3f / 16f);
+		
+		body.addOrReplaceChild("armLeft",
+				CubeListBuilder.create().texOffs(0, 26).addBox(-2.5f, 0, -2.5f, 5, 10, 5),
+				PartPose.offset(((7 + 2.5f) / 16f), (-7f / 16f), 0)
+		);
+//		armLeft.offsetY = (-7f / 16f);
+//		armLeft.offsetX = ((7 + 2.5f) / 16f);
+		
+		body.addOrReplaceChild("",
+				CubeListBuilder.create().texOffs(0, 26).addBox(-2.5f, 0, -2.5f, 5, 10, 5, true),
+				PartPose.offset((-(7 + 2.5f) / 16f), (-7f / 16f), 0)
+		);
+//		armRight.offsetY = (-7f / 16f);
+//		armRight.offsetX = (-(7 + 2.5f) / 16f);
+		
+		return mesh;
+	}
+
+	private ModelPart body;
+	private ModelPart head;
+	private ModelPart legLeft;
+	private ModelPart legRight;
+	private ModelPart armLeft;
+	private ModelPart armRight;
+	
+//	private OffsetModelRenderer heldMain;
+//	private OffsetModelRenderer heldOff;
 	
 	//private ModelRenderer pick;
 	
-	public ModelDwarf(boolean leftHanded) {
-		// 16x16x16 is one block.
-		// Y starts at offset 24 and grows down
-		final int textW = 128;
-		final int textH = 64;
+	public ModelDwarf(ModelPart root) {
+		body = root.getChild("body");
+		head = body.getChild("head");
+		legLeft = body.getChild("legLeft");
+		legRight = body.getChild("legRight");
+		armLeft = body.getChild("armLeft");
+		armRight = body.getChild("armRight");
 		
-		body = new OffsetModelRenderer(this, 0, 0);
-		body.setTexSize(textW, textH);
-		body.setPos(0, 11, 0);
-		body.addBox(-7, -9, -4, 14, 18, 8);
+//		heldMain = createHeldItem(true);
+//		heldOff = createHeldItem(false);
+//		
+//		if (leftHanded) {
+//			if (heldMain != null) {
+//				armLeft.addChild(heldMain);
+//			}
+//			if (heldOff != null) {
+//				armRight.addChild(heldOff);
+//			}
+//		} else {
+//			if (heldMain != null) {
+//				armRight.addChild(heldMain);
+//			}
+//			if (heldOff != null) {
+//				armLeft.addChild(heldOff);
+//			}
+//		}
 		
-		head = new OffsetModelRenderer(this, 44, 0);
-		head.setTexSize(textW, textH);
-		head.setPos(0, 0, 0);
-		head.addBox(-4, -8, -4, 8, 8, 8);
-		head.texOffs(44, 16);
-		head.addBox(4, -6, -1, 1, 2, 1);
-		head.texOffs(44, 16);
-		head.addBox(-5, -6, -1, 1, 2, 1);
-		head.offsetY = (-9f / 16f);
-		body.addChild(head);
-		
-		legLeft = new OffsetModelRenderer(this, 0, 41);
-		legLeft.setTexSize(textW, textH);
-		legLeft.setPos(0, 0, 0);
-		legLeft.addBox(-2.5f, 0, -3, 5, 8, 6);
-		legLeft.offsetY = (5f / 16f);
-		legLeft.offsetX = (3f / 16f);
-		body.addChild(legLeft);
-
-		legRight = new OffsetModelRenderer(this, 0, 41);
-		legRight.mirror = true;
-		legRight.setTexSize(textW, textH);
-		legRight.setPos(0, 0, 0);
-		legRight.addBox(-2.5f, 0, -3, 5, 8, 6);
-		legRight.offsetY = (5f / 16f);
-		legRight.offsetX = (-3f / 16f);
-		body.addChild(legRight);
-		
-		armLeft = new OffsetModelRenderer(this, 0, 26);
-		armLeft.setTexSize(textW, textH);
-		armLeft.setPos(0, 0, 0);
-		armLeft.addBox(-2.5f, 0, -2.5f, 5, 10, 5);
-		armLeft.offsetY = (-7f / 16f);
-		armLeft.offsetX = ((7 + 2.5f) / 16f);
-		body.addChild(armLeft);
-		
-		armRight = new OffsetModelRenderer(this, 0, 26);
-		armRight.mirror = true;
-		armRight.setTexSize(textW, textH);
-		armRight.setPos(0, 0, 0);
-		armRight.addBox(-2.5f, 0, -2.5f, 5, 10, 5);
-		armRight.offsetY = (-7f / 16f);
-		armRight.offsetX = (-(7 + 2.5f) / 16f);
-		body.addChild(armRight);
-		
-		heldMain = createHeldItem(true);
-		heldOff = createHeldItem(false);
-		
-		if (leftHanded) {
-			if (heldMain != null) {
-				armLeft.addChild(heldMain);
-			}
-			if (heldOff != null) {
-				armRight.addChild(heldOff);
-			}
-		} else {
-			if (heldMain != null) {
-				armRight.addChild(heldMain);
-			}
-			if (heldOff != null) {
-				armLeft.addChild(heldOff);
-			}
-		}
-		
-	}
-	
-	protected OffsetModelRenderer createPickaxe() {
-		final int textW = 128;
-		final int textH = 64;
-		
-		OffsetModelRenderer pick = new OffsetModelRenderer(this, 84, 0);
-		pick.setTexSize(textW, textH);
-		pick.setPos(-0.5f, 0, -0.5f);
-		pick.addBox(0, -14, 0, 1, 14, 1);
-		pick.texOffs(99, 5);
-		pick.addBox(-1, -15, -.5f, 3, 1, 2);
-		pick.texOffs(95, 2);
-		pick.addBox(-3, -16, -.5f, 7, 1, 2);
-		pick.texOffs(98, 0);
-		pick.addBox(-2, -17, 0, 5, 1, 1);
-		pick.texOffs(91, 5);
-		pick.addBox(3, -15, 0, 2, 1, 1);
-		pick.texOffs(111, 5);
-		pick.addBox(-4, -15, 0, 2, 1, 1);
-		pick.offsetY = (9f / 16f); // height of arm, - a bit
-		
-		pick.zRot = (float) (.5 * Math.PI) - .2f;
-		pick.xRot = (float) (.5 * Math.PI);
-		return pick;
-	}
-	
-	protected OffsetModelRenderer createHeldItem(boolean mainhand) {
-		if (mainhand) {
-			return createPickaxe();
-		}
-		
-		return null;
 	}
 	
 	@Override

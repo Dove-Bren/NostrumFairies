@@ -4,12 +4,19 @@ import java.util.OptionalDouble;
 
 import org.lwjgl.opengl.GL11;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
+
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
-public class FairyRenderTypes {
+public class FairyRenderTypes extends RenderType {
+
+	public FairyRenderTypes(String string, VertexFormat vertexFormat, Mode mode, int i, boolean bl, boolean bl2, Runnable runnable, Runnable runnable2) {
+		super(string, vertexFormat, mode, i, bl, bl2, runnable, runnable2);
+		throw new UnsupportedOperationException("Should not be instantiated");
+	}
 
 	public static final RenderType LOGISTICS_LINES;
 	public static final RenderType MININGBLOCK_HIGHLIGHT;
@@ -23,7 +30,6 @@ public class FairyRenderTypes {
 	
 	static {
 		
-		final RenderStateShard.TransparencyStateShard TRANSLUCENT_TRANSPARENCY = ObfuscationReflectionHelper.getPrivateValue(RenderStateShard.class, null, "TRANSLUCENT_TRANSPARENCY");
 		final RenderStateShard.CullStateShard NO_CULL = new RenderStateShard.CullStateShard(false);
 		//final RenderState.DepthTestState DEPTH_EQUAL = new RenderState.DepthTestState("==", GL11.GL_EQUAL);
 		final RenderStateShard.DepthTestStateShard NO_DEPTH = new RenderStateShard.DepthTestStateShard("none", GL11.GL_ALWAYS);
@@ -45,16 +51,17 @@ public class FairyRenderTypes {
 				.setCullState(NO_CULL)
 				.setLightmapState(NO_LIGHTING)
 				.setLineState(LINE_3)
+				.setShaderState(RENDERTYPE_LINES_SHADER)
 			.createCompositeState(false);
-		LOGISTICS_LINES = RenderType.create(Name("LogisticsLines"), DefaultVertexFormat.POSITION_COLOR_LIGHTMAP, GL11.GL_LINES, 64, glState);
+		LOGISTICS_LINES = RenderType.create(Name("LogisticsLines"), DefaultVertexFormat.POSITION_COLOR_NORMAL, VertexFormat.Mode.LINES, 64, false, false, glState);
 		
 		glState = RenderType.CompositeState.builder()
 				.setTransparencyState(TRANSLUCENT_TRANSPARENCY)
 				.setLightmapState(NO_LIGHTING)
 				.setDepthTestState(NO_DEPTH)
 			.createCompositeState(false);
-		MININGBLOCK_HIGHLIGHT = RenderType.create(Name("BlockHighlight"), DefaultVertexFormat.POSITION_COLOR, GL11.GL_QUADS, 64, glState);
-		TEMPLATE_SELECT_HIGHLIGHT_CULL = RenderType.create(Name("TemplateHighlightCull"), DefaultVertexFormat.POSITION_COLOR, GL11.GL_QUADS, 16, glState);
+		MININGBLOCK_HIGHLIGHT = RenderType.create(Name("BlockHighlight"), DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS, 64, false, false, glState);
+		TEMPLATE_SELECT_HIGHLIGHT_CULL = RenderType.create(Name("TemplateHighlightCull"), DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS, 16, false, false, glState);
 		
 		glState = RenderType.CompositeState.builder()
 				.setTransparencyState(TRANSLUCENT_TRANSPARENCY)
@@ -62,15 +69,17 @@ public class FairyRenderTypes {
 				.setDepthTestState(NO_DEPTH)
 				.setCullState(NO_CULL) // Previously only was no-cull if inside box
 			.createCompositeState(false);
-		TEMPLATE_SELECT_HIGHLIGHT = RenderType.create(Name("TemplateHighlight"), DefaultVertexFormat.POSITION_COLOR, GL11.GL_QUADS, 16, glState);
+		TEMPLATE_SELECT_HIGHLIGHT = RenderType.create(Name("TemplateHighlight"), DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS, 16, false, false, glState);
 
 		glState = RenderType.CompositeState.builder()
 				.setTransparencyState(TRANSLUCENT_TRANSPARENCY)
 				.setLightmapState(NO_LIGHTING)
 				.setLineState(LINE_3)
 				.setDepthTestState(NO_DEPTH)
+				.setShaderState(RENDERTYPE_LINES_SHADER)
 			.createCompositeState(false);
-		MININGBLOCK_OUTLINE = RenderType.create(Name("BlockHighlightOutline"), DefaultVertexFormat.POSITION_COLOR, GL11.GL_LINES, 64, glState);
+		MININGBLOCK_OUTLINE = RenderType.create(Name("BlockHighlightOutline"), DefaultVertexFormat.POSITION_COLOR_NORMAL, VertexFormat.Mode.LINES, 64, false, false, glState);
+		
 	}
 	
 }

@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.client.render.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.model.FairiesModelLayers;
 import com.smanzana.nostrumfairies.entity.fey.EntityElf;
 
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -16,10 +17,16 @@ public class RenderElf<T extends EntityElf> extends MobRenderer<T, ModelElf<T>> 
 	protected ModelElf<T> modelLeft;
 	protected ModelElf<T> modelRight;
 	
+	protected RenderElf(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn, ModelElf<T> left, ModelElf<T> right) {
+		super(renderManagerIn, left, shadowSizeIn);
+		this.modelLeft = left;
+		this.modelRight = right;
+	}
+	
 	public RenderElf(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
-		super(renderManagerIn, new ModelElf<>(true), .25f);
-		this.modelLeft = new ModelElf<>(true);
-		this.modelRight = new ModelElf<>(false);
+		this(renderManagerIn, shadowSizeIn,
+				new ModelElfMage<>(renderManagerIn.bakeLayer(FairiesModelLayers.MageElfLeft)),
+				new ModelElfMage<>(renderManagerIn.bakeLayer(FairiesModelLayers.MageElf)));
 	}
 
 	@Override

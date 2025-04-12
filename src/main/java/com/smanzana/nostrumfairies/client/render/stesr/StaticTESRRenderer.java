@@ -4,38 +4,38 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import org.lwjgl.opengl.GL11;
-
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Matrix4f;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.utils.Location;
 
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.Camera;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexBuffer;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.shapes.Shapes;
-import com.mojang.math.Matrix4f;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -50,6 +50,8 @@ public class StaticTESRRenderer {
 	private static final class RenderTarget {
 		public BlockEntity te;
 		public VertexBuffer drawlist;
+		public VertexFormat format;
+		public RenderType renderType;
 	}
 	
 	// Render thread exclusives
@@ -58,17 +60,17 @@ public class StaticTESRRenderer {
 	
 	// Synced update collections
 	private Map<Location, RenderTarget> updates; 
-	private Boolean clear;
+	private AtomicBoolean clear;
 	
 	private StaticTESRRenderer() {
 		cache = new HashMap<>();
 		renders = new HashMap<>();
 		updates = new HashMap<>();
-		clear = false;
+		clear = new AtomicBoolean(false);
 	}
 	
-	public <T extends BlockEntity> void registerRender(BlockEntityType<T> entClass, Function<? super BlockEntityRenderDispatcher, ? extends StaticTESR<T>> renderFactory) {
-		renders.put(entClass, renderFactory.apply(BlockEntityRenderDispatcher.instance));
+	public <T extends BlockEntity> void registerRender(BlockEntityType<T> entClass, Supplier<? extends StaticTESR<T>> renderFactory) {
+		renders.put(entClass, renderFactory.get());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -90,10 +92,7 @@ public class StaticTESRRenderer {
 			}
 		}
 		
-		synchronized(clear) {
-			shouldClear = clear;
-			clear = false;
-		}
+		shouldClear = clear.getAndSet(false);
 		
 		if (shouldClear) {
 			for (RenderTarget targ : cache.values()) {
@@ -127,6 +126,8 @@ public class StaticTESRRenderer {
 					// Set
 					StaticTESR<BlockEntity> render = this.getRender(put.te);
 					put.drawlist = compile(put.te, render, buffer);
+					put.format = render.getRenderFormat(put.te);
+					put.renderType = render.getRenderType(put.te);
 
 					cache.put(loc, put);
 				}
@@ -134,7 +135,7 @@ public class StaticTESRRenderer {
 		}
 		
 		// Draw cached displays
-		mc.getTextureManager().bind(TextureAtlas.LOCATION_BLOCKS);
+		RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
 		final Camera renderInfo = mc.gameRenderer.getMainCamera();
 		final Vec3 camera = renderInfo.getPosition();
 		final Frustum clippinghelper;
@@ -170,11 +171,11 @@ public class StaticTESRRenderer {
 		final PoseStack fakeStack = new PoseStack(); // identity
 		
 		if (bufferIn == null) {
-			bufferIn = new VertexBuffer(render.getRenderFormat(te));
+			bufferIn = new VertexBuffer(); // render.getRenderFormat(te)
 		}
 		
 		BufferBuilder builder = new BufferBuilder(4096);
-		builder.begin(GL11.GL_QUADS, render.getRenderFormat(te));
+		builder.begin(VertexFormat.Mode.QUADS, render.getRenderFormat(te));
 		{
 			BlockPos pos = te.getBlockPos();
 			Level world = te.getLevel();
@@ -195,11 +196,26 @@ public class StaticTESRRenderer {
 				pos.getY() - playerPos.y,
 				pos.getZ() - playerPos.z);
 		
+		final Matrix4f unknownMatrix = new Matrix4f();
+		unknownMatrix.setIdentity();
+		
 		matrixStackIn.pushPose();
 		matrixStackIn.translate(offset.x, offset.y, offset.z);
 		target.drawlist.bind();
-		DefaultVertexFormat.BLOCK.setupBufferState(0);
-		target.drawlist.draw(matrixStackIn.last().pose(), GL11.GL_QUADS);
+		target.format.setupBufferState();
+		target.renderType.setupRenderState();
+		
+		RenderSystem.backupProjectionMatrix();
+		RenderSystem.getProjectionMatrix().multiply(unknownMatrix);
+		RenderSystem.applyModelViewMatrix();
+		
+		//target.drawlist.drawWithShader(matrixStackIn.last().pose(), unknownMatrix, VertexFormat.Mode.QUADS);
+		target.drawlist.draw();
+		
+		RenderSystem.restoreProjectionMatrix();
+		RenderSystem.applyModelViewMatrix();
+		
+		target.renderType.clearRenderState();
 		matrixStackIn.popPose();
 	}
 	
@@ -229,8 +245,6 @@ public class StaticTESRRenderer {
 	}
 
 	public void clear() {
-		synchronized(clear) {
-			clear = true;
-		}
+		clear.set(true);
 	}
 }

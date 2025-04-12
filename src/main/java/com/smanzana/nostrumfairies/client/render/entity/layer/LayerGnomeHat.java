@@ -2,17 +2,19 @@ package com.smanzana.nostrumfairies.client.render.entity.layer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.model.FairiesModelLayers;
 import com.smanzana.nostrumfairies.client.render.entity.ModelGnome;
 import com.smanzana.nostrumfairies.client.render.entity.ModelGnomeHat;
 import com.smanzana.nostrumfairies.client.render.entity.RenderGnome;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 
+import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
-import com.mojang.math.Vector3f;
 
 public class LayerGnomeHat extends RenderLayer<EntityGnome, ModelGnome> {
 
@@ -21,21 +23,34 @@ public class LayerGnomeHat extends RenderLayer<EntityGnome, ModelGnome> {
 	private static final ResourceLocation TEXT_HAT_3 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/gnome_hat_3.png");
 	private static final ResourceLocation TEXT_HAT_4 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/gnome_hat_4.png");
 	
-	private ModelGnomeHat model;
-	private ModelGnomeHat.Type type;
+	private final ModelGnomeHat modelErect;
+	private final ModelGnomeHat modelPlain;
+	private final ModelGnomeHat modelLimp;
+	private final ModelGnomeHat modelSmall;
 	
-	public LayerGnomeHat(RenderGnome renderer, ModelGnomeHat.Type type) {
+	public LayerGnomeHat(RenderGnome renderer, EntityModelSet modelSet) {
 		super(renderer);
-		this.model = new ModelGnomeHat(type);
-		this.type = type;
+		this.modelErect = new ModelGnomeHat(modelSet.bakeLayer(FairiesModelLayers.GnomeHatErect));
+		this.modelPlain = new ModelGnomeHat(modelSet.bakeLayer(FairiesModelLayers.GnomeHatPlain));
+		this.modelLimp = new ModelGnomeHat(modelSet.bakeLayer(FairiesModelLayers.GnomeHatLimp));
+		this.modelSmall = new ModelGnomeHat(modelSet.bakeLayer(FairiesModelLayers.GnomeHatSmall));
 	}
 	
 	@Override
 	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, EntityGnome gnome, float limbSwing, float limbSwingAmount,
 			float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-		// TODO maybe make beard style and texture by something that's assigned and persisted to the dwarf?
-		if (((gnome.getUUID().getLeastSignificantBits() >> 5) & 3) != type.ordinal()) { // bits 6/7
-			return;
+		// TODO maybe make beard style and texture by something that's assigned and persisted to the gnome?
+		final ModelGnomeHat model;
+		switch ((int) ((gnome.getUUID().getLeastSignificantBits() >> 5) & 3)) {
+			case 0:
+				model = modelErect; break;
+			case 1:
+				model = modelPlain; break;
+			case 2:
+				model = modelLimp; break;
+			case 3:
+			default:
+				model = modelSmall; break;
 		}
 		
 		ResourceLocation text;

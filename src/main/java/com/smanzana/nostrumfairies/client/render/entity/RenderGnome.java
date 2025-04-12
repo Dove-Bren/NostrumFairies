@@ -3,7 +3,7 @@ package com.smanzana.nostrumfairies.client.render.entity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.entity.ModelGnomeHat.Type;
+import com.smanzana.nostrumfairies.client.model.FairiesModelLayers;
 import com.smanzana.nostrumfairies.client.render.entity.layer.LayerGnomeHat;
 import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
@@ -22,11 +22,8 @@ public class RenderGnome extends MobRenderer<EntityGnome, ModelGnome> {
 	private static ResourceLocation TEXT_GNOME_2 = new ResourceLocation(NostrumFairies.MODID, "textures/entity/gnome_2.png");
 	
 	public RenderGnome(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
-		super(renderManagerIn, new ModelGnome(), .25f);
-		this.addLayer(new LayerGnomeHat(this, Type.ERECT));
-		this.addLayer(new LayerGnomeHat(this, Type.PLAIN));
-		this.addLayer(new LayerGnomeHat(this, Type.LIMP));
-		this.addLayer(new LayerGnomeHat(this, Type.SMALL));
+		super(renderManagerIn, new ModelGnome(renderManagerIn.bakeLayer(FairiesModelLayers.Gnome)), .25f);
+		this.addLayer(new LayerGnomeHat(this, renderManagerIn.getModelSet()));
 	}
 
 	@Override

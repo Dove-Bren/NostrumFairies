@@ -16,7 +16,7 @@ import com.smanzana.nostrumfairies.client.gui.container.OutputChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.OutputPanelGui;
 import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.TemplateWandGui;
-import com.smanzana.nostrumfairies.client.render.entity.RenderDwarf;
+import com.smanzana.nostrumfairies.client.render.entity.RenderMiningDwarf;
 import com.smanzana.nostrumfairies.client.render.entity.RenderDwarfBuilder;
 import com.smanzana.nostrumfairies.client.render.entity.RenderDwarfCrafter;
 import com.smanzana.nostrumfairies.client.render.entity.RenderElf;
@@ -152,7 +152,7 @@ public class ClientInit {
 		event.registerEntityRenderer(FairyEntities.TestFairy, (manager) -> new RenderTestFairy(manager, 1.0f));
 		event.registerEntityRenderer(FairyEntities.Fairy, (manager) -> new RenderFairy(manager, 1.0f));
 		event.registerEntityRenderer(FairyEntities.PersonalFairy, (manager) -> new RenderFairy(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.Dwarf, (manager) -> new RenderDwarf<>(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.Dwarf, (manager) -> new RenderMiningDwarf(manager, 1.0f));
 		event.registerEntityRenderer(FairyEntities.Elf, (manager) -> new RenderElf<>(manager, 1.0f));
 		event.registerEntityRenderer(FairyEntities.Gnome, (manager) -> new RenderGnome(manager, 1.0f));
 		event.registerEntityRenderer(FairyEntities.ElfArcher, (manager) -> new RenderElfArcher(manager, 1.0f));

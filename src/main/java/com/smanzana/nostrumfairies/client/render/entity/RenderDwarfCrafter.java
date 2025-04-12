@@ -2,7 +2,7 @@ package com.smanzana.nostrumfairies.client.render.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
-import com.smanzana.nostrumfairies.client.render.entity.ModelDwarfBeard.Type;
+import com.smanzana.nostrumfairies.client.model.FairiesModelLayers;
 import com.smanzana.nostrumfairies.client.render.entity.layer.LayerDwarfBeard;
 import com.smanzana.nostrumfairies.entity.fey.EntityDwarfCrafter;
 
@@ -18,12 +18,18 @@ public class RenderDwarfCrafter extends MobRenderer<EntityDwarfCrafter, ModelCra
 	protected ModelCraftingDwarf modelLeft;
 	protected ModelCraftingDwarf modelRight;
 	
+	protected RenderDwarfCrafter(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn, ModelCraftingDwarf left, ModelCraftingDwarf right) {
+		super(renderManagerIn, left, shadowSizeIn);
+		this.modelLeft = left;
+		this.modelRight = right;
+		this.addLayer(new LayerDwarfBeard<>(this, renderManagerIn.getModelSet()));
+	}
+	
 	public RenderDwarfCrafter(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
-		super(renderManagerIn, new ModelCraftingDwarf(true), .25f);
-		this.modelLeft = new ModelCraftingDwarf(true);
-		this.modelRight = new ModelCraftingDwarf(false);
-		this.addLayer(new LayerDwarfBeard<>(this, Type.FULL));
-		this.addLayer(new LayerDwarfBeard<>(this, Type.LONG));
+		this(renderManagerIn, .25f,
+				new ModelCraftingDwarf(renderManagerIn.bakeLayer(FairiesModelLayers.CraftingDwarfLeft)),
+				new ModelCraftingDwarf(renderManagerIn.bakeLayer(FairiesModelLayers.CraftingDwarf))
+				);
 	}
 
 	@Override

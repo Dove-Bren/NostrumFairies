@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.client.render.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.model.FairiesModelLayers;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrummagica.client.model.ModelRenderShiv;
 
@@ -19,10 +20,16 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShi
 	protected ModelElfArcher<EntityShadowFey> modelLeft;
 	protected ModelElfArcher<EntityShadowFey> modelRight;
 	
+	protected RenderShadowFey(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn, ModelElfArcher<EntityShadowFey> left, ModelElfArcher<EntityShadowFey> right) {
+		super(renderManagerIn, new ModelRenderShiv<>(RenderType::entityTranslucent), shadowSizeIn);
+		this.modelLeft = left;
+		this.modelRight = right;
+	}
+	
 	public RenderShadowFey(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
-		super(renderManagerIn, new ModelRenderShiv<>(RenderType::entityTranslucent), .01f);
-		this.modelLeft = new ModelElfArcher<>(true, RenderType::entityTranslucent);
-		this.modelRight = new ModelElfArcher<>(false, RenderType::entityTranslucent);
+		this(renderManagerIn, shadowSizeIn,
+				new ModelElfArcher<>(renderManagerIn.bakeLayer(FairiesModelLayers.MageElfLeft), RenderType::entityTranslucent),
+				new ModelElfArcher<>(renderManagerIn.bakeLayer(FairiesModelLayers.MageElf), RenderType::entityTranslucent));
 	}
 
 	public ResourceLocation getTextureLocation(EntityShadowFey entity) {
@@ -72,7 +79,7 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShi
 			}
 			
 			modelToUse.prepareMobModel(entityIn, limbSwing, limbSwingAmount, partialTicks);
-			modelToUse.setupAnim(entityIn, limbSwing, limbSwingAmount, this.getBob(entityIn, partialTicks), entityIn.yHeadRot, entityIn.xRot);
+			modelToUse.setupAnim(entityIn, limbSwing, limbSwingAmount, this.getBob(entityIn, partialTicks), entityIn.yHeadRot, entityIn.getXRot());
 		}
 		
 		modelToUse.setWeaponSelection(entityIn);

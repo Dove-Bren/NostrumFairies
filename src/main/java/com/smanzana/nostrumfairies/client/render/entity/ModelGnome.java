@@ -6,80 +6,85 @@ import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.serializers.ArmPoseGnome;
 
 import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.util.Mth;
 
 public class ModelGnome extends EntityModel<EntityGnome> {
-
-	private OffsetModelRenderer body;
-	private OffsetModelRenderer head;
-	private OffsetModelRenderer legLeft;
-	private OffsetModelRenderer legRight;
-	private OffsetModelRenderer armLeft;
-	private OffsetModelRenderer armRight;
 	
-	public ModelGnome() {
-		// 16x16x16 is one block.
-		// Y starts at offset 24 and grows down
-		final int textW = 64;
-		final int textH = 32;
+	public static final LayerDefinition createLayer() {
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition root = mesh.getRoot();
 		
-		body = new OffsetModelRenderer(this, 0, 0);
-		body.setTexSize(textW, textH);
-		body.setPos(0, 13, 0);
-		body.addBox(-4, -5, -3, 8, 10, 6);
+		PartDefinition body =
+		root.addOrReplaceChild("body",
+				CubeListBuilder.create().addBox(-4, -5, -3, 8, 10, 6),
+				PartPose.offset(0, 13, 0)
+		);
+		//body.setPos(0, 13, 0);
 		
-		head = new OffsetModelRenderer(this, 28, 0);
-		head.setTexSize(textW, textH);
-		head.setPos(0, 0, 0);
-		head.addBox(-3.5f, -7, -3.5f, 7, 7, 7);
-		head.texOffs(28, 14);
-		head.addBox(3, -5, -1, 1, 2, 1);
-		head.texOffs(28, 17);
-		head.addBox(-4, -5, -1, 1, 2, 1);
-		head.offsetY = (-5f / 16f);
-		body.addChild(head);
+		body.addOrReplaceChild("head",
+				CubeListBuilder.create().texOffs(28, 0).addBox(-3.5f, -7, -3.5f, 7, 7, 7)
+					.texOffs(28, 14).addBox(3, -5, -1, 1, 2, 1)
+					.texOffs(28, 17).addBox(-4, -5, -1, 1, 2, 1),
+				PartPose.offset(0, -5f, 0)
+		);
+		//head.offsetY = (-5f / 16f);
 		
-		legLeft = new OffsetModelRenderer(this, 0, 16);
-		legLeft.setTexSize(textW, textH);
-		legLeft.setPos(0, 0, 0);
-		legLeft.addBox(-1.5f, 0, -2, 3, 6, 4);
-		legLeft.texOffs(14, 27);
-		legLeft.addBox(-1.5f, 4, -5, 3, 2, 3);
-		legLeft.texOffs(4, 28);
-		legLeft.addBox(-1.5f, 3, -6, 3, 2, 2);
-		legLeft.offsetY = (5f / 16f);
-		legLeft.offsetX = (2.49f / 16f);
-		body.addChild(legLeft);
+		body.addOrReplaceChild("legLeft",
+				CubeListBuilder.create().texOffs(0, 16).addBox(-1.5f, 0, -2, 3, 6, 4)
+					.texOffs(14, 27).addBox(-1.5f, 4, -5, 3, 2, 3)
+					.texOffs(4, 28).addBox(-1.5f, 3, -6, 3, 2, 2),
+				PartPose.offset(2.49f, 5, 0)
+		);
+//		legLeft.offsetY = (5f / 16f);
+//		legLeft.offsetX = (2.49f / 16f);
+		
+		body.addOrReplaceChild("legRight",
+				CubeListBuilder.create().mirror().texOffs(0, 16).addBox(-1.5f, 0, -2, 3, 6, 4)
+					.texOffs(14, 27).addBox(-1.5f, 4, -5, 3, 2, 3)
+					.texOffs(4, 28).addBox(-1.5f, 3, -6, 3, 2, 2)
+					,
+				PartPose.offset(-2.49f, 5, 0)
+		);
+//		legRight.offsetY = (5f / 16f);
+//		legRight.offsetX = (-2.49f / 16f);
+		
+		body.addOrReplaceChild("armLeft",
+				CubeListBuilder.create().texOffs(48, 16).addBox(-1.5f, 0, -1.5f, 3, 7, 3),
+				PartPose.offset((3 + 1.5f), -5, 0)
+		);
+//		armLeft.offsetY = (-5f / 16f);
+//		armLeft.offsetX = ((3 + 1.5f) / 16f);
+		
+		body.addOrReplaceChild("armRight",
+				CubeListBuilder.create().mirror().texOffs(48, 16).addBox(-1.5f, 0, -1.5f, 3, 7, 3),
+				PartPose.offset(-(3 + 1.5f), -5, 0)
+		);
+//		armRight.offsetY = (-5f / 16f);
+//		armRight.offsetX = (-(3 + 1.5f) / 16f);
+		
+		return LayerDefinition.create(mesh, 64, 32);
+	}
 
-		legRight = new OffsetModelRenderer(this, 0, 16);
-		legRight.mirror = true;
-		legRight.setTexSize(textW, textH);
-		legRight.setPos(0, 0, 0);
-		legRight.addBox(-1.5f, 0, -2, 3, 6, 4);
-		legRight.texOffs(14, 27);
-		legRight.addBox(-1.5f, 4, -5, 3, 2, 3);
-		legRight.texOffs(4, 28);
-		legRight.addBox(-1.5f, 3, -6, 3, 2, 2);
-		legRight.offsetY = (5f / 16f);
-		legRight.offsetX = (-2.49f / 16f);
-		body.addChild(legRight);
-		
-		armLeft = new OffsetModelRenderer(this, 48, 16);
-		armLeft.setTexSize(textW, textH);
-		armLeft.setPos(0, 0, 0);
-		armLeft.addBox(-1.5f, 0, -1.5f, 3, 7, 3);
-		armLeft.offsetY = (-5f / 16f);
-		armLeft.offsetX = ((3 + 1.5f) / 16f);
-		body.addChild(armLeft);
-		
-		armRight = new OffsetModelRenderer(this, 48, 16);
-		armRight.mirror = true;
-		armRight.setTexSize(textW, textH);
-		armRight.setPos(0, 0, 0);
-		armRight.addBox(-1.5f, 0, -1.5f, 3, 7, 3);
-		armRight.offsetY = (-5f / 16f);
-		armRight.offsetX = (-(3 + 1.5f) / 16f);
-		body.addChild(armRight);
+	private final ModelPart body;
+	private final ModelPart head;
+	private final ModelPart legLeft;
+	private final ModelPart legRight;
+	private final ModelPart armLeft;
+	private final ModelPart armRight;
+	
+	public ModelGnome(ModelPart root) {
+		this.body = root.getChild("body");
+		this.head = body.getChild("head");
+		this.legLeft = body.getChild("legLeft");
+		this.legRight = body.getChild("legRight");
+		this.armLeft = body.getChild("armLeft");
+		this.armRight = body.getChild("armRight");
 	}
 	
 	@Override
@@ -101,12 +106,12 @@ public class ModelGnome extends EntityModel<EntityGnome> {
 		legRight.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
 		legLeft.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
 		
-		body.offsetY = 0;
+		body.y = 0;
 		body.xRot = 0;
-		legLeft.offsetY = (5f / 16f);
-		legLeft.offsetZ = 0;
-		legRight.offsetY = (5f / 16f);
-		legRight.offsetZ = 0;
+		legLeft.y = (5f / 16f);
+		legLeft.z = 0;
+		legRight.y = (5f / 16f);
+		legRight.z = 0;
 		
 		if (gnome.swinging || gnome.getGnomePose() != ArmPoseGnome.IDLE) {
 			
@@ -114,13 +119,13 @@ public class ModelGnome extends EntityModel<EntityGnome> {
 			if (gnome.getGnomePose() == ArmPoseGnome.WORKING || gnome.swinging) {
 				float bend = (float) (Math.sin(attackTime * Math.PI) * (Math.PI * .1));
 				float offsetY = (float) (Math.sin(attackTime * Math.PI) * (1f / 16f));
-				body.offsetY += offsetY;
+				body.y += offsetY;
 				body.xRot = bend;
-				legLeft.offsetY -= offsetY;
-				legLeft.offsetZ -= offsetY;
+				legLeft.y -= offsetY;
+				legLeft.z -= offsetY;
 				legLeft.xRot = -bend;
-				legRight.offsetY -= offsetY;
-				legRight.offsetZ -= offsetY;
+				legRight.y -= offsetY;
+				legRight.z -= offsetY;
 				legRight.xRot = -bend;
 				
 				armRight.xRot = (float) -(Math.PI * .3);

@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.client.render.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.model.FairiesModelLayers;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfArcher;
 
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -16,10 +17,16 @@ public class RenderElfArcher extends MobRenderer<EntityElfArcher, ModelElfArcher
 	protected ModelElfArcher<EntityElfArcher> modelLeft;
 	protected ModelElfArcher<EntityElfArcher> modelRight;
 	
+	protected RenderElfArcher(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn, ModelElfArcher<EntityElfArcher> left, ModelElfArcher<EntityElfArcher> right) {
+		super(renderManagerIn, left, shadowSizeIn);
+		this.modelLeft = left;
+		this.modelRight = right;
+	}
+	
 	public RenderElfArcher(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
-		super(renderManagerIn, new ModelElfArcher<>(true), .25f);
-		this.modelLeft = new ModelElfArcher<>(true);
-		this.modelRight = new ModelElfArcher<>(false);
+		this(renderManagerIn, shadowSizeIn,
+				new ModelElfArcher<>(renderManagerIn.bakeLayer(FairiesModelLayers.ArcherElfLeft)),
+				new ModelElfArcher<>(renderManagerIn.bakeLayer(FairiesModelLayers.ArcherElf)));
 	}
 
 	public ResourceLocation getTextureLocation(EntityElfArcher entity) {

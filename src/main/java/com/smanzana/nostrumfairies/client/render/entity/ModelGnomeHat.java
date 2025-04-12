@@ -6,87 +6,96 @@ import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 
 public class ModelGnomeHat extends EntityModel<EntityGnome> {
 	
-	public static enum Type {
-		ERECT,
-		PLAIN,
-		LIMP,
-		SMALL
+	public static LayerDefinition createErectLayer() {
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition root = mesh.getRoot();
+		
+		root.addOrReplaceChild("base",
+				CubeListBuilder.create()
+					.addBox(-3.5f, -8, -3.5f, 7, 2, 7)
+					.texOffs(28, 0)
+					.addBox(-3, -9, -3, 6, 1, 6)
+					.texOffs(28, 7)
+					.addBox(-2, -10, -2, 4, 1, 4)
+					.texOffs(44, 7)
+					.addBox(-1, -12, -1, 2, 2, 2)
+					.texOffs(44, 11)
+					.addBox(-.5f, -15, -.5f, 1, 3, 1),
+				PartPose.offset(0, 0, 0)
+		);
+		
+		return LayerDefinition.create(mesh, 128, 128);
 	}
 	
-	protected final Type type;
-
+	public static LayerDefinition createPlainLayer() {
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition root = mesh.getRoot();
+		
+		root.addOrReplaceChild("base",
+				CubeListBuilder.create()
+					.texOffs(0, 18).addBox(-3.5f, -8, -3.5f, 7, 2, 7)
+					.texOffs(28, 18).addBox(-3, -9, -3, 6, 1, 6)
+					.texOffs(28, 25).addBox(-2, -10, -2, 4, 1, 4)
+					.texOffs(44, 7).addBox(-1, -12, -1, 2, 2, 2)
+					.texOffs(44, 29).addBox(-.5f, -13, -.5f, 2, 1, 2)
+				,
+				PartPose.offset(0, 0, 0)
+		);
+		
+		return LayerDefinition.create(mesh, 128, 128);
+	}
+	
+	public static LayerDefinition createLimpLayer() {
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition root = mesh.getRoot();
+		
+		root.addOrReplaceChild("base",
+				CubeListBuilder.create()
+					.texOffs(0, 36).addBox(-3.5f, -8, -3.5f, 7, 2, 7)
+					.texOffs(28, 36).addBox(-4, -9, -3, 7, 1, 6)
+					
+					.texOffs(28, 43).addBox(-6, -10, -2, 6, 1, 6)
+					.texOffs(12, 45).addBox(-5, -11, -1, 4, 1, 4)
+					
+					.texOffs(0, 45).addBox(-7, -9, 2, 2, 2, 3)
+					
+					.texOffs(52, 48).addBox(-7, -7, 3, 1, 1, 1)
+				,
+				PartPose.offset(0, 0, 0)
+		);
+		
+		return LayerDefinition.create(mesh, 128, 128);
+	}
+	
+	public static LayerDefinition createSmallLayer() {
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition root = mesh.getRoot();
+		
+		root.addOrReplaceChild("base",
+				CubeListBuilder.create()
+					.texOffs(0, 52).addBox(-1, -8, -1, 4, 1, 4)
+					.texOffs(16, 52).addBox(-.5f, -9, -.5f, 3, 1, 3)
+					.texOffs(28, 52).addBox(0, -11, 0, 2, 2, 2)
+					.texOffs(36, 52).addBox(.5f, -13, .5f, 1, 2, 1)
+				,
+				PartPose.offset(0, 0, 0)
+		);
+		
+		return LayerDefinition.create(mesh, 128, 128);
+	}
+	
 	private ModelPart base;
 	
-	public ModelGnomeHat(Type type) {
-		// 16x16x16 is one block.
-		// Y starts at offset 24 and grows down
-		
-		int textW = 128;
-		int textH = 128;
-		// TODO some y offset
-		
-		this.type = type;
-		switch (type) {
-		case ERECT:
-			base = new ModelPart(this, 0, 0);
-			base.setTexSize(textW, textH);
-			base.addBox(-3.5f, -8, -3.5f, 7, 2, 7);
-			base.texOffs(28, 0);
-			base.addBox(-3, -9, -3, 6, 1, 6);
-			base.texOffs(28, 7);
-			base.addBox(-2, -10, -2, 4, 1, 4);
-			base.texOffs(44, 7);
-			base.addBox(-1, -12, -1, 2, 2, 2);
-			base.texOffs(44, 11);
-			base.addBox(-.5f, -15, -.5f, 1, 3, 1);
-			break;
-		case PLAIN:
-			base = new ModelPart(this, 0, 18);
-			base.setTexSize(textW, textH);
-			base.addBox(-3.5f, -8, -3.5f, 7, 2, 7);
-			base.texOffs(28, 18);
-			base.addBox(-3, -9, -3, 6, 1, 6);
-			base.texOffs(28, 25);
-			base.addBox(-2, -10, -2, 4, 1, 4);
-			base.texOffs(44, 7);
-			base.addBox(-1, -12, -1, 2, 2, 2);
-			base.texOffs(44, 29);
-			base.addBox(-.5f, -13, -.5f, 2, 1, 2);
-			break;
-		case LIMP:
-			base = new ModelPart(this, 0, 36);
-			base.setTexSize(textW, textH);
-			base.addBox(-3.5f, -8, -3.5f, 7, 2, 7);
-			base.texOffs(28, 36);
-			base.addBox(-4, -9, -3, 7, 1, 6);
-			
-			base.texOffs(28, 43);
-			base.addBox(-6, -10, -2, 6, 1, 6);
-			base.texOffs(12, 45);
-			base.addBox(-5, -11, -1, 4, 1, 4);
-			
-			base.texOffs(0, 45);
-			base.addBox(-7, -9, 2, 2, 2, 3);
-			
-			base.texOffs(52, 48);
-			base.addBox(-7, -7, 3, 1, 1, 1);
-			break;
-		case SMALL:
-			base = new ModelPart(this, 0, 52);
-			base.setTexSize(textW, textH);
-			base.addBox(-1, -8, -1, 4, 1, 4);
-			
-			base.texOffs(16, 52);
-			base.addBox(-.5f, -9, -.5f, 3, 1, 3);
-			base.texOffs(28, 52);
-			base.addBox(0, -11, 0, 2, 2, 2);
-			base.texOffs(36, 52);
-			base.addBox(.5f, -13, .5f, 1, 2, 1);
-			break;
-		}
+	public ModelGnomeHat(ModelPart root) {
+		this.base = root.getChild("base");
 	}
 	
 	public void setupAnim(EntityGnome entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {

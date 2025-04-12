@@ -2,6 +2,7 @@ package com.smanzana.nostrumfairies.client.render.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
+import com.smanzana.nostrumfairies.client.model.FairiesModelLayers;
 import com.smanzana.nostrumfairies.entity.fey.EntityElfCrafter;
 
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -16,10 +17,16 @@ public class RenderElfCrafter extends MobRenderer<EntityElfCrafter, ModelElf<Ent
 	protected ModelElf<EntityElfCrafter> modelLeft;
 	protected ModelElf<EntityElfCrafter> modelRight;
 	
+	protected RenderElfCrafter(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn, ModelElf<EntityElfCrafter> left, ModelElf<EntityElfCrafter> right) {
+		super(renderManagerIn, left, shadowSizeIn);
+		this.modelLeft = left;
+		this.modelRight = right;
+	}
+	
 	public RenderElfCrafter(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
-		super(renderManagerIn, new ModelElf<>(true), .25f);
-		this.modelLeft = new ModelElf<>(true);
-		this.modelRight = new ModelElf<>(false);
+		this(renderManagerIn, shadowSizeIn,
+				new ModelElfMage<>(renderManagerIn.bakeLayer(FairiesModelLayers.MageElfLeft)),
+				new ModelElfMage<>(renderManagerIn.bakeLayer(FairiesModelLayers.MageElf)));
 	}
 
 	public ResourceLocation getTextureLocation(EntityElfCrafter entity) {
