@@ -159,7 +159,8 @@ public class HomeBlockGui {
 		
 		@Override
 		public ItemStack quickMoveStack(Player playerIn, int fromSlot) {
-			return super.quickMoveStack(playerIn, fromSlot);
+			return ItemStack.EMPTY;
+			//return super.quickMoveStack(playerIn, fromSlot);
 //			ItemStack prev = ItemStack.EMPTY;	
 //			Slot slot = (Slot) this.inventorySlots.get(fromSlot);
 //			

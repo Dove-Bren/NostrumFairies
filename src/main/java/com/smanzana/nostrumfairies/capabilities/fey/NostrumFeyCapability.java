@@ -289,6 +289,11 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 			return;
 		}
 		
+		if (owner instanceof Player player) {
+			this.buildPlanner.setInventory(player.getInventory());
+			this.buildPlanner.setWorld(owner.level);
+		}
+		
 		ticksExisted++;
 		
 		if (this.deactivationTicks > 0) {

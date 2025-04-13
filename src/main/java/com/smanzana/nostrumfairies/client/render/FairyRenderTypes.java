@@ -23,6 +23,7 @@ public class FairyRenderTypes extends RenderType {
 	public static final RenderType MININGBLOCK_OUTLINE;
 	public static final RenderType TEMPLATE_SELECT_HIGHLIGHT;
 	public static final RenderType TEMPLATE_SELECT_HIGHLIGHT_CULL;
+	public static final RenderType TEMPLATE_BLOCK_GHOST;
 	
 	private static final String Name(String suffix) {
 		return "fairyrender_" + suffix;
@@ -79,6 +80,14 @@ public class FairyRenderTypes extends RenderType {
 				.setShaderState(RENDERTYPE_LINES_SHADER)
 			.createCompositeState(false);
 		MININGBLOCK_OUTLINE = RenderType.create(Name("BlockHighlightOutline"), DefaultVertexFormat.POSITION_COLOR_NORMAL, VertexFormat.Mode.LINES, 64, false, false, glState);
+		
+		glState = RenderType.CompositeState.builder()
+				.setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+				.setLightmapState(LIGHTMAP)
+				.setTextureState(BLOCK_SHEET)
+				.setShaderState(RENDERTYPE_SOLID_SHADER) // I am surprised this works
+			.createCompositeState(false);
+		TEMPLATE_BLOCK_GHOST = RenderType.create(Name("TemplateBlockGhost"), DefaultVertexFormat.BLOCK, VertexFormat.Mode.QUADS, 131072, false, false, glState);
 		
 	}
 	

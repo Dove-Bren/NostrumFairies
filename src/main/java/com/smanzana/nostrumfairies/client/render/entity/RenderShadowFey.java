@@ -28,8 +28,8 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShi
 	
 	public RenderShadowFey(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn) {
 		this(renderManagerIn, shadowSizeIn,
-				new ModelElfArcher<>(renderManagerIn.bakeLayer(FairiesModelLayers.MageElfLeft), RenderType::entityTranslucent),
-				new ModelElfArcher<>(renderManagerIn.bakeLayer(FairiesModelLayers.MageElf), RenderType::entityTranslucent));
+				new ModelElfArcher<>(renderManagerIn.bakeLayer(FairiesModelLayers.ArcherElfLeft), RenderType::entityTranslucent),
+				new ModelElfArcher<>(renderManagerIn.bakeLayer(FairiesModelLayers.ArcherElf), RenderType::entityTranslucent));
 	}
 
 	public ResourceLocation getTextureLocation(EntityShadowFey entity) {

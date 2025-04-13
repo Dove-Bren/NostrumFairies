@@ -34,34 +34,34 @@ public abstract class ModelDwarf<T extends EntityDwarf> extends EntityModel<T> {
 				CubeListBuilder.create().texOffs(44, 0).addBox(-4, -8, -4, 8, 8, 8)
 					.texOffs(44, 16).addBox(4, -6, -1, 1, 2, 1)
 					.texOffs(44, 16).addBox(-5, -6, -1, 1, 2, 1),
-				PartPose.offset(0, -9f/16f, 0)
+				PartPose.offset(0, -9f, 0)
 		);
 		//head.offsetY = (-9f / 16f);
 		
 		body.addOrReplaceChild("legLeft",
 				CubeListBuilder.create().texOffs(0, 41).addBox(-2.5f, 0, -3, 5, 8, 6),
-				PartPose.offset((3f / 16f), (5f / 16f), 0)
+				PartPose.offset(3f, 5f, 0)
 		);
 		//legLeft.offsetY = (5f / 16f);
 		//legLeft.offsetX = (3f / 16f);
 		
 		body.addOrReplaceChild("legRight",
 				CubeListBuilder.create().texOffs(0, 41).addBox(-2.5f, 0, -3, 5, 8, 6, true),
-				PartPose.offset((-3f / 16f), (5f / 16f), 0)
+				PartPose.offset(-3f, 5f, 0)
 		);
 //		legRight.offsetY = (5f / 16f);
 //		legRight.offsetX = (-3f / 16f);
 		
 		body.addOrReplaceChild("armLeft",
 				CubeListBuilder.create().texOffs(0, 26).addBox(-2.5f, 0, -2.5f, 5, 10, 5),
-				PartPose.offset(((7 + 2.5f) / 16f), (-7f / 16f), 0)
+				PartPose.offset(7 + 2.5f, -7f, 0)
 		);
 //		armLeft.offsetY = (-7f / 16f);
 //		armLeft.offsetX = ((7 + 2.5f) / 16f);
 		
-		body.addOrReplaceChild("",
+		body.addOrReplaceChild("armRight",
 				CubeListBuilder.create().texOffs(0, 26).addBox(-2.5f, 0, -2.5f, 5, 10, 5, true),
-				PartPose.offset((-(7 + 2.5f) / 16f), (-7f / 16f), 0)
+				PartPose.offset(-(7 + 2.5f), -7f, 0)
 		);
 //		armRight.offsetY = (-7f / 16f);
 //		armRight.offsetX = (-(7 + 2.5f) / 16f);

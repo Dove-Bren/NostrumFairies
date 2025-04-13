@@ -108,7 +108,7 @@ public class TemplateBlueprint implements IBlueprintBlockPlacer, IBlueprint {
 		}
 		
 		final LoadContext context = new LoadContext("TemplateBlueprint_NBT_load");
-		Blueprint actualPrint = Blueprint.FromNBT(context, nbt);
+		Blueprint actualPrint = Blueprint.FromNBT(context, nbt.getCompound(NBT_BLUEPRINT));
 		
 		return new TemplateBlueprint(id, actualPrint);
 	}

@@ -302,7 +302,7 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements Tickable
 		this.slotInv = new HomeBlockSlotInventory(this, FeyHomeBlock.GetSpecMaterials(type));
 	}
 	
-	public HomeBlockTileEntity(BlockPos pos, BlockState state) {
+	protected HomeBlockTileEntity(BlockPos pos, BlockState state) {
 		super(FairyTileEntities.HomeBlockTileEntityType, pos, state);
 		//this.feyList = new HashSet<>();
 		this.slots = DEFAULT_SLOTS;

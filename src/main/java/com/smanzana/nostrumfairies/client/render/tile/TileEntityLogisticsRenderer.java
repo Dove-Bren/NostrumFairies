@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix3f;
 import com.smanzana.nostrumfairies.client.render.FairyRenderTypes;
 import com.smanzana.nostrumfairies.effect.FeyEffects;
 import com.smanzana.nostrumfairies.logistics.ILogisticsComponent;
@@ -29,10 +30,18 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 		super(rendererDispatcherIn);
 	}
 	
-	private void addVertex(PoseStack matrixStackIn, VertexConsumer buffer, int combinedLightIn, float red, float green, float blue, float alpha, Vec3 point, boolean repeat) {
-		buffer.vertex(matrixStackIn.last().pose(), (float) point.x, (float) point.y, (float) point.z).color(red, green, blue, alpha).uv2(combinedLightIn).endVertex();
+	private void addVertex(PoseStack matrixStackIn, VertexConsumer buffer, int combinedLightIn, float red, float green, float blue, float alpha, Vec3 point, Vec3 next, boolean repeat) {
+		// calculate normal
+		final Vec3 diff = next.subtract(point);
+		final double dist = diff.length();
+		final float nx = (float) (diff.x / dist);
+		final float ny = (float) (diff.y / dist);
+		final float nz = (float) (diff.z / dist);
+		final Matrix3f normal = matrixStackIn.last().normal();
+		
+		buffer.vertex(matrixStackIn.last().pose(), (float) point.x, (float) point.y, (float) point.z).color(red, green, blue, alpha).normal(normal, nx, ny, nz).endVertex();
 		if (repeat) {
-			this.addVertex(matrixStackIn, buffer, combinedLightIn, red, green, blue, alpha, point, false);
+			this.addVertex(matrixStackIn, buffer, combinedLightIn, red, green, blue, alpha, point, next, false);
 		}
 	}
 	
@@ -46,10 +55,13 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 			float prog = (float) i / (float) intervals;
 			Vec3 point = Curves.bezier(prog, Vec3.ZERO, control1, control2, offset);
 			
+			float progNext = (float) (i+1) / (float) intervals;
+			Vec3 pointNext = Curves.bezier(progNext, Vec3.ZERO, control1, control2, offset);
+			
 			// We aren't rendering a strip, so need to repeat every 'last' point.
 			// We can do this simply by just adding each point twice except the first and last one.
 			final boolean repeat = (i != 0 && i != intervals);
-			addVertex(matrixStackIn, buffer, combinedLightIn, red, green, blue, alpha, point, repeat);
+			addVertex(matrixStackIn, buffer, combinedLightIn, red, green, blue, alpha, point, pointNext, repeat);
 		}
 	}
 	
@@ -84,7 +96,7 @@ public abstract class TileEntityLogisticsRenderer<T extends LogisticsTileEntity>
 				matrixStackIn.pushPose();
 				matrixStackIn.translate(.5, 1.05, .5);
 				for (ILogisticsComponent component : neighbors) {
-					final Vec3 offset = Vec3.atCenterOf(component.getPosition().immutable().subtract(te.getBlockPos()));
+					final Vec3 offset = Vec3.atLowerCornerOf(component.getPosition().immutable().subtract(te.getBlockPos()));
 					this.renderLine(matrixStackIn, buffer, 15728880, offset, intervals, 1f, 1f, 1f, alpha);
 				}
 				

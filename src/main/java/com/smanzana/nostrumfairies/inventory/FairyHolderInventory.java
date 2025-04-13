@@ -84,7 +84,7 @@ public class FairyHolderInventory implements Container, IAutoContainerInventory 
 		public List<Component> getDescription() {
 			if (this.desc == null) {
 				this.desc = TextUtils.GetTranslatedList("fairyplacement." + getUnlocName() + ".desc", "" + ChatFormatting.DARK_GREEN + ChatFormatting.BOLD, ChatFormatting.RESET);
-				desc.add(0, getName().withStyle(ChatFormatting.BLACK, ChatFormatting.BOLD));
+				desc.add(0, getName().withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
 			}
 			return desc;
 		}

@@ -23,8 +23,10 @@ import com.smanzana.nostrumfairies.utils.Location;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -82,6 +84,11 @@ public class StaticTESRRenderer {
 	public void render(PoseStack matrixStackIn, Matrix4f projectionMatrix, Minecraft mc, LocalPlayer player, float partialTicks) {
 		final boolean shouldClear;
 		final Map<Location, RenderTarget> updatesCopy;
+		
+		int unused;
+		if (mc != null) {
+			return;
+		}
 		
 		synchronized(updates) {
 			if (updates.isEmpty()) {
@@ -190,6 +197,8 @@ public class StaticTESRRenderer {
 	}
 	
 	private void drawTarget(RenderTarget target, PoseStack matrixStackIn, Camera info, LocalPlayer player, float partialTicks) {
+		
+		
 		Vec3 playerPos = info.getPosition();
 		BlockPos pos = target.te.getBlockPos();
 		Vec3 offset = new Vec3(pos.getX() - playerPos.x,
@@ -201,16 +210,20 @@ public class StaticTESRRenderer {
 		
 		matrixStackIn.pushPose();
 		matrixStackIn.translate(offset.x, offset.y, offset.z);
-		target.drawlist.bind();
-		target.format.setupBufferState();
+		//target.drawlist.bind();
+		//target.format.setupBufferState();
 		target.renderType.setupRenderState();
 		
+		ShaderInstance shaderinstance = RenderSystem.getShader();
+		shaderinstance.apply();
+		
 		RenderSystem.backupProjectionMatrix();
-		RenderSystem.getProjectionMatrix().multiply(unknownMatrix);
+		RenderSystem.getProjectionMatrix().multiply(matrixStackIn.last().pose());
 		RenderSystem.applyModelViewMatrix();
 		
-		//target.drawlist.drawWithShader(matrixStackIn.last().pose(), unknownMatrix, VertexFormat.Mode.QUADS);
-		target.drawlist.draw();
+		//target.drawlist.drawWithShader(matrixStackIn.last().pose(), unknownMatrix, GameRenderer.getRendertypeTranslucentMovingBlockShader());
+		target.drawlist.drawChunkLayer();
+		//target.drawlist.draw();
 		
 		RenderSystem.restoreProjectionMatrix();
 		RenderSystem.applyModelViewMatrix();

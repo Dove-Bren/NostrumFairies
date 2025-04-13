@@ -106,11 +106,11 @@ public class ModelGnome extends EntityModel<EntityGnome> {
 		legRight.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
 		legLeft.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
 		
-		body.y = 0;
+		body.y = 13;
 		body.xRot = 0;
-		legLeft.y = (5f / 16f);
+		legLeft.y = 5f;
 		legLeft.z = 0;
-		legRight.y = (5f / 16f);
+		legRight.y = 5f;
 		legRight.z = 0;
 		
 		if (gnome.swinging || gnome.getGnomePose() != ArmPoseGnome.IDLE) {
@@ -118,7 +118,7 @@ public class ModelGnome extends EntityModel<EntityGnome> {
 			// Either squatting down and trying to pick something up, or carrying something.
 			if (gnome.getGnomePose() == ArmPoseGnome.WORKING || gnome.swinging) {
 				float bend = (float) (Math.sin(attackTime * Math.PI) * (Math.PI * .1));
-				float offsetY = (float) (Math.sin(attackTime * Math.PI) * (1f / 16f));
+				float offsetY = (float) (Math.sin(attackTime * Math.PI));
 				body.y += offsetY;
 				body.xRot = bend;
 				legLeft.y -= offsetY;

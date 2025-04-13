@@ -17,7 +17,7 @@ public class ModelElfMage<T extends EntityElf> extends ModelElf<T> {
 		
 		root.getChild("body").getChild("armMain").addOrReplaceChild("wand",
 				makeWand(),
-				PartPose.offset(0, (10f / 16f), 0)
+				PartPose.offset(0, 10f, 0)
 		);
 		
 		//render.offsetY = (10f / 16f); // height of arm, - a bit

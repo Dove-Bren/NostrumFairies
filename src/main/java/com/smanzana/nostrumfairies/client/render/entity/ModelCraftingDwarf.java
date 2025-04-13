@@ -26,7 +26,7 @@ public class ModelCraftingDwarf extends ModelDwarf<EntityDwarfCrafter> {
 		
 		root.getChild("body").getChild(handName).addOrReplaceChild("hammer",
 				createHammer(),
-				PartPose.offsetAndRotation(-0.5f, 9f/16f, -.5f, (float) (.5 * Math.PI), 0f, (float) (.5 * Math.PI) - .2f)
+				PartPose.offsetAndRotation(-0.5f, 9f, -.5f, (float) (.5 * Math.PI), 0f, (float) (.5 * Math.PI) - .2f)
 		);
 		
 //		hammer.setPos(-0.5F, 0.0F, -0.5F);

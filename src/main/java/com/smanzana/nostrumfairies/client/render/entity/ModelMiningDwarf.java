@@ -19,7 +19,7 @@ public class ModelMiningDwarf extends ModelDwarf<EntityDwarf> {
 		
 		root.getChild("body").getChild(leftHanded ? "armLeft" : "armRight").addOrReplaceChild("pickaxe",
 				createPickaxe(),
-				PartPose.offsetAndRotation(-0.5f, 9f/16f, -.5f, (float) (.5 * Math.PI), 0f, (float) (.5 * Math.PI) - .2f)
+				PartPose.offsetAndRotation(-.5f, 9f, -.5f, (float) (.5 * Math.PI), 0f, (float) (.5 * Math.PI) - .2f)
 		);
 		
 //		pick.offsetY = (9f / 16f); // height of arm, - a bit

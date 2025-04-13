@@ -132,6 +132,13 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 	
 	protected void updateItems(ItemStack items[]) {
+		// sanitize items
+		for (int i = 0; i < items.length; i++) {
+			if (items[i] == null) {
+				items[i] = ItemStack.EMPTY;
+			}
+		}
+		
 		entityData.set(ITEMS, items);
 		//dataManager.setDirty(ITEMS);
 	}

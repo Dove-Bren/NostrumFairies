@@ -985,7 +985,7 @@ public class FairyScreenGui {
 									}
 									// else unaffected
 								}
-								return true; // ?
+								//return true; // ?
 							}
 						}
 					}

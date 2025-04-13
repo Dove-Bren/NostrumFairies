@@ -41,27 +41,27 @@ public abstract class ModelElf<T extends Entity> extends EntityModel<T> {
 					// right ear
 					.texOffs(24, 17).addBox(-5, -8, 0, 2, 4, 1).texOffs(30, 17).addBox(-4, -7, -1, 1, 4, 1)
 					,
-				PartPose.offset(0, (-7f / 16f), 0)
+				PartPose.offset(0, -7f, 0)
 		);
 		//head.offsetY = (-7f / 16f);
 		
 		body.addOrReplaceChild("legLeft",
 				CubeListBuilder.create().texOffs(0, 18).addBox(-2, 0, -2, 3, 10, 4),
-				PartPose.offset((2f / 16f), (7f / 16f), 0)
+				PartPose.offset(2f, 7f, 0)
 		);
 //		legLeft.offsetY = (7f / 16f);
 //		legLeft.offsetX = (2f / 16f); originally 3f/16f but render moved it
 		
 		body.addOrReplaceChild("legRight",
 				CubeListBuilder.create().texOffs(0, 18).addBox(-2, 0, -2, 3, 10, 4, true),
-				PartPose.offset((-2f / 16f), (7f / 16f), 0)
+				PartPose.offset(-2f, 7f, 0)
 		);
 //		legRight.offsetY = (7f / 16f);
 //		legRight.offsetX = (-2f / 16f);
 		
 		body.addOrReplaceChild(leftHanded ? "armMain" : "armOff",
 				CubeListBuilder.create().texOffs(48, 0).addBox(-1.5f, -1, -1.5f, 3, 12, 3),
-				PartPose.offset(((4 + 1.5f) / 16f), (-7f / 16f) + 1, 0)
+				PartPose.offset((4 + 1.5f), -7f + 1, 0)
 		);
 //		armLeft.setPos(0, 1, 0);
 //		armLeft.offsetY = (-7f / 16f);
@@ -69,7 +69,7 @@ public abstract class ModelElf<T extends Entity> extends EntityModel<T> {
 		
 		body.addOrReplaceChild(leftHanded ? "armOff" : "armMain",
 				CubeListBuilder.create().texOffs(48, 0).addBox(-1.5f, -1, -1.5f, 3, 12, 3, true),
-				PartPose.offset((-(4 + 1.5f) / 16f), (-7f / 16f) + 1, 0)
+				PartPose.offset(-(4 + 1.5f), -7f + 1, 0)
 		);
 //		armRight.setPos(0, 1, 0);
 //		armRight.offsetY = (-7f / 16f);
@@ -106,22 +106,27 @@ public abstract class ModelElf<T extends Entity> extends EntityModel<T> {
 	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float headAngleY, float headAngleX) {
 		final boolean isWorking;
 		final boolean isIdle;
+		final boolean leftHanded;
 		
 		if (entity instanceof EntityElf) {
 			EntityElf elf = (EntityElf) entity;
 			isWorking = elf.getElfPose() == ArmPoseElf.WORKING;
 			isIdle = elf.getElfPose() == ArmPoseElf.IDLE;
+			leftHanded = elf.isLeftHanded();
 		} else if (entity instanceof EntityShadowFey) {
 			EntityShadowFey shadow = (EntityShadowFey) entity;
 			isWorking = false;
 			isIdle = shadow.getStance() == BattleStanceShadowFey.IDLE;
+			leftHanded = shadow.isLeftHanded();
 		} else {
 			isWorking = false;
 			isIdle = false;
+			leftHanded = false;
 		}
 		
 		body.yRot = 0;
 		body.xRot = 0;
+		body.y = 7;
 		head.xRot = headAngleX * 0.017453292F;
 		head.yRot = headAngleY * 0.017453292F;
 		
@@ -135,13 +140,25 @@ public abstract class ModelElf<T extends Entity> extends EntityModel<T> {
 		armMain.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 2.0F * limbSwingAmount * 0.5F;
 		armMain.zRot = 0;
 		armMain.yRot = 0;
+		armMain.y = -7f;
+		armMain.x = (4 + 1.5f) * (leftHanded ? 1 : -1);
+		armMain.z = 0;
 		armOff.xRot = Mth.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F;
 		armOff.zRot = 0;
 		armOff.yRot = 0;
+		armOff.y = -7f;
+		armOff.x = (4 + 1.5f) * (leftHanded ? -1 : 1);;
+		armOff.z = 0;
 		
 		
 		legRight.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+		legRight.y = 7f;
+		legRight.x = -2f;
+		legRight.z = 0;
 		legLeft.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
+		legLeft.y = 7f;
+		legLeft.x = 2f;
+		legLeft.z = 0;
 		
 		//if (elf.isSwingInProgress || elf.getPose() != ArmPose.IDLE) {
 		final ModelPart heldMain = this.getHeldMainHand();

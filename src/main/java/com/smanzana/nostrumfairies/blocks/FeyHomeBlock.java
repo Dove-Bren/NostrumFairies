@@ -231,7 +231,7 @@ public class FeyHomeBlock extends FeyContainerBlock {
 	
 	@Override
 	public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-		return new HomeBlockTileEntity(pos, state);
+		return isCenter(state) ? new HomeBlockTileEntity(pos, state, type) : null;
 	}
 	
 	@Override

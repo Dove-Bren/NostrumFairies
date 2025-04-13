@@ -30,13 +30,13 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 		
 		root.getChild("body").getChild("armMain").addOrReplaceChild("dagger",
 				makeDagger(),
-				PartPose.offset(0, (10f / 16f), 0)
+				PartPose.offset(0, 10f, 0)
 		);
 		//dagger.offsetY = (10f / 16f); // height of arm, - a bit
 		
 		root.getChild("body").getChild("armOff").addOrReplaceChild("bow",
 				makeBow(),
-				PartPose.offset(0, (11f / 16f), 0)
+				PartPose.offset(0, 11f, 0)
 		);
 		//bow.offsetY = (11f / 16f); // height of arm, - a bit
 		
@@ -90,18 +90,22 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 		
 		final boolean isAttacking;
 		final boolean useBow;
+		final boolean leftHanded;
 		
 		if (entity instanceof EntityElfArcher) {
 			EntityElfArcher elf = (EntityElfArcher) entity;
 			isAttacking = elf.getElfPose() == ArmPoseElf.ATTACKING;
 			useBow = elf.getStance() == BattleStanceElfArcher.RANGED;
+			leftHanded = elf.isLeftHanded();
 		} else if (entity instanceof EntityShadowFey) {
 			EntityShadowFey shadow = (EntityShadowFey) entity;
 			isAttacking = shadow.getStance() != BattleStanceShadowFey.IDLE;
 			useBow = shadow.getStance() != BattleStanceShadowFey.MELEE;
+			leftHanded = shadow.isLeftHanded();
 		} else {
 			isAttacking = (entity instanceof Mob ? ((Mob) entity).getTarget() != null : false);
 			useBow = false;
+			leftHanded = false;
 		}
 		
 		dagger.zRot = 0;
@@ -116,8 +120,7 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 			if (useBow) {
 				double targetDist = 0;
 				//LivingEntity target = elf.getAttackTarget();
-				int unused;
-				float sign = 1f;//TODO (leftHanded ? -1 : 1);
+				float sign = (leftHanded ? -1 : 1);
 //				if (target != null) {
 //					targetDist = elf.getDistanceSqToEntity(target);
 //				}
@@ -125,36 +128,36 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 				targetDist = 16;
 				
 				// Default position
-				armMain.xRot = (float) -(Math.PI * (.5 + .2 * Math.min(1, targetDist / 64)));
 				armOff.xRot = (float) -(Math.PI * (.5 + .2 * Math.min(1, targetDist / 64)));
-				armOff.yRot = .1f;
-				armOff.x += (sign) * entity.getBbWidth() / 2;
-				armOff.z -= entity.getBbWidth() / 4;
-				armOff.y += entity.getBbHeight() / 24;
+				armMain.xRot = (float) -(Math.PI * (.5 + .2 * Math.min(1, targetDist / 64)));
+				armMain.yRot = .1f;
+				armMain.x += 16 * (sign) * entity.getBbWidth() / 2;
+				armMain.z -= 16 * entity.getBbWidth() / 4;
+				armMain.y += 16 * entity.getBbHeight() / 24;
 				
 				//if (elf.isSwingInProgress || swingProgress > 0f) {
 				if (attackTime > 0f) {
 					// .1 to reach string and notch arrow
 					if (attackTime < .1f) {
 						float progress = attackTime / .1f;
-						armOff.x += (sign) * (entity.getBbWidth() / 3) * Math.sin(Math.PI * .5 * progress);
+						armMain.x += 16 * (sign) * (entity.getBbWidth() / 3) * Math.sin(Math.PI * .5 * progress);
 					} else if (attackTime < .5f) { // .4 to draw it back
 						float progress = (attackTime - .1f) / .4f;
-						armOff.x += (sign) * (entity.getBbWidth() / 3) * Math.sin(Math.PI * (.5 + .5 * progress));
+						armMain.x += 16 * (sign) * (entity.getBbWidth() / 3) * Math.sin(Math.PI * (.5 + .5 * progress));
 					} else {
 						; //hold initial position
 					}
 				}
 				
 				double tilt = .5;
-				armMain.yRot += -sign * (float) (Math.PI * tilt);
 				armOff.yRot += -sign * (float) (Math.PI * tilt);
+				armMain.yRot += -sign * (float) (Math.PI * tilt);
 				this.body.yRot += sign * (float) (Math.PI * tilt);
 				this.head.yRot += -sign * (float) (Math.PI * tilt);
 				
 				double magnitude = .075;
 				float bend = (float) (Math.PI * magnitude);
-				float offsetY = (float) magnitude / 8;
+				float offsetY = 16 * (float) magnitude / 8;
 				body.y += offsetY;
 				body.xRot = bend;
 				legLeft.y -= offsetY;
@@ -165,11 +168,10 @@ public class ModelElfArcher<T extends Entity> extends ModelElf<T> {
 				legRight.xRot = -bend;
 				
 			} else {
-				int unused;
-				float sign = 1;//(leftHanded ? -1 : 1); TODO
+				float sign = (leftHanded ? -1 : 1);
 				double magnitude = .075;
 				float bend = (float) (Math.PI * magnitude);
-				float offsetY = (float) magnitude / 8;
+				float offsetY = 16 * (float) magnitude / 8;
 				body.y += offsetY;
 				body.xRot = bend;
 				legLeft.y -= offsetY;

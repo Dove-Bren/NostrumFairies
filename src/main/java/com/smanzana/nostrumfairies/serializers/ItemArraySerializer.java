@@ -33,10 +33,15 @@ public class ItemArraySerializer implements EntityDataSerializer<ItemStack[]> {
 	@Override
 	public ItemStack[] read(FriendlyByteBuf buf) {
 		int count = buf.readInt();
-		ItemStack array[] = new ItemStack[Math.max(1, count)];
+		int size = Math.max(1, count);
+		ItemStack array[] = new ItemStack[size];
 		
-		for (int i = 0; i < count; i++) {
-			array[i] = buf.readItem();
+		for (int i = 0; i < size; i++) {
+			if (i < count) {
+				array[i] = buf.readItem();
+			} else {
+				array[i] = ItemStack.EMPTY;
+			}
 		}
 		
 		return array;
