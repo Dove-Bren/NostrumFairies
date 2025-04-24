@@ -16,7 +16,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -206,7 +205,8 @@ public class SoulJar extends Item implements ILoreTagged {
 			if (!filled.isEmpty()) {
 				playerIn.setItemInHand(hand, filled);
 				//target.remove();
-				((ServerLevel) playerIn.level).removeEntity(target);
+				target.discard();
+				//((ServerLevel) playerIn.level).removeEntity(target);
 				return InteractionResult.SUCCESS;
 			}
 		}

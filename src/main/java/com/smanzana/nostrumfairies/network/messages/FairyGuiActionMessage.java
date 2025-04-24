@@ -8,7 +8,7 @@ import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
 import com.smanzana.nostrumfairies.inventory.FairyHolderInventory;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Client has made a client-side action in the fairy gui

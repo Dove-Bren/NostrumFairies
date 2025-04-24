@@ -42,7 +42,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.DifficultyInstance;
@@ -1060,7 +1059,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		if (replacement != null) {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
-			((ServerLevel) level).removeEntity(this);
+			this.discard();
+			//((ServerLevel) level).removeEntity(this);
 			level.addFreshEntity(replacement);
 		}
 		

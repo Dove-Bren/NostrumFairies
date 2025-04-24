@@ -151,7 +151,7 @@ public class GatheringBlockTileEntity extends LogisticsTileEntity implements Tic
 		
 		// Idk if this is actually faster than 6 conditionals.
 		return (e.level == this.level &&
-				this.worldPosition.distSqr(e.getX(), e.getY(), e.getZ(), true) <=
+				this.worldPosition.distToCenterSqr(e.getX(), e.getY(), e.getZ()) <=
 					Math.pow(radius * 1.7321, 2));
 	}
 	

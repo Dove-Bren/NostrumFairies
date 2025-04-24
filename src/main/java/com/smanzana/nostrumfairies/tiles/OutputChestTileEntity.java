@@ -118,8 +118,8 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 	}
 	
 	@Override
-	public CompoundTag save(CompoundTag nbt) {
-		nbt = super.save(nbt);
+	public void saveAdditional(CompoundTag nbt) {
+		super.saveAdditional(nbt);
 		
 		// Save templates
 		ListTag templates = new ListTag();
@@ -138,8 +138,6 @@ public class OutputChestTileEntity extends LogisticsChestTileEntity implements I
 		}
 		nbt.put(NBT_TEMPLATES, templates);
 		nbt.put(NBT_LOGIC_COMP, this.logicComp.write(new CompoundTag()));
-		
-		return nbt;
 	}
 	
 	@Override

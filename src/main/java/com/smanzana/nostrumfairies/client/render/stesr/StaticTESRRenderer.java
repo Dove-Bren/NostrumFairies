@@ -162,7 +162,7 @@ public class StaticTESRRenderer {
 			}
 			
 			
-			if (targ.te.getBlockPos().distSqr(camera.x(), camera.y(), camera.z(), true) < 10000
+			if (targ.te.getBlockPos().distToCenterSqr(camera.x(), camera.y(), camera.z()) < 10000
 					&& clippinghelper.isVisible(bb)) {
 				drawTarget(targ, matrixStackIn, renderInfo, player, partialTicks);
 			}

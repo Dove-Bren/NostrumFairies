@@ -43,12 +43,12 @@ public abstract class LogisticsTileEntity extends BlockEntity {
 	
 	@Override
 	public ClientboundBlockEntityDataPacket getUpdatePacket() {
-		return new ClientboundBlockEntityDataPacket(this.worldPosition, 3, this.getUpdateTag());
+		return ClientboundBlockEntityDataPacket.create(this);
 	}
 
 	@Override
 	public CompoundTag getUpdateTag() {
-		return this.save(new CompoundTag());
+		return this.saveWithId(); // With ID to force non-empty, which gets transformed to null
 	}
 	
 	@Override
@@ -58,16 +58,14 @@ public abstract class LogisticsTileEntity extends BlockEntity {
 	}
 	
 	@Override
-	public CompoundTag save(CompoundTag nbt) {
+	public void saveAdditional(CompoundTag nbt) {
 		// We STORE the UUID of our network... but only so we can communicate it to the client.
 		// We hook things back up on the server when we load by position.
-		nbt = super.save(nbt);
+		super.saveAdditional(nbt);
 		
 		if (this.networkComponent != null) {
 			nbt.putUUID(NBT_NETWORK_COMP_UUID, this.networkComponent.componentID);
 		}
-		
-		return nbt;
 	}
 	
 	@Override

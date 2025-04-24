@@ -61,7 +61,7 @@ public final class Paths {
 	 */
 	public static boolean IsComplete(Path path, BlockPos target, int maxDistance) {
 		Node end = path.getEndNode();
-		return target.distSqr(end.x, end.y, end.z, true) <= Math.pow(maxDistance, 2); // 0 or 1 blocks away, please!
+		return target.distToCenterSqr(end.x, end.y, end.z) <= Math.pow(maxDistance, 2); // 0 or 1 blocks away, please!
 	}
 	
 	public static PathPublic ClonePath(Path path) {

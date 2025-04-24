@@ -121,7 +121,7 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	}
 	
 	public static boolean isLeafMaterial(BlockState state) {
-		return BlockTags.LEAVES.contains(state.getBlock());
+		return state.is(BlockTags.LEAVES);
 	}
 	
 	public static boolean isLeafMaterial(Level world, BlockPos pos) {
@@ -129,7 +129,7 @@ public class WoodcuttingBlock extends FeyContainerBlock {
 	}
 	
 	public static boolean isTrunkMaterial(BlockState state) {
-		return BlockTags.LOGS.contains(state.getBlock()) && !(state.getBlock() instanceof FeyHomeBlock);
+		return state.is(BlockTags.LOGS) && !(state.getBlock() instanceof FeyHomeBlock);
 	}
 	
 	public static boolean isTrunkMaterial(Level world, BlockPos pos) {

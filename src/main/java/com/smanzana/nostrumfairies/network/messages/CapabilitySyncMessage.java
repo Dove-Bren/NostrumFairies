@@ -10,7 +10,7 @@ import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Server is sending the most recent version of the fey capability to a client-side player

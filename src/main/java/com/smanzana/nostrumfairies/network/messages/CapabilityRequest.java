@@ -6,7 +6,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Client has requested an update about the their fey capability

@@ -712,8 +712,8 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements Tickable
 	}
 	
 	@Override
-	public CompoundTag save(CompoundTag nbt) {
-		nbt = super.save(nbt);
+	public void saveAdditional(CompoundTag nbt) {
+		super.saveAdditional(nbt);
 		
 		nbt.putString(NBT_TYPE, type.name());
 		nbt.putString(NBT_NAME, getName());
@@ -736,8 +736,6 @@ public class HomeBlockTileEntity extends LogisticsTileEntity implements Tickable
 		nbt.put(NBT_UPGRADES, this.upgradeInv.toNBT());
 		nbt.put(NBT_SLOT_INV, slotInv.toNBT());
 		nbt.put(NBT_HANDLER, handler.writeToNBT(new CompoundTag()));
-		
-		return nbt;
 	}
 	
 	@Override

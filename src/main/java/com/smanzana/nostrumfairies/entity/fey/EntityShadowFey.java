@@ -474,7 +474,7 @@ public class EntityShadowFey extends Monster implements RangedAttackMob {
 	public boolean checkSpawnRules(LevelAccessor worldIn, MobSpawnType spawnReasonIn) {
 		// Shadow fey amass ar mies in the twilight forest. So let's make sure to only spawn them when other things can spawn.
 		if ((spawnReasonIn == MobSpawnType.NATURAL || spawnReasonIn == MobSpawnType.CHUNK_GENERATION)
-				&& this.level.getBiome(this.blockPosition()).getMobSettings().getMobs(MobCategory.MONSTER).unwrap().size() <= 2) {
+				&& this.level.getBiome(this.blockPosition()).value().getMobSettings().getMobs(MobCategory.MONSTER).unwrap().size() <= 2) {
 			return false;
 		}
 		

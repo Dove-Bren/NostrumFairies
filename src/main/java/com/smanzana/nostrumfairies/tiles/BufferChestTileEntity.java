@@ -88,8 +88,8 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 	}
 	
 	@Override
-	public CompoundTag save(CompoundTag nbt) {
-		nbt = super.save(nbt);
+	public void saveAdditional(CompoundTag nbt) {
+		super.saveAdditional(nbt);
 		
 		// Save templates
 		ListTag templates = new ListTag();
@@ -107,8 +107,6 @@ public class BufferChestTileEntity extends LogisticsChestTileEntity {
 			templates.add(template);
 		}
 		nbt.put(NBT_TEMPLATES, templates);
-		
-		return nbt;
 	}
 	
 	@Override

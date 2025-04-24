@@ -11,7 +11,7 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.gui.ForgeIngameGui;
 import net.minecraftforge.client.gui.IIngameOverlay;
 import net.minecraftforge.client.gui.OverlayRegistry;
@@ -47,13 +47,16 @@ public class OverlayRenderer extends GuiComponent {
 	}
 	
 	@SubscribeEvent
-	public void onRender(RenderWorldLastEvent event) {
+	public void onRender(RenderLevelStageEvent event) {
+		if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRIPWIRE_BLOCKS) {
+			return;
+		}
 		final Minecraft mc = Minecraft.getInstance();
 		LocalPlayer player = mc.player;
-		final PoseStack matrixStackIn = event.getMatrixStack();
+		final PoseStack matrixStackIn = event.getPoseStack();
 		
 		// Hook into static TESR renderer
-		StaticTESRRenderer.instance.render(matrixStackIn, event.getProjectionMatrix(), mc, player, event.getPartialTicks());
+		StaticTESRRenderer.instance.render(matrixStackIn, event.getProjectionMatrix(), mc, player, event.getPartialTick());
 	}
 	
 	private void renderTemplateNameOverlay(ForgeIngameGui gui, PoseStack matrixStackIn, float partialTicks, int width, int height) {

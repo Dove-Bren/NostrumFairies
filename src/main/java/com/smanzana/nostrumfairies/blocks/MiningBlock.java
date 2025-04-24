@@ -139,7 +139,7 @@ public class MiningBlock extends FeyContainerBlock {
 		}
 		
 		// See if it's one of the known ores
-		if (Tags.Blocks.ORES.contains(state.getBlock())) {
+		if (state.is(Tags.Blocks.ORES)) {
 			return true;
 		}
 		

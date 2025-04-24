@@ -1008,10 +1008,10 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements Tickab
 		public static final String NBT_TORCHES = "torches";
 		
 		@Override
-		public CompoundTag save(CompoundTag nbt) {
+		public void saveAdditional(CompoundTag nbt) {
 			// We STORE the UUID of our network... but only so we can communicate it to the client.
 			// We hook things back up on the server when we load by position.
-			nbt = super.save(nbt);
+			super.saveAdditional(nbt);
 			
 			ListTag list = new ListTag();
 			for (BlockPos pos : oreLocations) {
@@ -1043,8 +1043,6 @@ public class MiningBlockTileEntity extends LogisticsTileEntity implements Tickab
 				list.add(NbtUtils.writeBlockPos(pos));
 			}
 			nbt.put("paths", list);
-			
-			return nbt;
 		}
 		
 		@Override

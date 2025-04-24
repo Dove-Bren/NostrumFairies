@@ -32,7 +32,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -684,7 +683,8 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 			// Kill this entity and add the other one
 			replacement.copyFrom(this);
 			//this.remove();
-			((ServerLevel) level).removeEntity(this);
+			this.discard();
+			//((ServerLevel) level).removeEntity(this);
 			level.addFreshEntity(replacement);
 		}
 		

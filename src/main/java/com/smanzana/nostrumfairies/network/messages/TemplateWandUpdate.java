@@ -11,7 +11,7 @@ import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Client has changed mode or index and is sending such to the server

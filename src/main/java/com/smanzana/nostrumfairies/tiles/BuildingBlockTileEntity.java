@@ -260,14 +260,12 @@ public class BuildingBlockTileEntity extends LogisticsTileEntity implements Tick
 	}
 	
 	@Override
-	public CompoundTag save(CompoundTag nbt) {
-		nbt = super.save(nbt);
+	public void saveAdditional(CompoundTag nbt) {
+		super.saveAdditional(nbt);
 		
 		if (this.slot != null) {
 			nbt.put(NBT_SLOT, slot.serializeNBT());
 		}
-		
-		return nbt;
 	}
 	
 	@Override

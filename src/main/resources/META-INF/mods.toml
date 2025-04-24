@@ -1,44 +1,42 @@
 modLoader="javafml" #mandatory
-loaderVersion="[36,)"
+loaderVersion="${loader_version_range}"
 
 # The license for your mod. This is mandatory and allows for easier comprehension of your redistributive properties.
 # Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
-license="All Rights Reserved"
+license="${mod_license}"
 
 [[mods]]
-modId="nostrumfairies"
-version="${file.jarVersion}"
-displayName="Nostrum Fairies"
+modId="${mod_id}" 
+version="${mod_version}"
+displayName="${mod_name}"
 #logoFile="examplemod.png" #optional
-authors="Skyler Manzanares"
-description='''
-Fairy-based logistics add-on for Nostrum Magica
-'''
+authors="{$mod_authors}"
+description='''${mod_description}'''
 
 [[dependencies.nostrumfairies]]
 	modId="forge"
 	mandatory=true
-	versionRange="[36,)"
+	versionRange="${loader_version_range}"
 	ordering="NONE"
 	side="BOTH"
 
 [[dependencies.nostrumfairies]]
 	modId="nostrummagica"
 	mandatory=true
-	versionRange="[1.16.5-1.11.0,)"
+	versionRange="[${nostrummagica_version},)"
 	ordering="AFTER"
 	side="BOTH"
 
 [[dependencies.nostrumfairies]]
 	modId="nostrumaetheria"
 	mandatory=true
-	versionRange="[1.16.5-1.3.0,)"
+	versionRange="[${aetheria_version},)"
 	ordering="AFTER"
 	side="BOTH"
 
 [[dependencies.nostrumfairies]]
 	modId="autodungeons"
 	mandatory=true
-	versionRange="[1.16.5-1.0.0,)"
+	versionRange="[${autodungeons_version},)"
 	ordering="AFTER"
 	side="BOTH"

@@ -354,8 +354,8 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 	}
 	
 	@Override
-	public CompoundTag save(CompoundTag nbt) {
-		nbt = super.save(nbt);
+	public void saveAdditional(CompoundTag nbt) {
+		super.saveAdditional(nbt);
 		
 		// Save templates
 		ListTag templates = new ListTag();
@@ -377,8 +377,6 @@ public abstract class CraftingBlockTileEntity extends LogisticsChestTileEntity
 		nbt.put(NBT_LOGIC_COMP, logicComp.write(new CompoundTag()));
 		
 		nbt.putFloat(NBT_BUILD_POINTS, buildPoints);
-		
-		return nbt;
 	}
 	
 	@Override

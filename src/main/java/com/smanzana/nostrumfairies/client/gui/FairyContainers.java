@@ -15,7 +15,7 @@ import com.smanzana.nostrumfairies.client.gui.container.StorageChestGui;
 import com.smanzana.nostrumfairies.client.gui.container.TemplateWandGui;
 
 import net.minecraft.world.inventory.MenuType;
-import net.minecraftforge.common.extensions.IForgeContainerType;
+import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -44,17 +44,17 @@ public class FairyContainers {
 	public static void registerContainers(final RegistryEvent.Register<MenuType<?>> event) {
 		final IForgeRegistry<MenuType<?>> registry = event.getRegistry();
 		
-		registry.register(IForgeContainerType.create(BufferChestGui.BufferChestContainer::FromNetwork).setRegistryName(BufferChestGui.BufferChestContainer.ID));
-		registry.register(IForgeContainerType.create(BuildingBlockGui.BuildingBlockContainer::FromNetwork).setRegistryName(BuildingBlockGui.BuildingBlockContainer.ID));
-		registry.register(IForgeContainerType.create(CraftingStationGui.CraftingStationContainer::FromNetwork).setRegistryName(CraftingStationGui.CraftingStationContainer.ID));
-		registry.register(IForgeContainerType.create(CraftingStationSmallGui.CraftingStationSmallContainer::FromNetwork).setRegistryName(CraftingStationSmallGui.CraftingStationSmallContainer.ID));
-		registry.register(IForgeContainerType.create(FairyScreenGui.FairyScreenContainer::FromNetwork).setRegistryName(FairyScreenGui.FairyScreenContainer.ID));
-		registry.register(IForgeContainerType.create(HomeBlockGui.HomeBlockContainer::FromNetwork).setRegistryName(HomeBlockGui.HomeBlockContainer.ID));
-		registry.register(IForgeContainerType.create(InputChestGui.InputChestContainer::FromNetwork).setRegistryName(InputChestGui.InputChestContainer.ID));
-		registry.register(IForgeContainerType.create(LogisticsSensorGui.LogisticsSensorContainer::FromNetwork).setRegistryName(LogisticsSensorGui.LogisticsSensorContainer.ID));
-		registry.register(IForgeContainerType.create(OutputChestGui.OutputChestContainer::FromNetwork).setRegistryName(OutputChestGui.OutputChestContainer.ID));
-		registry.register(IForgeContainerType.create(OutputPanelGui.OutputPanelContainer::FromNetwork).setRegistryName(OutputPanelGui.OutputPanelContainer.ID));
-		registry.register(IForgeContainerType.create(StorageChestGui.StorageChestContainer::FromNetwork).setRegistryName(StorageChestGui.StorageChestContainer.ID));
-		registry.register(IForgeContainerType.create(TemplateWandGui.TemplateWandContainer::FromNetwork).setRegistryName(TemplateWandGui.TemplateWandContainer.ID));
+		registry.register(IForgeMenuType.create(BufferChestGui.BufferChestContainer::FromNetwork).setRegistryName(BufferChestGui.BufferChestContainer.ID));
+		registry.register(IForgeMenuType.create(BuildingBlockGui.BuildingBlockContainer::FromNetwork).setRegistryName(BuildingBlockGui.BuildingBlockContainer.ID));
+		registry.register(IForgeMenuType.create(CraftingStationGui.CraftingStationContainer::FromNetwork).setRegistryName(CraftingStationGui.CraftingStationContainer.ID));
+		registry.register(IForgeMenuType.create(CraftingStationSmallGui.CraftingStationSmallContainer::FromNetwork).setRegistryName(CraftingStationSmallGui.CraftingStationSmallContainer.ID));
+		registry.register(IForgeMenuType.create(FairyScreenGui.FairyScreenContainer::FromNetwork).setRegistryName(FairyScreenGui.FairyScreenContainer.ID));
+		registry.register(IForgeMenuType.create(HomeBlockGui.HomeBlockContainer::FromNetwork).setRegistryName(HomeBlockGui.HomeBlockContainer.ID));
+		registry.register(IForgeMenuType.create(InputChestGui.InputChestContainer::FromNetwork).setRegistryName(InputChestGui.InputChestContainer.ID));
+		registry.register(IForgeMenuType.create(LogisticsSensorGui.LogisticsSensorContainer::FromNetwork).setRegistryName(LogisticsSensorGui.LogisticsSensorContainer.ID));
+		registry.register(IForgeMenuType.create(OutputChestGui.OutputChestContainer::FromNetwork).setRegistryName(OutputChestGui.OutputChestContainer.ID));
+		registry.register(IForgeMenuType.create(OutputPanelGui.OutputPanelContainer::FromNetwork).setRegistryName(OutputPanelGui.OutputPanelContainer.ID));
+		registry.register(IForgeMenuType.create(StorageChestGui.StorageChestContainer::FromNetwork).setRegistryName(StorageChestGui.StorageChestContainer.ID));
+		registry.register(IForgeMenuType.create(TemplateWandGui.TemplateWandContainer::FromNetwork).setRegistryName(TemplateWandGui.TemplateWandContainer.ID));
 	}
 }

@@ -12,7 +12,7 @@ import com.smanzana.nostrumfairies.logistics.FakeLogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Server has processed a request for an update about all logistics networks and is

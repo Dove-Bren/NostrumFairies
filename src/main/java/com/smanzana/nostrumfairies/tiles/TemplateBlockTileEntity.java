@@ -58,18 +58,16 @@ public class TemplateBlockTileEntity extends MimicBlockTileEntity {
 	// Notably, this makes sending chunked updates AND discrete updates send the whole TE instead of a trimmed version
 	@Override
 	public CompoundTag getUpdateTag() {
-		return this.save(new CompoundTag());
+		return this.saveWithId();
 	}
 	
 	@Override
-	public CompoundTag save(CompoundTag compound) {
-		super.save(compound);
+	public void saveAdditional(CompoundTag compound) {
+		super.saveAdditional(compound);
 		
 		if (state != null) {
 			compound.put(NBT_STATE, NbtUtils.writeBlockState(state));
 		}
-		
-		return compound;
 	}
 
 	@Override

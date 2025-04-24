@@ -199,7 +199,7 @@ public class ClientInit {
 	public static void stitchEventPre(TextureStitchEvent.Pre event) {
 		// Note: called multiple times for different texture atlases.
 		// Using what Botania does
-		if(event.getMap().location() != TextureAtlas.LOCATION_BLOCKS) {
+		if(event.getAtlas().location() != TextureAtlas.LOCATION_BLOCKS) {
 			return;
 		}
 		

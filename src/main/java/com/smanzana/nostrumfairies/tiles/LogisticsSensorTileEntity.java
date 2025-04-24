@@ -27,14 +27,12 @@ public class LogisticsSensorTileEntity extends LogisticsTileEntity implements Ti
 	}
 	
 	@Override
-	public CompoundTag save(CompoundTag nbt) {
-		nbt = super.save(nbt);
+	public void saveAdditional(CompoundTag nbt) {
+		super.saveAdditional(nbt);
 		
 		CompoundTag tag = new CompoundTag();
 		logicComp.write(tag);
 		nbt.put(NBT_LOGIC_COMP, tag);
-		
-		return nbt;
 	}
 	
 	@Override

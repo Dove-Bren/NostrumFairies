@@ -175,16 +175,14 @@ public class StorageMonitorTileEntity extends LogisticsTileEntity implements ILo
 	}
 	
 	@Override
-	public CompoundTag save(CompoundTag nbt) {
-		super.save(nbt);
+	public void saveAdditional(CompoundTag nbt) {
+		super.saveAdditional(nbt);
 		
 		ListTag list = new ListTag();
 		for (ItemStack stack : requests) {
 			list.add(stack.serializeNBT());
 		}
 		nbt.put(NBT_REQUESTS, list);
-		
-		return nbt;
 	}
 	
 	@Override
