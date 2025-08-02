@@ -135,7 +135,7 @@ public class LogisticsTaskMineBlock extends LogisticsTaskBase {
 			}
 		}
 		
-		if (!world.isAreaLoaded(block, 1)) {
+		if (!world.isLoaded(block)) {
 			return false;
 		}
 		

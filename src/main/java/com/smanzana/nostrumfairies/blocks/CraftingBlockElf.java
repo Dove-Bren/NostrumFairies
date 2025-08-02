@@ -92,7 +92,7 @@ public class CraftingBlockElf extends FeyContainerBlock {
 		}
 		
 		CraftingBlockElfTileEntity craftBlock = (CraftingBlockElfTileEntity) worldIn.getBlockEntity(pos);
-		NostrumMagica.instance.proxy.openContainer(playerIn, CraftingStationGui.CraftingStationContainer.Make(craftBlock));
+		NostrumMagica.Proxy.openContainer(playerIn, CraftingStationGui.CraftingStationContainer.Make(craftBlock));
 		
 		return InteractionResult.SUCCESS;
 	}

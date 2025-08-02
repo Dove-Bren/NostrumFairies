@@ -16,9 +16,9 @@ import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
+import com.smanzana.nostrummagica.loretag.ELoreCategory;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
@@ -82,10 +82,10 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	public Lore getDeepLore() {
 		return new Lore("test lore for test fairy lol");
 	}
-
+	
 	@Override
-	public InfoScreenTabs getTab() {
-		return InfoScreenTabs.INFO_ENTITY;
+	public ELoreCategory getCategory() {
+		return ELoreCategory.ENTITY;
 	}
 	
 	protected @Nonnull ItemStack getHeldItem() {

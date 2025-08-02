@@ -14,10 +14,13 @@ import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.attribute.NostrumAttributes;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
-import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
+import com.smanzana.nostrummagica.client.particles.NostrumParticles;
+import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
+import com.smanzana.nostrummagica.client.particles.ParticleTargetBehavior.TargetBehavior;
 import com.smanzana.nostrummagica.entity.tasks.AttackRangedGoal;
 import com.smanzana.nostrummagica.entity.tasks.SpellAttackGoal;
-import com.smanzana.nostrummagica.loretag.ILoreTagged;
+import com.smanzana.nostrummagica.loretag.ELoreCategory;
+import com.smanzana.nostrummagica.loretag.IEntityLoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.spell.EAlteration;
 import com.smanzana.nostrummagica.spell.EMagicElement;
@@ -25,6 +28,7 @@ import com.smanzana.nostrummagica.spell.Spell;
 import com.smanzana.nostrummagica.spell.component.SpellEffectPart;
 import com.smanzana.nostrummagica.spell.component.SpellShapePart;
 import com.smanzana.nostrummagica.spell.component.shapes.NostrumSpellShapes;
+import com.smanzana.nostrummagica.util.TargetLocation;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -164,7 +168,7 @@ public class EntityShadowFey extends Monster implements RangedAttackMob {
 			}
 		});
 		
-		this.goalSelector.addGoal(priority++, new AttackRangedGoal<EntityShadowFey>(this, 0.75, 10, 3) {
+		this.goalSelector.addGoal(priority++, new AttackRangedGoal<EntityShadowFey>(this, 0.75, 20, 1) {
 			@Override
 			public boolean hasWeaponEquipped(EntityShadowFey elf) {
 				return !shouldUseBow() && !elf.getMorphing();
@@ -172,12 +176,18 @@ public class EntityShadowFey extends Monster implements RangedAttackMob {
 			
 			@Override
 			protected boolean isAttackAnimationComplete(EntityShadowFey elf) {
-				return elf.attackAnim >= .7;// slash is .7 through animation
+				return elf.attackAnim >= .7f || !elf.swinging;// slash is .7 through animation
 			}
 			
 			@Override
 			protected void startAttackAnimation(EntityShadowFey elf) {
 				elf.swing(InteractionHand.MAIN_HAND);
+			}
+			
+			@Override
+			protected void resetAttackAnimation(EntityShadowFey elf) {
+				elf.swinging = false;
+				elf.swingTime = 0;
 			}
 		});
 		
@@ -320,6 +330,10 @@ public class EntityShadowFey extends Monster implements RangedAttackMob {
 	protected void slashAt(LivingEntity target, float distanceFactor) {
 		if (this.doHurtTarget(target)) {
 			this.heal(1f);
+			NostrumParticles.FILLED_ORB.spawn(level, new SpawnParams(
+					10, target.getX(), target.getY() + target.getBbHeight()/2f, target.getZ(), .1, 20, 10,
+					new TargetLocation(this, true)
+				).color(0xFFDD2200).setTargetBehavior(TargetBehavior.JOIN));
 		}
 	}
 
@@ -372,7 +386,7 @@ public class EntityShadowFey extends Monster implements RangedAttackMob {
 
 		if (this.swinging) {
 			++this.swingTime;
-
+			
 			if (this.swingTime >= i) {
 				this.swingTime = 0;
 				this.swinging = false;
@@ -491,7 +505,7 @@ public class EntityShadowFey extends Monster implements RangedAttackMob {
 		return NostrumFairiesSounds.SHADOW_FEY_HURT.getEvent();
 	}
 	
-	public static final class ShadowFeyConversionLore implements ILoreTagged {
+	public static final class ShadowFeyConversionLore implements IEntityLoreTagged<EntityShadowFey> {
 		
 		private static ShadowFeyConversionLore instance = null;
 		public static ShadowFeyConversionLore instance() {
@@ -520,10 +534,15 @@ public class EntityShadowFey extends Monster implements RangedAttackMob {
 		public Lore getDeepLore() {
 			return getBasicLore();
 		}
+		
+		@Override
+		public ELoreCategory getCategory() {
+			return ELoreCategory.ENTITY;
+		}
 
 		@Override
-		public InfoScreenTabs getTab() {
-			return InfoScreenTabs.INFO_ENTITY;
+		public EntityType<? extends EntityShadowFey> getEntityType() {
+			return FairyEntities.ShadowFey;
 		}
 	}
 }

@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.smanzana.autodungeons.item.IBlueprintHolder;
+import com.smanzana.autodungeons.api.item.IBlueprintHolder;
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
@@ -15,11 +15,12 @@ import com.smanzana.nostrumfairies.client.gui.container.TemplateWandGui;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.TemplateWandUpdate;
 import com.smanzana.nostrumfairies.network.messages.TemplateWandUpdate.WandUpdateType;
+import com.smanzana.nostrumfairies.research.FairyResearches;
 import com.smanzana.nostrumfairies.templates.TemplateBlueprint;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
-import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
-import com.smanzana.nostrummagica.item.ISelectionItem;
+import com.smanzana.nostrummagica.item.api.ISelectionItem;
+import com.smanzana.nostrummagica.loretag.ELoreCategory;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
@@ -276,8 +277,8 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 	}
 
 	@Override
-	public InfoScreenTabs getTab() {
-		return InfoScreenTabs.INFO_ITEMS;
+	public ELoreCategory getCategory() {
+		return ELoreCategory.ITEM;
 	}
 	
 	public static void HandleScroll(Player player, ItemStack stack, boolean forward) {
@@ -414,7 +415,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 					inHand = playerIn.getOffhandItem();
 					pos = Inventories.getPlayerHandSlotIndex(playerIn.getInventory(), InteractionHand.OFF_HAND);
 				}
-				NostrumMagica.instance.proxy.openContainer(playerIn, TemplateWandGui.TemplateWandContainer.Make(pos));
+				NostrumMagica.Proxy.openContainer(playerIn, TemplateWandGui.TemplateWandContainer.Make(pos));
 				return InteractionResultHolder.success(stack);
 			}
 		}
@@ -458,7 +459,7 @@ public class TemplateWand extends Item implements ILoreTagged, IBlueprintHolder,
 		}
 		
 		final INostrumMagic magic = NostrumMagica.getMagicWrapper(playerIn);
-		if (magic == null || !magic.getCompletedResearches().contains("logistics_construction") ) {
+		if (magic == null || !magic.getCompletedResearches().contains(FairyResearches.ID_Logistics_Construction) ) {
 			return InteractionResult.FAIL;
 		}
 		

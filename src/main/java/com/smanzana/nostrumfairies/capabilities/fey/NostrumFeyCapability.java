@@ -33,31 +33,32 @@ import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemDepositRequ
 import com.smanzana.nostrumfairies.logistics.requesters.LogisticsItemWithdrawRequester;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
 import com.smanzana.nostrumfairies.logistics.task.LogisticsTaskDepositItem;
+import com.smanzana.nostrumfairies.research.FairyResearches;
 import com.smanzana.nostrumfairies.serializers.FairyJob;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
 import com.smanzana.nostrummagica.item.PositionCrystal;
-import com.smanzana.nostrummagica.item.SpellScroll;
+import com.smanzana.nostrummagica.item.equipment.SpellScroll;
 import com.smanzana.nostrummagica.spell.Spell;
 import com.smanzana.nostrummagica.util.DimensionUtils;
 import com.smanzana.nostrummagica.util.Inventories;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -695,19 +696,19 @@ public class NostrumFeyCapability implements INostrumFeyCapability {
 	@Override
 	public boolean attackFairyUnlocked() {
 		INostrumMagic attr = NostrumMagica.getMagicWrapper(owner);
-		return attr != null && attr.getCompletedResearches().contains("fairy_gael_aggressive");
+		return attr != null && attr.getCompletedResearches().contains(FairyResearches.ID_Fairy_Gael_Aggressive);
 	}
 
 	@Override
 	public boolean builderFairyUnlocked() {
 		INostrumMagic attr = NostrumMagica.getMagicWrapper(owner);
-		return attr != null && attr.getCompletedResearches().contains("fairy_gael_construction");
+		return attr != null && attr.getCompletedResearches().contains(FairyResearches.ID_Fairy_Gael_Construction);
 	}
 
 	@Override
 	public boolean logisticsFairyUnlocked() {
 		INostrumMagic attr = NostrumMagica.getMagicWrapper(owner);
-		return attr != null && attr.getCompletedResearches().contains("fairy_gael_logistics");
+		return attr != null && attr.getCompletedResearches().contains(FairyResearches.ID_Fairy_Gael_Logistics);
 	}
 	
 	@Override

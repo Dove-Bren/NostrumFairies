@@ -32,7 +32,7 @@ public class InputLogisticsChest extends FeyContainerBlock {
 	@Override
 	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult hit) {
 		InputChestTileEntity chest = (InputChestTileEntity) worldIn.getBlockEntity(pos);
-		NostrumMagica.instance.proxy.openContainer(playerIn, InputChestGui.InputChestContainer.Make(chest));
+		NostrumMagica.Proxy.openContainer(playerIn, InputChestGui.InputChestContainer.Make(chest));
 		
 		return InteractionResult.SUCCESS;
 	}

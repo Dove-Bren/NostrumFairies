@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.client.model.FairiesModelLayers;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
-import com.smanzana.nostrummagica.client.model.ModelRenderShiv;
+import com.smanzana.nostrummagica.client.model.RenderShivModel;
 
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -13,7 +13,7 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
-public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShiv<EntityShadowFey>> {
+public class RenderShadowFey extends MobRenderer<EntityShadowFey, RenderShivModel<EntityShadowFey>> {
 	
 	private static ResourceLocation TEXT_SHADOW_FEY = new ResourceLocation(NostrumFairies.MODID, "textures/entity/shadow_fey.png");
 	
@@ -21,7 +21,7 @@ public class RenderShadowFey extends MobRenderer<EntityShadowFey, ModelRenderShi
 	protected ModelElfArcher<EntityShadowFey> modelRight;
 	
 	protected RenderShadowFey(EntityRendererProvider.Context renderManagerIn, float shadowSizeIn, ModelElfArcher<EntityShadowFey> left, ModelElfArcher<EntityShadowFey> right) {
-		super(renderManagerIn, new ModelRenderShiv<>(RenderType::entityTranslucent), shadowSizeIn);
+		super(renderManagerIn, new RenderShivModel<>(RenderType::entityTranslucent), shadowSizeIn);
 		this.modelLeft = left;
 		this.modelRight = right;
 	}

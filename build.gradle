@@ -99,6 +99,12 @@ repositories {
 	}
 	
 	maven {
+		// Local mods that aren't available on the net
+		name = "Local Maven"
+		url = "file://${local_maven_path}"
+	}
+	
+	maven {
         url = "https://maven.blamejared.com"
     }
     maven {
@@ -134,18 +140,18 @@ repositories {
 
 dependencies {
 	minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
-	compileOnly fg.deobf("com.smanzana:nostrumaetheria:${aetheria_version}:api")
-	runtimeOnly fg.deobf("com.smanzana:nostrumaetheria:${aetheria_version}")
 	
-	compileOnly fg.deobf("com.smanzana:nostrummagica:${nostrummagica_version}")
-	runtimeOnly fg.deobf("com.smanzana:nostrummagica:${nostrummagica_version}")
-
-	compileOnly fg.deobf("com.smanzana:petcommand:${petcommand_version}:api")
-	runtimeOnly fg.deobf("com.smanzana:petcommand:${petcommand_version}")
+	runtimeOnly fg.deobf("com.smanzana.petcommand:petcommand:${petcommand_version}")
+	compileOnly fg.deobf("com.smanzana.petcommand:petcommand:${petcommand_version}:api")
 	
-	runtimeOnly fg.deobf("com.smanzana:autodungeons:${autodungeons_version}")
-	compileOnly fg.deobf("com.smanzana:autodungeons:${autodungeons_version}")
+	runtimeOnly fg.deobf("com.smanzana.autodungeons:autodungeons:${autodungeons_version}")
+	compileOnly fg.deobf("com.smanzana.autodungeons:autodungeons:${autodungeons_version}")
+	
+	compileOnly fg.deobf("com.smanzana.nostrummagica:nostrummagica:${nostrummagica_version}")
+	runtimeOnly fg.deobf("com.smanzana.nostrummagica:nostrummagica:${nostrummagica_version}")
+	
+	implementation fg.deobf("com.smanzana.nostrumaetheria:nostrumaetheria:${aetheria_version}:api")
+	runtimeOnly fg.deobf("com.smanzana.nostrumaetheria:nostrumaetheria:${aetheria_version}")
 }
 
 task sourcesJar(type: Jar) {

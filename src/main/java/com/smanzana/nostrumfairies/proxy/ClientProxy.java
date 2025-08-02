@@ -10,6 +10,7 @@ import com.smanzana.nostrumfairies.items.TemplateWand.WandMode;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.network.messages.CapabilityRequest;
 import com.smanzana.nostrumfairies.network.messages.LogisticsUpdateRequest;
+import com.smanzana.nostrumfairies.research.FairyResearches;
 import com.smanzana.nostrumfairies.tiles.StorageMonitorTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
@@ -125,7 +126,7 @@ public class ClientProxy extends CommonProxy {
 		final boolean forwardPressed = bindingWandModeForward.consumeClick(); 
 		if (forwardPressed || bindingWandModeBackward.consumeClick()) {
 			final INostrumMagic magic = NostrumMagica.getMagicWrapper(player);
-			if (magic == null || !magic.getCompletedResearches().contains("logistics_construction") ) {
+			if (magic == null || !magic.getCompletedResearches().contains(FairyResearches.ID_Logistics_Construction)) {
 				return;
 			}
 			

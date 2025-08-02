@@ -22,54 +22,58 @@ import com.smanzana.nostrumfairies.serializers.FairyJob;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
-import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
 import com.smanzana.nostrummagica.entity.tasks.FlierDiveGoal;
 import com.smanzana.nostrummagica.entity.tasks.OrbitEntityGenericGoal;
 import com.smanzana.nostrummagica.entity.tasks.OwnerHurtByTargetGoalGeneric;
 import com.smanzana.nostrummagica.entity.tasks.SpellAttackGoal;
+import com.smanzana.nostrummagica.loretag.ELoreCategory;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.serializer.PetJobSerializer;
 import com.smanzana.nostrummagica.spell.Spell;
+import com.smanzana.nostrummagica.spell.SpellCastProperties;
 import com.smanzana.nostrummagica.util.Entities;
 import com.smanzana.nostrummagica.util.Inventories;
 import com.smanzana.petcommand.api.client.petgui.IPetGUISheet;
-import com.smanzana.petcommand.api.client.petgui.PetGUIStatAdapter;
 import com.smanzana.petcommand.api.entity.IEntityPet;
+import com.smanzana.petcommand.api.pet.EPetAction;
 import com.smanzana.petcommand.api.pet.PetInfo;
 import com.smanzana.petcommand.api.pet.PetInfo.ManagedPetInfo;
-import com.smanzana.petcommand.api.pet.PetInfo.PetAction;
-import com.smanzana.petcommand.api.pet.PetInfo.SecondaryFlavor;
+import com.smanzana.petcommand.api.pet.PetInfo.ValueFlavor;
 
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.monster.RangedAttackMob;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITrackableEntity<EntityPersonalFairy>, RangedAttackMob {
 	
 	public static final String ID = "personal_fairy";
+	
+	protected static final Component LABEL_ENERGY = new TranslatableComponent("pet.personal_fairy.energy.name");
 	
 	private static final String NBT_OWNER_ID = "owner_uuid";
 	private static final String NBT_JOB = "job";
@@ -79,7 +83,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	private static final EntityDataAccessor<FairyJob> DATA_JOB = SynchedEntityData.<FairyJob>defineId(EntityPersonalFairy.class, FairyJob.instance());
 	private static final EntityDataAccessor<Float> DATA_ENERGY = SynchedEntityData.<Float>defineId(EntityPersonalFairy.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Float> DATA_MAX_ENERGY = SynchedEntityData.<Float>defineId(EntityPersonalFairy.class, EntityDataSerializers.FLOAT);
-	private static final EntityDataAccessor<PetAction> DATA_PET_ACTION = SynchedEntityData.<PetAction>defineId(EntityPersonalFairy.class, PetJobSerializer.GetInstance());
+	private static final EntityDataAccessor<EPetAction> DATA_PET_ACTION = SynchedEntityData.<EPetAction>defineId(EntityPersonalFairy.class, PetJobSerializer.GetInstance());
 	
 	// Transient data, and only useful for Builders
 	private static final EntityDataAccessor<Optional<BlockPos>> DATA_BUILDER_SPOT = SynchedEntityData.<Optional<BlockPos>>defineId(EntityPersonalFairy.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
@@ -206,8 +210,8 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 
 	@Override
-	public InfoScreenTabs getTab() {
-		return InfoScreenTabs.INFO_ENTITY;
+	public ELoreCategory getCategory() {
+		return ELoreCategory.ENTITY;
 	}
 	
 	@Override
@@ -432,7 +436,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		LivingEntity owner = this.getOwner();
 		
 		if (owner == null || !owner.isAlive()) {
-			this.setPetAction(PetAction.IDLING);
+			this.setPetAction(EPetAction.IDLE);
 			return;
 		}
 		
@@ -445,12 +449,12 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			if (this.getBuildSpot() != null) {
 				// not idle
 				this.idleTicks = 0;
-				this.setPetAction(PetAction.WORKING);
+				this.setPetAction(EPetAction.WORK);
 				return;
 			}
 		}
 
-		this.setPetAction(PetAction.IDLING);
+		this.setPetAction(EPetAction.IDLE);
 		double distOwnerSq = this.distanceToSqr(owner);
 		
 		if (distOwnerSq > 1600) {
@@ -545,7 +549,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	protected void onTaskTick(ILogisticsTask task) {
 		super.onTaskTick(task);
 		idleTicks = 0;
-		this.setPetAction(PetAction.WORKING);
+		this.setPetAction(EPetAction.WORK);
 	}
 	
 	protected INostrumFeyCapability getOwnerAttr() {
@@ -748,7 +752,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		this.entityData.define(DATA_JOB, FairyJob.WARRIOR);
 		this.entityData.define(DATA_ENERGY, 100f);
 		this.entityData.define(DATA_MAX_ENERGY, 100f);
-		this.entityData.define(DATA_PET_ACTION, PetAction.IDLING);
+		this.entityData.define(DATA_PET_ACTION, EPetAction.IDLE);
 		this.entityData.define(DATA_BUILDER_SPOT, Optional.empty());
 	}
 	
@@ -801,13 +805,13 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 			return;
 		}
 		
-		this.setPetAction(PetAction.ATTACKING);
+		this.setPetAction(EPetAction.ATTACK);
 		idleTicks = 0;
 	}
 	
 	@Override
 	protected void onCientTick() {
-		if (this.getJob() == FairyJob.BUILDER && this.getPetAction() == PetAction.WORKING) {
+		if (this.getJob() == FairyJob.BUILDER && this.getPetAction() == EPetAction.WORK) {
 			// Don't have build ticks, so just guess
 			BlockPos pos = this.getBuildSpot();
 			if (pos == null || this.getDistanceSq(pos) > 3) {
@@ -939,11 +943,11 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		super.die(cause);
 	}
 	
-	public PetAction getPetAction() {
+	public EPetAction getPetAction() {
 		return entityData.get(DATA_PET_ACTION);
 	}
 	
-	public void setPetAction(PetAction action) {
+	public void setPetAction(EPetAction action) {
 		entityData.set(DATA_PET_ACTION, action);
 	}
 
@@ -1000,7 +1004,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	@Override
 	public void performRangedAttack(LivingEntity target, float distanceFactor) {
 		if (castSpell != null) {
-			castSpell.cast(this, 1f);
+			castSpell.cast(this, SpellCastProperties.BASE);
 			
 			LivingEntity owner = getOwner();
 			INostrumFeyCapability attr = NostrumFairies.getFeyWrapper(owner);
@@ -1012,7 +1016,7 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 
 	@Override
 	public PetInfo getPetSummary() {
-		infoInst.set(getHealth(), getMaxHealth(), getEnergy(), getMaxEnergy(), SecondaryFlavor.GRADUAL_GOOD, getPetAction());
+		infoInst.set(getPetAction(), getHealth(), getMaxHealth(), getEnergy(), getMaxEnergy(), ValueFlavor.GRADUAL_GOOD, LABEL_ENERGY);
 		return infoInst;
 	}
 	
@@ -1058,17 +1062,17 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 	}
 
 	@Override
-	public PetGUIStatAdapter<? extends IEntityPet> getGUIAdapter() {
-		return null;
-	}
-
-	@Override
 	public UUID getPetID() {
 		return this.getUUID();
 	}
 
 	@Override
 	public boolean isBigPet() {
+		return false;
+	}
+
+	@Override
+	public boolean setEntitySitting(boolean sitting) {
 		return false;
 	}
 }

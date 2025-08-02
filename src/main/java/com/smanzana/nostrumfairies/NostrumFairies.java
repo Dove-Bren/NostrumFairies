@@ -21,6 +21,7 @@ import com.smanzana.nostrumfairies.proxy.CommonProxy;
 import com.smanzana.nostrummagica.util.DimensionUtils;
 
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
@@ -58,7 +59,7 @@ public class NostrumFairies {
     public NostrumFairies() {
     	instance = this;
     	
-    	proxy = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
+    	proxy = DistExecutor.unsafeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
     	logisticsRegistryInitRecurseGuard = false;
     	
     	NostrumFairies.creativeTab = new CreativeModeTab(MODID){
@@ -172,4 +173,8 @@ public class NostrumFairies {
     		logger.debug(buffer.toString());
     	}
     }
+
+	public static final ResourceLocation Loc(String string) {
+		return new ResourceLocation(MODID, string);
+	}
 }

@@ -15,12 +15,13 @@ import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
-import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
 import com.smanzana.nostrummagica.entity.tasks.AttackRangedGoal;
+import com.smanzana.nostrummagica.loretag.ELoreCategory;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.spell.EAlteration;
 import com.smanzana.nostrummagica.spell.EMagicElement;
 import com.smanzana.nostrummagica.spell.Spell;
+import com.smanzana.nostrummagica.spell.SpellCastProperties;
 import com.smanzana.nostrummagica.spell.component.SpellEffectPart;
 import com.smanzana.nostrummagica.spell.component.SpellShapePart;
 import com.smanzana.nostrummagica.spell.component.shapes.NostrumSpellShapes;
@@ -105,10 +106,10 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, RangedA
 	public Lore getDeepLore() {
 		return new Lore("test lore for test fairy lol");
 	}
-
+	
 	@Override
-	public InfoScreenTabs getTab() {
-		return InfoScreenTabs.INFO_ENTITY;
+	public ELoreCategory getCategory() {
+		return ELoreCategory.ENTITY;
 	}
 	
 	private static final NonNullList<ItemStack> EMPTY = NonNullList.create();
@@ -536,9 +537,9 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, RangedA
 	@Override
 	public void performRangedAttack(LivingEntity target, float distanceFactor) {
 		if (random.nextFloat() < .1) {
-			SPELL_VINES.cast(this, 1.0f);
+			SPELL_VINES.cast(this, SpellCastProperties.BASE);
 		} else {
-			SPELL_POISON_WIND.cast(this, 1.0f);
+			SPELL_POISON_WIND.cast(this, SpellCastProperties.BASE);
 		}
 	}
 	

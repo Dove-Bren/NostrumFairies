@@ -108,7 +108,7 @@ public class LogisticsSensorBlock extends FeyContainerBlock
 		
 		// Don't wait, though, and show the UI
 		LogisticsSensorTileEntity sensor = (LogisticsSensorTileEntity) worldIn.getBlockEntity(pos);
-		NostrumMagica.instance.proxy.openContainer(playerIn, LogisticsSensorGui.LogisticsSensorContainer.Make(sensor));
+		NostrumMagica.Proxy.openContainer(playerIn, LogisticsSensorGui.LogisticsSensorContainer.Make(sensor));
 		
 		return InteractionResult.SUCCESS;
 	}

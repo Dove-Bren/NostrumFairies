@@ -30,7 +30,7 @@ import com.smanzana.nostrumfairies.tiles.MiningBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
-import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
+import com.smanzana.nostrummagica.loretag.ELoreCategory;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
 
@@ -107,8 +107,8 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	}
 
 	@Override
-	public InfoScreenTabs getTab() {
-		return InfoScreenTabs.INFO_ENTITY;
+	public ELoreCategory getCategory() {
+		return ELoreCategory.ENTITY;
 	}
 	
 	protected ItemStack[] getCarriedItemsRaw() {

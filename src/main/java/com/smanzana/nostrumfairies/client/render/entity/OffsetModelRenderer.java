@@ -3,11 +3,7 @@ package com.smanzana.nostrumfairies.client.render.entity;
 import java.util.List;
 import java.util.Map;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.smanzana.nostrummagica.client.model.ModelPartClone;
-
-import net.minecraft.client.model.Model;
+import com.smanzana.nostrummagica.client.model.PartCloneModel;
 
 /**
  * ModelRenderer that adds back the ability to set offsets to ease in porting.
@@ -19,11 +15,11 @@ import net.minecraft.client.model.Model;
  *
  */
 @Deprecated
-public class OffsetModelRenderer extends ModelPartClone {
+public class OffsetModelRenderer extends PartCloneModel {
 
 	private int unused;
 	
-	public OffsetModelRenderer(List<Cube> p_171306_, Map<String, ModelPartClone> p_171307_) {
+	public OffsetModelRenderer(List<Cube> p_171306_, Map<String, PartCloneModel> p_171307_) {
 		super(p_171306_, p_171307_);
 		// TODO Auto-generated constructor stub
 	}

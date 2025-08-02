@@ -129,7 +129,7 @@ public class LogisticsTaskPlaceBlock extends LogisticsTaskBase {
 		}
 		
 		// Also check here if the area around the block is a) loaded and b) exposed
-		if (!world.isAreaLoaded(block, 1)) {
+		if (!world.isLoaded(block)) {
 			return false;
 		}
 		

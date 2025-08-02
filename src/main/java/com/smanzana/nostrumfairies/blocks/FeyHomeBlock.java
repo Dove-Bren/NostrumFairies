@@ -129,7 +129,7 @@ public class FeyHomeBlock extends FeyContainerBlock {
 			return InteractionResult.FAIL;
 		}
 		
-		NostrumMagica.instance.proxy.openContainer(playerIn, HomeBlockGui.HomeBlockContainer.Make((HomeBlockTileEntity) te));
+		NostrumMagica.Proxy.openContainer(playerIn, HomeBlockGui.HomeBlockContainer.Make((HomeBlockTileEntity) te));
 		
 		return InteractionResult.SUCCESS;
 	}

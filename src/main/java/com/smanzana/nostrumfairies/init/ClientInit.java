@@ -150,18 +150,18 @@ public class ClientInit {
 	@SubscribeEvent
 	public static final void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
 		event.registerEntityRenderer(FairyEntities.TestFairy, (manager) -> new RenderTestFairy(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.Fairy, (manager) -> new RenderFairy(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.PersonalFairy, (manager) -> new RenderFairy(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.Dwarf, (manager) -> new RenderMiningDwarf(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.Fairy, (manager) -> new RenderFairy(manager, .25f));
+		event.registerEntityRenderer(FairyEntities.PersonalFairy, (manager) -> new RenderFairy(manager, .25f));
+		event.registerEntityRenderer(FairyEntities.Dwarf, (manager) -> new RenderMiningDwarf(manager, .25f));
 		event.registerEntityRenderer(FairyEntities.Elf, (manager) -> new RenderElf<>(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.Gnome, (manager) -> new RenderGnome(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.ElfArcher, (manager) -> new RenderElfArcher(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.ShadowFey, (manager) -> new RenderShadowFey(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.ElfCrafter, (manager) -> new RenderElfCrafter(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.DwarfCrafter, (manager) -> new RenderDwarfCrafter(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.DwarfBuilder, (manager) -> new RenderDwarfBuilder(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.GnomeCrafter, (manager) -> new RenderGnome(manager, 1.0f));
-		event.registerEntityRenderer(FairyEntities.GnomeCollector, (manager) -> new RenderGnome(manager, 1.0f));
+		event.registerEntityRenderer(FairyEntities.Gnome, (manager) -> new RenderGnome(manager, .25f));
+		event.registerEntityRenderer(FairyEntities.ElfArcher, (manager) -> new RenderElfArcher(manager, .25f));
+		event.registerEntityRenderer(FairyEntities.ShadowFey, (manager) -> new RenderShadowFey(manager, .25f));
+		event.registerEntityRenderer(FairyEntities.ElfCrafter, (manager) -> new RenderElfCrafter(manager, .25f));
+		event.registerEntityRenderer(FairyEntities.DwarfCrafter, (manager) -> new RenderDwarfCrafter(manager, .25f));
+		event.registerEntityRenderer(FairyEntities.DwarfBuilder, (manager) -> new RenderDwarfBuilder(manager, .25f));
+		event.registerEntityRenderer(FairyEntities.GnomeCrafter, (manager) -> new RenderGnome(manager, .25f));
+		event.registerEntityRenderer(FairyEntities.GnomeCollector, (manager) -> new RenderGnome(manager, .25f));
 		event.registerEntityRenderer(FairyEntities.ArrowEx, (manager) -> new TippableArrowRenderer(manager));
 	}
 	

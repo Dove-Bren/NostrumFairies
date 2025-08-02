@@ -140,7 +140,7 @@ public class OutputLogisticsPanel extends FeyContainerBlock {
 	@Override
 	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult hit) {
 		OutputPanelTileEntity panel = (OutputPanelTileEntity) worldIn.getBlockEntity(pos);
-		NostrumMagica.instance.proxy.openContainer(playerIn, OutputPanelGui.OutputPanelContainer.Make(panel));
+		NostrumMagica.Proxy.openContainer(playerIn, OutputPanelGui.OutputPanelContainer.Make(panel));
 		
 		return InteractionResult.SUCCESS;
 	}

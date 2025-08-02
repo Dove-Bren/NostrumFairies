@@ -7,26 +7,27 @@ import javax.annotation.Nullable;
 import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.client.gui.container.FairyScreenGui;
+import com.smanzana.nostrumfairies.research.FairyResearches;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrummagica.NostrumMagica;
 import com.smanzana.nostrummagica.capabilities.INostrumMagic;
-import com.smanzana.nostrummagica.client.gui.infoscreen.InfoScreenTabs;
+import com.smanzana.nostrummagica.loretag.ELoreCategory;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.Rarity;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.Util;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -106,8 +107,8 @@ public class FairyInstrument extends Item implements ILoreTagged {
 	}
 
 	@Override
-	public InfoScreenTabs getTab() {
-		return InfoScreenTabs.INFO_ITEMS;
+	public ELoreCategory getCategory() {
+		return ELoreCategory.ITEM;
 	}
 
 	public InstrumentType getType(ItemStack stack) {
@@ -128,7 +129,7 @@ public class FairyInstrument extends Item implements ILoreTagged {
 			if (attr != null && !attr.isUnlocked()) {
 				// Possibly unlock
 				INostrumMagic magicAttr = NostrumMagica.getMagicWrapper(playerIn);
-				if (magicAttr.isUnlocked() && magicAttr.getCompletedResearches().contains("fairy_instruments")) {
+				if (magicAttr.isUnlocked() && magicAttr.getCompletedResearches().contains(FairyResearches.ID_Fairy_Instruments)) {
 					attr.unlock();
 					NostrumFairies.proxy.pushCapabilityRefresh(playerIn);
 				}
@@ -169,7 +170,7 @@ public class FairyInstrument extends Item implements ILoreTagged {
 				
 				NostrumMagica.playerListener.registerTimer((t, entity, data) -> {
 					if (playerIn.isAlive() && playerIn.getItemInHand(hand) == stack) {
-						NostrumMagica.instance.proxy.openContainer(playerIn, FairyScreenGui.FairyScreenContainer.Make());
+						NostrumMagica.Proxy.openContainer(playerIn, FairyScreenGui.FairyScreenContainer.Make());
 					}
 					return true;
 				}, 30, 0);

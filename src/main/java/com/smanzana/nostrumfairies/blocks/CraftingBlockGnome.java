@@ -102,7 +102,7 @@ public class CraftingBlockGnome extends FeyContainerBlock {
 		}
 		
 		CraftingBlockGnomeTileEntity craftBlock = (CraftingBlockGnomeTileEntity) worldIn.getBlockEntity(pos);
-		NostrumMagica.instance.proxy.openContainer(playerIn, CraftingStationSmallGui.CraftingStationSmallContainer.Make(craftBlock));
+		NostrumMagica.Proxy.openContainer(playerIn, CraftingStationSmallGui.CraftingStationSmallContainer.Make(craftBlock));
 		
 		return InteractionResult.SUCCESS;
 	}

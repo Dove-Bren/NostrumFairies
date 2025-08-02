@@ -201,7 +201,7 @@ public class EntityElfArcher extends EntityElf {
 			
 			@Override
 			protected boolean isAttackAnimationComplete(EntityElfArcher elf) {
-				return elf.attackAnim >= .7;// slash is .7 through animation
+				return elf.attackAnim >= .7f;// slash is .7 through animation
 			}
 			
 			@Override

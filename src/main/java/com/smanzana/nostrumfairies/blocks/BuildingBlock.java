@@ -105,7 +105,7 @@ public class BuildingBlock extends FeyContainerBlock {
 	@Override
 	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult hit) {
 		BuildingBlockTileEntity buildBlock = (BuildingBlockTileEntity) worldIn.getBlockEntity(pos);
-		NostrumMagica.instance.proxy.openContainer(playerIn, BuildingBlockGui.BuildingBlockContainer.Make(buildBlock));
+		NostrumMagica.Proxy.openContainer(playerIn, BuildingBlockGui.BuildingBlockContainer.Make(buildBlock));
 		return InteractionResult.SUCCESS;
 	}
 	

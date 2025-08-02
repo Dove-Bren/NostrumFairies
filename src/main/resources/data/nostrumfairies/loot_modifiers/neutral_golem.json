@@ -9,7 +9,7 @@
 			"entity": "this",
 			"predicate":
 				{
-					"type": "nostrummagica:physical_golem"
+					"type": "nostrummagica:neutral_golem"
 				}
 		},
 		{
