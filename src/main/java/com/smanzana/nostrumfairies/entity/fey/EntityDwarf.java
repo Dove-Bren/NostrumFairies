@@ -31,6 +31,8 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.loretag.ELoreCategory;
+import com.smanzana.nostrummagica.loretag.IEntityLoreTagged;
+import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.Inventories;
 
@@ -84,31 +86,6 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 		this.setPathfindingMalus(BlockPathTypes.LAVA, 0.0F);
 		this.setPathfindingMalus(BlockPathTypes.DANGER_FIRE, 0.0F);
 		this.setPathfindingMalus(BlockPathTypes.DAMAGE_FIRE, 0.0F);
-	}
-	
-	@Override
-	public String getLoreKey() {
-		return "dwarf";
-	}
-
-	@Override
-	public String getLoreDisplayName() {
-		return "dwarf";
-	}
-
-	@Override
-	public Lore getBasicLore() {
-		return new Lore("Dwarves are a quiet, brooding fey who seem to have an affinity for mining.");
-	}
-
-	@Override
-	public Lore getDeepLore() {
-		return new Lore("Dwarves are a quiet, brooding fey who seem to have an affinity for mining.");
-	}
-
-	@Override
-	public ELoreCategory getCategory() {
-		return ELoreCategory.ENTITY;
 	}
 	
 	protected ItemStack[] getCarriedItemsRaw() {
@@ -1086,5 +1063,44 @@ public class EntityDwarf extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected @Nullable NostrumFairiesSounds getIdleSound() {
 		return null;
+	}
+	
+	@Override
+	public ILoreTagged getLoreTag() {
+		return DwarfLore.instance;
+	}
+	
+	public static final class DwarfLore implements IEntityLoreTagged<EntityDwarf> {
+		public static final DwarfLore instance = new DwarfLore();
+		
+		@Override
+		public String getLoreKey() {
+			return "dwarf";
+		}
+
+		@Override
+		public String getLoreDisplayName() {
+			return "Dwarves";
+		}
+
+		@Override
+		public Lore getBasicLore() {
+			return new Lore().add("Dwarves are a quiet, brooding fey who seem to have an affinity for mining.");
+		}
+
+		@Override
+		public Lore getDeepLore() {
+			return new Lore().add("Dwarves are a quiet, brooding fey who seem to have an affinity for mining.", "Dwarves can specialize in mining, crafting, or constructing.");
+		}
+
+		@Override
+		public ELoreCategory getCategory() {
+			return ELoreCategory.ENTITY;
+		}
+
+		@Override
+		public EntityType<? extends EntityDwarf> getEntityType() {
+			return FairyEntities.Dwarf;
+		}
 	}
 }

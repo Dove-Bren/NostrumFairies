@@ -2,27 +2,26 @@ package com.smanzana.nostrumfairies.blocks;
 
 import com.smanzana.nostrumfairies.entity.fey.EntityFeyBase;
 import com.smanzana.nostrumfairies.entity.fey.EntityPersonalFairy;
-import com.smanzana.nostrumfairies.items.FeyResource;
-import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
+import com.smanzana.nostrumfairies.items.FairyItems;
 import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrummagica.sound.NostrumMagicaSounds;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.BushBlock;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BushBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
 import net.minecraftforge.common.IPlantable;
 
 /**
@@ -62,7 +61,7 @@ public class FeyBush extends BushBlock {
 			EntityFeyBase fey = (EntityFeyBase) target;
 			if (fey.getStatus() == FairyGeneralStatus.WANDERING) {
 				if (!target.level.isClientSide) {
-					target.spawnAtLocation(FeyResource.create(FeyResourceType.TABLET, 1), .1f);
+					target.spawnAtLocation(new ItemStack(FairyItems.feyTablet), .1f);
 					((ServerLevel) target.level).sendParticles(ParticleTypes.HEART,
 							target.getX(),
 							target.getY(),	

@@ -19,6 +19,8 @@ import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles;
 import com.smanzana.nostrummagica.client.particles.NostrumParticles.SpawnParams;
 import com.smanzana.nostrummagica.loretag.ELoreCategory;
+import com.smanzana.nostrummagica.loretag.IEntityLoreTagged;
+import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
@@ -63,31 +65,6 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 		this.moveControl = new FairyFlyMoveHelper(this);
 	}
 
-	@Override
-	public String getLoreKey() {
-		return "fairy";
-	}
-
-	@Override
-	public String getLoreDisplayName() {
-		return "Fairies";
-	}
-
-	@Override
-	public Lore getBasicLore() {
-		return new Lore("test lore for test fairy lol");
-	}
-
-	@Override
-	public Lore getDeepLore() {
-		return new Lore("test lore for test fairy lol");
-	}
-	
-	@Override
-	public ELoreCategory getCategory() {
-		return ELoreCategory.ENTITY;
-	}
-	
 	protected @Nonnull ItemStack getHeldItem() {
 		return this.entityData.get(DATA_HELD_ITEM);
 	}
@@ -782,5 +759,44 @@ public class EntityFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected @Nullable NostrumFairiesSounds getIdleSound() {
 		return NostrumFairiesSounds.FAIRY_IDLE;
+	}
+	
+	@Override
+	public ILoreTagged getLoreTag() {
+		return FairyLore.instance;
+	}
+	
+	public static final class FairyLore implements IEntityLoreTagged<EntityFairy> {
+		public static final FairyLore instance = new FairyLore();
+		
+		@Override
+		public String getLoreKey() {
+			return "fairy";
+		}
+
+		@Override
+		public String getLoreDisplayName() {
+			return "Fairies";
+		}
+
+		@Override
+		public Lore getBasicLore() {
+			return new Lore().add("Fairies are small, quick, and in some instances, full of whimsy. Despite their prankster tendencies, they seem to have a keen interest in helping players.");
+		}
+
+		@Override
+		public Lore getDeepLore() {
+			return getBasicLore().add("Fairies can perform all sorts of logistics tasks. They can also be bound to a player to help them directly.");
+		}
+		
+		@Override
+		public ELoreCategory getCategory() {
+			return ELoreCategory.ENTITY;
+		}
+
+		@Override
+		public EntityType<? extends EntityFairy> getEntityType() {
+			return FairyEntities.Fairy;
+		}
 	}
 }

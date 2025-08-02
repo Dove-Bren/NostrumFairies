@@ -20,8 +20,7 @@ import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.ItemDeepStacks;
 import com.smanzana.nostrumfairies.utils.Paths;
-import com.smanzana.nostrummagica.loretag.ELoreCategory;
-import com.smanzana.nostrummagica.loretag.Lore;
+import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.util.Inventories;
 
 import net.minecraft.core.BlockPos;
@@ -58,31 +57,6 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 		super(type, world);
 		this.workDistanceSq = 24 * 24;
 		this.inventory = new SimpleContainer(INV_SIZE);
-	}
-
-	@Override
-	public String getLoreKey() {
-		return "testfairy";
-	}
-
-	@Override
-	public String getLoreDisplayName() {
-		return "testfairy";
-	}
-
-	@Override
-	public Lore getBasicLore() {
-		return new Lore("test lore for test fairy lol");
-	}
-
-	@Override
-	public Lore getDeepLore() {
-		return new Lore("test lore for test fairy lol");
-	}
-	
-	@Override
-	public ELoreCategory getCategory() {
-		return ELoreCategory.ENTITY;
 	}
 
 	@Override
@@ -692,6 +666,11 @@ public class EntityTestFairy extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected NostrumFairiesSounds getIdleSound() {
 		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public ILoreTagged getLoreTag() {
 		return null;
 	}
 }

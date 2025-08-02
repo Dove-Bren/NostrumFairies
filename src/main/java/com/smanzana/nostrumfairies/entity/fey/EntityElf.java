@@ -17,6 +17,8 @@ import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrummagica.entity.tasks.AttackRangedGoal;
 import com.smanzana.nostrummagica.loretag.ELoreCategory;
+import com.smanzana.nostrummagica.loretag.IEntityLoreTagged;
+import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.spell.EAlteration;
 import com.smanzana.nostrummagica.spell.EMagicElement;
@@ -87,31 +89,6 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, RangedA
 		initSpells();
 	}
 
-	@Override
-	public String getLoreKey() {
-		return "elf";
-	}
-
-	@Override
-	public String getLoreDisplayName() {
-		return "elf";
-	}
-
-	@Override
-	public Lore getBasicLore() {
-		return new Lore("test lore for test fairy lol");
-	}
-
-	@Override
-	public Lore getDeepLore() {
-		return new Lore("test lore for test fairy lol");
-	}
-	
-	@Override
-	public ELoreCategory getCategory() {
-		return ELoreCategory.ENTITY;
-	}
-	
 	private static final NonNullList<ItemStack> EMPTY = NonNullList.create();
 
 	@Override
@@ -640,5 +617,44 @@ public class EntityElf extends EntityFeyBase implements IItemCarrierFey, RangedA
 	@Override
 	protected @Nullable NostrumFairiesSounds getIdleSound() {
 		return NostrumFairiesSounds.ELF_IDLE;
+	}
+	
+	@Override
+	public ILoreTagged getLoreTag() {
+		return ElfLore.instance;
+	}
+	
+	public static final class ElfLore implements IEntityLoreTagged<EntityElf> {
+		public static final ElfLore instance = new ElfLore();
+		
+		@Override
+		public String getLoreKey() {
+			return "elf";
+		}
+
+		@Override
+		public String getLoreDisplayName() {
+			return "Elves";
+		}
+
+		@Override
+		public Lore getBasicLore() {
+			return new Lore().add("Elves are quiet and have a noble aura about them. Their talent for woodworking and magic seems great.");
+		}
+
+		@Override
+		public Lore getDeepLore() {
+			return getBasicLore().add("Elves can specialize as hunters, crafters, or wood cutters.");
+		}
+		
+		@Override
+		public ELoreCategory getCategory() {
+			return ELoreCategory.ENTITY;
+		}
+
+		@Override
+		public EntityType<? extends EntityElf> getEntityType() {
+			return FairyEntities.Elf;
+		}
 	}
 }

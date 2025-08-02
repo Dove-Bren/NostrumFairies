@@ -22,6 +22,8 @@ import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrumfairies.utils.ItemDeepStack;
 import com.smanzana.nostrumfairies.utils.Paths;
 import com.smanzana.nostrummagica.loretag.ELoreCategory;
+import com.smanzana.nostrummagica.loretag.IEntityLoreTagged;
+import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.util.ItemStacks;
 
@@ -61,31 +63,6 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 		this.workDistanceSq = 24 * 24;
 	}
 
-	@Override
-	public String getLoreKey() {
-		return "gnome";
-	}
-
-	@Override
-	public String getLoreDisplayName() {
-		return "Gnomes";
-	}
-
-	@Override
-	public Lore getBasicLore() {
-		return new Lore("test lore for test fairy lol");
-	}
-
-	@Override
-	public Lore getDeepLore() {
-		return new Lore("test lore for test fairy lol");
-	}
-	
-	@Override
-	public ELoreCategory getCategory() {
-		return ELoreCategory.ENTITY;
-	}
-	
 	public @Nonnull ItemStack getCarriedItem() {
 		return this.entityData.get(DATA_HELD_ITEM);
 	}
@@ -709,5 +686,44 @@ public class EntityGnome extends EntityFeyBase implements IItemCarrierFey {
 	@Override
 	protected @Nullable NostrumFairiesSounds getIdleSound() {
 		return NostrumFairiesSounds.GNOME_IDLE;
+	}
+	
+	@Override
+	public ILoreTagged getLoreTag() {
+		return GnomeLore.instance;
+	}
+	
+	public static final class GnomeLore implements IEntityLoreTagged<EntityGnome> {
+		public static final GnomeLore instance = new GnomeLore();
+		
+		@Override
+		public String getLoreKey() {
+			return "gnome";
+		}
+
+		@Override
+		public String getLoreDisplayName() {
+			return "Gnomes";
+		}
+
+		@Override
+		public Lore getBasicLore() {
+			return new Lore().add("Gnomes are small, humble, and plain-headed. They like doing what they need to do, and then relaxing.");
+		}
+
+		@Override
+		public Lore getDeepLore() {
+			return getBasicLore().add("Gnomes can perform small crafting recipes, gather and collect items, and even tend to crops!");
+		}
+		
+		@Override
+		public ELoreCategory getCategory() {
+			return ELoreCategory.ENTITY;
+		}
+
+		@Override
+		public EntityType<? extends EntityGnome> getEntityType() {
+			return FairyEntities.Gnome;
+		}
 	}
 }

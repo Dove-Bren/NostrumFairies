@@ -4,8 +4,8 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrumfairies.items.FairyInstrument.InstrumentType;
-import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
+import com.smanzana.nostrummagica.item.api.LoreItem;
 import com.smanzana.nostrummagica.loretag.ILoreTagged;
 import com.smanzana.nostrummagica.loretag.LoreRegistry;
 
@@ -19,6 +19,12 @@ import net.minecraftforge.registries.ObjectHolder;
 @Mod.EventBusSubscriber(modid = NostrumFairies.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 @ObjectHolder(NostrumFairies.MODID)
 public class FairyItems {
+	
+	protected static final String ID_TEARS = "fey_tears";
+	protected static final String ID_ESSENCE = "fey_essence";
+	protected static final String ID_ESSENCE_CORRUPTED = "fey_essence_corrupted";
+	protected static final String ID_GOLEM_TOKEN = "golem_token";
+	protected static final String ID_LOGIC_TOKEN = "logic_token";
 
 	@ObjectHolder(FairyGael.ID_ATTACK) public static FairyGael attackGael;
 	@ObjectHolder(FairyGael.ID_BUILD) public static FairyGael buildGael;
@@ -26,14 +32,14 @@ public class FairyItems {
 	@ObjectHolder(FairyInstrument.ID_FLUTE) public static FairyInstrument fairyFlute;
 	@ObjectHolder(FairyInstrument.ID_HARP) public static FairyInstrument fairyHarp;
 	@ObjectHolder(FairyInstrument.ID_OCARINA) public static FairyInstrument fairyOcarina;
-	@ObjectHolder(FeyResource.ID_TEARS) public static FeyResource feyTears;
-	@ObjectHolder(FeyResource.ID_ESSENCE) public static FeyResource feyEssence;
-	@ObjectHolder(FeyResource.ID_ESSENCE_CORRUPTED) public static FeyResource feyCorruptedEssence;
-	@ObjectHolder(FeyResource.ID_BELL) public static FeyResource feyBell;
-	@ObjectHolder(FeyResource.ID_FLOWER) public static FeyResource feyFlower;
-	@ObjectHolder(FeyResource.ID_TABLET) public static FeyResource feyTablet;
-	@ObjectHolder(FeyResource.ID_GOLEM_TOKEN) public static FeyResource feyGolemToken;
-	@ObjectHolder(FeyResource.ID_LOGIC_TOKEN) public static FeyResource feyLogicToken;
+	@ObjectHolder(ID_TEARS) public static LoreItem feyTears;
+	@ObjectHolder(ID_ESSENCE) public static LoreItem feyEssence;
+	@ObjectHolder(ID_ESSENCE_CORRUPTED) public static LoreItem feyCorruptedEssence;
+	@ObjectHolder(ID_GOLEM_TOKEN) public static LoreItem feyGolemToken;
+	@ObjectHolder(ID_LOGIC_TOKEN) public static LoreItem feyLogicToken;
+	@ObjectHolder(FeyBell.ID) public static FeyBell feyBell;
+	@ObjectHolder(FeyFlower.ID) public static FeyFlower feyFlower;
+	@ObjectHolder(FeyTablet.ID) public static FeyTablet feyTablet;
 	@ObjectHolder(FeySoulStone.ID_SOUL_GEM) public static FeySoulStone soulGem;
 	@ObjectHolder(FeySoulStone.ID_SOUL_GAEL) public static FeySoulStone soulGael;
 	@ObjectHolder(FeyStone.ID_SPEC_EMERALD) public static FeyStone stoneSpecEmerald;
@@ -84,14 +90,14 @@ public class FairyItems {
 		register(registry, new FairyInstrument(InstrumentType.FLUTE).setRegistryName(FairyInstrument.ID_FLUTE));
 		register(registry, new FairyInstrument(InstrumentType.HARP).setRegistryName(FairyInstrument.ID_HARP));
 		register(registry, new FairyInstrument(InstrumentType.OCARINA).setRegistryName(FairyInstrument.ID_OCARINA));
-		register(registry, new FeyResource(FeyResourceType.TEARS).setRegistryName(FeyResource.ID_TEARS));
-		register(registry, new FeyResource(FeyResourceType.ESSENCE).setRegistryName(FeyResource.ID_ESSENCE));
-		register(registry, new FeyResource(FeyResourceType.ESSENCE_CORRUPTED).setRegistryName(FeyResource.ID_ESSENCE_CORRUPTED));
-		register(registry, new FeyResource(FeyResourceType.BELL).setRegistryName(FeyResource.ID_BELL));
-		register(registry, new FeyResource(FeyResourceType.FLOWER).setRegistryName(FeyResource.ID_FLOWER));
-		register(registry, new FeyResource(FeyResourceType.TABLET).setRegistryName(FeyResource.ID_TABLET));
-		register(registry, new FeyResource(FeyResourceType.GOLEM_TOKEN).setRegistryName(FeyResource.ID_GOLEM_TOKEN));
-		register(registry, new FeyResource(FeyResourceType.LOGIC_TOKEN).setRegistryName(FeyResource.ID_LOGIC_TOKEN));
+		register(registry, new LoreItem(FairyItems.PropBase()).setRegistryName(ID_TEARS));
+		register(registry, new LoreItem(FairyItems.PropBase()).setRegistryName(ID_ESSENCE));
+		register(registry, new LoreItem(FairyItems.PropBase()).setRegistryName(ID_ESSENCE_CORRUPTED));
+		register(registry, new LoreItem(FairyItems.PropBase()).setRegistryName(ID_GOLEM_TOKEN));
+		register(registry, new LoreItem(FairyItems.PropBase()).setRegistryName(ID_LOGIC_TOKEN));
+		register(registry, new FeyBell(FairyItems.PropBase()).setRegistryName(FeyBell.ID));
+		register(registry, new FeyFlower(FairyItems.PropBase()).setRegistryName(FeyFlower.ID));
+		register(registry, new FeyTablet(FairyItems.PropBase()).setRegistryName(FeyTablet.ID));
 		register(registry, new FeySoulStone(SoulStoneType.GEM).setRegistryName(FeySoulStone.ID_SOUL_GEM));
 		register(registry, new FeySoulStone(SoulStoneType.GAEL).setRegistryName(FeySoulStone.ID_SOUL_GAEL));
 		register(registry, new FeyStone(FeySlotType.SPECIALIZATION, FeyStoneMaterial.EMERALD).setRegistryName(FeyStone.ID_SPEC_EMERALD));

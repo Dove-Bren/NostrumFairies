@@ -8,6 +8,10 @@ import com.smanzana.nostrumfairies.capabilities.CapabilityHandler;
 import com.smanzana.nostrumfairies.capabilities.fey.INostrumFeyCapability;
 import com.smanzana.nostrumfairies.capabilities.templates.ITemplateViewerCapability;
 import com.smanzana.nostrumfairies.entity.ResidentType;
+import com.smanzana.nostrumfairies.entity.fey.EntityDwarf;
+import com.smanzana.nostrumfairies.entity.fey.EntityElf;
+import com.smanzana.nostrumfairies.entity.fey.EntityFairy;
+import com.smanzana.nostrumfairies.entity.fey.EntityGnome;
 import com.smanzana.nostrumfairies.entity.fey.EntityShadowFey;
 import com.smanzana.nostrumfairies.inventory.FeySlotType;
 import com.smanzana.nostrumfairies.items.FairyGael;
@@ -15,12 +19,11 @@ import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrumfairies.items.FairyInstrument;
 import com.smanzana.nostrumfairies.items.FairyInstrument.InstrumentType;
 import com.smanzana.nostrumfairies.items.FairyItems;
-import com.smanzana.nostrumfairies.items.FeyResource;
-import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
 import com.smanzana.nostrumfairies.items.FeyStone;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
+import com.smanzana.nostrumfairies.items.FeyTablet;
 import com.smanzana.nostrumfairies.network.NetworkHandler;
 import com.smanzana.nostrumfairies.research.FairyResearches;
 import com.smanzana.nostrumfairies.rituals.outcomes.OutcomeConstructGael;
@@ -128,7 +131,11 @@ public class ModInit {
 	
 	private static final void registerLore() {
     	LoreRegistry.instance().register(EntityShadowFey.ShadowFeyConversionLore.instance());
-    	LoreRegistry.instance().register(FeyResource.FeyFriendLore.instance());
+    	LoreRegistry.instance().register(FeyTablet.FeyFriendLore.instance());
+    	LoreRegistry.instance().register(EntityDwarf.DwarfLore.instance);
+    	LoreRegistry.instance().register(EntityElf.ElfLore.instance);
+    	LoreRegistry.instance().register(EntityFairy.FairyLore.instance);
+    	LoreRegistry.instance().register(EntityGnome.GnomeLore.instance);
     }
 	
 	// Aetheria items
@@ -140,35 +147,35 @@ public class ModInit {
     	
     	registry.register(
 			RitualRecipe.createTier3("purify_essence",
-				FeyResource.create(FeyResourceType.ESSENCE, 1),
+					new ItemStack(FairyItems.feyEssence, 1),
 				EMagicElement.ICE,
 				new ReagentType[] {ReagentType.CRYSTABLOOM, ReagentType.BLACK_PEARL, ReagentType.MANI_DUST, ReagentType.SPIDER_SILK},
 				Ingredient.of(NostrumTags.Items.CrystalSmall),
 				new Ingredient[] {Ingredient.of(FairyItems.feyCorruptedEssence), Ingredient.of(Items.WATER_BUCKET), Ingredient.of(FairyItems.feyCorruptedEssence), Ingredient.of(FairyItems.feyCorruptedEssence)},
 				new ResearchRequirement(FairyResearches.ID_Purify_Essence),
-				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.ESSENCE, 3)))
+				new OutcomeSpawnItem(new ItemStack(FairyItems.feyEssence, 3)))
 			);
     	
     	registry.register(
 			RitualRecipe.createTier3("fey_bell",
-				FeyResource.create(FeyResourceType.BELL, 1),
+				new ItemStack(FairyItems.feyBell, 1),
 				EMagicElement.WIND,
 				new ReagentType[] {ReagentType.SPIDER_SILK, ReagentType.SKY_ASH, ReagentType.MANI_DUST, ReagentType.SPIDER_SILK},
 				Ingredient.of(Tags.Items.INGOTS_GOLD),
 				new Ingredient[] {Ingredient.of(FairyItems.feyEssence), Ingredient.of(NostrumTags.Items.CrystalMedium), Ingredient.of(Tags.Items.INGOTS_GOLD), Ingredient.of(FairyItems.feyEssence)},
 				new ResearchRequirement(FairyResearches.ID_Fey_Bell),
-				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.BELL, 1)))
+				new OutcomeSpawnItem(new ItemStack(FairyItems.feyBell, 1)))
 			);
     	
     	registry.register(
 			RitualRecipe.createTier3("fey_flower",
-				FeyResource.create(FeyResourceType.FLOWER, 1),
+				new ItemStack(FairyItems.feyFlower, 1),
 				EMagicElement.EARTH,
 				new ReagentType[] {ReagentType.MANI_DUST, ReagentType.MANDRAKE_ROOT, ReagentType.SKY_ASH, ReagentType.SKY_ASH},
 				Ingredient.of(Blocks.TALL_GRASS),
 				new Ingredient[] {Ingredient.of(FairyItems.feyTears), Ingredient.of(Items.MELON), Ingredient.of(FairyItems.feyEssence), Ingredient.of(FairyItems.feyTears)},
 				new ResearchRequirement(FairyResearches.ID_Fey_Flower),
-				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.FLOWER, 4)))
+				new OutcomeSpawnItem(new ItemStack(FairyItems.feyFlower, 4)))
 			);
     	
     	registry.register(
@@ -261,13 +268,13 @@ public class ModInit {
     	
     	registry.register(
 			RitualRecipe.createTier3("logistics_tokens",
-				FeyResource.create(FeyResourceType.LOGIC_TOKEN, 4),
+				new ItemStack(FairyItems.feyLogicToken, 4),
 				EMagicElement.FIRE,
 				new ReagentType[] {ReagentType.SKY_ASH, ReagentType.SPIDER_SILK, ReagentType.GRAVE_DUST, ReagentType.MANDRAKE_ROOT},
 				Ingredient.of(FairyItems.feyGolemToken),
 				new Ingredient[] {Ingredient.of(NostrumTags.Items.MagicToken), Ingredient.of(Items.REDSTONE), Ingredient.of(NostrumTags.Items.CrystalSmall), Ingredient.of(NostrumTags.Items.MagicToken)},
 				new ResearchRequirement(FairyResearches.ID_Logistics),
-				new OutcomeSpawnItem(FeyResource.create(FeyResourceType.LOGIC_TOKEN, 4)))
+				new OutcomeSpawnItem(new ItemStack(FairyItems.feyLogicToken, 4)))
 			);
     	
     	registry.register(

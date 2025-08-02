@@ -18,8 +18,7 @@ import com.smanzana.nostrumfairies.NostrumFairies;
 import com.smanzana.nostrumfairies.blocks.FeyHomeBlock;
 import com.smanzana.nostrumfairies.entity.ResidentType;
 import com.smanzana.nostrumfairies.entity.navigation.PathNavigatorLogistics;
-import com.smanzana.nostrumfairies.items.FeyResource;
-import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
+import com.smanzana.nostrumfairies.items.FairyItems;
 import com.smanzana.nostrumfairies.items.FeyStoneMaterial;
 import com.smanzana.nostrumfairies.logistics.LogisticsNetwork;
 import com.smanzana.nostrumfairies.logistics.task.ILogisticsTask;
@@ -28,7 +27,7 @@ import com.smanzana.nostrumfairies.serializers.FairyGeneralStatus;
 import com.smanzana.nostrumfairies.sound.NostrumFairiesSounds;
 import com.smanzana.nostrumfairies.tiles.HomeBlockTileEntity;
 import com.smanzana.nostrummagica.NostrumMagica;
-import com.smanzana.nostrummagica.loretag.ILoreTagged;
+import com.smanzana.nostrummagica.loretag.ILoreSupplier;
 import com.smanzana.nostrummagica.util.DimensionUtils;
 
 import net.minecraft.core.BlockPos;
@@ -68,7 +67,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public abstract class EntityFeyBase extends AbstractGolem implements IFeyWorker, ILoreTagged {
+public abstract class EntityFeyBase extends AbstractGolem implements IFeyWorker, ILoreSupplier {
 
 	protected static final EntityDataAccessor<Optional<BlockPos>> HOME  = SynchedEntityData.<Optional<BlockPos>>defineId(EntityFeyBase.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
 	protected static final EntityDataAccessor<String> NAME = SynchedEntityData.<String>defineId(EntityFeyBase.class, EntityDataSerializers.STRING);
@@ -1151,10 +1150,10 @@ public abstract class EntityFeyBase extends AbstractGolem implements IFeyWorker,
 	@Override
 	protected void dropCustomDeathLoot(DamageSource source, int lootingModifier, boolean wasRecentlyHit) {
 		if (isCursed() && !level.isClientSide) {
-			this.spawnAtLocation(FeyResource.create(FeyResourceType.TEARS, 1 + lootingModifier), 0);
+			this.spawnAtLocation(new ItemStack(FairyItems.feyTears, 1 + lootingModifier), 0);
 			
 			if (wasRecentlyHit && random.nextInt(5) < (1 + lootingModifier)) {
-				this.spawnAtLocation(FeyResource.create(FeyResourceType.ESSENCE, random.nextInt(2) + 1), 0);
+				this.spawnAtLocation(new ItemStack(FairyItems.feyEssence, random.nextInt(2) + 1), 0);
 			}
 		}
 	}

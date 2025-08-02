@@ -9,10 +9,9 @@ import com.smanzana.nostrumfairies.items.FairyGael.FairyGaelType;
 import com.smanzana.nostrumfairies.items.FairyInstrument;
 import com.smanzana.nostrumfairies.items.FairyInstrument.InstrumentType;
 import com.smanzana.nostrumfairies.items.FairyItems;
-import com.smanzana.nostrumfairies.items.FeyResource;
-import com.smanzana.nostrumfairies.items.FeyResource.FeyResourceType;
 import com.smanzana.nostrumfairies.items.FeySoulStone;
 import com.smanzana.nostrumfairies.items.FeySoulStone.SoulStoneType;
+import com.smanzana.nostrumfairies.items.FeyTablet;
 import com.smanzana.nostrummagica.progression.research.NostrumResearch;
 import com.smanzana.nostrummagica.progression.research.NostrumResearch.Size;
 import com.smanzana.nostrummagica.progression.research.NostrumResearchTab;
@@ -86,26 +85,26 @@ public class FairyResearches {
 			.lore(FairyItems.feyCorruptedEssence)
 			.hiddenParent(NostrumResearches.ID_Rituals)
 			.reference("ritual::purify_essence", "ritual.purify_essence.name")
-		.build(ID_Purify_Essence, researchTab, Size.NORMAL, 0, -1, true, FeyResource.create(FeyResourceType.ESSENCE, 1));
+		.build(ID_Purify_Essence, researchTab, Size.NORMAL, 0, -1, true, new ItemStack(FairyItems.feyEssence, 1));
 		
 		Fey_Bell = NostrumResearch.startBuilding()
 			.parent(ID_Purify_Essence)
 			.hiddenParent(NostrumResearches.ID_Kani)
 			.reference("ritual::fey_bell", "ritual.fey_bell.name")
-		.build(ID_Fey_Bell, researchTab, Size.NORMAL, -1, 0, true, FeyResource.create(FeyResourceType.BELL, 1));
+		.build(ID_Fey_Bell, researchTab, Size.NORMAL, -1, 0, true, new ItemStack(FairyItems.feyBell, 1));
 		
 		Fey_Flower = NostrumResearch.startBuilding()
 			.parent(ID_Purify_Essence)
 			.hiddenParent(ID_Fey_Bell)
 			.lore(EntityShadowFey.ShadowFeyConversionLore.instance())
 			.reference("ritual::fey_flower", "ritual.fey_flower.name")
-		.build(ID_Fey_Flower, researchTab, Size.NORMAL, 1, 0, true, FeyResource.create(FeyResourceType.FLOWER, 1));
+		.build(ID_Fey_Flower, researchTab, Size.NORMAL, 1, 0, true, new ItemStack(FairyItems.feyFlower, 1));
 		
 		Fey_Souls = NostrumResearch.startBuilding()
 			.parent(ID_Purify_Essence)
 			.parent(ID_Fey_Flower)
 			.parent(ID_Fey_Bell)
-			.lore(FeyResource.FeyFriendLore.instance())
+			.lore(FeyTablet.FeyFriendLore.instance())
 			.reference("ritual::soul_stone", "ritual.soul_stone.name")
 			.reference("ritual::soul_gael", "ritual.soul_gael.name")
 		.build(ID_Fey_Souls, researchTab, Size.LARGE, 0, 1, true, FeySoulStone.create(SoulStoneType.GEM));
@@ -144,7 +143,7 @@ public class FairyResearches {
 			.reference("ritual::fey_upgrade.up.ruby", "ritual.fey_upgrade.up.ruby.name")
 			.reference("ritual::fey_upgrade.down.sapphire", "ritual.fey_upgrade.down.sapphire.name")
 			.reference("ritual::fey_upgrade.up.sapphire", "ritual.fey_upgrade.up.sapphire.name")
-		.build(ID_Logistics, researchTab, Size.GIANT, -2, 1, true, FeyResource.create(FeyResourceType.LOGIC_TOKEN, 1));
+		.build(ID_Logistics, researchTab, Size.GIANT, -2, 1, true, new ItemStack(FairyItems.feyLogicToken, 1));
 		
 		Dwarves = NostrumResearch.startBuilding()
 			.parent(ID_Logistics)

@@ -28,8 +28,6 @@ import com.smanzana.nostrummagica.entity.tasks.FlierDiveGoal;
 import com.smanzana.nostrummagica.entity.tasks.OrbitEntityGenericGoal;
 import com.smanzana.nostrummagica.entity.tasks.OwnerHurtByTargetGoalGeneric;
 import com.smanzana.nostrummagica.entity.tasks.SpellAttackGoal;
-import com.smanzana.nostrummagica.loretag.ELoreCategory;
-import com.smanzana.nostrummagica.loretag.Lore;
 import com.smanzana.nostrummagica.serializer.PetJobSerializer;
 import com.smanzana.nostrummagica.spell.Spell;
 import com.smanzana.nostrummagica.spell.SpellCastProperties;
@@ -187,31 +185,6 @@ public class EntityPersonalFairy extends EntityFairy implements IEntityPet, ITra
 		if (oldJob != job) {
 			resetAttributes(job);
 		}
-	}
-	
-	@Override
-	public String getLoreKey() {
-		return "personal_fairy";
-	}
-
-	@Override
-	public String getLoreDisplayName() {
-		return "testfairy";
-	}
-
-	@Override
-	public Lore getBasicLore() {
-		return new Lore("test lore for test fairy lol");
-	}
-
-	@Override
-	public Lore getDeepLore() {
-		return new Lore("test lore for test fairy lol");
-	}
-
-	@Override
-	public ELoreCategory getCategory() {
-		return ELoreCategory.ENTITY;
 	}
 	
 	@Override
